@@ -1,0 +1,9 @@
+.next
+node_modules
+.claude
+.taste-skill
+docs
+*.md
+package-lock.json
+test-results
+playwright-report
