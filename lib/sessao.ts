@@ -54,9 +54,11 @@ export async function livrosDoMembro(
       "papel, books!inner(id, autor_nome, autor_apelido, autor_parentesco, autor_foto_id, configuracao, plano_estado, plano_vence_em, criado_em)",
     )
     .eq("user_id", usuarioId);
-  return (data ?? [])
-    .map((m) => ({ ...m.books, papel: m.papel }))
-    .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- só ordena por criado_em
-    .map(({ criado_em, ...livro }) => livro);
+  return (
+    (data ?? [])
+      .map((m) => ({ ...m.books, papel: m.papel }))
+      .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- só ordena por criado_em
+      .map(({ criado_em, ...livro }) => livro)
+  );
 }

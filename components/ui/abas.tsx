@@ -20,13 +20,29 @@ export type Aba = {
 type Props = {
   abas: Aba[];
   inicial?: string;
+  // Controle externo (opcional): quem usa sabe qual aba está aberta (ex.: ?aba= na URL).
+  ativa?: string;
+  aoMudar?: (id: string) => void;
   rotulo: string; // nome do grupo, para o leitor de tela
   titulo?: ReactNode; // quando há, fica na mesma linha das abas (desktop)
   className?: string;
 };
 
-export function Abas({ abas, inicial, rotulo, titulo, className = "" }: Props) {
-  const [ativa, setAtiva] = useState(inicial ?? abas[0]?.id);
+export function Abas({
+  abas,
+  inicial,
+  ativa: ativaExterna,
+  aoMudar,
+  rotulo,
+  titulo,
+  className = "",
+}: Props) {
+  const [ativaInterna, setAtivaInterna] = useState(inicial ?? abas[0]?.id);
+  const ativa = ativaExterna ?? ativaInterna;
+  const setAtiva = (id: string) => {
+    setAtivaInterna(id);
+    aoMudar?.(id);
+  };
   const base = useId();
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
 

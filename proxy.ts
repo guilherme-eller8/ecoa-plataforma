@@ -1,10 +1,38 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { envPublico } from "@/lib/env-publico";
+import {
+  APARELHO_DURA_S,
+  COOKIE_APARELHO,
+  aparelhoValido,
+} from "@/lib/familia/aparelho";
 import { decidirRota } from "@/lib/rotas";
+
+// Link da família: sem sessão nem chamada ao Supabase. Grava o cookie do aparelho na
+// requisição (a página já o lê no primeiro acesso) e na resposta, e pede para não indexar
+// nem vazar o token pelo Referer.
+function proxyFamilia(request: NextRequest) {
+  const atual = request.cookies.get(COOKIE_APARELHO)?.value;
+  const valor = aparelhoValido(atual) ? atual : crypto.randomUUID();
+  if (valor !== atual) request.cookies.set(COOKIE_APARELHO, valor);
+  const resposta = NextResponse.next({ request });
+  if (valor !== atual)
+    resposta.cookies.set(COOKIE_APARELHO, valor, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: request.nextUrl.protocol === "https:",
+      maxAge: APARELHO_DURA_S,
+      path: "/f",
+    });
+  resposta.headers.set("Referrer-Policy", "no-referrer");
+  resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return resposta;
+}
 
 // Renova a sessão do Supabase a cada requisição e decide redirects e 404 antes de renderizar.
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/f/")) return proxyFamilia(request);
+
   let resposta = NextResponse.next({ request });
   const env = envPublico();
 
@@ -48,5 +76,9 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.[a-z0-9]+$).*)"],
+  // /f/:path* explícito: um token nunca pode cair na exclusão de arquivos estáticos.
+  matcher: [
+    "/f/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.[a-z0-9]+$).*)",
+  ],
 };

@@ -1,0 +1,127 @@
+// Tipos que o servidor monta e as telas recebem. Sem nada de servidor aqui: as telas do
+// styleguide usam os mesmos tipos com dados falsos.
+import type {
+  CausoEstado,
+  EnqueteEstado,
+  Parentesco,
+  PromptEstado,
+  PromptOrigem,
+  PromptTipo,
+} from "@/lib/supabase/tipos";
+import type { ItemDaEnquete, VotoDaEnquete } from "@/lib/enquete/ranking";
+import type { Configuracao, EstadoPasso, Passo } from "./configuracao";
+
+export type Resposta<T = undefined> =
+  | ({ ok: true } & (T extends undefined ? object : { dados: T }))
+  | { ok: false; mensagem: string };
+
+export type LivroDaTela = {
+  id: string;
+  autor: string; // apelido ou nome, como a tela mostra
+  autorNome: string | null;
+  autorApelido: string | null;
+  parentesco: Parentesco | null;
+  fotoAutorUrl: string | null;
+  configuracao: Configuracao;
+  podeEscrever: boolean;
+};
+
+export type PerguntaDaTela = {
+  id: string;
+  tipo: PromptTipo;
+  texto: string;
+  origem: PromptOrigem;
+  bancoId: string | null;
+  causoId: string | null;
+  sugeridoPor: string | null; // nome de quem sugeriu o causo
+  fotoUrl: string | null;
+  estado: PromptEstado;
+  enviadaEm: string | null;
+};
+
+export type CausoDaTela = {
+  id: string;
+  nome: string;
+  texto: string | null;
+  temAudio: boolean;
+  duracaoS: number | null;
+  estado: CausoEstado;
+  criadoEm: string;
+};
+
+export type EnqueteDaTela = {
+  id: string;
+  estado: EnqueteEstado;
+  abertaEm: string;
+  itens: ItemDaEnquete[];
+  votos: VotoDaEnquete[];
+};
+
+export type FotoDaTela = {
+  id: string;
+  url: string;
+  largura: number | null;
+  altura: number | null;
+  legenda: string | null;
+};
+
+export type CandidatoDaEnquete = {
+  texto: string;
+  tipo: PromptTipo;
+  banco_id?: string;
+  causo_id?: string;
+};
+
+// Upload direto do navegador ao Storage: uploadToSignedUrl(caminho, token, arquivo).
+export type FotoPreparada = { caminho: string; token: string };
+export type FotoSubida = { caminho: string; largura: number; altura: number };
+
+// Ações do responsável, passadas às telas como props (o styleguide passa versões falsas).
+export type AcoesConfiguracao = {
+  salvarQuem: (dados: {
+    nome: string;
+    apelido: string;
+    parentesco: Parentesco | null;
+  }) => Promise<Resposta>;
+  salvarPerguntas: (dados: {
+    bancoIds: string[];
+    proprias: { tipo: PromptTipo; texto: string }[];
+  }) => Promise<Resposta<{ salvas: number }>>;
+  marcarPasso: (passo: Passo, estado: EstadoPasso) => Promise<Resposta>;
+};
+
+export type AcoesFotos = {
+  prepararFotos: (quantidade: number) => Promise<Resposta<FotoPreparada[]>>;
+  registrarFotos: (
+    fotos: FotoSubida[],
+    opcoes?: { doAutor?: boolean },
+  ) => Promise<Resposta<{ ids: string[] }>>;
+};
+
+export type AcoesPerguntas = {
+  adicionarDoBanco: (
+    bancoIds: string[],
+  ) => Promise<Resposta<{ salvas: number }>>;
+  adicionarPropria: (dados: {
+    tipo: PromptTipo;
+    texto: string;
+    fotoId?: string | null;
+  }) => Promise<Resposta>;
+  mudarEstado: (pergunta: string, estado: PromptEstado) => Promise<Resposta>;
+  apagar: (pergunta: string) => Promise<Resposta>;
+  virarPergunta: (causo: string, texto: string) => Promise<Resposta>;
+  porNaEnquete: (causo: string) => Promise<Resposta<{ adicionado: boolean }>>;
+  urlDoAudio: (causo: string) => Promise<Resposta<{ url: string }>>;
+  abrirEnquete: (candidatos: CandidatoDaEnquete[]) => Promise<Resposta>;
+  encerrarEnquete: (enquete: string) => Promise<Resposta>;
+  salvarDaEnquete: (
+    enquete: string,
+    itens: string[],
+  ) => Promise<Resposta<{ salvas: number }>>;
+  removerVotos: (enquete: string, votante: string) => Promise<Resposta>;
+};
+
+export type AcoesKit = {
+  pegarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
+  trocarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
+};
