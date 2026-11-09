@@ -21,6 +21,20 @@ export const SANGRIA_MM = 3; // em cada lado
 export const MAX_GRAVACAO_MIN = 30; // por gravação
 export const MAX_ARQUIVOS_LOTE = 30; // por upload em lote
 
+// ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
+// 50 MB é o teto por arquivo do plano grátis do Supabase (o PRD pede 100; muda com o Pro).
+// Espelhado em privado.max_audio_bytes() e no limite do bucket "audios".
+export const MAX_AUDIO_MB = 50;
+export const FORMATOS_AUDIO = [
+  "opus",
+  "ogg",
+  "m4a",
+  "mp3",
+  "wav",
+  "webm",
+] as const;
+export const SUBIDAS_SIMULTANEAS = 2; // arquivos subindo ao mesmo tempo
+
 // ── Pessoas ──────────────────────────────────────────────────────────────
 export const MAX_COFACILITADORES = 3; // além do responsável
 
