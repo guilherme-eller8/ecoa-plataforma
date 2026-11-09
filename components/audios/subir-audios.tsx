@@ -338,7 +338,7 @@ function Progresso({ estado, fracao }: { estado: EstadoItem; fracao: number }) {
     estado === "ok"
       ? "Guardado"
       : estado === "erro"
-        ? "Não subiu. A internet caiu?"
+        ? "Não subiu. Tente de novo."
         : `Enviando ${pct}%`;
   return (
     <div className="flex flex-col gap-2">

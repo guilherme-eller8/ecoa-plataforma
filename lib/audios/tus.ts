@@ -9,13 +9,17 @@ import type { AudioPreparado } from "@/lib/livro/tipos";
 const PEDACO = 6 * 1024 * 1024; // o Supabase exige 6 MB
 const ESPERAS = [0, 3000, 5000, 10000, 20000, 60000];
 
-/** https://ref.supabase.co → https://ref.storage.supabase.co/storage/v1/upload/resumable */
+/**
+ * https://ref.supabase.co → https://ref.storage.supabase.co/storage/v1/upload/resumable/sign
+ * Com token assinado (x-signature) o endpoint é o /sign; o /upload/resumable comum ignora o
+ * token e trata o envio como anônimo (403 da RLS de storage.objects).
+ */
 export function endpointTus(urlSupabase: string) {
   const u = new URL(urlSupabase);
   const host = u.hostname.endsWith(".supabase.co")
     ? u.hostname.replace(/\.supabase\.co$/, ".storage.supabase.co")
     : u.host;
-  return `${u.protocol}//${host}/storage/v1/upload/resumable`;
+  return `${u.protocol}//${host}/storage/v1/upload/resumable/sign`;
 }
 
 export type EnviarArquivo = (

@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import {
-  ABAS,
-  TelaPerguntas,
-  type AbaPerguntas,
-} from "@/components/telas/tela-perguntas";
+import { TelaPerguntas } from "@/components/telas/tela-perguntas";
+import { ehAba, type AbaPerguntas } from "@/lib/perguntas/abas";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import {
   causosDoLivro,
@@ -25,9 +22,7 @@ export default function PaginaPerguntas({
   return (
     <Suspense>
       {Promise.all([params, searchParams]).then(([{ id }, busca]) => {
-        const aba = ABAS.includes(busca.aba as AbaPerguntas)
-          ? (busca.aba as AbaPerguntas)
-          : "perguntar";
+        const aba = ehAba(busca.aba) ? busca.aba : "perguntar";
         return <Perguntas id={id} aba={aba} />;
       })}
     </Suspense>

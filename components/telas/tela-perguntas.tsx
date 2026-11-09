@@ -32,14 +32,8 @@ import type { PromptTipo } from "@/lib/supabase/tipos";
 import { falarDuracao } from "@/lib/ui/tempo";
 import { linkWhatsApp, mensagemPergunta } from "@/lib/whatsapp";
 
-export const ABAS = [
-  "perguntar",
-  "enviadas",
-  "respondidas",
-  "causos",
-  "enquete",
-] as const;
-export type AbaPerguntas = (typeof ABAS)[number];
+import type { AbaPerguntas } from "@/lib/perguntas/abas";
+export type { AbaPerguntas };
 
 type Props = {
   livro: LivroDaTela;
