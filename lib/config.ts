@@ -28,3 +28,10 @@ export const MAX_COFACILITADORES = 3; // além do responsável
 export const DOMINIO_APP = "app.ecoamemorias.com.br";
 // O QR impresso aponta para cá. Nunca mudar: livros impressos dependem dele.
 export const DOMINIO_QR = "ouvir.ecoamemorias.com.br";
+
+// ── Lembretes e estimativas ──────────────────────────────────────────────
+// Pergunta enviada há este número de dias sem resposta mostra "Lembrar com carinho".
+export const LEMBRETE_APOS_DIAS = 3;
+// Estimativa de páginas no 21x21 enquanto o livro não é paginado de verdade.
+export const PALAVRAS_POR_PAGINA_ESTIMADA = 320;
+export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
