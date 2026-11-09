@@ -36,7 +36,7 @@ export function TelaFamiliaInvalida() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-5 pt-10">
       <MarcaEcoa />
-      <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
         Este link não vale mais.
       </h1>
       <p className="text-ui-17 text-tinta-2">
@@ -65,7 +65,7 @@ export function TelaFamilia({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-5 pt-8 pb-12">
       <MarcaEcoa />
-      <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
         Livro do {autor}
       </h1>
 
@@ -182,7 +182,7 @@ function Votar({
                 className={
                   "rounded-interno min-h-alvo flex cursor-pointer items-start gap-3 border px-4 py-3 " +
                   (marcado
-                    ? "border-floresta bg-floresta-claro"
+                    ? "border-floresta/40 bg-floresta-claro"
                     : "border-linha bg-papel") +
                   (!marcado && cheio ? " opacity-55" : "")
                 }

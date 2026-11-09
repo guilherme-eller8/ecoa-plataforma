@@ -17,7 +17,7 @@ A integração da Vercel com o GitHub ainda não enxerga este repositório, ent�
 1. Em vercel.com, **Add New → Project**.
 2. Em "Import Git Repository", clique em **Adjust GitHub App Permissions** e libere o repositório `guilherme-eller8/ecoa-plataforma`.
 3. Importe com o nome **`ecoa-plataforma`**. O framework é detectado como Next.js; não mude nada no build.
-4. Antes de clicar em Deploy, abra **Environment Variables** e cadastre estas 4, marcando **Production** e **Preview**:
+4. Antes de clicar em Deploy, abra **Environment Variables** e cadastre estas 6, marcando **Production** e **Preview**:
 
 | Nome | Valor |
 | --- | --- |
@@ -25,6 +25,8 @@ A integração da Vercel com o GitHub ainda não enxerga este repositório, ent�
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Settings → API Keys → aba "Publishable and secret API keys" → `default` (começa com `sb_publishable_`) |
 | `SUPABASE_SECRET_KEY` | mesma tela → **Secret keys** → crie uma chamada `vercel` (começa com `sb_secret_`). Nunca no chat, nunca com `NEXT_PUBLIC_` |
 | `RESEND_API_KEY` | do passo 3 abaixo (chave `app-plataforma`) |
+| `LINKS_VERSAO_ATUAL` | `1` |
+| `LINKS_SEGREDO_V1` | gere com `openssl rand -base64 32`. Assina os links da família (e do autor, no prompt 5). **Nunca edite o valor depois de criado:** todos os links fixados nos grupos param. Para trocar, crie `LINKS_SEGREDO_V2` e mude `LINKS_VERSAO_ATUAL` para `2` |
 
 5. Deploy. Depois, em **Deployments**, abra o deploy do branch `claude/gracious-hypatia-1rdyrv` e copie o domínio que termina em `.vercel.app` (ex.: `ecoa-plataforma-git-claude-…-guilhermeeller7-gmailcoms-projects.vercel.app`). Ele é a **URL do preview** usada nos passos seguintes. Para o branch `claude/gracious-hypatia-1rdyrv`, ela é `ecoa-plataforma-git-c-667868-guilhermeeller7-gmailcoms-projects.vercel.app` (fixa enquanto o branch existir).
 

@@ -1,7 +1,7 @@
 # Configuração inicial, perguntas, causos e enquete da família
 
 - **Autor:** Guilherme Eller (com Claude)
-- **Status:** Revisado (segurança, prontidão e código), aguardando aprovação
+- **Status:** Aprovado (10/11/2026) e implementado
 - **Data:** 2026-11-10
 - **Origem:** prompt 4 da sessão de 09/11/2026 · PRD: M2 (sem co-facilitadores), M3, jornadas do responsável e da família
 - **Revisões:** [segurança](./familia-perguntas-enquete/critic_report.md) · [prontidão](./familia-perguntas-enquete/implementation_readiness_report.md) · [código](./familia-perguntas-enquete/codebase_details_report.md) · [resolução](./familia-perguntas-enquete/resolucao.md)
@@ -348,7 +348,7 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 
 - **8 temas:** `raizes`, `infancia`, `estudos`, `juventude`, `trabalho`, `amor`, `filhos`, `legado`.
 - **Origem:** as 127 do anexo "Banco de Perguntas-Gatilho", mais 23 novas, todas neutras, nos temas mais curtos (`estudos`, `infancia`, `amor`).
-- **Marca `fe: true`:** as 30 marcadas como Fé & Aliança no anexo.
+- **Marca `fe: true`:** as 27 marcadas como Fé & Aliança no anexo, mais 4 que usam vocabulário religioso explícito (legado-04, 10, 20 e 25), para o filtro funcionar. Conferir na revisão.
 - **Ids estáveis:** a revisão pode mudar o texto, mas não o id (`prompts.banco_id` aponta para ele).
 - **`lib/perguntas/banco.ts`:** valida o JSON com zod ao importar e exporta:
   - `TEMAS`;

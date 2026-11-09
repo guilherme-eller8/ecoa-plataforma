@@ -772,9 +772,9 @@ function Resultados({
               {aviso}
             </p>
           ) : null}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3">
             <div
-              className="rounded-controle border-linha-forte flex items-center border"
+              className="rounded-controle border-linha-forte flex items-center self-start border"
               role="group"
               aria-label="Quantas salvar"
             >
@@ -797,7 +797,7 @@ function Resultados({
               </button>
             </div>
             <Botao
-              className="flex-1"
+              larguraTotal
               carregando={pendente}
               disabled={top.length === 0}
               onClick={() =>
@@ -938,10 +938,11 @@ export function TelaPerguntas({
         ← Livro do {livro.autor}
       </Link>
       <div className="flex items-end justify-between gap-4">
-        <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           Perguntas
         </h1>
-        {escrever ? (
+        {/* Uma ação principal por tela: Adicionar só na lista; Causos e Enquete têm a sua. */}
+        {escrever && aba === "perguntar" && paraPerguntar.length > 0 ? (
           <Botao onClick={() => setAdicionar(true)}>Adicionar</Botao>
         ) : null}
       </div>
@@ -949,6 +950,7 @@ export function TelaPerguntas({
 
       <Abas
         rotulo="Perguntas"
+        quebrar
         ativa={aba}
         aoMudar={mudarAba}
         abas={[

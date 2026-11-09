@@ -221,7 +221,7 @@ export default function HomeResponsavel() {
             ].map(([rotulo, valor]) => (
               <div
                 key={rotulo}
-                className="border-linha flex items-center justify-between border-t py-2.5"
+                className="flex items-center justify-between py-2.5"
               >
                 <dt className="text-tinta-2">{rotulo}</dt>
                 <dd className="num text-tinta">{valor}</dd>
@@ -280,7 +280,7 @@ export default function HomeResponsavel() {
               {causos.map((c) => (
                 <li
                   key={c.id}
-                  className="border-linha flex flex-col gap-2 border-t py-4 first:border-t-0 first:pt-0"
+                  className="flex flex-col gap-2 py-4 first:pt-0"
                 >
                   <p className="text-ui-15 text-tinta-2">
                     {c.quem}, {c.relacao}
@@ -323,7 +323,7 @@ export default function HomeResponsavel() {
               {enviadas.map((p) => (
                 <li
                   key={p.id}
-                  className="border-linha flex flex-col gap-1 border-t py-4 first:border-t-0 first:pt-0"
+                  className="flex flex-col gap-1 py-4 first:pt-0"
                 >
                   <p className="font-livro text-livro-20 text-tinta">
                     {p.texto}

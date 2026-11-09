@@ -72,7 +72,7 @@ export function EscolherDoBanco({
                 className={
                   "rounded-interno min-h-alvo flex cursor-pointer items-start gap-3 border px-4 py-3 " +
                   (marcada
-                    ? "border-floresta bg-floresta-claro"
+                    ? "border-floresta/40 bg-floresta-claro"
                     : "border-linha bg-papel")
                 }
               >

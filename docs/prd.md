@@ -61,7 +61,7 @@ Três pessoas usam a plataforma, e nenhuma precisa de tutorial.
 
 1. **Compra.** Paga (Pix manual na onda 1; Mercado Pago na onda 2) e recebe o e-mail de acesso.
 2. **Entra com Google.**
-3. **Configuração inicial, toda pulável.** Quem é o autor (nome, apelido, parentesco). "Me conte sobre ele", por texto ou áudio, para a IA criar glossário, temas e perguntas sugeridas. Fotos iniciais. Na onda 2, quem mais vai ajudar (co-facilitadores).
+3. **Configuração inicial, toda pulável.** Quem é o autor (nome, apelido, parentesco). Primeiras perguntas: as 10 do parentesco já marcadas, para trocar ou escrever as suas. Fotos iniciais. Depois do laboratório de IA: "Me conte sobre ele", para a IA criar glossário, temas e perguntas sugeridas. Na onda 2, quem mais vai ajudar (co-facilitadores).
 4. **Kit de início.** A plataforma entrega dois textos prontos: o convite do grupo de WhatsApp da família, com o link de sugerir causos, e a mensagem para o autor, com o link pessoal dele.
 5. **Coleta, em ciclos.** Escolhe uma pergunta ou um causo e decide: *Enviar ao autor* (abre o WhatsApp do responsável com a mensagem pronta), *Gravar agora* (modo conversa) ou *Subir áudios* (um ou vários).
 6. **Acompanha na tela.** O card da história mostra "Ouvindo" e depois "Escrevendo", e o texto aparece sendo escrito.
@@ -77,7 +77,7 @@ Três pessoas usam a plataforma, e nenhuma precisa de tutorial.
 
 ### Família
 
-1. Recebe no grupo o link *Sugira um causo*, informa o nome e grava um áudio ou escreve: "Pede pra ele contar aquela vez em Guarapari que dormiu demais e perdeu a praia".
+1. Recebe no grupo o link da família (`/f/…`, fixado no grupo). Vota nas perguntas da enquete aberta, se houver, e toca em *Sugerir um causo*: informa o nome e grava um áudio ou escreve: "Pede pra ele contar aquela vez em Guarapari que dormiu demais e perdeu a praia".
 2. A sugestão chega ao responsável exatamente como foi enviada, sem IA. Com 1 toque ela vira pergunta, e o áudio de quem sugeriu pode tocar para o autor na tela de gravação ("A Ana pediu:").
 3. Onda 2: recebe o link *Deixe uma mensagem para o livro*, grava ou escreve, anexa uma foto e confere o texto antes de enviar.
 
@@ -112,7 +112,8 @@ Dez módulos, cada um com a onda em que entra e critérios de aceite verificáve
 ### M2. Configuração inicial (onda 1; co-facilitadores na onda 2)
 
 - **Quem é:** nome (o único campo obrigatório), apelido, parentesco (pai, mãe, avô, avó, tio, tia, outro) e foto.
-- **Me conte sobre ele:** texto livre ou áudio de até 5 minutos. A IA extrai o glossário (pessoas, lugares, apelidos), os grandes temas da vida e 10 perguntas personalizadas. O glossário pode ser revisado depois, sem obrigação.
+- **Primeiras perguntas:** as 10 iniciais do parentesco (banco de perguntas) já marcadas; desmarcar, trocar por outras do banco ou escrever perguntas e causos próprios.
+- **Me conte sobre ele (depois do laboratório de IA, prompt 1):** texto livre ou áudio de até 5 minutos. A IA extrai o glossário (pessoas, lugares, apelidos), os grandes temas da vida e 10 perguntas personalizadas. O glossário pode ser revisado depois, sem obrigação.
 - **Fotos:** várias de uma vez. Ficam no acervo e podem virar perguntas com foto.
 - **Quem mais ajuda (onda 2):** convite para até 3 co-facilitadores, por e-mail ou link.
 - Todo passo tem *Pular* e *Depois*.
@@ -120,12 +121,15 @@ Dez módulos, cada um com a onda em que entra e critérios de aceite verificáve
 
 ### M3. Perguntas e causos (onda 1)
 
-- Banco de 150 perguntas em 8 temas, mais as perguntas personalizadas do M2, as próprias do responsável e as perguntas com foto.
-- **Causos da família:** link fixo para o grupo. A pessoa informa o nome e grava um áudio de até 3 minutos ou escreve. A sugestão chega na aba *Causos* exatamente como foi enviada, sem IA.
+- Banco de 150 perguntas em 8 temas (`supabase/seed/perguntas.json`, perguntas de fé marcadas e fora das iniciais), mais as personalizadas do M2, as próprias do responsável e as perguntas com foto.
+- **A lista é a base do livro, não uma fila de envio.** Abas: *Para perguntar*, *Enviadas*, *Respondidas*, *Causos* e *Enquete*. Cada pergunta pode ser enviada ao autor ou gravada ao vivo (modo conversa, prompt 5).
+- **Link da família** (`/f/[token]`): link fixo para o grupo, sem login. Mostra a enquete aberta, se houver, e o botão *Sugerir um causo*.
+- **Causos da família:** a pessoa informa o nome e grava um áudio de até 3 minutos ou escreve, com consentimento. A sugestão chega na aba *Causos* exatamente como foi enviada, sem IA.
+- **Enquete:** o responsável escolhe os candidatos (do banco, causos ou texto próprio) e abre; quem abre o link informa o nome e marca até 5 itens (um conjunto de votos por aparelho; uma enquete aberta por livro). Ranking que se atualiza sozinho, com votos e nomes; remover os votos de uma pessoa; encerrar; salvar as N mais votadas com 1 toque ou uma a uma, tudo em *Para perguntar*.
 - **Causo vira pergunta** com 1 toque. A pergunta pode levar o áudio de quem sugeriu, que toca para o autor na tela de gravação.
 - Estados: `para_enviar`, `enviada`, `respondida`, `pulada`.
 - *Enviar ao autor* abre o WhatsApp do responsável com a mensagem pronta e o link pessoal do autor aberto naquela pergunta.
-- **Aceite:** um causo em áudio enviado pelo link aparece tocável na aba *Causos* em menos de 10 segundos.
+- **Aceite:** um causo em áudio enviado pelo link aparece tocável na aba *Causos* em menos de 10 segundos. 5 pessoas votam de celulares diferentes, o ranking muda na tela e as 3 mais votadas vão para *Para perguntar* com 1 toque.
 
 ### M4. Coleta de áudio (onda 1)
 
@@ -384,7 +388,7 @@ Voz de idoso e segredo de família são os dados mais sensíveis que a Ecoa vai 
 
 Tudo abaixo foi cortado de propósito e volta quando um cliente real pedir.
 
-**Fora das duas ondas:** mural com reações e comentários, checkout próprio de cartão, integração com gráfica, gravação em vídeo, app nativo, e-book, enquetes, indicação e cartão-presente, API do WhatsApp, 3ª pessoa, leitura de conversa exportada do WhatsApp, versão B2B para residenciais.
+**Fora das duas ondas:** mural com reações e comentários, checkout próprio de cartão, integração com gráfica, gravação em vídeo, app nativo, e-book, indicação e cartão-presente, API do WhatsApp, 3ª pessoa, leitura de conversa exportada do WhatsApp, versão B2B para residenciais.
 
 ### Pendências do fundador
 
@@ -392,7 +396,7 @@ Tudo abaixo foi cortado de propósito e volta quando um cliente real pedir.
 - [ ] **Parcelamento:** 12x sem juros (a Ecoa absorve a taxa) ou com juros para o cliente.
 - [ ] **Cotação da gráfica:** 80 páginas, capa dura, colorido, 21 × 21 cm. Define a margem dos R$ 467, o valor por página e por cópia extra, o modo de cor, a lombada e o múltiplo de páginas.
 - [ ] **Domínio `ecoa-memorias.com.br`** registrado e apontado para a Vercel (os subdomínios `app` e `ouvir` dependem dele).
-- [ ] **Banco de 150 perguntas:** rascunho gerado no prompt 4, revisão da tia Caia.
+- [ ] **Banco de 150 perguntas:** rascunho gerado no prompt 4 (`supabase/seed/perguntas.json`, `status: "rascunho"`), revisão da tia Caia.
 - [ ] **Padrão-ouro:** 5 a 10 histórias editadas pela tia Caia antes do prompt 1 terminar.
 - [ ] **Áudios de teste:** 5 áudios reais dos pais dos 2 parceiros de design, incluindo conversa, ruído e áudio encaminhado do WhatsApp.
 
@@ -476,6 +480,8 @@ Gate de design. Aceite: ativo um plano no admin, recebo o e-mail, entro com Goog
 ```
 
 ### Prompt 4. Configuração inicial, perguntas e causos
+
+> Executado em 10/11/2026 com mudanças: sem "Me conte sobre ele" (depende do prompt 1), com enquete da família e link `/f/[token]`. Ver `docs/designs/familia-perguntas-enquete.md`.
 
 ```
 Leia docs/prd.md: M2 (sem co-facilitadores), M3 e a jornada do responsável.

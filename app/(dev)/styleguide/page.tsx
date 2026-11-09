@@ -107,7 +107,7 @@ function Secao({
     <section
       id={id}
       aria-labelledby={`t-${id}`}
-      className="border-linha flex scroll-mt-8 flex-col gap-6 border-t pt-10"
+      className="flex scroll-mt-8 flex-col gap-6 pt-16"
     >
       <h2 id={`t-${id}`} className="font-livro text-livro-28 text-tinta">
         {titulo}

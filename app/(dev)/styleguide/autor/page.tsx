@@ -141,7 +141,7 @@ export default function AreaDoAutor() {
               {outrasPerguntas.map((p) => (
                 <li
                   key={p.id}
-                  className="border-linha border-t first:border-t-0"
+                  className="py-1"
                 >
                   <a
                     href="#"

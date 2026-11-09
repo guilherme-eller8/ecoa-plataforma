@@ -25,6 +25,8 @@ type Props = {
   aoMudar?: (id: string) => void;
   rotulo: string; // nome do grupo, para o leitor de tela
   titulo?: ReactNode; // quando há, fica na mesma linha das abas (desktop)
+  // Quebra a linha de abas em vez de rolar de lado: todas ficam visíveis no celular.
+  quebrar?: boolean;
   className?: string;
 };
 
@@ -35,6 +37,7 @@ export function Abas({
   aoMudar,
   rotulo,
   titulo,
+  quebrar = false,
   className = "",
 }: Props) {
   const [ativaInterna, setAtivaInterna] = useState(inicial ?? abas[0]?.id);
@@ -71,7 +74,11 @@ export function Abas({
         <div
           role="tablist"
           aria-label={rotulo}
-          className="-mx-4 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+          className={
+            quebrar
+              ? "flex flex-wrap gap-1"
+              : "-mx-4 flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+          }
         >
           {abas.map((aba, i) => {
             const selecionada = aba.id === ativa;

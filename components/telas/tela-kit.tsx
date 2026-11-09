@@ -33,10 +33,12 @@ function Cartao({
   titulo,
   texto,
   enviar,
+  secundario = false,
 }: {
   titulo: string;
   texto: string;
   enviar: string;
+  secundario?: boolean;
 }) {
   return (
     <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
@@ -49,7 +51,9 @@ function Cartao({
           href={linkWhatsApp(texto)}
           target="_blank"
           rel="noreferrer"
-          className={classesDoBotao()}
+          className={classesDoBotao({
+            variante: secundario ? "secundario" : "principal",
+          })}
         >
           <IconeEnviar tamanho={20} />
           <span>{enviar}</span>
@@ -96,7 +100,7 @@ export function TelaKit({
       >
         ← Livro do {livro.autor}
       </Link>
-      <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
         Chame a família
       </h1>
 
@@ -130,6 +134,7 @@ export function TelaKit({
         titulo={`Para o ${livro.autor}`}
         texto={mensagemAoAutor({ autor: livro.autor, link: linkAutor })}
         enviar={`Enviar ao ${livro.autor}`}
+        secundario
       />
 
       {erro ? (

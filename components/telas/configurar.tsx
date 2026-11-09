@@ -84,7 +84,7 @@ function Moldura({
       <p className="text-ui-15 text-tinta-2">
         Passo {indice} de {PASSOS.length}
       </p>
-      <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
         {titulo}
       </h1>
       <div className="flex flex-1 flex-col gap-6">{children}</div>
@@ -252,7 +252,7 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
                 className={
                   "rounded-interno min-h-alvo flex cursor-pointer items-start gap-3 border px-4 py-3 " +
                   (marcada
-                    ? "border-floresta bg-floresta-claro"
+                    ? "border-floresta/40 bg-floresta-claro"
                     : "border-linha bg-papel")
                 }
               >
@@ -276,7 +276,7 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
         {proprias.map((p, i) => (
           <li
             key={`p${i}`}
-            className="rounded-interno border-floresta bg-floresta-claro flex items-start gap-3 border px-4 py-3"
+            className="rounded-interno border-floresta/40 bg-floresta-claro flex items-start gap-3 border px-4 py-3"
           >
             <span className="font-livro text-livro-20 text-tinta flex-1">
               {p.texto}

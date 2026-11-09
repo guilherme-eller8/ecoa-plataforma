@@ -13,7 +13,7 @@ export function conviteDoGrupo({
   link: string;
 }) {
   return [
-    `Estamos fazendo o livro de memórias do ${autor}. 📖`,
+    `Estamos fazendo o livro de memórias do ${autor}.`,
     `Por este link você vota nas perguntas e sugere um causo para ele contar:`,
     link,
     `Fixe esta mensagem no grupo. O link vale até o livro ficar pronto.`,
