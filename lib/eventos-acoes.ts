@@ -10,6 +10,19 @@ export const ACOES = [
   "editou",
   "sugeriu",
   "gerou",
+  // Prompt 4: configuração, perguntas, causos e enquete.
+  "configurou",
+  "subiu_fotos",
+  "adicionou_pergunta",
+  "enviou_pergunta",
+  "gerou_link_familia",
+  "trocou_link_familia",
+  "virou_pergunta",
+  "abriu_enquete",
+  "encerrou_enquete",
+  "enquete_salvou",
+  "removeu_voto",
+  "votou", // família; detalhes: { votante }
 ] as const;
 
 export const PAPEIS = [
