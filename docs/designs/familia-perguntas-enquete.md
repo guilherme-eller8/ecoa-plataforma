@@ -1,10 +1,10 @@
 # Configuração inicial, perguntas, causos e enquete da família
 
 - **Autor:** Guilherme Eller (com Claude)
-- **Status:** Proposto, aguardando aprovação
-- **Data:** 2026-11-10 (revisado depois da revisão de segurança)
+- **Status:** Revisado (segurança, prontidão e código), aguardando aprovação
+- **Data:** 2026-11-10
 - **Origem:** prompt 4 da sessão de 09/11/2026 · PRD: M2 (sem co-facilitadores), M3, jornadas do responsável e da família
-- **Revisões:** [design](./familia-perguntas-enquete/critic_report.md) · [zoom out](./familia-perguntas-enquete/zoom_out_report.md) · [prontidão](./familia-perguntas-enquete/implementation_readiness_report.md) · [código](./familia-perguntas-enquete/codebase_details_report.md) · [resolução](./familia-perguntas-enquete/resolucao.md)
+- **Revisões:** [segurança](./familia-perguntas-enquete/critic_report.md) · [prontidão](./familia-perguntas-enquete/implementation_readiness_report.md) · [código](./familia-perguntas-enquete/codebase_details_report.md) · [resolução](./familia-perguntas-enquete/resolucao.md)
 
 ---
 
@@ -38,7 +38,7 @@ O PRD resolvia a escolha com "Me conte sobre ele" e perguntas geradas por IA, ma
 | Link `/c/[token]`, só para causos | Link `/f/[token]`, da família: enquete e causo | Um link fixado no grupo, não dois |
 | Tabelas `book_context` e `glossary_entries` | Ficam para quando o "Me conte sobre ele" voltar | Sem uso neste prompt |
 | Realtime nas etapas ao vivo | Neste prompt, "ao vivo" é consulta a cada 4 s com a tela visível | O Realtime em tabela com votos vaza eventos de DELETE entre livros (revisão de segurança, M3); com 2 famílias, a consulta é barata e simples. O Realtime volta no prompt 6, com Broadcast por livro |
-| CLAUDE.md: token de link com "128 bits aleatórios" | Token **imprevisível** de ≥128 bits, derivado por HMAC com segredo versionado; só o hash no banco | Aprovado pelo Guilherme em 10/11/2026: o link fixado no grupo precisa ser mostrado de novo. O CLAUDE.md é ajustado no mesmo PR |
+| CLAUDE.md: token de link com "128 bits aleatórios" | Token **imprevisível** de ≥128 bits, derivado por HMAC com segredo versionado; só o hash no banco | Aprovado pelo Guilherme em 10/11/2026: o link fixado no grupo precisa ser mostrado de novo. O CLAUDE.md já foi ajustado (commit do design) |
 
 O `docs/prd.md` é atualizado no mesmo PR (M2, M3, a jornada da família e "Fora do escopo").
 
@@ -49,12 +49,12 @@ O `docs/prd.md` é atualizado no mesmo PR (M2, M3, a jornada da família e "Fora
   - pelo menos 5 pessoas votam;
   - pelo menos 3 perguntas saem da enquete para Para enviar e depois são enviadas ao autor.
 - **Critério de morte:** menos de 3 votantes em 7 dias. A aba Enquete sai do menu, e as tabelas ficam (sem custo).
-- **Como medir:** pelos eventos `votou` e `enquete_salvou` em `events` e pelo estado das perguntas com `origem = 'enquete'`.
+- **Como medir:** `count(distinct votante)` em `poll_votes` e o estado das perguntas com `origem = 'enquete'`. Os eventos `votou` (com o `votante` em `detalhes`) e `enquete_salvou` dão a linha do tempo.
 
 ## Objetivos
 
-1. Configuro o livro só com o nome em menos de 30 s. O caminho é: nome → Continuar → Salvar perguntas → Pular fotos → kit.
-   - Verificação: cronometrado no aceite; o e2e confere que o caminho tem 4 toques.
+1. Configuro o livro só com o nome em menos de 30 s. O caminho é: digitar o nome → Continuar → Salvar 10 perguntas → Pular fotos → kit (3 toques além de digitar).
+   - Verificação: cronometrado no aceite; o e2e no styleguide confere que cada passo tem a ação principal visível sem rolar, a 390 px.
 2. As 10 perguntas do parentesco chegam marcadas. Posso desmarcar, trocar por outras do banco e escrever perguntas ou causos próprios.
    - Verificação: e2e no styleguide; teste unitário de `iniciaisDo`.
 3. Cada passo tem Pular e Depois. Depois deixa um cartão "Continuar configuração" na home do livro.
@@ -66,7 +66,7 @@ O `docs/prd.md` é atualizado no mesmo PR (M2, M3, a jornada da família e "Fora
 6. Pelo link da família, alguém sem login sugere um causo com nome, áudio de até 3 min ou texto, e consentimento. O causo chega na aba Causos exatamente como enviado, sem IA, tocável em menos de 10 s (a aba se atualiza a cada 4 s).
    - Verificação: `familia.test.ts`; manual no aceite.
 7. Virar pergunta cria a pergunta ligada ao causo, e o áudio de quem sugeriu continua acessível pela pergunta.
-   - Verificação: teste de banco.
+   - Verificação: `rls.test.ts` (inserir o prompt com `causo_id` e mudar o causo para `virou_pergunta` com a sessão; com o causo de outro livro, a FK recusa).
 8. Enquete:
    - o responsável escolhe de 2 a 30 candidatos e abre;
    - quem abre o link informa o nome e marca até `VOTOS_POR_PESSOA` (5) itens;
@@ -81,6 +81,7 @@ O `docs/prd.md` é atualizado no mesmo PR (M2, M3, a jornada da família e "Fora
    - tudo vai para Para enviar, sem duplicar.
    - Verificação: `ranking.test.ts`, teste de banco de `enquete_salvar`, aceite com 5 aparelhos.
 10. Kit de início: o convite do grupo com o link da família e a mensagem para o autor com o link pessoal, que é um placeholder até o prompt 5. Enviar ao autor abre o `wa.me`.
+    - Verificação: `whatsapp.test.ts` (textos e `wa.me`), `links.test.ts` (token estável), e2e do kit no styleguide (os dois `href` começam com `https://wa.me/?text=`).
 11. O token do autor não lê `polls`, `poll_votes` nem `causos`. O link da família só alcança a enquete e o envio de causos do próprio livro.
     - Verificação: `familia.test.ts` e `autor-isolamento.test.ts`.
 
@@ -217,7 +218,7 @@ Storage: buckets privados acervo e causos, sem políticas; só URLs assinadas pe
 | `enquete_salvar(enquete, itens[])` | authenticated | Cria as perguntas e liga os itens, sem duplicar, mesmo com toque duplo |
 
 - Todas são `security definer`, com `search_path = ''`. As de `authenticated` começam com `privado.membro_editando(livro)`, que confere `eh_membro` e `livro_editavel`.
-- Os erros saem só como códigos: `link_invalido`, `livro_fechado`, `dados_invalidos`, `quantidade_invalida`, `sem_enquete`, `item_invalido`, `limite_votantes`, `limite_por_hora`, `limite_causos`, `sem_consentimento`, `sem_permissao`, `enquete_aberta`, `enquete_encerrada`, `limite_itens`, `cota_fotos` e `transicao_invalida`. `lib/erros-banco.ts` traduz cada um para uma frase da tela. Um teste confere que todo código levantado no SQL tem tradução.
+- Os erros saem só como códigos: `link_invalido`, `livro_fechado`, `dados_invalidos`, `quantidade_invalida`, `sem_enquete`, `item_invalido`, `limite_votantes`, `limite_por_hora`, `limite_causos`, `sem_consentimento`, `sem_permissao`, `enquete_aberta`, `enquete_encerrada`, `limite_itens`, `cota_fotos`, `transicao_invalida` e `link_ja_revogado`. Os erros que o Postgres levanta sozinho (constraint, cast, RLS) têm uma frase de reserva por SQLSTATE (ver Comportamento detalhado). `lib/erros-banco.ts` traduz cada um para uma frase da tela. Um teste confere que todo código levantado no SQL tem tradução.
 - A entrada tem o tamanho conferido antes de qualquer processamento.
 - O servidor chama as funções `familia_*` com um cliente **anon** (chave pública, sem sessão). Se o código do servidor errar, a única porta continua sendo a função. A chave secreta só chama as funções `servico_*` e cria URLs assinadas no Storage.
 
@@ -232,7 +233,7 @@ O token do autor ainda não tem uso (prompt 5). O isolamento pedido é garantido
 
 ### Links sem login: token derivado por HMAC, com versão de chave
 
-- `token = "v" + versao + "." + base64url(HMAC-SHA256(LINKS_SEGREDO_V{versao}, "familia:" + family_access.id))`, com o HMAC cortado em 22 caracteres (132 bits). Exemplo: `v1.Xk3…`.
+- `token = "v" + versao + "_" + base64url(HMAC-SHA256(LINKS_SEGREDO_V{versao}, "familia:" + family_access.id))`, com o HMAC cortado em 22 caracteres (132 bits). O token inteiro tem 25 caracteres. Exemplo: `v1_Xk3…`. Sem ponto: o `matcher` do `proxy.ts` exclui caminhos que terminam em `.<letras>` (arquivos estáticos).
 - O banco guarda `token_hash = sha256(token)` em hexadecimal e `chave_versao`. O token puro nunca é gravado.
 - **Gerar** (toque em "Pegar o link do grupo", na primeira visita ao kit, numa server action e não no GET):
   1. O servidor confere a sessão.
@@ -245,8 +246,8 @@ O token do autor ainda não tem uso (prompt 5). O isolamento pedido é garantido
   - os links ativos continuam valendo com a V1 até serem trocados;
   - nunca editar o valor de uma versão existente.
 - **Por quê:** um link fixado no grupo precisa ser mostrado de novo semanas depois. Mostrar só uma vez obrigaria a trocar o link do grupo toda vez que alguém o perdesse.
-- O CLAUDE.md passa a dizer "token imprevisível de ≥128 bits, só o hash no banco". O prompt 5 usa o mesmo esquema para o autor (`"autor:" + id`).
-- `lib/env-servidor.ts` valida `LINKS_SEGREDO_V1` (≥32 caracteres) e `LINKS_VERSAO_ATUAL`.
+- O CLAUDE.md já diz "imprevisíveis, com 128 bits ou mais, só o hash". O prompt 5 usa o mesmo esquema para o autor (`"autor:" + id`).
+- `envLinks()`, em `lib/env-links.ts` (separado de `envServidor()`, para que faltar o segredo não derrube o admin nem o e-mail), valida `LINKS_VERSAO_ATUAL` e toda `LINKS_SEGREDO_V1` … `V{atual}` (≥32 caracteres cada).
 
 ### Voto por aparelho
 
@@ -265,7 +266,7 @@ O token do autor ainda não tem uso (prompt 5). O isolamento pedido é garantido
 
 ### Ranking
 
-- `lib/enquete/ranking.ts` (função pura) recebe os itens e os votos e devolve, por item: total, nomes (únicos, em ordem de chegada), `votante` de cada nome e posição. Ordem: mais votos primeiro; no empate, a ordem em que o item foi criado.
+- `lib/enquete/ranking.ts` (função pura) recebe os itens e os votos e devolve, por item: total, uma entrada por `votante` (nome e id, em ordem de chegada) e posição. Ordem: mais votos primeiro; no empate, `poll_items.ordem`.
 - `topN(ranking, n)` devolve os itens com pelo menos 1 voto, até N. "Salvar as N mais votadas" usa esse resultado. Um empate na fronteira não estica a lista: o critério é a ordem, mostrado na tela.
 - Na tela, N começa em 3 e vai de 1 a 10 (`− 3 +`).
 - "Ao vivo": `components/livro/atualizar-sozinho.tsx` chama `router.refresh()` a cada 4 s enquanto a aba Enquete ou Causos está aberta e a página visível.
@@ -289,7 +290,7 @@ O token do autor ainda não tem uso (prompt 5). O isolamento pedido é garantido
      - chama `servico_confirmar_audio_causo` com a duração medida no aparelho.
   - Até o passo 4, o causo não aparece na aba. Se o upload falhar, a tela oferece "Tentar de novo" (passos 2 a 4, por até 30 min).
 - **Envio só com texto:** passo 1, sem áudio, e pronto.
-- **Aba Causos:** nome, quando chegou, texto ou player (URL assinada de 1 hora, gerada no servidor depois de a sessão ler o causo pela RLS). Botões Virar pergunta e Pôr na enquete. Os causos já usados mostram o selo do estado.
+- **Aba Causos:** nome, quando chegou, texto ou player. A URL assinada de 1 hora é pedida no toque em Ouvir, depois de a sessão ler o causo pela RLS (ver Comportamento detalhado). Botões Virar pergunta e Pôr na enquete. Os causos já usados mostram o selo do estado.
 - **Virar pergunta:** abre a folha com o texto pré-preenchido (o texto do causo, ou "Conte a história que {nome} pediu"), editável. Salvar faz duas coisas:
   - insere o prompt com `origem = 'causo'` e `causo_id`;
   - muda o causo para `virou_pergunta`.
@@ -316,16 +317,16 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 - **Estado em `books.configuracao`:** `{ "quem": "feito"|"pulado"|"depois", "perguntas": …, "fotos": … }`.
 - **Regras** em `lib/livro/configuracao.ts`, funções puras e testadas:
   - `proximoPasso(cfg)`: o primeiro passo sem estado, ou `null`;
-  - `precisaConfigurar(cfg)`: `{}` leva ao passo 1 na primeira entrada;
-  - `pendentes(cfg)`: os passos marcados como `depois`, para o cartão da home.
+  - `precisaConfigurar(cfg, plano)`: só `{}` com plano ativo leva ao passo 1 na primeira entrada;
+  - `pendentes(cfg)`: os passos `depois` e os sem estado, para o cartão da home.
 - **Rodapé de todo passo:** a ação principal; **Pular** (texto) marca `pulado` e avança; **Depois** (texto) marca `depois` e volta para a home.
 - **Passo 1, Quem é:**
-  - Nome (já preenchido com `autor_nome`, obrigatório), Apelido ("Como a família chama", opcional) e Parentesco: chips Pai, Mãe, Avô, Avó, Tio, Tia, Outro (seletor do P2, opcional).
+  - Nome (já preenchido com `autor_nome`, obrigatório), Apelido ("Como a família chama", opcional) e Parentesco: `Seletor` do P2 (`<select>`) com Pai, Mãe, Avô, Avó, Tio, Tia e Outro, opcional.
   - "Pôr uma foto" é opcional, um botão secundário.
 - **Passo 2, Primeiras perguntas:**
   - lista com caixas, as 10 de `iniciaisDo(parentesco ?? "outro")` marcadas;
   - botões Trocar (folha com o banco: temas em chips, filtro Fé e busca simples) e "Escrever a minha" (folha: Pergunta ou Causo, e o texto);
-  - ação principal: "Salvar N perguntas", que insere em `prompts` (`origem` banco ou propria) e ignora as do banco que já estão na lista.
+  - ação principal: "Salvar N perguntas", que insere em `prompts` (`origem` banco ou propria) e ignora as do banco que já estão na lista (lê os `banco_id` antes e filtra). Com N = 0, o botão fica desabilitado.
 - **Passo 3, Fotos:** "Escolher fotos", progresso e miniaturas. Ação principal Continuar.
 - **Fim:** vai para `/livro/[id]/kit`.
 - O texto das perguntas troca "ele/ela" pelo apelido quando o JSON usa `{apelido}`. No rascunho, nenhuma pergunta usa `{apelido}`: todas estão em 2ª pessoa, porque o autor é quem lê.
@@ -384,6 +385,103 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 - **Mensagens de WhatsApp** em `lib/whatsapp.ts`, funções puras: `linkWhatsApp(texto)`, `conviteDoGrupo({ autor, link })` e `mensagemAoAutor({ autor, link })`.
 - **Placeholder do link do autor** em `lib/links.ts`: `linkDoAutor()` devolve `urlDoApp() + "/a/em-breve"` com o comentário `// TODO(prompt 5)`. A rota `/a/em-breve` mostra "Seu link chega em breve".
 
+### Comportamento detalhado (revisão de prontidão)
+
+**Erros na tela:**
+- Toda server action devolve o `Resultado` de `lib/resultado.ts` (`{ ok, mensagem }`). O erro aparece como `Aviso` logo abaixo da ação que o gerou, e o formulário mantém o que foi digitado.
+- `lib/erros-banco.ts` traduz:
+  - primeiro o código nosso (a lista de "Quem pode o quê", mais `link_ja_revogado`);
+  - depois o SQLSTATE de reserva: `23505` "Isso já foi feito, atualize a tela"; `23514`/`22P02` "Algo não está certo, confira e tente de novo"; `42501` "Este livro não aceita mudanças agora";
+  - por fim, uma frase genérica.
+- UPDATE e DELETE pela sessão usam `.select("id")`. Zero linhas devolvidas vira `livro_fechado` (plano vencido) e nunca "salvo".
+- Leituras listam as colunas: `select('*')` em `poll_votes`, `polls` e `family_access` dá permission denied por causa do grant por coluna.
+
+**Estados vazios** (uma frase e, quando cabe, um botão):
+
+| Lugar | Texto | Botão |
+| --- | --- | --- |
+| Para enviar | "Escolha o que perguntar ao Jair." | Adicionar |
+| Enviadas | "Nada enviado ainda." | — |
+| Respondidas | "As respostas do Jair aparecem aqui." (fica vazia até o prompt 5) | — |
+| Causos | "Os causos que a família sugerir chegam aqui." | Convidar a família (kit) |
+| Enquete, nunca aberta | "Deixe a família votar no que perguntar." | Nova enquete |
+| Enquete encerrada | Mostra o resultado da última | Nova enquete |
+| `/f` sem enquete | Só "Sugerir um causo" | — |
+| `/f` com o livro fechado | "Este livro não está recebendo sugestões agora." | nenhum |
+| `/f` com token inválido | "Este link não vale mais. Peça o novo no grupo." | nenhum |
+
+- `/f` com token inválido sai com status 200 e `noindex`. Com `cacheComponents`, o `notFound()` dentro de `<Suspense>` vira 200 (o `lib/rotas.ts` já registra isso). Validar no proxy custaria uma chamada ao banco por acesso.
+
+**Perguntas:**
+- **Puladas:** ficam em Para enviar, num grupo recolhido "Puladas (n)" no fim, com "Voltar para a lista".
+- **Enviadas:** cada cartão tem "Desfazer envio" (`enviada → para_enviar`).
+- **Enviar ao autor:** é um `<a href="https://wa.me/?text=…" target="_blank">`, para o celular abrir o WhatsApp no toque. No mesmo toque, sem esperar, a action marca a pergunta como `enviada`. Se a action falhar, um aviso diz "Não marquei como enviada" e oferece "Marcar agora".
+- **Mensagens:** todas saem de `lib/whatsapp.ts`. O `demo-folha.tsx` do styleguide passa a usar a mesma função.
+
+**Passo 2 (primeiras perguntas):**
+- "Salvar N perguntas" fica desabilitado com N = 0. Nesse caso a saída é Pular.
+- Antes do insert, a action lê os `banco_id` já existentes no livro e filtra. O upsert do PostgREST não alcança o índice parcial.
+- Uma pergunta escrita com mais de 500 caracteres é recusada no campo, com o contador visível.
+
+**Configuração:**
+- `precisaConfigurar(cfg, plano)` é verdadeiro só com `cfg = {}` **e** plano ativo. Só nesse caso a primeira entrada leva ao passo 1.
+- `pendentes(cfg)` lista os passos `depois` **e** os sem estado. O cartão "Continuar configuração" da home mostra o primeiro deles.
+- Quem fecha o app no meio do caminho encontra o cartão, não um redirecionamento: a plataforma lembra sem insistir.
+
+**Nova enquete:**
+- Os candidatos vêm de três fontes:
+  - do banco (as que ainda não estão em perguntas);
+  - texto próprio;
+  - causos `novo` ou `na_enquete`.
+- Perguntas que já estão em Para enviar não entram como candidatas (evita duplicata, porque o `on conflict` só protege `banco_id`).
+- Um causo vira candidato com o texto dele cortado em 500 caracteres. Um causo só de áudio vira "Conte a história que {nome} pediu".
+- "Salvar" funciona com a enquete aberta ou encerrada.
+- Um item de causo salvo muda o causo para `virou_pergunta`.
+
+**Ranking:**
+- Uma entrada por `votante`: duas "Ana" aparecem duas vezes, como no CUJ 6.
+- No empate, vale `poll_items.ordem`.
+
+**Áudio do causo:**
+- **Player:** a URL assinada é pedida só no toque em Ouvir (server action `urlDoAudio(causo)`). Fica guardada no cliente por `causo.id` até vencer (1 hora). O `router.refresh()` a cada 4 s não reinicia o player, e a atualização pausa enquanto há áudio tocando.
+- **Tentar de novo:** primeiro chama `confirmarAudio`. Só pede uma nova URL se o arquivo não existir (`storage.from('causos').info(caminho)`).
+- **`contentType`:** sobe sem `;codecs=` (`audio/webm` ou `audio/mp4`). O tamanho é conferido pelo `info()` antes de confirmar.
+- **Gravar e Escrever são exclusivos:** o banco recusa os dois juntos (`dados_invalidos`).
+- **Nome lembrado:** fica em `localStorage` (`ecoa_nome`), dentro de try/catch.
+
+**Fotos:**
+- `prepararFotos` e `registrarFotos` ficam em `app/livro/[id]/fotos/acoes.ts` e servem ao passo 1, ao passo 3 e à folha "Com foto".
+- `registrarFotos` registra só as que subiram. Cada falha mostra "Tentar de novo" na miniatura.
+- Um arquivo que subiu e não foi registrado fica órfão. É aceito, porque só membro sobe e o limite de 30 por envio vale.
+
+**Eventos e medição:**
+- `familia_votar` e `familia_enviar_causo` devolvem o `livro` (e o `votante`). O evento sai com `book_id` e `detalhes: { votante }`.
+- A hipótese é medida por `count(distinct votante)` em `poll_votes` e pelas perguntas com `origem = 'enquete'`.
+
+**Next 16:**
+- As rotas novas seguem o padrão de `app/livro/[id]/page.tsx`: `params.then` dentro de `<Suspense>`.
+- `cookies()` e `searchParams` (`?aba=`) são lidos dentro do Suspense.
+- `POST /f/[token]/audio` usa `RouteContext` com `await params`.
+- `router.refresh()` e `after()` existem na 16.4.3.
+
+**Proxy:**
+- `/f/*` entra explicitamente no `matcher` (`/f/:path*`), além do padrão atual.
+- O cookie entra em `request.cookies.set` **antes** de `getClaims()` e de qualquer `NextResponse.next({ request })`.
+- Na resposta final, inclusive em redirect e 404, entram o `Set-Cookie` e os cabeçalhos `Referrer-Policy` e `X-Robots-Tag`.
+- `Secure` quando `request.nextUrl.protocol === "https:"`.
+
+**Home do livro:**
+- `components/telas/tela-livro.tsx` substitui `tela-livro-vazio.tsx`, que é apagada.
+- As telas `livro` e `livro-somente-leitura` da vitrine (`lib/styleguide.ts`, `vitrine.tsx`, `scripts/inspecionar-telas.mjs`) passam a renderizar a nova home com os dados de `lib/exemplos/livro-jair.ts`.
+
+**Interface reaproveitada:**
+- O `gravador-causo.tsx` compõe o visual de `components/ui/gravador.tsx` com `formatarCronometro` e `falarDuracao` de `lib/ui/tempo.ts`. Só acrescenta o MediaRecorder.
+- `Abas` ganha `ativa` e `aoMudar` (controle externo), para `?aba=` e para a atualização a cada 4 s saber qual aba está aberta.
+- O parentesco usa o `Seletor` do P2 (`<select>` nativo, com 7 opções), não chips.
+- Os cartões de causo e a folha "Enviar ao Jair" partem dos exemplos do styleguide do P2 (`app/(dev)/styleguide/responsavel/page.tsx`).
+- `Causo.relacao` sai de `lib/exemplos/livro-jair.ts`: o formulário não pergunta a relação, e uma pergunta a menos ajuda quem está com pressa.
+- "Pode escrever" usa `podeEscrever` de `lib/plano.ts`.
+
 ## Alternativas consideradas
 
 ### A: Token aleatório guardado só como hash, mostrado uma vez
@@ -402,7 +500,7 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 
 - **Prós:** consultas diretas.
 - **Contras:** obriga a emitir JWT próprio, assinar com o segredo do Supabase e manter políticas para `anon` em várias tabelas.
-- **Motivo:** 4 funções fechadas são mais fáceis de testar e auditar.
+- **Motivo:** 3 funções fechadas são mais fáceis de testar e auditar.
 
 ### D: Banco de perguntas numa tabela com seed
 
@@ -437,7 +535,7 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 
 ## SQL de subida
 
-As revisões de segurança do prompt 3 seguem valendo: funções com `search_path = ''`, revogação explícita de EXECUTE, nenhum grant para `anon` em tabela. Validado no PGlite: sobe, reverte e sobe de novo sem erro, e um teste de fumaça cobriu isolamento entre livros, limites, travas e caminhos com `%2e%2e`.
+As revisões de segurança do prompt 3 seguem valendo: funções com `search_path = ''`, revogação explícita de EXECUTE, nenhum grant para `anon` em tabela. Validado no PGlite: sobe, reverte e sobe de novo sem erro. Um teste de fumaça, feito com os papéis reais (`anon`, `authenticated`, `porta_autor`), cobriu o isolamento entre livros, os limites, as travas, as fotos inseridas pela sessão e os caminhos com `%2e%2e`.
 
 ### `supabase/migrations/20261110120000_perguntas_causos_enquete.sql`
 
@@ -487,12 +585,6 @@ language sql immutable set search_path = '' as $$ select 40 $$;
 create function privado.max_fotos_por_livro() returns integer
 language sql immutable set search_path = '' as $$ select 200 $$;
 
--- uuid em minúsculas, como gen_random_uuid() e crypto.randomUUID() geram.
-create function privado.re_uuid() returns text
-language sql immutable set search_path = '' as $$
-  select '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
-$$;
-
 -- ── Fotos (acervo) ─────────────────────────────────────────────────────────
 -- Comprimidas no navegador para JPEG de até 3000 px antes de subir.
 create table public.photos (
@@ -506,7 +598,8 @@ create table public.photos (
   criado_em timestamptz not null default now(),
   unique (book_id, id),
   constraint photos_caminho_do_livro check (
-    caminho ~ ('^livros/' || book_id::text || '/acervo/' || privado.re_uuid() || '\.jpg$')
+    -- regex literal: um CHECK roda com o usuário corrente, que não executa funções de privado
+    caminho ~ ('^livros/' || book_id::text || '/acervo/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.jpg$')
   )
 );
 create index photos_livro_data on public.photos (book_id, criado_em desc);
@@ -807,8 +900,9 @@ begin
 end $$;
 
 -- Grava (ou troca) o conjunto de votos de um aparelho na enquete aberta do livro do token.
+-- Devolve {votos, livro, votante} para o servidor registrar o evento.
 create function public.familia_votar(p_token text, p_aparelho text, p_nome text, p_itens uuid[])
-returns integer language plpgsql security definer set search_path = '' as $$
+returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   v_livro uuid;
   v_hash text;
@@ -871,7 +965,7 @@ begin
   delete from public.poll_votes where poll_id = v_enquete.id and aparelho_hash = v_hash;
   insert into public.poll_votes (book_id, poll_id, poll_item_id, votante, aparelho_hash, nome)
   select v_livro, v_enquete.id, x, v_votante, v_hash, btrim(p_nome) from unnest(v_itens) x;
-  return cardinality(v_itens);
+  return jsonb_build_object('votos', cardinality(v_itens), 'livro', v_livro, 'votante', v_votante);
 end $$;
 
 -- Recebe um causo exatamente como a pessoa enviou. Com áudio (p_audio_tipo), devolve o
@@ -889,7 +983,7 @@ begin
   if p_nome is null or octet_length(p_nome) > 320
      or (p_texto is not null and octet_length(p_texto) > 8000)
      or (p_audio_tipo is not null and p_audio_tipo not in ('webm', 'm4a', 'ogg'))
-     or (nullif(btrim(coalesce(p_texto, '')), '') is null and p_audio_tipo is null)
+     or ((nullif(btrim(coalesce(p_texto, '')), '') is null) = (p_audio_tipo is null)) -- um ou outro
      or char_length(btrim(p_nome)) not between 1 and 80
      or (p_texto is not null and char_length(btrim(p_texto)) > 2000)
      or p_consentimento_versao is null or p_consentimento_versao not between 1 and 99 then
@@ -920,7 +1014,7 @@ begin
   end if;
   insert into public.causos (id, book_id, nome, texto, audio_caminho, consentimento_em, consentimento_versao)
   values (v_id, v_livro, btrim(p_nome), nullif(btrim(p_texto), ''), v_caminho, now(), p_consentimento_versao);
-  return jsonb_build_object('id', v_id, 'audio_caminho', v_caminho);
+  return jsonb_build_object('id', v_id, 'livro', v_livro, 'audio_caminho', v_caminho);
 end $$;
 
 -- ── Funções do servidor (chave secreta), que ainda conferem o token ou o membro ──
@@ -968,13 +1062,28 @@ begin
 end $$;
 
 -- ── Ações do responsável na enquete (conferem membro e plano ativo) ────────
-create function privado.item_valido(p_item jsonb) returns boolean
-language sql immutable set search_path = '' as $$
-  select jsonb_typeof(p_item) = 'object'
-    and jsonb_typeof(p_item -> 'texto') = 'string'
-    and octet_length(p_item ->> 'texto') <= 2000
-    and coalesce(p_item ->> 'tipo', 'pergunta') in ('pergunta', 'causo')
-$$;
+-- Candidato da enquete. O causo, quando há, precisa ser do mesmo livro.
+create function privado.item_valido(p_livro uuid, p_item jsonb) returns boolean
+language plpgsql stable security definer set search_path = '' as $$
+begin
+  if jsonb_typeof(p_item) is distinct from 'object'
+     or jsonb_typeof(p_item -> 'texto') is distinct from 'string'
+     or octet_length(p_item ->> 'texto') > 2000
+     or char_length(btrim(p_item ->> 'texto')) not between 3 and 500
+     or coalesce(p_item ->> 'tipo', 'pergunta') not in ('pergunta', 'causo')
+     or (p_item ? 'banco_id' and jsonb_typeof(p_item -> 'banco_id') <> 'null'
+         and coalesce(p_item ->> 'banco_id', '') !~ '^[a-z]+-[0-9]{2,3}$')
+     or (p_item ? 'causo_id' and jsonb_typeof(p_item -> 'causo_id') <> 'null'
+         and coalesce(p_item ->> 'causo_id', '') !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$') then
+    return false;
+  end if;
+  if p_item ->> 'causo_id' is not null and not exists (
+    select 1 from public.causos c where c.id = (p_item ->> 'causo_id')::uuid and c.book_id = p_livro
+  ) then
+    return false;
+  end if;
+  return true;
+end $$;
 
 -- Abre a enquete com os candidatos: [{"texto", "tipo", "banco_id", "causo_id"}].
 create function public.enquete_abrir(p_livro uuid, p_itens jsonb)
@@ -984,9 +1093,11 @@ declare
 begin
   perform privado.membro_editando(p_livro);
   if p_itens is null or jsonb_typeof(p_itens) is distinct from 'array'
-     or jsonb_array_length(p_itens) not between 2 and privado.max_itens_enquete()
-     or exists (select 1 from jsonb_array_elements(p_itens) i where not privado.item_valido(i)) then
+     or jsonb_array_length(p_itens) not between 2 and privado.max_itens_enquete() then
     raise exception 'dados_invalidos';
+  end if;
+  if exists (select 1 from jsonb_array_elements(p_itens) i where not privado.item_valido(p_livro, i)) then
+    raise exception 'item_invalido';
   end if;
   if exists (select 1 from public.polls where book_id = p_livro and estado = 'aberta') then
     raise exception 'enquete_aberta';
@@ -1014,8 +1125,8 @@ begin
   if v_enquete.estado <> 'aberta' then
     raise exception 'enquete_encerrada';
   end if;
-  if not privado.item_valido(p_item) then
-    raise exception 'dados_invalidos';
+  if not privado.item_valido(v_enquete.book_id, p_item) then
+    raise exception 'item_invalido';
   end if;
   if (select count(*) from public.poll_items where poll_id = p_enquete) >= privado.max_itens_enquete() then
     raise exception 'limite_itens';
@@ -1087,6 +1198,8 @@ begin
     update public.poll_items set prompt_id = v_prompt where id = r.id and prompt_id is null;
     if found then
       v_total := v_total + 1;
+      update public.causos set estado = 'virou_pergunta'
+      where id = r.causo_id and book_id = v_livro and estado in ('novo', 'na_enquete');
     end if;
   end loop;
   return v_total;
@@ -1126,10 +1239,10 @@ grant execute on function
 revoke all on function
   privado.votos_por_pessoa(), privado.max_itens_enquete(), privado.max_votantes_por_enquete(),
   privado.max_trocas_voto_por_hora(), privado.max_causos_por_hora(), privado.max_causos_por_dia(),
-  privado.max_fotos_por_livro(), privado.re_uuid(), privado.cota_de_fotos(),
+  privado.max_fotos_por_livro(), privado.cota_de_fotos(),
   privado.transicao_da_pergunta(), privado.revogacao_definitiva(),
   privado.livro_da_familia(text), privado.hash_aparelho(uuid, text),
-  privado.membro_editando(uuid), privado.item_valido(jsonb)
+  privado.membro_editando(uuid), privado.item_valido(uuid, jsonb)
   from public, anon, authenticated;
 
 -- ── Storage (pulado nos testes com PGlite) ─────────────────────────────────
@@ -1154,56 +1267,55 @@ end $$;
 -- ATENÇÃO: apaga fotos, perguntas, causos, links da família e enquetes do banco.
 -- Os buckets acervo e causos e os arquivos ficam no Storage (apagar à mão, se for o caso).
 
-drop function public.enquete_salvar(uuid, uuid[]);
-drop function public.enquete_remover_votos(uuid, uuid);
-drop function public.enquete_encerrar(uuid);
-drop function public.enquete_adicionar_item(uuid, jsonb);
-drop function public.enquete_abrir(uuid, jsonb);
-drop function public.servico_trocar_link_familia(uuid, uuid, uuid, text, smallint);
-drop function public.servico_confirmar_audio_causo(text, uuid, integer);
-drop function public.servico_caminho_audio_causo(text, uuid);
-drop function public.familia_enviar_causo(text, text, text, text, boolean, smallint);
-drop function public.familia_votar(text, text, text, uuid[]);
-drop function public.familia_pagina(text, text);
-drop function privado.item_valido(jsonb);
-drop function privado.membro_editando(uuid);
-drop function privado.hash_aparelho(uuid, text);
-drop function privado.livro_da_familia(text);
+drop function if exists public.enquete_salvar(uuid, uuid[]);
+drop function if exists public.enquete_remover_votos(uuid, uuid);
+drop function if exists public.enquete_encerrar(uuid);
+drop function if exists public.enquete_adicionar_item(uuid, jsonb);
+drop function if exists public.enquete_abrir(uuid, jsonb);
+drop function if exists public.servico_trocar_link_familia(uuid, uuid, uuid, text, smallint);
+drop function if exists public.servico_confirmar_audio_causo(text, uuid, integer);
+drop function if exists public.servico_caminho_audio_causo(text, uuid);
+drop function if exists public.familia_enviar_causo(text, text, text, text, boolean, smallint);
+drop function if exists public.familia_votar(text, text, text, uuid[]);
+drop function if exists public.familia_pagina(text, text);
+drop function if exists privado.item_valido(uuid, jsonb);
+drop function if exists privado.membro_editando(uuid);
+drop function if exists privado.hash_aparelho(uuid, text);
+drop function if exists privado.livro_da_familia(text);
 
-drop table public.poll_votes;
-drop table public.poll_items;
-drop table public.polls;
-drop table public.family_access;
-drop function privado.revogacao_definitiva();
-drop table public.prompts;
-drop function privado.transicao_da_pergunta();
-drop table public.causos;
+drop table if exists public.poll_votes;
+drop table if exists public.poll_items;
+drop table if exists public.polls;
+drop table if exists public.family_access;
+drop function if exists privado.revogacao_definitiva();
+drop table if exists public.prompts;
+drop function if exists privado.transicao_da_pergunta();
+drop table if exists public.causos;
 
 alter table public.books
-  drop constraint books_autor_foto_do_livro,
-  drop column configuracao,
-  drop column autor_foto_id,
-  drop column autor_parentesco,
-  drop column autor_apelido;
+  drop constraint if exists books_autor_foto_do_livro,
+  drop column if exists configuracao,
+  drop column if exists autor_foto_id,
+  drop column if exists autor_parentesco,
+  drop column if exists autor_apelido;
 
-drop table public.photos;
-drop function privado.cota_de_fotos();
+drop table if exists public.photos;
+drop function if exists privado.cota_de_fotos();
 
-drop function privado.re_uuid();
-drop function privado.max_fotos_por_livro();
-drop function privado.max_causos_por_dia();
-drop function privado.max_causos_por_hora();
-drop function privado.max_trocas_voto_por_hora();
-drop function privado.max_votantes_por_enquete();
-drop function privado.max_itens_enquete();
-drop function privado.votos_por_pessoa();
+drop function if exists privado.max_fotos_por_livro();
+drop function if exists privado.max_causos_por_dia();
+drop function if exists privado.max_causos_por_hora();
+drop function if exists privado.max_trocas_voto_por_hora();
+drop function if exists privado.max_votantes_por_enquete();
+drop function if exists privado.max_itens_enquete();
+drop function if exists privado.votos_por_pessoa();
 
-drop type public.enquete_estado;
-drop type public.causo_estado;
-drop type public.prompt_estado;
-drop type public.prompt_origem;
-drop type public.prompt_tipo;
-drop type public.parentesco;
+drop type if exists public.enquete_estado;
+drop type if exists public.causo_estado;
+drop type if exists public.prompt_estado;
+drop type if exists public.prompt_origem;
+drop type if exists public.prompt_tipo;
+drop type if exists public.parentesco;
 
 drop role if exists porta_autor;
 ```
@@ -1214,8 +1326,8 @@ drop role if exists porta_autor;
 
 1. **Parada 1 (este documento):** aprovar o design e o SQL.
 2. Migration, reversão e testes de banco (PGlite). Aplicar no projeto `ecoa-plataforma` (`dhmjaeauhzfniqncmiof`) com `apply_migration`, com `name` igual ao nome do arquivo. Depois, `get_advisors` (segurança) e regenerar `lib/supabase/tipos.ts`.
-3. `lib/config.ts`, `lib/env-servidor.ts` (`LINKS_SEGREDO_V1`, `LINKS_VERSAO_ATUAL`), `lib/links.ts`, `lib/whatsapp.ts`, `lib/perguntas/*`, `lib/enquete/ranking.ts` e `lib/livro/configuracao.ts`, com testes unitários.
-4. Banco de perguntas (`supabase/seed/perguntas.json`).
+3. Banco de perguntas (`supabase/seed/perguntas.json`), antes de `lib/perguntas/banco.ts`, que o valida ao importar.
+4. `lib/config.ts`, `lib/erros-banco.ts`, `lib/env-links.ts`, `lib/links.ts`, `lib/arquivos.ts`, `lib/whatsapp.ts`, `lib/perguntas/*`, `lib/enquete/ranking.ts` e `lib/livro/configuracao.ts`, com testes unitários. O `config-banco.test.ts` roda aqui, já com o banco do passo 2.
 5. Configuração inicial e home do livro.
 6. Tela Perguntas e kit.
 7. `/f/[token]`: causo.
@@ -1228,7 +1340,7 @@ drop role if exists porta_autor;
 
 1. **`supabase/migrations/20261110120000_perguntas_causos_enquete.sql` (criar).** Conteúdo da seção SQL de subida.
 2. **`supabase/reversao/20261110120000_perguntas_causos_enquete.down.sql` (criar).** Conteúdo da seção de reversão.
-3. **`supabase/tests/banco.ts` (alterar).** Acrescentar:
+3. **`supabase/tests/banco.ts` (alterar).** `como()` passa a aceitar `porta_autor` e `service_role`. Acrescentar:
    - `criarLinkFamilia(db, livro, usuario, token)`, que chama `servico_trocar_link_familia`;
    - `abrirEnquete(db, livro, usuario, textos[])`, que chama `enquete_abrir` com a sessão do usuário.
 4. **`supabase/tests/familia.test.ts` (criar).** Livros A e B, cada um com o seu link da família, mais o link do autor de A. Casos:
@@ -1239,11 +1351,13 @@ drop role if exists porta_autor;
      - com itens de B usando o token de A: `item_invalido`;
      - com 6 itens: `quantidade_invalida`; com 31 itens: `dados_invalidos`;
      - o 151º votante: `limite_votantes`; a 301ª troca na hora: `limite_por_hora`;
+     - o retorno traz `livro` e `votante`;
      - um segundo voto do mesmo aparelho troca o conjunto (o mesmo `votante`);
      - outro aparelho cria outro `votante`;
      - com a enquete encerrada: `sem_enquete`;
      - com o plano vencido: `livro_fechado`.
    - **Causo:**
+     - texto e áudio juntos: `dados_invalidos`;
      - entra em A, e com áudio devolve `livros/<A>/causos/<id>.webm`;
      - fica invisível para o membro até `servico_confirmar_audio_causo`;
      - `servico_caminho_audio_causo` com o token de B, com causo já confirmado ou com mais de 30 min: `null`;
@@ -1268,8 +1382,13 @@ drop role if exists porta_autor;
    - a pergunta só pode ser apagada em `para_enviar`;
    - causos: só `estado` é alterável;
    - `enquete_abrir` com a sessão de A no livro B: `sem_permissao`; com `null`: `dados_invalidos`;
-   - `enquete_salvar` chamado duas vezes não duplica, e não duplica uma pergunta do banco já existente;
-   - a lista de funções de `authenticated` passa a ter as 5 `enquete_*`;
+   - `enquete_salvar` chamado duas vezes não duplica, e não duplica uma pergunta do banco já existente; um item de causo muda o causo para `virou_pergunta`;
+   - `enquete_remover_votos` apaga só os votos daquele `votante`; o de outro livro dá `sem_permissao`;
+   - `enquete_abrir` com causo de outro livro, `causo_id` inválido ou texto com mais de 500 caracteres: `item_invalido`; com `p_itens` nulo: `dados_invalidos`;
+   - INSERT válido em `photos` e UPDATE da legenda feitos **pela sessão** passam (o CHECK não pode depender de função sem grant);
+   - virar pergunta: insert com `causo_id` e mudança do causo para `virou_pergunta` com a sessão;
+   - a lista de funções de `authenticated` passa a ter as 5 `enquete_*`, e o título do teste vira "authenticated executa só as funções da lista";
+   - a lista fechada de tabelas negadas a `anon` (`rls.test.ts:273`) ganha as 7 novas;
    - a lista de `anon` passa a ter as 3 `familia_*` (a regra genérica muda de "nenhuma" para "lista fechada");
    - a regra "toda função definer tem `search_path` fixo" vale para as novas.
 7. **`supabase/tests/config-banco.test.ts` (criar).** Cada `privado.max_*()` e `privado.votos_por_pessoa()` bate com a constante de `lib/config.ts`. Todo código de erro levantado no SQL (`raise exception '<codigo>'`) tem tradução em `lib/erros-banco.ts`.
@@ -1281,44 +1400,45 @@ drop role if exists porta_autor;
    - `MAX_CAUSOS_POR_HORA = 20`, `MAX_CAUSOS_POR_DIA = 40`, `MAX_CAUSO_AUDIO_MIN = 3`, `MAX_CAUSO_AUDIO_MB = 2`, `CAUSO_AUDIO_KBPS = 48`, `CONSENTIMENTO_CAUSO_VERSAO = 1`;
    - `PERGUNTAS_INICIAIS = 10`, `MAX_FOTOS_POR_ENVIO = 30`, `MAX_FOTOS_POR_LIVRO = 200`, `FOTO_LADO_MAX_PX = 3000`, `MAX_FOTO_MB = 5`;
    - `ATUALIZAR_A_CADA_S = 4`.
-9. **`lib/env-servidor.ts`.** `LINKS_SEGREDO_V1` (mínimo de 32 caracteres) e `LINKS_VERSAO_ATUAL` (padrão 1), com o comentário "nunca edite o valor de uma versão; crie outra". Mais o `.env.example` e o guia `docs/setup/supabase-google-resend.md` (como gerar: `openssl rand -base64 32`).
-10. **`lib/links.ts` (server-only).**
+9. **`lib/env-links.ts` (criar).** `envLinks()` separado de `envServidor()`: valida `LINKS_VERSAO_ATUAL` (padrão 1) e de `LINKS_SEGREDO_V1` até a versão atual (mínimo de 32 caracteres cada), com o comentário "nunca edite o valor de uma versão; crie outra". Mais o `.env.example`, o guia `docs/setup/supabase-google-resend.md` (como gerar: `openssl rand -base64 32`) e um valor falso no `env` do `playwright.config.ts`.
+10. **`lib/links.ts` (criar, server-only).**
     - `tokenDoLink(tipo: "familia" | "autor", id, versao)` → `v{versao}.{hmac}`;
     - `hashDoToken(token)`;
     - `urlFamilia(token)`;
     - `linkDoAutor()` (placeholder).
-    - Testado com um segredo fixo: o token é determinístico, tem 22 caracteres, e o hash bate com o `sha256` do banco (vetor fixo conferido no PGlite).
-11. **`lib/supabase/anonimo.ts`.** Cliente com a chave pública, sem sessão, só para as funções `familia_*`.
+    - Testado com um segredo fixo: o token é determinístico, tem 25 caracteres (`v1_` + 22), não tem ponto, e o hash bate com o `sha256` do banco (vetor fixo conferido no PGlite).
+11. **`lib/supabase/anonimo.ts` (criar).** Cliente com a chave pública, sem sessão, só para as funções `familia_*`.
     - **`lib/erros-banco.ts`:** código de erro do banco → frase da tela.
     - **`lib/arquivos.ts`:** regex dos caminhos de foto e áudio (as mesmas do SQL), com teste que inclui `../` e `%2e%2e`.
     - **`lib/fotos/comprimir.ts`** (navegador): canvas → JPEG de até 3000 px.
 12. **`lib/whatsapp.ts`**, **`lib/perguntas/banco.ts`**, **`lib/enquete/ranking.ts`** e **`lib/livro/configuracao.ts`**, cada um com o seu `.test.ts`.
-13. **`lib/livro/dados.ts` (server-only).** Leituras do responsável, com a sessão:
+13. **`lib/livro/dados.ts` (criar, server-only).** Leituras do responsável, com a sessão e com as colunas listadas (grant por coluna):
     - `perguntasDoLivro`;
-    - `causosDoLivro` (com URLs assinadas);
+    - `causosDoLivro` (sem URL; o áudio é assinado no toque por `urlDoAudio`);
     - `enqueteDoLivro` (enquete aberta ou a última, itens, votos);
     - `fotosDoLivro`;
     - `linkDaFamilia` (só lê; gerar é a server action `pegarLinkDaFamilia`).
-14. **`lib/eventos-acoes.ts`.** As ações novas.
-15. **`proxy.ts`** e **`lib/rotas.ts`.** `/f/*` é público; o proxy grava o cookie do aparelho na resposta e na requisição, e põe `Referrer-Policy: no-referrer` e `X-Robots-Tag: noindex`. `lib/rotas.test.ts` cobre `/f/abc` sem sessão: passa.
+14. **`lib/eventos-acoes.ts` (alterar).** As ações novas.
+    - **`lib/sessao.ts` (alterar):** `livrosDoMembro` e `LivroDoMembro` passam a trazer `autor_apelido`, `autor_parentesco` e `configuracao`.
+15. **`proxy.ts` (alterar).** `/f/:path*` explícito no `matcher`; cookie e cabeçalhos conforme Comportamento detalhado. `lib/rotas.ts` não muda (`/f/*` já é público); `lib/rotas.test.ts` (alterar) ganha o caso `/f/v1_abc` sem sessão.
 
 #### Telas e rotas
 
-16. **`app/livro/[id]/page.tsx` (alterar).** Leva a `/configurar/quem` se `precisaConfigurar`. Senão, mostra a nova home (`components/telas/tela-livro.tsx`).
-17. **`app/livro/[id]/configurar/[passo]/page.tsx`**, **`acoes.ts`** e **`components/telas/configurar-{quem,perguntas,fotos}.tsx`.**
-18. **`app/livro/[id]/perguntas/page.tsx`**, **`acoes.ts`**, **`components/telas/tela-perguntas.tsx`** e **`components/perguntas/*`.**
+16. **`app/livro/[id]/page.tsx` (alterar).** Leva a `/configurar/quem` se `precisaConfigurar`. Senão, mostra a nova home **`components/telas/tela-livro.tsx` (criar)**. `components/telas/tela-livro-vazio.tsx` é apagada.
+17. **Criar:** `app/livro/[id]/configurar/[passo]/page.tsx`, `acoes.ts`, `app/livro/[id]/fotos/acoes.ts` (`prepararFotos`, `registrarFotos`) e `components/telas/configurar-{quem,perguntas,fotos}.tsx`.
+18. **Criar:** **`app/livro/[id]/perguntas/page.tsx`**, **`acoes.ts`**, **`components/telas/tela-perguntas.tsx`** e **`components/perguntas/*`.**
     - cartão de pergunta;
     - folha de adicionar;
     - folha do banco;
     - cartão de causo;
     - criar enquete;
     - resultados da enquete.
-19. **`app/livro/[id]/kit/page.tsx`**, **`acoes.ts`** e **`components/telas/tela-kit.tsx`.**
-20. **`app/f/[token]/page.tsx`**, **`acoes.ts`**, **`audio/route.ts`**, **`components/telas/tela-familia.tsx`** e **`components/familia/{votar,sugerir-causo,gravador-causo}.tsx`.**
-21. **`app/a/em-breve/page.tsx`.** Placeholder do link do autor.
-22. **`components/livro/atualizar-sozinho.tsx`.** Chama `router.refresh()` a cada `ATUALIZAR_A_CADA_S` segundos, só com a página visível; para quando a aba muda.
-23. **`components/ui/upload-fotos.tsx`.** Escolher várias, comprimir no navegador, subir 3 por vez, progresso.
-24. **Styleguide.** Telas novas em `lib/styleguide.ts` e na vitrine, com dados falsos:
+19. **Criar:** **`app/livro/[id]/kit/page.tsx`**, **`acoes.ts`** e **`components/telas/tela-kit.tsx`.**
+20. **Criar:** **`app/f/[token]/page.tsx`**, **`acoes.ts`**, **`audio/route.ts`**, **`components/telas/tela-familia.tsx`** e **`components/familia/{votar,sugerir-causo,gravador-causo}.tsx`.**
+21. **`app/a/em-breve/page.tsx` (criar).** Placeholder do link do autor.
+22. **`components/livro/atualizar-sozinho.tsx` (criar).** Chama `router.refresh()` a cada `ATUALIZAR_A_CADA_S` segundos, só com a página visível; para quando a aba muda.
+23. **`components/ui/upload-fotos.tsx` (criar)** e **`components/ui/abas.tsx` (alterar:** `ativa` e `aoMudar`). Escolher várias, comprimir no navegador, subir 3 por vez, progresso.
+24. **Styleguide (alterar `lib/styleguide.ts`, `app/(dev)/styleguide/[tela]/page.tsx` e `vitrine.tsx`, `lib/exemplos/livro-jair.ts`, `_demos/demo-folha.tsx`).** As telas `livro` e `livro-somente-leitura` passam a usar `tela-livro.tsx`. Telas novas, com os dados de `lib/exemplos/livro-jair.ts`:
     - `configurar-quem`, `configurar-perguntas`, `configurar-fotos`;
     - `kit`;
     - `perguntas`, `perguntas-causos`, `perguntas-enquete`;
@@ -1327,19 +1447,21 @@ drop role if exists porta_autor;
 
 #### Testes de ponta a ponta e documentação
 
-25. **`e2e/configurar.spec.ts`.** No styleguide: no passo 2, 10 caixas marcadas; Salvar mostra "Salvar 10 perguntas"; desmarcar muda para 9.
-26. **`e2e/familia.spec.ts`.** No styleguide:
+25. **`supabase/seed/perguntas.json` (criar).** O banco de perguntas (ver seção própria).
+26. **`e2e/configurar.spec.ts`.** No styleguide: no passo 2, 10 caixas marcadas; Salvar mostra "Salvar 10 perguntas"; desmarcar muda para 9.
+27. **`e2e/familia.spec.ts`.** No styleguide:
     - marcar 6 itens deixa o 6º desabilitado;
     - Votar exige o nome;
     - o causo exige consentimento;
     - nenhuma rolagem lateral a 390 px.
-27. **`e2e/perguntas.spec.ts`.** No styleguide:
+28. **`e2e/perguntas.spec.ts`.** No styleguide:
     - 5 abas;
     - "Enviar ao autor" tem um `href` `https://wa.me/?text=`;
-    - na enquete, "Salvar as 3 mais votadas" existe e o N muda.
-28. **`docs/prd.md`.** Mudanças da seção "Mudanças em relação ao PRD".
-29. **`docs/setup/supabase-google-resend.md`.** `LINKS_SEGREDO_V1`, `LINKS_VERSAO_ATUAL`, a regra de rotação e a conferência dos buckets.
-30. **`CLAUDE.md`.** A regra de token vira "imprevisível, ≥128 bits, um recurso por link, revogável; só o hash no banco".
+    - na enquete, "Salvar as 3 mais votadas" existe e o N muda;
+    - no kit, os dois `href` começam com `https://wa.me/?text=`.
+29. **`docs/prd.md`.** Mudanças da seção "Mudanças em relação ao PRD".
+30. **`docs/setup/supabase-google-resend.md`.** `LINKS_SEGREDO_V1`, `LINKS_VERSAO_ATUAL`, a regra de rotação e a conferência dos buckets.
+31. **`CLAUDE.md`.** Já ajustado no commit do design.
 
 ### Plano de verificação
 
