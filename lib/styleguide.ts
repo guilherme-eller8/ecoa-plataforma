@@ -1,4 +1,4 @@
-// Dados falsos para ver as telas sem Supabase (gate de design). Só com ECOA_PREVIA=1.
+// Dados falsos para ver as telas sem Supabase (gate de design). Só com ECOA_STYLEGUIDE=1 em produção.
 import type { LinhaAdmin } from "@/components/telas/tela-admin";
 
 export const TELAS = [

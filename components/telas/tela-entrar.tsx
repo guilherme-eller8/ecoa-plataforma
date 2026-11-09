@@ -62,7 +62,7 @@ export function TelaEntrar({
           <form action={enviar} className="flex flex-col gap-4">
             <Campo
               rotulo="Seu e-mail"
-              nome="email"
+              name="email"
               type="email"
               autoComplete="email"
               inputMode="email"

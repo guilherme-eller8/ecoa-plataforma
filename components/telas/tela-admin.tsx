@@ -113,7 +113,7 @@ function FormularioAtivar({ ativar }: { ativar: AcaoFormulario }) {
         <div className="grid gap-4 md:grid-cols-2">
           <Campo
             rotulo="E-mail de quem comprou"
-            nome="email"
+            name="email"
             type="email"
             autoComplete="off"
             inputMode="email"
@@ -124,7 +124,7 @@ function FormularioAtivar({ ativar }: { ativar: AcaoFormulario }) {
           />
           <Campo
             rotulo="Nome do autor (opcional)"
-            nome="autor_nome"
+            name="autor_nome"
             autoComplete="off"
             value={autor}
             readOnly={confirmando}

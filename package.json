@@ -13,7 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "taste:lint": "node .claude/skills/design-taste-frontend/scripts/lint.mjs app components",
-    "taste:inspect": "node .claude/skills/design-taste-frontend/scripts/inspect.mjs --allow palette-cream http://localhost:3000"
+    "taste:inspect": "node scripts/inspecionar-telas.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

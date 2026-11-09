@@ -32,3 +32,10 @@ export const DOMINIO_QR = "ouvir.ecoa-memorias.com.br";
 // ── E-mail ───────────────────────────────────────────────────────────────
 // Domínio verificado no Resend. Ver docs/decisoes/dominio.md.
 export const EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>";
+
+// ── Lembretes e estimativas ──────────────────────────────────────────────
+// Pergunta enviada há este número de dias sem resposta mostra "Lembrar com carinho".
+export const LEMBRETE_APOS_DIAS = 3;
+// Estimativa de páginas no 21x21 enquanto o livro não é paginado de verdade.
+export const PALAVRAS_POR_PAGINA_ESTIMADA = 320;
+export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;

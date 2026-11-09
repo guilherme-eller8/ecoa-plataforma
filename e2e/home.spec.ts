@@ -14,9 +14,5 @@ test.describe("rotas protegidas sem sessão", () => {
   }
 });
 
-test("a vitrine de telas não existe fora do gate de design", async ({
-  request,
-}) => {
-  const resposta = await request.get("/styleguide/entrar");
-  expect(resposta.status()).toBe(404);
-});
+// A vitrine (/styleguide) só existe com ECOA_STYLEGUIDE=1; o build do e2e liga essa flag,
+// então a regra é coberta pelo teste unitário lib/dev.test.ts.

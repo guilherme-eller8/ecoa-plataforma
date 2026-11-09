@@ -28,7 +28,8 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_teste",
       SUPABASE_SECRET_KEY: "sb_secret_teste",
       RESEND_API_KEY: "re_teste",
-      ECOA_PREVIA: "",
+      // Libera /styleguide e as telas de exemplo no build de produção do teste.
+      ECOA_STYLEGUIDE: "1",
     },
   },
 });
