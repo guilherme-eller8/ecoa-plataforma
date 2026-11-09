@@ -1,0 +1,1027 @@
+{
+  "status": "rascunho",
+  "revisado_por": null,
+  "nota": "Rascunho para revisão humana (tia Caia). Ids estáveis: a revisão pode mudar o texto, nunca o id. 'fe' marca as perguntas de fé, que ficam fora das 10 iniciais. Origem: 127 perguntas do banco 'Cronológico + Fé Reformada' e 23 novas neutras. As perguntas legado-04, legado-10, legado-20 e legado-25 não tinham a marca Fé & Aliança no anexo, mas usam vocabulário religioso (milagre, caminhada com Deus, mordomia, oração); ficaram marcadas como fé para o filtro. Conferir na revisão.",
+  "temas": [
+    {
+      "id": "raizes",
+      "nome": "Pais, raízes e origens"
+    },
+    {
+      "id": "infancia",
+      "nome": "Infância e brincadeiras"
+    },
+    {
+      "id": "estudos",
+      "nome": "Primeiros estudos"
+    },
+    {
+      "id": "juventude",
+      "nome": "Juventude"
+    },
+    {
+      "id": "trabalho",
+      "nome": "Trabalho e vocação"
+    },
+    {
+      "id": "amor",
+      "nome": "Amor e casamento"
+    },
+    {
+      "id": "filhos",
+      "nome": "Filhos e família"
+    },
+    {
+      "id": "legado",
+      "nome": "Celebrações e legado"
+    }
+  ],
+  "perguntas": [
+    {
+      "id": "raizes-01",
+      "tema": "raizes",
+      "texto": "Qual é a lembrança mais antiga que você tem na vida, mesmo que seja só um flash, uma cor ou um barulho?",
+      "fe": false
+    },
+    {
+      "id": "raizes-02",
+      "tema": "raizes",
+      "texto": "Se você pudesse voltar hoje à casa onde passou a infância e abrir a porta da frente, o que veria primeiro?",
+      "fe": false
+    },
+    {
+      "id": "raizes-03",
+      "tema": "raizes",
+      "texto": "Qual era o cheiro mais marcante da casa onde você cresceu?",
+      "fe": false
+    },
+    {
+      "id": "raizes-04",
+      "tema": "raizes",
+      "texto": "Como era a história de como seus pais se conheceram, do jeito que contavam para você?",
+      "fe": false
+    },
+    {
+      "id": "raizes-05",
+      "tema": "raizes",
+      "texto": "O que você sabe sobre a origem dos seus avós? De onde eles vieram e como falavam?",
+      "fe": false
+    },
+    {
+      "id": "raizes-06",
+      "tema": "raizes",
+      "texto": "Quem era o parente mais \"figura\" ou contador de causos da sua família quando você era pequeno?",
+      "fe": false
+    },
+    {
+      "id": "raizes-07",
+      "tema": "raizes",
+      "texto": "Qual era o objeto mais sagrado ou proibido na sala da sua casa, aquele que criança nenhuma podia chegar perto?",
+      "fe": false
+    },
+    {
+      "id": "raizes-08",
+      "tema": "raizes",
+      "texto": "Como eram as refeições na sua casa? Todo mundo sentava junto ou tinha horário marcado?",
+      "fe": false
+    },
+    {
+      "id": "raizes-09",
+      "tema": "raizes",
+      "texto": "Qual era o prato que sua mãe ou sua avó fazia que, até hoje, você nunca encontrou igual em lugar nenhum?",
+      "fe": false
+    },
+    {
+      "id": "raizes-10",
+      "tema": "raizes",
+      "texto": "Tinha algum som que marcava o começo ou o fim do dia na sua rua (um apito de fábrica, o sino da igreja, o rádio ligado, um vendedor passando)?",
+      "fe": false
+    },
+    {
+      "id": "raizes-11",
+      "tema": "raizes",
+      "texto": "Qual é a história por trás do seu nome ou do apelido que você tinha quando era criança?",
+      "fe": false
+    },
+    {
+      "id": "raizes-12",
+      "tema": "raizes",
+      "texto": "Como era o seu quarto ou o lugar onde você dormia? Você dividia com seus irmãos?",
+      "fe": false
+    },
+    {
+      "id": "raizes-13",
+      "tema": "raizes",
+      "texto": "Como seus pais viviam e nutriam a fé dentro de casa no dia a dia? Havia o costume de orar antes das refeições ou ler a Bíblia juntos?",
+      "fe": true
+    },
+    {
+      "id": "raizes-14",
+      "tema": "raizes",
+      "texto": "Qual foi o maior exemplo de confiança em Deus que você viu no seu pai ou na sua mãe durante uma época de aperto?",
+      "fe": true
+    },
+    {
+      "id": "raizes-15",
+      "tema": "raizes",
+      "texto": "Como o evangelho chegou na sua família? Alguém foi o primeiro a se converter e mudou o rumo da casa?",
+      "fe": true
+    },
+    {
+      "id": "raizes-16",
+      "tema": "raizes",
+      "texto": "Como era a cidade ou o bairro onde você nasceu? O que tinha na rua da sua casa?",
+      "fe": false
+    },
+    {
+      "id": "raizes-17",
+      "tema": "raizes",
+      "texto": "Que histórias seus avós contavam sobre o tempo em que eram jovens?",
+      "fe": false
+    },
+    {
+      "id": "raizes-18",
+      "tema": "raizes",
+      "texto": "Qual era o ofício do seu pai e da sua mãe, e como era o dia de trabalho deles?",
+      "fe": false
+    },
+    {
+      "id": "infancia-01",
+      "tema": "infancia",
+      "texto": "Qual era a brincadeira na rua que fazia você perder a hora de voltar para casa?",
+      "fe": false
+    },
+    {
+      "id": "infancia-02",
+      "tema": "infancia",
+      "texto": "Quem era o seu melhor amigo ou parceiro de bagunça na infância e o que aconteceu com ele?",
+      "fe": false
+    },
+    {
+      "id": "infancia-03",
+      "tema": "infancia",
+      "texto": "Qual foi a maior arte ou travessura que você (ou seus irmãos) aprontou e que rendeu um castigo inesquecível?",
+      "fe": false
+    },
+    {
+      "id": "infancia-04",
+      "tema": "infancia",
+      "texto": "Qual foi o brinquedo ou presente que você mais desejou ganhar no Natal ou no aniversário? Você chegou a ganhar?",
+      "fe": false
+    },
+    {
+      "id": "infancia-05",
+      "tema": "infancia",
+      "texto": "O que você fazia quando ficava doente em casa? Tinha algum chá, simpatia ou cuidado especial que faziam em você?",
+      "fe": false
+    },
+    {
+      "id": "infancia-06",
+      "tema": "infancia",
+      "texto": "Qual era o seu esconderijo secreto quando queria ficar sozinho ou fugir de alguma obrigação?",
+      "fe": false
+    },
+    {
+      "id": "infancia-07",
+      "tema": "infancia",
+      "texto": "Como eram as férias ou os fins de semana na infância? Vocês viajavam para a roça, praia ou casa de parentes?",
+      "fe": false
+    },
+    {
+      "id": "infancia-08",
+      "tema": "infancia",
+      "texto": "Qual foi o maior susto ou machucado da sua infância (aquele que deixou cicatriz no joelho ou no queixo)?",
+      "fe": false
+    },
+    {
+      "id": "infancia-09",
+      "tema": "infancia",
+      "texto": "Como você ganhava uns trocados quando era criança para comprar doce na venda ou ir ao cinema?",
+      "fe": false
+    },
+    {
+      "id": "infancia-10",
+      "tema": "infancia",
+      "texto": "Se você olhasse para você mesmo aos 10 anos de idade, como descreveria aquela criança? Era tímida, espoleta, observadora?",
+      "fe": false
+    },
+    {
+      "id": "infancia-11",
+      "tema": "infancia",
+      "texto": "Como eram os domingos da sua infância? Vocês iam à igreja juntos ou tinham alguma rotina especial no Dia do Senhor?",
+      "fe": true
+    },
+    {
+      "id": "infancia-12",
+      "tema": "infancia",
+      "texto": "Qual é a sua primeira lembrança da Escola Bíblica Dominical, de uma música infantil da igreja ou de uma história da Bíblia que te encantava quando criança?",
+      "fe": true
+    },
+    {
+      "id": "infancia-13",
+      "tema": "infancia",
+      "texto": "Tinha algum hino antigo ou cântico que você ouvia seus pais ou avós cantarem pela casa?",
+      "fe": true
+    },
+    {
+      "id": "infancia-14",
+      "tema": "infancia",
+      "texto": "Qual era a comida de festa que deixava a criançada esperando o dia inteiro?",
+      "fe": false
+    },
+    {
+      "id": "infancia-15",
+      "tema": "infancia",
+      "texto": "Você tinha algum medo de criança que hoje te faz rir?",
+      "fe": false
+    },
+    {
+      "id": "infancia-16",
+      "tema": "infancia",
+      "texto": "Como era a casa dos seus avós e o que você mais gostava de fazer lá?",
+      "fe": false
+    },
+    {
+      "id": "estudos-01",
+      "tema": "estudos",
+      "texto": "Como era o caminho para a sua primeira escola? Você ia a pé, com quem e o que via pelo caminho?",
+      "fe": false
+    },
+    {
+      "id": "estudos-02",
+      "tema": "estudos",
+      "texto": "Teve algum professor ou professora que marcou a sua vida para o bem (ou que dava um medo danado)?",
+      "fe": false
+    },
+    {
+      "id": "estudos-03",
+      "tema": "estudos",
+      "texto": "Qual era a matéria que você mais gostava na escola e qual era aquela que tirava o seu sono?",
+      "fe": false
+    },
+    {
+      "id": "estudos-04",
+      "tema": "estudos",
+      "texto": "Como era o seu material escolar, o seu uniforme e o lanche que você levava na época de estudante?",
+      "fe": false
+    },
+    {
+      "id": "estudos-05",
+      "tema": "estudos",
+      "texto": "Quem foram os heróis, escritores, esportistas ou figuras públicas que você mais admirava quando estava crescendo? Por quê?",
+      "fe": false
+    },
+    {
+      "id": "estudos-06",
+      "tema": "estudos",
+      "texto": "Quem foi o professor(a) — na escola ou na igreja — que mais te ajudou a amar a leitura, a verdade e o conhecimento?",
+      "fe": true
+    },
+    {
+      "id": "estudos-07",
+      "tema": "estudos",
+      "texto": "Você lembra de quando ganhou sua primeira Bíblia ou de algum livro cristão que abriu os seus olhos na juventude?",
+      "fe": true
+    },
+    {
+      "id": "estudos-08",
+      "tema": "estudos",
+      "texto": "Na época de escola, você já precisou se posicionar ou agir diferente dos colegas por causa dos valores e da fé que aprendeu em casa?",
+      "fe": true
+    },
+    {
+      "id": "estudos-09",
+      "tema": "estudos",
+      "texto": "Qual foi a nota, prova ou boletim que você nunca esqueceu, para o bem ou para o mal?",
+      "fe": false
+    },
+    {
+      "id": "estudos-10",
+      "tema": "estudos",
+      "texto": "Como era a hora do recreio na sua escola? Do que vocês brincavam?",
+      "fe": false
+    },
+    {
+      "id": "estudos-11",
+      "tema": "estudos",
+      "texto": "Teve algum colega de escola que virou amigo para a vida inteira?",
+      "fe": false
+    },
+    {
+      "id": "estudos-12",
+      "tema": "estudos",
+      "texto": "Até onde você conseguiu estudar? Se pudesse, o que ainda gostaria de ter aprendido?",
+      "fe": false
+    },
+    {
+      "id": "estudos-13",
+      "tema": "estudos",
+      "texto": "Quem te ensinou a ler e a escrever? Você lembra da primeira cartilha ou do primeiro livro?",
+      "fe": false
+    },
+    {
+      "id": "estudos-14",
+      "tema": "estudos",
+      "texto": "Qual foi a lição mais importante que você aprendeu fora da escola, na vida?",
+      "fe": false
+    },
+    {
+      "id": "estudos-15",
+      "tema": "estudos",
+      "texto": "Você aprendeu algum ofício ou habilidade de que se orgulha até hoje? Quem te ensinou?",
+      "fe": false
+    },
+    {
+      "id": "juventude-01",
+      "tema": "juventude",
+      "texto": "Qual foi a primeira música, cantor ou disco que fez você sentir que tinha o seu próprio gosto, diferente do gosto dos seus pais?",
+      "fe": false
+    },
+    {
+      "id": "juventude-02",
+      "tema": "juventude",
+      "texto": "Como eram os encontros, festas ou passeios da juventude na sua cidade?",
+      "fe": false
+    },
+    {
+      "id": "juventude-03",
+      "tema": "juventude",
+      "texto": "Qual era a roupa ou sapato que você achava o máximo usar quando tinha 16 ou 18 anos?",
+      "fe": false
+    },
+    {
+      "id": "juventude-04",
+      "tema": "juventude",
+      "texto": "Quem foi a primeira pessoa por quem seu coração bateu mais forte (aquela paixão platônica de escola ou de rua)?",
+      "fe": false
+    },
+    {
+      "id": "juventude-05",
+      "tema": "juventude",
+      "texto": "Qual era o conselho ou regra que o seu pai ou sua mãe repetia toda vez que você saía de casa à noite?",
+      "fe": false
+    },
+    {
+      "id": "juventude-06",
+      "tema": "juventude",
+      "texto": "Qual foi a maior aventura ou viagem improvisada que você fez com seus amigos na juventude?",
+      "fe": false
+    },
+    {
+      "id": "juventude-07",
+      "tema": "juventude",
+      "texto": "Quando você aprendeu a dirigir (ou a andar de moto/bicicleta)? Quem te ensinou e qual era o veículo?",
+      "fe": false
+    },
+    {
+      "id": "juventude-08",
+      "tema": "juventude",
+      "texto": "O que você sonhava em ser quando crescesse aos 15 anos, e como a realidade mudou esse plano?",
+      "fe": false
+    },
+    {
+      "id": "juventude-09",
+      "tema": "juventude",
+      "texto": "Teve algum filme no cinema ou programa de rádio/TV que parava todo mundo naquela época?",
+      "fe": false
+    },
+    {
+      "id": "juventude-10",
+      "tema": "juventude",
+      "texto": "Qual foi o momento exato em que você sentiu: \"Pronto, deixei de ser criança\"?",
+      "fe": false
+    },
+    {
+      "id": "juventude-11",
+      "tema": "juventude",
+      "texto": "Como era a sua relação com seus irmãos quando vocês começaram a ficar adolescentes? Vocês se protegiam ou brigavam muito?",
+      "fe": false
+    },
+    {
+      "id": "juventude-12",
+      "tema": "juventude",
+      "texto": "Tinha algum lugar na cidade (uma praça, lanchonete, esquina ou beira de rio) onde a sua turma sempre se encontrava?",
+      "fe": false
+    },
+    {
+      "id": "juventude-13",
+      "tema": "juventude",
+      "texto": "Como foi a sua conversão ao evangelho? Teve um dia marcante ou foi um despertar gradual em que a graça de Cristo fez sentido para você?",
+      "fe": true
+    },
+    {
+      "id": "juventude-14",
+      "tema": "juventude",
+      "texto": "Você se lembra do dia do seu batismo ou da sua pública profissão de fé? O que você sentiu naquele momento?",
+      "fe": true
+    },
+    {
+      "id": "juventude-15",
+      "tema": "juventude",
+      "texto": "Como era a mocidade da igreja, os acampamentos ou o grupo de jovens na sua época? Quais amizades daquele tempo você levou para a vida inteira?",
+      "fe": true
+    },
+    {
+      "id": "juventude-16",
+      "tema": "juventude",
+      "texto": "Na juventude, qual foi a maior dúvida ou crise que você enfrentou na caminhada cristã e como Deus sustentou você?",
+      "fe": true
+    },
+    {
+      "id": "juventude-17",
+      "tema": "juventude",
+      "texto": "Como era um sábado à noite na sua juventude, do começo ao fim?",
+      "fe": false
+    },
+    {
+      "id": "juventude-18",
+      "tema": "juventude",
+      "texto": "Qual foi a maior bronca que você levou dos seus pais na juventude, e por quê?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-01",
+      "tema": "trabalho",
+      "texto": "Qual foi o seu primeiríssimo trabalho na vida e o que você comprou com o primeiro dinheiro que recebeu?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-02",
+      "tema": "trabalho",
+      "texto": "Quem foi a pessoa que te deu a primeira grande oportunidade profissional ou que te ensinou o ofício?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-03",
+      "tema": "trabalho",
+      "texto": "Qual foi o dia mais difícil da sua vida no trabalho — aquele em que você pensou \"não sei se vou dar conta\"?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-04",
+      "tema": "trabalho",
+      "texto": "E qual foi o momento profissional em que você sentiu mais orgulho do que tinha construído?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-05",
+      "tema": "trabalho",
+      "texto": "Você já precisou mudar de cidade, de ramo ou começar do zero alguma vez? Como foi tomar essa decisão?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-06",
+      "tema": "trabalho",
+      "texto": "Qual era a rotina do seu trabalho na época em que você mais trabalhava? A que horas você saía e a que horas voltava?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-07",
+      "tema": "trabalho",
+      "texto": "Teve algum colega de trabalho ou sócio que virou amigo para a vida inteira? Qual é o melhor causo de vocês juntos?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-08",
+      "tema": "trabalho",
+      "texto": "Qual foi o negócio, compra ou decisão financeira mais arriscada que você já fez na vida?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-09",
+      "tema": "trabalho",
+      "texto": "Como você equilibrava o trabalho pesado com a vontade de estar perto da família?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-10",
+      "tema": "trabalho",
+      "texto": "Qual foi a maior lição sobre honestidade e palavra empenhada que você aprendeu trabalhando?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-11",
+      "tema": "trabalho",
+      "texto": "Se você não tivesse seguido a profissão que seguiu, que outra vida você acha que teria levado?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-12",
+      "tema": "trabalho",
+      "texto": "O que o trabalho te ensinou sobre lidar com pessoas difíceis?",
+      "fe": false
+    },
+    {
+      "id": "trabalho-13",
+      "tema": "trabalho",
+      "texto": "Como a sua fé moldou a forma como você enxergava o seu trabalho, tratava seus colegas e fazia negócios?",
+      "fe": true
+    },
+    {
+      "id": "trabalho-14",
+      "tema": "trabalho",
+      "texto": "Você já precisou abrir mão de um ganho financeiro ou tomar uma decisão difícil no trabalho para manter a consciência limpa diante de Deus?",
+      "fe": true
+    },
+    {
+      "id": "trabalho-15",
+      "tema": "trabalho",
+      "texto": "Olhando para a sua trajetória profissional, como você viu a mão da providência de Deus abrindo ou fechando portas nos momentos certos?",
+      "fe": true
+    },
+    {
+      "id": "trabalho-16",
+      "tema": "trabalho",
+      "texto": "Além do seu trabalho no dia a dia, como você gostava de servir na igreja local (no diaconato, presbitério, música, escola dominical ou hospitalidade)?",
+      "fe": true
+    },
+    {
+      "id": "trabalho-17",
+      "tema": "trabalho",
+      "texto": "Qual foi o chefe ou o cliente mais inesquecível que você teve, e por quê?",
+      "fe": false
+    },
+    {
+      "id": "amor-01",
+      "tema": "amor",
+      "texto": "Onde e como você viu o grande amor da sua vida pela primeira vez? Você lembra com que roupa a pessoa estava?",
+      "fe": false
+    },
+    {
+      "id": "amor-02",
+      "tema": "amor",
+      "texto": "Qual foi o momento em que você teve certeza: \"É com essa pessoa que eu quero dividir a minha vida\"?",
+      "fe": false
+    },
+    {
+      "id": "amor-03",
+      "tema": "amor",
+      "texto": "Como era o namoro de vocês? Tinha horário no portão, carta, telefonema caro ou sogro bravo?",
+      "fe": false
+    },
+    {
+      "id": "amor-04",
+      "tema": "amor",
+      "texto": "Como foi o pedido de casamento (ou a conversa em que decidiram começar a vida juntos)?",
+      "fe": false
+    },
+    {
+      "id": "amor-05",
+      "tema": "amor",
+      "texto": "No dia do seu casamento, teve algum imprevisto engraçado ou emocionante que quase ninguém sabe?",
+      "fe": false
+    },
+    {
+      "id": "amor-06",
+      "tema": "amor",
+      "texto": "Como era a primeira casa ou apartamento onde vocês moraram juntos? O que tinha (e o que faltava) lá dentro?",
+      "fe": false
+    },
+    {
+      "id": "amor-07",
+      "tema": "amor",
+      "texto": "Qual foi a primeira grande conquista material de vocês dois como casal (um sofá, uma geladeira, um carro, um terreno)?",
+      "fe": false
+    },
+    {
+      "id": "amor-08",
+      "tema": "amor",
+      "texto": "Qual é o segredo que vocês descobriram na prática para atravessar as fases difíceis de um relacionamento longo?",
+      "fe": false
+    },
+    {
+      "id": "amor-09",
+      "tema": "amor",
+      "texto": "Qual foi a viagem ou passeio a dois mais inesquecível que vocês fizeram?",
+      "fe": false
+    },
+    {
+      "id": "amor-10",
+      "tema": "amor",
+      "texto": "Que mania ou jeito da pessoa amada sempre faz você abrir um sorriso, mesmo depois de tantos anos?",
+      "fe": false
+    },
+    {
+      "id": "amor-11",
+      "tema": "amor",
+      "texto": "Qual foi o maior gesto de cuidado ou companheirismo que seu parceiro(a) teve com você num momento de aperto?",
+      "fe": false
+    },
+    {
+      "id": "amor-12",
+      "tema": "amor",
+      "texto": "Se você pudesse reviver um único dia do começo da vida de vocês juntos, qual dia escolheria?",
+      "fe": false
+    },
+    {
+      "id": "amor-13",
+      "tema": "amor",
+      "texto": "Como a fé em comum aproximou vocês dois no começo do namoro? Vocês costumavam orar juntos sobre o futuro?",
+      "fe": true
+    },
+    {
+      "id": "amor-14",
+      "tema": "amor",
+      "texto": "Qual texto bíblico, hino ou palavra pastoral marcou o dia do casamento de vocês?",
+      "fe": true
+    },
+    {
+      "id": "amor-15",
+      "tema": "amor",
+      "texto": "Ao longo dos anos de casados, como o evangelho — o exercício do perdão diário e da graça — ajudou vocês a superarem os dias difíceis?",
+      "fe": true
+    },
+    {
+      "id": "amor-16",
+      "tema": "amor",
+      "texto": "Qual é a música que vocês dois consideram a música do casal?",
+      "fe": false
+    },
+    {
+      "id": "amor-17",
+      "tema": "amor",
+      "texto": "Como foi a primeira vez que você levou a pessoa amada para conhecer a sua família?",
+      "fe": false
+    },
+    {
+      "id": "amor-18",
+      "tema": "amor",
+      "texto": "Qual foi a maior briga boba que vocês tiveram e como fizeram as pazes?",
+      "fe": false
+    },
+    {
+      "id": "amor-19",
+      "tema": "amor",
+      "texto": "Como vocês costumam comemorar o aniversário de casamento?",
+      "fe": false
+    },
+    {
+      "id": "filhos-01",
+      "tema": "filhos",
+      "texto": "Onde você estava e o que sentiu quando descobriu que ia ser pai/mãe pela primeira vez?",
+      "fe": false
+    },
+    {
+      "id": "filhos-02",
+      "tema": "filhos",
+      "texto": "Como foi o dia em que cada um dos seus filhos nasceu? Qual foi a sua primeira reação ao segurá-los no colo?",
+      "fe": false
+    },
+    {
+      "id": "filhos-03",
+      "tema": "filhos",
+      "texto": "Como vocês escolheram os nomes dos filhos? Teve alguma disputa ou homenagem?",
+      "fe": false
+    },
+    {
+      "id": "filhos-04",
+      "tema": "filhos",
+      "texto": "Qual foi a fase mais cansativa de criar os filhos pequenos e como vocês davam um jeito na rotina?",
+      "fe": false
+    },
+    {
+      "id": "filhos-05",
+      "tema": "filhos",
+      "texto": "Qual é a história mais engraçada que um dos seus filhos aprontou quando era pequeno e que virou lenda na família?",
+      "fe": false
+    },
+    {
+      "id": "filhos-06",
+      "tema": "filhos",
+      "texto": "Como eram as viagens de família (aquelas de carro cheio, mala no bagageiro, lanche na estrada)?",
+      "fe": false
+    },
+    {
+      "id": "filhos-07",
+      "tema": "filhos",
+      "texto": "Qual foi o maior susto que você passou como pai ou mãe?",
+      "fe": false
+    },
+    {
+      "id": "filhos-08",
+      "tema": "filhos",
+      "texto": "O que você fez questão de ensinar aos seus filhos exatamente como seus pais te ensinaram? E o que você decidiu fazer totalmente diferente?",
+      "fe": false
+    },
+    {
+      "id": "filhos-09",
+      "tema": "filhos",
+      "texto": "Qual foi a sensação de ver o primeiro filho sair de casa ou seguir o próprio caminho?",
+      "fe": false
+    },
+    {
+      "id": "filhos-10",
+      "tema": "filhos",
+      "texto": "Teve algum animal de estimação que marcou a história da casa e que era tratado quase como gente?",
+      "fe": false
+    },
+    {
+      "id": "filhos-11",
+      "tema": "filhos",
+      "texto": "Quando os netos chegaram, o que mudou dentro de você? É verdade que ser avô/avó é amar duas vezes?",
+      "fe": false
+    },
+    {
+      "id": "filhos-12",
+      "tema": "filhos",
+      "texto": "Daquilo que seus pais fizeram na sua criação espiritual, o que você tentou replicar com seus filhos e o que decidiu fazer diferente?",
+      "fe": true
+    },
+    {
+      "id": "filhos-13",
+      "tema": "filhos",
+      "texto": "Como vocês tentavam ensinar a Palavra em casa (no culto doméstico, nas conversas à mesa ou na hora de colocar as crianças para dormir)?",
+      "fe": true
+    },
+    {
+      "id": "filhos-14",
+      "tema": "filhos",
+      "texto": "Qual foi a oração mais fervorosa e demorada que você já fez de joelhos por um filho ou neto — e como viu Deus responder?",
+      "fe": true
+    },
+    {
+      "id": "filhos-15",
+      "tema": "filhos",
+      "texto": "Qual era a música, história ou brincadeira que você fazia para os filhos dormirem?",
+      "fe": false
+    },
+    {
+      "id": "filhos-16",
+      "tema": "filhos",
+      "texto": "Qual foi a primeira palavra ou o primeiro passo de um filho que você nunca esqueceu?",
+      "fe": false
+    },
+    {
+      "id": "filhos-17",
+      "tema": "filhos",
+      "texto": "Que conselho você daria hoje para um pai ou uma mãe de primeira viagem?",
+      "fe": false
+    },
+    {
+      "id": "legado-01",
+      "tema": "legado",
+      "texto": "Como eram os Natais, domingos de Páscoa ou festas de aniversário na sua casa quando a família toda se reunia?",
+      "fe": false
+    },
+    {
+      "id": "legado-02",
+      "tema": "legado",
+      "texto": "Qual foi a tempestade mais difícil que você precisou atravessar na vida e de onde tirou forças para continuar?",
+      "fe": false
+    },
+    {
+      "id": "legado-03",
+      "tema": "legado",
+      "texto": "Quem foi o \"anjo da guarda\" de carne e osso que Deus colocou no seu caminho quando você mais precisou de ajuda?",
+      "fe": false
+    },
+    {
+      "id": "legado-04",
+      "tema": "legado",
+      "texto": "Você já viveu um livramento tão grande ou uma provisão tão inesperada que não teve dúvida de que foi milagre e cuidado do alto?",
+      "fe": true
+    },
+    {
+      "id": "legado-05",
+      "tema": "legado",
+      "texto": "Como você lembra de grandes acontecimentos do país ou do mundo (como uma Copa do Mundo histórica, mudanças de moeda, eleições)? Onde você estava?",
+      "fe": false
+    },
+    {
+      "id": "legado-06",
+      "tema": "legado",
+      "texto": "Qual foi a despedida mais difícil da sua vida e o que você guarda de mais bonito de quem já partiu?",
+      "fe": false
+    },
+    {
+      "id": "legado-07",
+      "tema": "legado",
+      "texto": "Teve algum erro ou porta fechada que na época pareceu um desastre, mas que anos depois você percebeu que te levou para um caminho muito melhor?",
+      "fe": false
+    },
+    {
+      "id": "legado-08",
+      "tema": "legado",
+      "texto": "Qual foi o momento da sua vida em que você mais riu até a barriga doer e faltar o ar?",
+      "fe": false
+    },
+    {
+      "id": "legado-09",
+      "tema": "legado",
+      "texto": "Qual foi a conversa mais importante que você já teve com seu pai ou com sua mãe antes de eles partirem?",
+      "fe": false
+    },
+    {
+      "id": "legado-10",
+      "tema": "legado",
+      "texto": "O que a maturidade e a caminhada com Deus mudaram no seu jeito de encarar os problemas com o passar dos anos?",
+      "fe": true
+    },
+    {
+      "id": "legado-11",
+      "tema": "legado",
+      "texto": "Você já precisou perdoar alguém (ou pedir um perdão difícil) que tirou um peso enorme das suas costas?",
+      "fe": false
+    },
+    {
+      "id": "legado-12",
+      "tema": "legado",
+      "texto": "Qual foi a mudança tecnológica mais impressionante que você viu acontecer desde que era criança até hoje?",
+      "fe": false
+    },
+    {
+      "id": "legado-13",
+      "tema": "legado",
+      "texto": "Qual foi o lugar mais bonito da criação que os seus olhos já viram pessoalmente?",
+      "fe": false
+    },
+    {
+      "id": "legado-14",
+      "tema": "legado",
+      "texto": "Quando você olha para trás hoje, do que você sente que mais valeu a pena ter cuidado?",
+      "fe": false
+    },
+    {
+      "id": "legado-15",
+      "tema": "legado",
+      "texto": "O que você achava que era importantíssimo aos 30 anos e hoje percebe que não tinha a menor importância?",
+      "fe": false
+    },
+    {
+      "id": "legado-16",
+      "tema": "legado",
+      "texto": "Qual é o seu momento favorito de um dia comum hoje em dia?",
+      "fe": false
+    },
+    {
+      "id": "legado-17",
+      "tema": "legado",
+      "texto": "Se você pudesse sentar para tomar um café de uma hora com qualquer pessoa da nossa família que já partiu para a eternidade, quem seria e o que você contaria a ela?",
+      "fe": false
+    },
+    {
+      "id": "legado-18",
+      "tema": "legado",
+      "texto": "Qual é a tradição ou receita da nossa família que você mais torce para que os filhos e netos não deixem morrer?",
+      "fe": false
+    },
+    {
+      "id": "legado-19",
+      "tema": "legado",
+      "texto": "O que significa uma vida bem vivida e abençoada para você hoje?",
+      "fe": false
+    },
+    {
+      "id": "legado-20",
+      "tema": "legado",
+      "texto": "Qual é o melhor conselho sobre dinheiro, mordomia e trabalho que você daria para um neto que está começando a vida agora?",
+      "fe": true
+    },
+    {
+      "id": "legado-21",
+      "tema": "legado",
+      "texto": "E qual é o melhor conselho sobre escolher uma pessoa para amar e construir um lar?",
+      "fe": false
+    },
+    {
+      "id": "legado-22",
+      "tema": "legado",
+      "texto": "Pelo que você gostaria de ser lembrado quando seus bisnetos ouvirem a sua voz neste livro daqui a muitos anos?",
+      "fe": false
+    },
+    {
+      "id": "legado-23",
+      "tema": "legado",
+      "texto": "Qual é a coisa mais bonita que você enxerga em cada um dos seus filhos hoje?",
+      "fe": false
+    },
+    {
+      "id": "legado-24",
+      "tema": "legado",
+      "texto": "Se você pudesse mandar um recado curto para você mesmo lá aos 20 anos de idade, o que diria no ouvido daquele jovem?",
+      "fe": false
+    },
+    {
+      "id": "legado-25",
+      "tema": "legado",
+      "texto": "Qual é o seu maior desejo e oração para o futuro dos seus netos e dos que ainda vão nascer?",
+      "fe": true
+    },
+    {
+      "id": "legado-26",
+      "tema": "legado",
+      "texto": "O que ainda está na sua lista de desejos para fazer, conhecer ou experimentar nos próximos anos?",
+      "fe": false
+    },
+    {
+      "id": "legado-27",
+      "tema": "legado",
+      "texto": "Como vocês celebravam o Natal e a Páscoa em família para que o verdadeiro sentido da encarnação e ressurreição de Cristo estivesse sempre vivo?",
+      "fe": true
+    },
+    {
+      "id": "legado-28",
+      "tema": "legado",
+      "texto": "Se você pudesse levantar um \"Ebenézer\" (Até aqui nos ajudou o Senhor), qual foi a maior prova da bondade de Deus na história da nossa casa?",
+      "fe": true
+    },
+    {
+      "id": "legado-29",
+      "tema": "legado",
+      "texto": "Qual é o Salmo, versículo ou hino que foi a sua âncora nos dias de lágrima e nos dias de festa?",
+      "fe": true
+    },
+    {
+      "id": "legado-30",
+      "tema": "legado",
+      "texto": "Quando alguém da família estiver passando por um dia triste no futuro e apontar o celular para o QR Code desta página para ouvir a sua voz, que palavra de consolo e testemunho sobre a fidelidade de Deus você quer deixar gravada?",
+      "fe": true
+    }
+  ],
+  "iniciais": {
+    "pai": [
+      "raizes-01",
+      "raizes-04",
+      "infancia-01",
+      "infancia-03",
+      "juventude-08",
+      "trabalho-01",
+      "trabalho-04",
+      "amor-01",
+      "filhos-02",
+      "legado-24"
+    ],
+    "mae": [
+      "raizes-01",
+      "raizes-09",
+      "infancia-01",
+      "infancia-10",
+      "juventude-04",
+      "trabalho-01",
+      "amor-02",
+      "filhos-01",
+      "filhos-05",
+      "legado-18"
+    ],
+    "avo": [
+      "raizes-02",
+      "raizes-05",
+      "infancia-01",
+      "juventude-07",
+      "trabalho-01",
+      "amor-01",
+      "filhos-02",
+      "filhos-11",
+      "legado-12",
+      "legado-21"
+    ],
+    "avoa": [
+      "raizes-03",
+      "raizes-09",
+      "infancia-07",
+      "juventude-04",
+      "amor-03",
+      "filhos-01",
+      "filhos-11",
+      "legado-01",
+      "legado-18",
+      "legado-23"
+    ],
+    "tio": [
+      "raizes-06",
+      "infancia-02",
+      "infancia-03",
+      "juventude-06",
+      "juventude-12",
+      "trabalho-01",
+      "trabalho-07",
+      "amor-01",
+      "legado-08",
+      "legado-24"
+    ],
+    "tia": [
+      "raizes-06",
+      "raizes-09",
+      "infancia-07",
+      "juventude-02",
+      "juventude-04",
+      "trabalho-01",
+      "amor-03",
+      "legado-08",
+      "legado-15",
+      "legado-24"
+    ],
+    "outro": [
+      "raizes-01",
+      "raizes-02",
+      "infancia-01",
+      "estudos-02",
+      "juventude-08",
+      "trabalho-01",
+      "amor-01",
+      "legado-02",
+      "legado-14",
+      "legado-24"
+    ]
+  }
+}
