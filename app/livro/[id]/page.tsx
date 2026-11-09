@@ -3,7 +3,7 @@ import { after } from "next/server";
 import { Suspense } from "react";
 import { TelaLivroVazio } from "@/components/telas/tela-livro-vazio";
 import { registrarEvento } from "@/lib/eventos";
-import { estadoEfetivo } from "@/lib/passe";
+import { estadoEfetivo } from "@/lib/plano";
 import { livrosDoMembro, usuarioAtual } from "@/lib/sessao";
 
 export default function PaginaLivro({ params }: PageProps<"/livro/[id]">) {

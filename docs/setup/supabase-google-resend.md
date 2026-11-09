@@ -4,7 +4,7 @@ Guia do prompt 3. Leva uns 30 minutos, na ordem abaixo. Nada aqui pede segredo n
 
 **Já feito pelo Claude:**
 - Projeto Supabase `ecoa-plataforma`, região São Paulo (sa-east-1), ref `dhmjaeauhzfniqncmiof`.
-- As 2 migrations aplicadas, o job diário `vencer-passes` agendado e o advisor de segurança sem alertas.
+- As 2 migrations aplicadas, o job diário `vencer-planos` agendado e o advisor de segurança sem alertas.
 
 URL do projeto: `https://dhmjaeauhzfniqncmiof.supabase.co`
 
@@ -62,7 +62,7 @@ No painel do projeto `ecoa-plataforma`:
 
 ### 4.1 Cadastro fechado
 **Authentication → Sign In / Providers:**
-- **Allow new users to sign up: desligado.** Só o admin cria contas. Isso fecha o golpe de alguém criar `ana@…` antes do passe ser ativado.
+- **Allow new users to sign up: desligado.** Só o admin cria contas. Isso fecha o golpe de alguém criar `ana@…` antes do plano ser ativado.
 - **Email:** ligado. **Confirm email:** ligado.
 - **Google:** ligado. Cole o Client ID e o Client Secret do passo 2.
 
@@ -137,7 +137,7 @@ Copie `.env.example` para `.env.local`, preencha as mesmas 4 variáveis do passo
 ## 7. Aceite no celular
 
 1. Abra `https://ecoa-plataforma-git-c-667868-guilhermeeller7-gmailcoms-projects.vercel.app/admin` e entre com Google.
-2. **Ativar passe** com um e-mail seu que não seja o de admin, de preferência um Gmail, e "Jair" como autor. Confirme.
+2. **Ativar plano** com um e-mail seu que não seja o de admin, de preferência um Gmail, e "Jair" como autor. Confirme.
 3. O e-mail "O livro do Jair está pronto para começar" chega. Toque em **Abrir meu livro**, depois em **Entrar com Google**, com essa conta.
 4. Aparece "O livro do Jair", com o estado vazio.
 5. Teste negativo: em outra aba anônima, entre com um Google que ninguém cadastrou. Deve voltar com "Este e-mail ainda não tem um livro."

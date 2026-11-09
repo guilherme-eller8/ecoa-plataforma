@@ -93,7 +93,7 @@ describe("registrarEvento", () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     const { cliente } = clienteFalso({ erroInsert: "conexão caiu" });
     const r = await registrarEvento(
-      { quem: ANA, papel: "admin", acao: "passe_ativado", livro: LIVRO },
+      { quem: ANA, papel: "admin", acao: "plano_ativado", livro: LIVRO },
       {},
       cliente,
     );

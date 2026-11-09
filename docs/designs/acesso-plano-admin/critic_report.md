@@ -1,13 +1,13 @@
 # Relatório do revisor goldfish: Design Critic (segurança)
 
-Alvo: `docs/designs/acesso-passe-admin.md`, linhas 1–492. Padrão: feature-spec-standard. Revisor sem contexto da conversa.
+Alvo: `docs/designs/acesso-plano-admin.md`, linhas 1–492. Padrão: feature-spec-standard. Revisor sem contexto da conversa.
 
 ## Bloqueadores
 
 - **B1. Redirect curinga `https://*.vercel.app/**`** aceita deploy de qualquer pessoa na Vercel. Um atacante inicia o OAuth com o próprio PKCE e `redirect_to` para um domínio dele, e o código de login da Ana cai lá. **Correção:** URLs exatas, ou curinga com o escopo do time (`https://*-<time>.vercel.app/**`); em produção, só `APP_URL`.
-- **B2. Conta criada antes por um estranho.** Com cadastro aberto e login por senha habilitado, um estranho cria `ana@…` com senha própria. Depois, o "acha ou cria" do `ativarPasse` encontra essa conta e a torna responsável. **Correção:**
+- **B2. Conta criada antes por um estranho.** Com cadastro aberto e login por senha habilitado, um estranho cria `ana@…` com senha própria. Depois, o "acha ou cria" do `ativarPlano` encontra essa conta e a torna responsável. **Correção:**
   - Desligar o cadastro público e o login por senha.
-  - No `ativarPasse`, recusar usuário que tenha outra identidade além de e-mail ou Google.
+  - No `ativarPlano`, recusar usuário que tenha outra identidade além de e-mail ou Google.
   - Ajustar o CUJ 6.
 
 ## Majors
@@ -33,7 +33,7 @@ Alvo: `docs/designs/acesso-passe-admin.md`, linhas 1–492. Padrão: feature-spe
 - Objetivos 1 e 6 sem verificação automática.
 - Alternativas sem trade-off concreto.
 - O que pode entrar em `events.detalhes`.
-- `update` com passe vencido devolve 0 linhas, e a tela precisa distinguir isso de "não achou".
+- `update` com plano vencido devolve 0 linhas, e a tela precisa distinguir isso de "não achou".
 
 ## Veredito
 

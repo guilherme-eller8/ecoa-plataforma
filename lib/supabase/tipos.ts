@@ -1,5 +1,5 @@
 // Gerado por `generate_typescript_types` do projeto ecoa-plataforma (sa-east-1).
-// Ajuste manual: em admin_listar_livros, autor_nome, passe_vence_em e responsavel_email
+// Ajuste manual: em admin_listar_livros, autor_nome, plano_vence_em e responsavel_email
 // podem ser nulos (left join e livro sem nome do autor). Regerar após cada migration.
 
 export type Json =
@@ -89,27 +89,27 @@ export type Database = {
           autor_nome: string | null;
           criado_em: string;
           id: string;
-          passe_ativado_em: string | null;
-          passe_estado: Database["public"]["Enums"]["passe_estado"];
-          passe_vence_em: string | null;
+          plano_ativado_em: string | null;
+          plano_estado: Database["public"]["Enums"]["plano_estado"];
+          plano_vence_em: string | null;
         };
         Insert: {
           atualizado_em?: string;
           autor_nome?: string | null;
           criado_em?: string;
           id?: string;
-          passe_ativado_em?: string | null;
-          passe_estado?: Database["public"]["Enums"]["passe_estado"];
-          passe_vence_em?: string | null;
+          plano_ativado_em?: string | null;
+          plano_estado?: Database["public"]["Enums"]["plano_estado"];
+          plano_vence_em?: string | null;
         };
         Update: {
           atualizado_em?: string;
           autor_nome?: string | null;
           criado_em?: string;
           id?: string;
-          passe_ativado_em?: string | null;
-          passe_estado?: Database["public"]["Enums"]["passe_estado"];
-          passe_vence_em?: string | null;
+          plano_ativado_em?: string | null;
+          plano_estado?: Database["public"]["Enums"]["plano_estado"];
+          plano_vence_em?: string | null;
         };
         Relationships: [];
       };
@@ -156,7 +156,7 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      admin_ativar_passe: {
+      admin_ativar_plano: {
         Args: { p_autor_nome: string; p_meses: number; p_responsavel: string };
         Returns: string;
       };
@@ -166,12 +166,12 @@ export type Database = {
           autor_nome: string | null;
           criado_em: string;
           id: string;
-          passe_estado: Database["public"]["Enums"]["passe_estado"];
-          passe_vence_em: string | null;
+          plano_estado: Database["public"]["Enums"]["plano_estado"];
+          plano_vence_em: string | null;
           responsavel_email: string | null;
         }[];
       };
-      admin_renovar_passe: {
+      admin_renovar_plano: {
         Args: { p_livro: string; p_meses: number };
         Returns: string;
       };
@@ -193,7 +193,7 @@ export type Database = {
         | "admin"
         | "sistema";
       papel_membro: "responsavel" | "cofacilitador";
-      passe_estado: "pendente" | "ativo" | "somente_leitura";
+      plano_estado: "pendente" | "ativo" | "somente_leitura";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -201,6 +201,6 @@ export type Database = {
   };
 };
 
-export type PasseEstado = Database["public"]["Enums"]["passe_estado"];
+export type PlanoEstado = Database["public"]["Enums"]["plano_estado"];
 export type PapelMembro = Database["public"]["Enums"]["papel_membro"];
 export type AtorTipo = Database["public"]["Enums"]["ator_tipo"];

@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { TelaAdmin, type LinhaAdmin } from "@/components/telas/tela-admin";
-import { estadoEfetivo } from "@/lib/passe";
+import { estadoEfetivo } from "@/lib/plano";
 import { usuarioAtual } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
-import { ativarPasse, reenviarAcesso, renovarPasse } from "./acoes";
+import { ativarPlano, reenviarAcesso, renovarPlano } from "./acoes";
 
 export const metadata: Metadata = {
   title: "Admin · Ecoa Memórias",
@@ -33,14 +33,14 @@ async function Admin() {
     autorNome: l.autor_nome,
     email: l.responsavel_email,
     estado: estadoEfetivo(l),
-    venceEm: l.passe_vence_em,
+    venceEm: l.plano_vence_em,
   }));
 
   return (
     <TelaAdmin
       livros={livros}
-      ativar={ativarPasse}
-      renovar={renovarPasse}
+      ativar={ativarPlano}
+      renovar={renovarPlano}
       reenviar={reenviarAcesso}
     />
   );

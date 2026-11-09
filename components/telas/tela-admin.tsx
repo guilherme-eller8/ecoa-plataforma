@@ -6,13 +6,13 @@ import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
 import { Marca } from "@/components/ui/marca";
 import type { AcaoFormulario, Resultado } from "@/lib/resultado";
-import type { PasseEstado } from "@/lib/supabase/tipos";
+import type { PlanoEstado } from "@/lib/supabase/tipos";
 
 export type LinhaAdmin = {
   id: string;
   autorNome: string | null;
   email: string | null;
-  estado: PasseEstado;
+  estado: PlanoEstado;
   venceEm: string | null;
 };
 
@@ -23,7 +23,7 @@ type Props = {
   reenviar: AcaoFormulario;
 };
 
-const ROTULO_ESTADO: Record<PasseEstado, string> = {
+const ROTULO_ESTADO: Record<PlanoEstado, string> = {
   ativo: "Ativo",
   somente_leitura: "Somente leitura",
   pendente: "Pendente",
@@ -60,7 +60,7 @@ export function TelaAdmin({ livros, ativar, renovar, reenviar }: Props) {
         </h2>
         {livros.length === 0 ? (
           <p className="font-ui text-tinta-2 text-[16px]">
-            Nenhum passe ativado ainda.
+            Nenhum plano ativado ainda.
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -107,7 +107,7 @@ function FormularioAtivar({ ativar }: { ativar: AcaoFormulario }) {
         id="titulo-ativar"
         className="font-ui text-tinta text-[24px] font-semibold"
       >
-        Ativar passe
+        Ativar plano
       </h1>
       <form action={enviar} className="flex flex-col gap-5">
         <div className="grid gap-4 md:grid-cols-2">
@@ -139,7 +139,7 @@ function FormularioAtivar({ ativar }: { ativar: AcaoFormulario }) {
             onClick={() => setConfirmando(true)}
             className="self-start"
           >
-            Ativar passe
+            Ativar plano
           </Botao>
         ) : (
           <div className="flex flex-col gap-4">

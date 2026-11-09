@@ -1,19 +1,19 @@
-# Acesso, passe, admin e registro de uso
+# Acesso, plano, admin e registro de uso
 
 - **Autor:** Guilherme Eller (com Claude)
 - **Data:** 2026-11-09
 
 ## Visão geral
 
-Primeiro corte da plataforma com banco e login (prompt 3 do PRD). Na onda 1 o pagamento é Pix manual: a Ecoa confirma o Pix e ativa o passe no `/admin`. Ativar cria o livro, cria o responsável e manda o e-mail de acesso. O responsável entra com Google (ou link por e-mail) e vê a home vazia do livro. Desde o primeiro dia, toda ação relevante vira uma linha em `events`, para responder "quem acessou o livro X ontem e o que fez".
+Primeiro corte da plataforma com banco e login (prompt 3 do PRD). Na onda 1 o pagamento é Pix manual: a Ecoa confirma o Pix e ativa o plano no `/admin`. Ativar cria o livro, cria o responsável e manda o e-mail de acesso. O responsável entra com Google (ou link por e-mail) e vê a home vazia do livro. Desde o primeiro dia, toda ação relevante vira uma linha em `events`, para responder "quem acessou o livro X ontem e o que fez".
 
 Quem usa: a Ecoa (admin, 1 pessoa) e o responsável (filho ou filha que comprou). Escala da onda 1: 2 famílias até 20/12; da onda 2: dezenas de livros.
 
 ## Análise
 
 - **O maior risco não está aqui.** O PRD ordena os prompts por risco, e o risco central (qualidade do texto da IA, prompt 1) ainda não foi testado. Este prompt é infraestrutura conhecida. Não deve consumir mais de 1 sessão.
-- **Furo de segurança óbvio a fechar:** se a tabela `books` aceitar `update` do responsável sem restrição de coluna, ele estende o próprio passe pela API pública do Supabase. Decisão: colunas do passe só mudam pelo servidor (permissão por coluna + funções que só a chave secreta executa).
-- **O job diário pode atrasar ou falhar.** Por isso o bloqueio de escrita não depende só do estado gravado: a regra `livro_editavel` também compara `passe_vence_em` com a hora atual. O job serve para o estado ficar visível e para registrar o evento.
+- **Furo de segurança óbvio a fechar:** se a tabela `books` aceitar `update` do responsável sem restrição de coluna, ele estende o próprio plano pela API pública do Supabase. Decisão: colunas do plano só mudam pelo servidor (permissão por coluna + funções que só a chave secreta executa).
+- **O job diário pode atrasar ou falhar.** Por isso o bloqueio de escrita não depende só do estado gravado: a regra `livro_editavel` também compara `plano_vence_em` com a hora atual. O job serve para o estado ficar visível e para registrar o evento.
 - **E-mail de acesso que expira é um problema real.** Link mágico vale 1 hora; o responsável pode abrir o e-mail no dia seguinte. Decisão: o botão principal do e-mail leva a `/entrar` (não expira); o link mágico é a alternativa.
 - **Testes de RLS sem Docker.** O container e a máquina do Guilherme não precisam de Docker: PGlite (Postgres em WebAssembly) roda as migrations reais com um shim do schema `auth`.
 

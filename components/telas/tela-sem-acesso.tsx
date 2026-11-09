@@ -16,7 +16,7 @@ export function TelaSemAcesso({ email, ehAdmin, sair }: Props) {
           Seu acesso ainda não foi ativado
         </h1>
         <p className="font-ui text-tinta-2 text-[17px]">
-          {email ? <>Você entrou como {email}. </> : null}Assim que o passe for
+          {email ? <>Você entrou como {email}. </> : null}Assim que o plano for
           ativado, o livro aparece aqui.
         </p>
         {ehAdmin ? (

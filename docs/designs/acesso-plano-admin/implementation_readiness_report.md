@@ -1,6 +1,6 @@
 # Relatório do revisor goldfish: Prontidão de implementação e aderência ao código
 
-Alvo: `docs/designs/acesso-passe-admin.md`, a partir de "Plano de implementação detalhado". Padrão: implementation-readiness-standard. Revisor sem contexto da conversa. Confirmou nas versões instaladas:
+Alvo: `docs/designs/acesso-plano-admin.md`, a partir de "Plano de implementação detalhado". Padrão: implementation-readiness-standard. Revisor sem contexto da conversa. Confirmou nas versões instaladas:
 
 - `generateLink(...).data.properties.hashed_token`
 - `verifyOtp({ token_hash, type })`

@@ -1,16 +1,16 @@
-# Acesso, passe, admin e registro de uso
+# Acesso, plano, admin e registro de uso
 
 - **Autor:** Guilherme Eller (com Claude)
 - **Status:** Aprovado e implementado (aceite feito em 09/11/2026)
 - **Data:** 2026-11-09
-- **Origem:** [concepts brief](./acesso-passe-admin/concepts_brief.md) · PRD: Papéis e permissões, M1, M10 (onda 1), Modelo de dados
-- **Revisões:** [segurança](./acesso-passe-admin/critic_report.md) · [zoom out](./acesso-passe-admin/zoom_out_report.md) · [prontidão](./acesso-passe-admin/implementation_readiness_report.md) · [resolução](./acesso-passe-admin/resolucao.md)
+- **Origem:** [concepts brief](./acesso-plano-admin/concepts_brief.md) · PRD: Papéis e permissões, M1, M10 (onda 1), Modelo de dados
+- **Revisões:** [segurança](./acesso-plano-admin/critic_report.md) · [zoom out](./acesso-plano-admin/zoom_out_report.md) · [prontidão](./acesso-plano-admin/implementation_readiness_report.md) · [resolução](./acesso-plano-admin/resolucao.md)
 
 ---
 
 ## Visão geral
 
-Este design cobre o prompt 3 do PRD: a catraca da plataforma. Na onda 1, a Ecoa recebe o Pix e ativa o passe no `/admin`. Ativar cria o livro, cria a conta do responsável e manda o e-mail de acesso. O responsável entra com Google ou com link por e-mail e vê a home vazia do livro. O passe dura 12 meses; vencido, o livro fica em somente leitura. Cada abertura do livro e cada ação do admin vira uma linha em `events`.
+Este design cobre o prompt 3 do PRD: a catraca da plataforma. Na onda 1, a Ecoa recebe o Pix e ativa o plano no `/admin`. Ativar cria o livro, cria a conta do responsável e manda o e-mail de acesso. O responsável entra com Google ou com link por e-mail e vê a home vazia do livro. O plano dura 12 meses; vencido, o livro fica em somente leitura. Cada abertura do livro e cada ação do admin vira uma linha em `events`.
 
 ## O problema
 
@@ -18,13 +18,13 @@ Hoje não existe banco, login nem forma de liberar acesso. Sem isso, nenhum prom
 
 ## Objetivos
 
-1. O admin ativa um passe informando o e-mail do responsável (e, se quiser, o nome do autor), confirma o e-mail numa segunda tela, e o e-mail de acesso sai na hora. Verificação: manual no aceite.
+1. O admin ativa um plano informando o e-mail do responsável (e, se quiser, o nome do autor), confirma o e-mail numa segunda tela, e o e-mail de acesso sai na hora. Verificação: manual no aceite.
 2. O responsável entra com Google ou link por e-mail e cai direto na home do seu livro.
 3. Um responsável não lê, não altera e não apaga nada de outro livro. Verificação: `supabase/tests/rls.test.ts` em `npm test`.
 4. Só o admin cria contas. Ninguém se cadastra sozinho, nem por senha. Verificação: configuração no painel (guia de setup) e teste manual no aceite.
-5. Ninguém fora do servidor muda estado ou vencimento do passe, nem do próprio livro. Verificação: teste de RLS.
-6. Passe vencido bloqueia escrita feita com a sessão do usuário, mesmo que o job diário atrase. Verificação: teste de RLS.
-7. `registrarEvento` é a única porta de escrita em `events` no código TypeScript. Verificação: teste que procura `from("events")` fora de `lib/eventos.ts`. Exceção declarada: o job `privado.vencer_passes()`, que grava em SQL.
+5. Ninguém fora do servidor muda estado ou vencimento do plano, nem do próprio livro. Verificação: teste de RLS.
+6. Plano vencido bloqueia escrita feita com a sessão do usuário, mesmo que o job diário atrase. Verificação: teste de RLS.
+7. `registrarEvento` é a única porta de escrita em `events` no código TypeScript. Verificação: teste que procura `from("events")` fora de `lib/eventos.ts`. Exceção declarada: o job `privado.vencer_planos()`, que grava em SQL.
 8. "Quem acessou o livro X ontem e o que fez" responde com uma consulta. Verificação: consulta documentada, conferida no aceite.
 
 ## Não objetivos
@@ -47,24 +47,24 @@ Nenhuma.
 
 | Risco | Mitigação |
 | --- | --- |
-| Estranho cria `ana@…` antes do admin e herda o livro | Cadastro público e login por senha desligados; `ativarPasse` recusa conta com identidade diferente de `email`/`google` |
+| Estranho cria `ana@…` antes do admin e herda o livro | Cadastro público e login por senha desligados; `ativarPlano` recusa conta com identidade diferente de `email`/`google` |
 | Redirect de login para domínio de terceiro (`*.vercel.app` de outra pessoa) | Lista de redirects só com URLs exatas do app e do branch de preview |
 | E-mail digitado errado entrega o livro a um estranho | Tela de confirmação com o e-mail em destaque; `admin_trocar_responsavel` |
 | Scanner de e-mail (Outlook, antivírus) queima o link de uso único | Link abre uma página com o botão *Entrar*; só o clique (POST) consome o token |
 | Bombardeio de e-mails pelo `signInWithOtp` público | Limites de Auth do Supabase (documentados no setup); `shouldCreateUser: false` |
 | Descobrir quem tem livro pelo tempo de resposta | Envio em `after()`; resposta imediata e igual para todos |
-| Código futuro com a chave secreta ignora o passe vencido | Regra escrita aqui: escrita do usuário usa o cliente da sessão; quem usar a chave secreta chama `livro_editavel` antes |
+| Código futuro com a chave secreta ignora o plano vencido | Regra escrita aqui: escrita do usuário usa o cliente da sessão; quem usar a chave secreta chama `livro_editavel` antes |
 | Grants padrão do Supabase voltam em tabelas e funções novas | Teste genérico: nenhum grant de tabela para `anon`; nenhuma função executável por `anon`; só as funções da lista executáveis por `authenticated`; RLS ligada em toda tabela |
 | Conta Google do admin comprometida | Admin lê o e-mail de todos. Mitigação na onda 1: verificação em 2 etapas na conta Google; MFA no Supabase fica para a onda 2 |
-| Resend fora do ar na ativação | Passe fica ativo; a tela diz "Passe ativado, mas o e-mail não saiu. Use Reenviar." |
+| Resend fora do ar na ativação | Plano fica ativo; a tela diz "Plano ativado, mas o e-mail não saiu. Use Reenviar." |
 | Shim do PGlite diferente do Supabase real | `get_advisors` no projeto real e teste manual de leitura cruzada no aceite |
 
 ## Jornadas críticas (CUJs)
 
-### CUJ 1: Ativar um passe
+### CUJ 1: Ativar um plano
 - **Dado** que o admin está logado e o Pix foi confirmado,
-- **Quando** ele digita `ana@exemplo.com` e "Jair", toca em *Ativar passe*, vê "Ativar para **ana@exemplo.com**?" e confirma,
-- **Então** um livro `ativo` com vencimento em 12 meses é criado, Ana vira responsável, o e-mail "O livro do Jair está pronto para começar" é enviado, a linha aparece no topo da lista e o evento `passe_ativado` é registrado. Dois toques rápidos não criam dois livros (botão desativado durante o envio).
+- **Quando** ele digita `ana@exemplo.com` e "Jair", toca em *Ativar plano*, vê "Ativar para **ana@exemplo.com**?" e confirma,
+- **Então** um livro `ativo` com vencimento em 12 meses é criado, Ana vira responsável, o e-mail "O livro do Jair está pronto para começar" é enviado, a linha aparece no topo da lista e o evento `plano_ativado` é registrado. Dois toques rápidos não criam dois livros (botão desativado durante o envio).
 
 ### CUJ 2: Primeiro acesso com Google
 - **Dado** que Ana recebeu o e-mail,
@@ -76,10 +76,10 @@ Nenhuma.
 - **Quando** ela digita o e-mail em `/entrar` e toca em *Receber link*,
 - **Então** a tela responde na hora "Se este e-mail tiver um livro, o link chega em instantes"; o e-mail chega; o link abre uma página com o botão *Entrar*; o toque abre a home do livro.
 
-### CUJ 4: Passe vence
-- **Dado** um livro com `passe_vence_em` no passado,
+### CUJ 4: Plano vence
+- **Dado** um livro com `plano_vence_em` no passado,
 - **Quando** o job das 06:00 roda (ou mesmo antes dele),
-- **Então** qualquer escrita de Ana no livro é recusada pelo banco; a home mostra o selo "Somente leitura"; depois do job o estado gravado é `somente_leitura` e existe o evento `passe_vencido` com ator `sistema`.
+- **Então** qualquer escrita de Ana no livro é recusada pelo banco; a home mostra o selo "Somente leitura"; depois do job o estado gravado é `somente_leitura` e existe o evento `plano_vencido` com ator `sistema`.
 
 ### CUJ 5: Renovar, reenviar, trocar responsável
 - **Quando** o admin toca em *Renovar* e depois em *Confirmar +12 meses*, o vencimento vira o maior entre hoje e o vencimento atual, mais 12 meses, e o estado volta a `ativo`.
@@ -111,14 +111,14 @@ Celular/Computador
 Banco (Supabase, sa-east-1)
   books · book_members · author_access · events   (RLS ligada em todas)
   privado.eh_membro · privado.livro_editavel       (fora da API)
-  pg_cron 09:00 UTC → privado.vencer_passes()
+  pg_cron 09:00 UTC → privado.vencer_planos()
 ```
 
 ### Quem pode o quê no banco
 
 | Tabela | anon | authenticated (membro do livro) | service_role (servidor) |
 | --- | --- | --- | --- |
-| `books` | nada | lê o seu; altera só `autor_nome` e só com passe ativo e no prazo | tudo |
+| `books` | nada | lê o seu; altera só `autor_nome` e só com plano ativo e no prazo | tudo |
 | `book_members` | nada | lê os do seu livro | tudo |
 | `author_access` | nada | lê os do seu livro, **sem** `token_hash` | tudo |
 | `events` | nada | nada | tudo |
@@ -127,13 +127,13 @@ Um usuário logado sem livro (inclusive o admin, com a própria sessão) não l�
 
 **Regra para os próximos prompts:** escrita iniciada pelo usuário usa o cliente da sessão, para a RLS valer. Código que escreve com a chave secreta (jobs, admin) chama `privado.livro_editavel` antes, quando a escrita for de conteúdo do livro.
 
-### Passe
+### Plano
 
 - Estados: `pendente` (para a onda 2, quando o livro nascer antes do pagamento), `ativo`, `somente_leitura`.
-- `livro_editavel(livro)` = `ativo` **e** `passe_vence_em > agora`. Toda policy de escrita futura usa essa função. Neste prompt, ela já vale no `update` de `books`.
-- Na tela, o estado é o efetivo (`estadoEfetivo` em `lib/passe.ts`): `ativo` vencido aparece como somente leitura.
-- Um `update` com o passe vencido devolve 0 linhas, sem erro; a tela decide pela leitura prévia do livro (achou + `estadoEfetivo`), não pelo número de linhas.
-- Job: `pg_cron` às 09:00 UTC (06:00 em Brasília) chama `privado.vencer_passes()`, que muda o estado e grava `passe_vencido` com ator `sistema` na mesma instrução.
+- `livro_editavel(livro)` = `ativo` **e** `plano_vence_em > agora`. Toda policy de escrita futura usa essa função. Neste prompt, ela já vale no `update` de `books`.
+- Na tela, o estado é o efetivo (`estadoEfetivo` em `lib/plano.ts`): `ativo` vencido aparece como somente leitura.
+- Um `update` com o plano vencido devolve 0 linhas, sem erro; a tela decide pela leitura prévia do livro (achou + `estadoEfetivo`), não pelo número de linhas.
+- Job: `pg_cron` às 09:00 UTC (06:00 em Brasília) chama `privado.vencer_planos()`, que muda o estado e grava `plano_vencido` com ator `sistema` na mesma instrução.
 
 ### Login
 
@@ -180,7 +180,7 @@ registrarEvento({ quem, papel, acao, livro, detalhes? })
 // detalhes → events.detalhes (só ids e números; nunca e-mail, nome ou texto livre)
 ```
 
-- Ações agora: `entrou`, `passe_ativado`, `passe_renovado`, `acesso_reenviado`, `passe_vencido` (só o job grava). Já previstas no PRD: `gravou`, `editou`, `sugeriu`, `gerou`.
+- Ações agora: `entrou`, `plano_ativado`, `plano_renovado`, `acesso_reenviado`, `plano_vencido` (só o job grava). Já previstas no PRD: `gravou`, `editou`, `sugeriu`, `gerou`.
 - Opção `umaVezPorDia: true`: antes de gravar, procura o mesmo `ator_id`, `acao` e `book_id` desde a meia-noite de Brasília; se existir, não grava. Uma corrida rara pode gerar 2 linhas no mesmo dia, o que é aceitável.
 - Grava com a chave secreta. Nunca derruba a ação principal: em falha, `console.error` só com a ação e os ids, e devolve `{ ok: false }`.
 - **`entrou`** é gravado quando o livro é aberto (`/livro/[id]`, via `after()`), uma vez por pessoa, livro e dia, com o papel do membro. É isso que responde o M10. O login em si não gera evento.
@@ -208,7 +208,7 @@ Uma ação principal por tela, poucas palavras, celular primeiro. Interface em `
 | `/auth/confirmar` | *Entrar* | "Toque para entrar no seu livro" |
 | `/` | — | Redireciona para o livro mais recente, ou "Seu acesso ainda não foi ativado" |
 | `/livro/[id]` | *Começar* (desativado, "em breve", até o prompt 4) | "O livro do Jair" (ou "Seu livro") e uma frase; selo "Somente leitura" se vencido |
-| `/admin` | *Ativar passe* | Formulário (e-mail, nome do autor) → confirmação com o e-mail em destaque; lista com e-mail, autor, estado efetivo, vence em; por linha *Renovar* (dois passos) e *Reenviar acesso* |
+| `/admin` | *Ativar plano* | Formulário (e-mail, nome do autor) → confirmação com o e-mail em destaque; lista com e-mail, autor, estado efetivo, vence em; por linha *Renovar* (dois passos) e *Reenviar acesso* |
 
 **Ligação entre telas e ações:** cada tela é um componente de apresentação em `components/telas/`, que recebe dados e, quando há formulário, a Server Action por prop (`acao: (estado, formData) => Promise<Resultado>`). Os formulários são componentes cliente com `useActionState`. Todas as actions devolvem `type Resultado = { ok: boolean; mensagem: string }`. Para o gate de design, `/styleguide/[tela]` renderiza as mesmas telas com dados falsos e actions falsas. Ela só existe com `ECOA_PREVIA=1`, checado no topo da página; sem isso, 404 de verdade. O prompt 2 amplia essa rota.
 
@@ -245,6 +245,9 @@ Uma ação principal por tela, poucas palavras, celular primeiro. Interface em `
 
 ## SQL de subida
 
+> **Nome atualizado (09/11/2026):** depois do aceite, "passe" virou **"plano"** em todo o produto, a pedido do Guilherme ("passe" podia ser mal interpretado). O SQL abaixo já mostra os nomes novos. Os arquivos das duas primeiras migrations mantêm os nomes originais (`passe_*`) porque são histórico do banco; a troca foi aplicada pela migration `20261109150000_passe_vira_plano.sql`.
+
+
 ### `supabase/migrations/20261109120000_acesso_e_passe.sql`
 
 ```sql
@@ -261,21 +264,21 @@ grant usage on schema privado to authenticated, service_role;
 -- Em public, o Supabase continua concedendo a anon/authenticated: cada função revoga à mão.
 alter default privileges revoke execute on functions from public;
 
-create type public.passe_estado as enum ('pendente', 'ativo', 'somente_leitura');
+create type public.plano_estado as enum ('pendente', 'ativo', 'somente_leitura');
 create type public.papel_membro as enum ('responsavel', 'cofacilitador');
 create type public.ator_tipo as enum ('responsavel', 'cofacilitador', 'autor', 'familia', 'admin', 'sistema');
 
 create table public.books (
   id uuid primary key default gen_random_uuid(),
   autor_nome text check (autor_nome is null or char_length(btrim(autor_nome)) between 1 and 120),
-  passe_estado public.passe_estado not null default 'pendente',
-  passe_ativado_em timestamptz,
-  passe_vence_em timestamptz,
+  plano_estado public.plano_estado not null default 'pendente',
+  plano_ativado_em timestamptz,
+  plano_vence_em timestamptz,
   criado_em timestamptz not null default now(),
   atualizado_em timestamptz not null default now(),
-  constraint books_passe_datas check (
-    passe_estado = 'pendente'
-    or (passe_ativado_em is not null and passe_vence_em > passe_ativado_em)
+  constraint books_plano_datas check (
+    plano_estado = 'pendente'
+    or (plano_ativado_em is not null and plano_vence_em > plano_ativado_em)
   )
 );
 
@@ -337,7 +340,7 @@ create function privado.livro_editavel(p_book uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.books b
-    where b.id = p_book and b.passe_estado = 'ativo' and b.passe_vence_em > now()
+    where b.id = p_book and b.plano_estado = 'ativo' and b.plano_vence_em > now()
   )
 $$;
 
@@ -363,7 +366,7 @@ create policy "membro lê o livro" on public.books
   for select to authenticated
   using (privado.eh_membro(id));
 
-create policy "membro edita o livro com passe ativo" on public.books
+create policy "membro edita o livro com plano ativo" on public.books
   for update to authenticated
   using (privado.eh_membro(id) and privado.livro_editavel(id))
   with check (privado.eh_membro(id) and privado.livro_editavel(id));
@@ -377,7 +380,7 @@ create policy "membro lê o link do autor do livro" on public.author_access
   using (privado.eh_membro(book_id));
 
 -- Operações do admin: atômicas, só pelo servidor (service_role).
-create function public.admin_ativar_passe(p_responsavel uuid, p_autor_nome text, p_meses integer)
+create function public.admin_ativar_plano(p_responsavel uuid, p_autor_nome text, p_meses integer)
 returns uuid language plpgsql security definer set search_path = '' as $$
 declare
   v_livro uuid;
@@ -385,7 +388,7 @@ begin
   if p_meses is null or p_meses not between 1 and 36 then
     raise exception 'meses fora do intervalo: %', p_meses;
   end if;
-  insert into public.books (autor_nome, passe_estado, passe_ativado_em, passe_vence_em)
+  insert into public.books (autor_nome, plano_estado, plano_ativado_em, plano_vence_em)
   values (nullif(btrim(p_autor_nome), ''), 'ativo', now(), now() + make_interval(months => p_meses))
   returning id into v_livro;
   insert into public.book_members (book_id, user_id, papel)
@@ -394,7 +397,7 @@ begin
 end $$;
 
 -- Renovar soma a partir do maior entre hoje e o vencimento atual: renovar cedo não perde dias.
-create function public.admin_renovar_passe(p_livro uuid, p_meses integer)
+create function public.admin_renovar_plano(p_livro uuid, p_meses integer)
 returns timestamptz language plpgsql security definer set search_path = '' as $$
 declare
   v_vence timestamptz;
@@ -403,11 +406,11 @@ begin
     raise exception 'meses fora do intervalo: %', p_meses;
   end if;
   update public.books
-  set passe_estado = 'ativo',
-      passe_ativado_em = coalesce(passe_ativado_em, now()),
-      passe_vence_em = greatest(now(), coalesce(passe_vence_em, now())) + make_interval(months => p_meses)
+  set plano_estado = 'ativo',
+      plano_ativado_em = coalesce(plano_ativado_em, now()),
+      plano_vence_em = greatest(now(), coalesce(plano_vence_em, now())) + make_interval(months => p_meses)
   where id = p_livro
-  returning passe_vence_em into v_vence;
+  returning plano_vence_em into v_vence;
   if v_vence is null then
     raise exception 'livro não encontrado: %', p_livro;
   end if;
@@ -432,13 +435,13 @@ create function public.admin_listar_livros()
 returns table (
   id uuid,
   autor_nome text,
-  passe_estado public.passe_estado,
-  passe_vence_em timestamptz,
+  plano_estado public.plano_estado,
+  plano_vence_em timestamptz,
   criado_em timestamptz,
   responsavel_email text
 )
 language sql stable security definer set search_path = '' as $$
-  select b.id, b.autor_nome, b.passe_estado, b.passe_vence_em, b.criado_em, u.email::text
+  select b.id, b.autor_nome, b.plano_estado, b.plano_vence_em, b.criado_em, u.email::text
   from public.books b
   left join public.book_members m on m.book_id = b.id and m.papel = 'responsavel'
   left join auth.users u on u.id = m.user_id
@@ -446,15 +449,15 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 revoke all on function
-  public.admin_ativar_passe(uuid, text, integer),
-  public.admin_renovar_passe(uuid, integer),
+  public.admin_ativar_plano(uuid, text, integer),
+  public.admin_renovar_plano(uuid, integer),
   public.admin_trocar_responsavel(uuid, uuid),
   public.admin_usuario_por_email(text),
   public.admin_listar_livros()
   from public, anon, authenticated;
 grant execute on function
-  public.admin_ativar_passe(uuid, text, integer),
-  public.admin_renovar_passe(uuid, integer),
+  public.admin_ativar_plano(uuid, text, integer),
+  public.admin_renovar_plano(uuid, integer),
   public.admin_trocar_responsavel(uuid, uuid),
   public.admin_usuario_por_email(text),
   public.admin_listar_livros()
@@ -465,32 +468,32 @@ grant execute on function
 
 ```sql
 -- 20261109120100_job_vencer_passes.sql
--- Todo dia às 06:00 de Brasília (09:00 UTC), passes vencidos viram somente leitura.
+-- Todo dia às 06:00 de Brasília (09:00 UTC), planos vencidos viram somente leitura.
 
-create function privado.vencer_passes() returns integer
+create function privado.vencer_planos() returns integer
 language plpgsql security definer set search_path = '' as $$
 declare
   v_total integer;
 begin
   with vencidos as (
     update public.books
-    set passe_estado = 'somente_leitura'
-    where passe_estado = 'ativo' and passe_vence_em <= now()
+    set plano_estado = 'somente_leitura'
+    where plano_estado = 'ativo' and plano_vence_em <= now()
     returning id
   )
   insert into public.events (book_id, ator_tipo, acao)
-  select id, 'sistema', 'passe_vencido' from vencidos;
+  select id, 'sistema', 'plano_vencido' from vencidos;
   get diagnostics v_total = row_count;
   return v_total;
 end $$;
-revoke all on function privado.vencer_passes() from public, anon, authenticated;
+revoke all on function privado.vencer_planos() from public, anon, authenticated;
 
 -- O pg_cron existe no Supabase e não existe no PGlite dos testes.
 do $$
 begin
   if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
     create extension if not exists pg_cron with schema pg_catalog;
-    perform cron.schedule('vencer-passes', '0 9 * * *', 'select privado.vencer_passes()');
+    perform cron.schedule('vencer-planos', '0 9 * * *', 'select privado.vencer_planos()');
   end if;
 end $$;
 ```
@@ -504,10 +507,10 @@ end $$;
 do $$
 begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then
-    perform cron.unschedule(jobid) from cron.job where jobname = 'vencer-passes';
+    perform cron.unschedule(jobid) from cron.job where jobname = 'vencer-planos';
   end if;
 end $$;
-drop function if exists privado.vencer_passes();
+drop function if exists privado.vencer_planos();
 -- A extensão pg_cron fica instalada: outras rotinas podem usá-la.
 ```
 
@@ -519,8 +522,8 @@ drop function if exists privado.vencer_passes();
 drop function if exists public.admin_listar_livros();
 drop function if exists public.admin_usuario_por_email(text);
 drop function if exists public.admin_trocar_responsavel(uuid, uuid);
-drop function if exists public.admin_renovar_passe(uuid, integer);
-drop function if exists public.admin_ativar_passe(uuid, text, integer);
+drop function if exists public.admin_renovar_plano(uuid, integer);
+drop function if exists public.admin_ativar_plano(uuid, text, integer);
 drop table if exists public.events;
 drop table if exists public.author_access;
 drop table if exists public.book_members;
@@ -532,7 +535,7 @@ alter default privileges grant execute on functions to public;
 drop schema if exists privado;
 drop type if exists public.ator_tipo;
 drop type if exists public.papel_membro;
-drop type if exists public.passe_estado;
+drop type if exists public.plano_estado;
 ```
 
 ### `supabase/tests/auth-shim.sql` (só para os testes, imita o Supabase)
@@ -565,7 +568,7 @@ alter default privileges in schema public grant all on sequences to anon, authen
 **Já rodou no PGlite** (rascunho fora do repositório), com estes resultados:
 
 - O responsável A lê só o próprio livro. `update` em B afeta 0 linhas; `delete` em B e `insert` em `books` são negados.
-- Mudar `passe_vence_em` do próprio livro é negado.
+- Mudar `plano_vence_em` do próprio livro é negado.
 - Ler `events` e `token_hash` é negado. `admin_*` com a sessão de A, ou com `anon`, é negado.
 - Usuário logado sem livro, e o admin com a própria sessão, leem 0 linhas.
 - Livro vencido recusa edição antes do job. O job muda 1 livro e grava o evento.
@@ -603,27 +606,27 @@ alter default privileges in schema public grant all on sequences to anon, authen
      - Lê só o livro A em `books`, `book_members` e `author_access`.
      - Em B: `update` afeta 0 linhas; `delete` é negado, em cada tabela.
      - `insert` em `books`, `book_members`, `author_access` e `events` é negado.
-     - Não muda `passe_estado`, `passe_vence_em` nem `passe_ativado_em` do próprio livro.
+     - Não muda `plano_estado`, `plano_vence_em` nem `plano_ativado_em` do próprio livro.
      - `token_hash` é negado; as outras colunas do link do próprio livro, ok.
      - `events` é negado.
      - Livro A vencido com estado `ativo`: `update autor_nome` afeta 0 linhas.
    - **X sem livro, e X com `app_metadata.role = admin`:** 0 linhas nas 3 tabelas.
    - **`anon`:** negado nas 4 tabelas e nas funções `admin_*`.
-   - **Funções:** todas as `admin_*` e `privado.vencer_passes` negadas para `authenticated`.
+   - **Funções:** todas as `admin_*` e `privado.vencer_planos` negadas para `authenticated`.
    - **Genéricos:**
      - Toda tabela de `public` tem RLS ligada.
      - `anon` não tem grant de tabela em `public`.
      - Nenhuma função de `public` ou `privado` é executável por `anon`.
      - As funções executáveis por `authenticated` são exatamente `privado.eh_membro` e `privado.livro_editavel`.
    - **Reversão:** deixa `public` sem tabelas.
-6. **`supabase/tests/passe.test.ts` (criar).** No PGlite:
-   - **`admin_ativar_passe`:** cria livro ativo que vence em 12 meses, com 1 responsável; recusa meses 0 e 37.
-   - **`admin_renovar_passe`:**
+6. **`supabase/tests/plano.test.ts` (criar).** No PGlite:
+   - **`admin_ativar_plano`:** cria livro ativo que vence em 12 meses, com 1 responsável; recusa meses 0 e 37.
+   - **`admin_renovar_plano`:**
      - vencido: vence em ≈ agora + 12 meses e o estado vira `ativo`;
      - faltando 3 meses: vence em ≈ vencimento atual + 12 meses;
      - id inexistente: erro.
    - **`admin_trocar_responsavel`:** troca o responsável.
-   - **`privado.vencer_passes()`:** muda só os vencidos e grava 1 evento `passe_vencido` por livro.
+   - **`privado.vencer_planos()`:** muda só os vencidos e grava 1 evento `plano_vencido` por livro.
 
 #### Configuração e bibliotecas
 
@@ -664,8 +667,8 @@ alter default privileges in schema public grant all on sequences to anon, authen
     - **`usuarioAtual()`:** `{ id, email, ehAdmin }` ou `null`, via `getClaims()`; `ehAdmin = claims.app_metadata?.role === "admin"`.
     - **`exigirAdmin()`:** devolve o usuário, ou chama `notFound()`. Nas páginas, é usada no topo, fora do `<Suspense>`.
     - **`livroMaisRecente(usuarioId)`:** `book_members` filtrado por `user_id` com join em `books`, ordenado por `criado_em desc`, limite 1, com o cliente da sessão.
-18. **`lib/passe.ts`, `lib/passe.test.ts` (criar).**
-    - `estadoEfetivo({ passe_estado, passe_vence_em }, agora)` e `podeEscrever(...)`.
+18. **`lib/plano.ts`, `lib/plano.test.ts` (criar).**
+    - `estadoEfetivo({ plano_estado, plano_vence_em }, agora)` e `podeEscrever(...)`.
     - Testes: ativo no prazo, ativo vencido, somente leitura, pendente e vencimento igual a agora.
 19. **`lib/eventos-acoes.ts` (criar).** `ACOES` e `PAPEIS` como tuplas `as const`.
 20. **`lib/eventos.ts`, `lib/eventos.test.ts` (criar).**
@@ -712,13 +715,13 @@ alter default privileges in schema public grant all on sequences to anon, authen
 31. **`app/admin/page.tsx`, `app/admin/acoes.ts` (criar).**
     - A página chama `exigirAdmin()` no topo e, dentro de `<Suspense>`, `admin_listar_livros()` com o cliente admin.
     - Toda action começa por `exigirAdmin()`, valida com zod, devolve `Resultado` e termina com `refresh()` de `next/cache`.
-    - **`ativarPasse`:**
+    - **`ativarPlano`:**
       1. Procura o e-mail com `admin_usuario_por_email`. Se existir e `identidadeAceitavel` for falsa, recusa: "Esta conta não pode ser usada. Fale com o suporte."
       2. Se não existir, cria com `createUser({ email, email_confirm: true })`.
-      3. Chama `admin_ativar_passe(usuario, autorNome, DURACAO_PASSE_MESES)`.
+      3. Chama `admin_ativar_plano(usuario, autorNome, DURACAO_PLANO_MESES)`.
       4. Envia o e-mail com `enviarAcesso`.
-      5. Registra o evento `passe_ativado`.
-    - **`renovarPasse`:** `admin_renovar_passe(livroId, DURACAO_PASSE_MESES)` e o evento `passe_renovado`.
+      5. Registra o evento `plano_ativado`.
+    - **`renovarPlano`:** `admin_renovar_plano(livroId, DURACAO_PLANO_MESES)` e o evento `plano_renovado`.
     - **`reenviarAcesso`:** `enviarAcesso` e o evento `acesso_reenviado`.
 32. **`app/styleguide/[tela]/page.tsx`, `lib/styleguide.ts` (criar).**
     - No topo, se `process.env.ECOA_PREVIA !== "1"`, chama `notFound()`.
@@ -764,10 +767,10 @@ alter default privileges in schema public grant all on sequences to anon, authen
   4. Corrigir todo FAIL e parar no PASS.
 - **Banco real:**
   - `get_advisors` (segurança) sem alerta;
-  - `select jobname, schedule from cron.job` com `vencer-passes`;
+  - `select jobname, schedule from cron.job` com `vencer-planos`;
   - teste manual: com a sessão de uma conta sem livro, a API REST devolve 0 linhas em `books`.
 - **Aceite (preview da Vercel, no celular):**
-  1. Ativar o passe para o e-mail do Guilherme.
+  1. Ativar o plano para o e-mail do Guilherme.
   2. O e-mail chega.
   3. *Abrir meu livro* → *Entrar com Google* → home vazia.
   4. A consulta do M10 mostra `entrou`.

@@ -3,10 +3,10 @@
 
 export const MARCA = "Ecoa Memórias";
 
-// ── Passe ────────────────────────────────────────────────────────────────
+// ── Plano ────────────────────────────────────────────────────────────────
 // R$ 467 por ano: gravações ilimitadas e 1 livro de 80 páginas.
-export const PRECO_PASSE = 467; // exibir como "R$ 467"
-export const DURACAO_PASSE_MESES = 12; // conta a partir da ativação
+export const PRECO_PLANO = 467; // exibir como "R$ 467"
+export const DURACAO_PLANO_MESES = 12; // conta a partir da ativação
 
 // ── Livro ────────────────────────────────────────────────────────────────
 export const PAGINAS_INCLUSAS = 80;

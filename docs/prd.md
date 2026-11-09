@@ -13,8 +13,8 @@ A plataforma permite que a família (um responsável e até 3 co-facilitadores) 
 | Tema | Decisão |
 | --- | --- |
 | Preço | R$ 467 por ano: gravações ilimitadas e 1 livro de 80 páginas com histórias, fotos e mensagens. Página extra com valor configurável. Frete e cópias extras à parte. |
-| Pagamento | Onda 1: Pix manual, passe ativado no admin. Onda 2: link do Mercado Pago com Pix e cartão em até 12x, ativação automática. Exige CNPJ. |
-| Renovação | Sem cobrança recorrente. Ao vencer, o passe fica em somente leitura e renova com novo pagamento. |
+| Pagamento | Onda 1: Pix manual, plano ativado no admin. Onda 2: link do Mercado Pago com Pix e cartão em até 12x, ativação automática. Exige CNPJ. |
+| Renovação | Sem cobrança recorrente. Ao vencer, o plano fica em somente leitura e renova com novo pagamento. |
 | Login | Google como entrada principal e link por e-mail como alternativa. O autor entra por link pessoal, sem login. |
 | Papéis | 1 responsável (publica e envia à impressão), até 3 co-facilitadores com acesso total e o autor, em modo autor. |
 | Coleta | Link de pergunta para o autor, gravação livre do autor, modo conversa, upload de 1 áudio e upload em lote com divisão automática em histórias. |
@@ -31,7 +31,7 @@ A plataforma permite que a família (um responsável e até 3 co-facilitadores) 
 
 | Onda | Meta | O que entra |
 | --- | --- | --- |
-| 1. Natal | 2 famílias parceiras gravando na ceia, até 20/12/2026 | Login, passe manual, configuração inicial com contexto, perguntas e causos, as cinco formas de coleta, IA com texto ao vivo, editor completo, modo autor, página de amostra em PDF com QR (para o dia 26) e registro de acessos |
+| 1. Natal | 2 famílias parceiras gravando na ceia, até 20/12/2026 | Login, plano ativado à mão, configuração inicial com contexto, perguntas e causos, as cinco formas de coleta, IA com texto ao vivo, editor completo, modo autor, página de amostra em PDF com QR (para o dia 26) e registro de acessos |
 | 2. Lançamento | Primeiros clientes pagantes até março de 2027 | Co-facilitadores, compartilhar histórias, mensagens da família, montar e publicar o livro, pedido de impressão, Mercado Pago e painel de aderência no admin |
 
 ## Papéis e permissões
@@ -45,7 +45,7 @@ Só o responsável e os co-facilitadores têm login. O autor e a família entram
 | Autor | Link pessoal permanente e revogável, sem login | Ver as perguntas para ele, gravar respostas e histórias livres, ouvir e corrigir os próprios textos, ler o livro em modo leitura | Ver mensagens da família, ver causos sugeridos, publicar |
 | Família e amigos | Links do grupo, sem login | Sugerir causo (áudio ou texto), deixar mensagem para o livro (onda 2), ouvir histórias compartilhadas | Ver o painel ou editar |
 | Leitor do livro | QR impresso | Ouvir o áudio original daquela história ou mensagem, para sempre | Qualquer outra coisa |
-| Admin Ecoa | Google, com papel admin | Passes, pedidos de impressão, métricas de uso, suporte | Editar conteúdo sem pedido da família |
+| Admin Ecoa | Google, com papel admin | Planos, pedidos de impressão, métricas de uso, suporte | Editar conteúdo sem pedido da família |
 
 **Regras**
 
@@ -101,13 +101,13 @@ A régua: um avô de 80 anos e um filho com pressa entendem cada tela em 3 segun
 
 Dez módulos, cada um com a onda em que entra e critérios de aceite verificáveis.
 
-### M1. Acesso, passe e pagamento (onda 1; Mercado Pago na onda 2)
+### M1. Acesso, plano e pagamento (onda 1; Mercado Pago na onda 2)
 
 - Login com Google e, como alternativa, link mágico por e-mail.
-- O passe tem os estados `pendente`, `ativo` (12 meses a partir da ativação) e `somente_leitura`.
-- Onda 1: o admin ativa o passe depois de confirmar o Pix.
-- Onda 2: link de pagamento do Mercado Pago com Pix e cartão em até 12x. A confirmação do pagamento ativa o passe e envia o e-mail de acesso, sem ação humana.
-- **Aceite:** em `somente_leitura`, gravar, editar, rodar IA e gerar livro ficam bloqueados; ler, baixar e os QR continuam funcionando. Na onda 2, um pagamento aprovado ativa o passe em menos de 1 minuto.
+- O plano tem os estados `pendente`, `ativo` (12 meses a partir da ativação) e `somente_leitura`.
+- Onda 1: o admin ativa o plano depois de confirmar o Pix.
+- Onda 2: link de pagamento do Mercado Pago com Pix e cartão em até 12x. A confirmação do pagamento ativa o plano e envia o e-mail de acesso, sem ação humana.
+- **Aceite:** em `somente_leitura`, gravar, editar, rodar IA e gerar livro ficam bloqueados; ler, baixar e os QR continuam funcionando. Na onda 2, um pagamento aprovado ativa o plano em menos de 1 minuto.
 
 ### M2. Configuração inicial (onda 1; co-facilitadores na onda 2)
 
@@ -187,7 +187,7 @@ Tela inspirada no Remento: o áudio com a transcrição navegável de um lado e 
 
 ### M10. Admin e aderência (registro na onda 1; painel na onda 2)
 
-- **Onda 1:** lista de livros, ativar e renovar passe, reenviar acesso. Registro de eventos desde o primeiro dia: quem (responsável, co-facilitador, autor, família), o quê (entrou, gravou, editou, sugeriu, gerou) e quando.
+- **Onda 1:** lista de livros, ativar e renovar plano, reenviar acesso. Registro de eventos desde o primeiro dia: quem (responsável, co-facilitador, autor, família), o quê (entrou, gravou, editou, sugeriu, gerou) e quando.
 - **Onda 2:** painel de aderência com acessos por dia por livro e por pessoa, gravações por semana, livros parados há 7 dias ou mais e o funil configuração → 1ª história → 5 histórias → livro publicado. Fila de pedidos de impressão.
 - **Aceite:** consigo ver quem acessou o livro X ontem e o que fez.
 
@@ -270,7 +270,7 @@ O resultado são dois PDFs, o miolo e a capa aberta, que a Ecoa envia à gráfic
 
 - O QR aponta para `ouvir.ecoa-memorias.com.br/{código}`, com código de 8 caracteres sem letras ambíguas. Esse subdomínio redireciona para o player, onde quer que o áudio esteja.
 - Correção de erro nível Q, mínimo de 2 × 2 cm, preto sobre o papel, com margem de silêncio.
-- O player abre sem login, toca o áudio original e mostra o título. Funciona com o passe vencido.
+- O player abre sem login, toca o áudio original e mostra o título. Funciona com o plano vencido.
 - **Teste automático:** cada QR do PDF é decodificado por software antes de liberar o download.
 
 ### Alertas antes de publicar
@@ -317,7 +317,7 @@ A stack repete a da landing e acrescenta só o que o produto exige: tempo real n
 
 | Tabela | Guarda |
 | --- | --- |
-| `books` | Livro: autor (nome, apelido, parentesco, foto), estado e vencimento do passe, capa |
+| `books` | Livro: autor (nome, apelido, parentesco, foto), estado e vencimento do plano, capa |
 | `book_members` | Responsável e co-facilitadores, com papel |
 | `author_access` | Link pessoal do autor (hash do token, revogado em) |
 | `book_context` | "Sobre ele" em texto ou áudio, temas extraídos, resumo de cada história (memória do livro) |
@@ -419,7 +419,7 @@ O repositório github.com/guilherme-eller8/ecoa-plataforma já existe, privado e
 1. Next.js na mesma versão da landing (16.x), TypeScript strict, Tailwind, ESLint, Prettier e zod. Leia node_modules/next/dist/docs antes de escrever código: esta versão difere do seu treino.
 2. Vitest (unidade) e Playwright (ponta a ponta), com 1 teste de exemplo cada.
 3. Salve o PRD que vou colar a seguir em docs/prd.md.
-4. lib/config.ts com: PRECO_PASSE=467, PAGINAS_INCLUSAS=80, VALOR_PAGINA_EXTRA e VALOR_COPIA_EXTRA (placeholders), FORMATO_LIVRO='21x21', SANGRIA_MM=3, DURACAO_PASSE_MESES=12, MAX_GRAVACAO_MIN=30, MAX_ARQUIVOS_LOTE=30, MAX_COFACILITADORES=3, DOMINIO_APP e DOMINIO_QR.
+4. lib/config.ts com: PRECO_PLANO=467, PAGINAS_INCLUSAS=80, VALOR_PAGINA_EXTRA e VALOR_COPIA_EXTRA (placeholders), FORMATO_LIVRO='21x21', SANGRIA_MM=3, DURACAO_PLANO_MESES=12, MAX_GRAVACAO_MIN=30, MAX_ARQUIVOS_LOTE=30, MAX_COFACILITADORES=3, DOMINIO_APP e DOMINIO_QR.
 5. Copie de github.com/guilherme-eller8/ecoa-memorias a pasta .claude/skills/design-taste-frontend e os scripts taste:lint e taste:inspect do package.json.
 6. Instale o plugin Elephant-Goldfish Model (github.com/google/elephant-goldfish-model) conforme o README dele.
 7. Escreva um CLAUDE.md curto: o produto em 1 parágrafo, a stack, o vocabulário (autor, responsável, co-facilitador, família), as regras de segurança (RLS em toda tabela, tokens só como hash, token do autor nunca lê family_messages, segredos só no .env.local), o gate de fim de tarefa, o gate de design e a regra de mostrar o SQL de subida e reversão antes de alterar o banco.
@@ -459,7 +459,7 @@ Leia docs/prd.md, seção Design e experiência, e a skill .claude/skills/design
 Gate de design completo. Aceite: me mostre as screenshots de 390 px e 1440 px das duas telas, com a nota da crítica.
 ```
 
-### Prompt 3. Acesso, passe, admin e registro de uso \[EGM\]
+### Prompt 3. Acesso, plano, admin e registro de uso \[EGM\]
 
 ```
 Leia docs/prd.md: Papéis e permissões, M1, M10 (parte da onda 1) e Modelo de dados. Use o EGM.
@@ -467,12 +467,12 @@ Leia docs/prd.md: Papéis e permissões, M1, M10 (parte da onda 1) e Modelo de d
 1. Projeto Supabase na região São Paulo. Me guie nas variáveis de ambiente e na configuração do login com Google.
 2. Migrations de books, book_members (papel responsável ou co-facilitador), author_access e events, com RLS. Mostre o SQL de subida e reversão antes de aplicar.
 3. Login com Google e link mágico por e-mail (e-mails pelo Resend).
-4. Estados do passe (pendente, ativo, somente_leitura) e um job diário que move os vencidos.
+4. Estados do plano (pendente, ativo, somente_leitura) e um job diário que move os vencidos.
 5. /admin (só papel admin): lista de livros, ativar, renovar e reenviar acesso. Ativar cria o livro e o responsável, e envia o e-mail de acesso.
 6. Uma função única registrarEvento(quem, papel, ação, livro), usada em toda ação relevante daqui em diante.
 7. Testes de RLS: um responsável não lê, não altera e não apaga nada de outro livro.
 
-Gate de design. Aceite: ativo um passe no admin, recebo o e-mail, entro com Google e vejo a home vazia do livro.
+Gate de design. Aceite: ativo um plano no admin, recebo o e-mail, entro com Google e vejo a home vazia do livro.
 ```
 
 ### Prompt 4. Configuração inicial, perguntas e causos
@@ -630,11 +630,11 @@ Gate de design. Aceite: com 6 histórias e 2 mensagens reais, publico, e os PDFs
 Leia docs/prd.md: M1 (onda 2), M9 (impressão) e Impressão intermediada pela Ecoa. Pré-requisito: CNPJ e conta no Mercado Pago criados. Use o EGM.
 
 1. Tabelas print_orders e payments. SQL antes de aplicar.
-2. Compra do passe por link de pagamento do Mercado Pago (Pix e cartão em até 12x). A notificação do Mercado Pago, com assinatura validada, cria o livro, ativa o passe e envia o e-mail de acesso.
+2. Compra do plano por link de pagamento do Mercado Pago (Pix e cartão em até 12x). A notificação do Mercado Pago, com assinatura validada, cria o livro, ativa o plano e envia o e-mail de acesso.
 3. Enviar para impressão (só o responsável): endereço e número de cópias. Pedido no admin com os status recebido, aguardando pagamento, na gráfica e enviado, e campo de rastreio. O responsável acompanha na plataforma.
 4. No admin: gerar link de pagamento de frete e extras para um pedido e baixar os PDFs da versão publicada.
 
-Aceite: compro um passe no modo de teste do Mercado Pago e o acesso chega sozinho em menos de 1 minuto; um pedido de impressão percorre todos os status.
+Aceite: compro um plano no modo de teste do Mercado Pago e o acesso chega sozinho em menos de 1 minuto; um pedido de impressão percorre todos os status.
 ```
 
 ### Prompt 15. Aderência, LGPD e lançamento

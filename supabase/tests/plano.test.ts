@@ -1,7 +1,7 @@
-// Regras do passe dentro do banco: ativar, renovar, trocar responsável e o job diário.
+// Regras do plano dentro do banco: ativar, renovar, trocar responsável e o job diário.
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { ativarPasse, criarBanco, criarUsuario } from "./banco";
+import { ativarPlano, criarBanco, criarUsuario } from "./banco";
 
 let db: PGlite;
 let ana: string;
@@ -17,10 +17,10 @@ afterAll(async () => {
 
 async function livro(id: string) {
   const r = await db.query<{
-    passe_estado: string;
+    plano_estado: string;
     vence_em_dias: number;
   }>(
-    `select passe_estado, round(extract(epoch from passe_vence_em - now()) / 86400)::int as vence_em_dias
+    `select plano_estado, round(extract(epoch from plano_vence_em - now()) / 86400)::int as vence_em_dias
      from public.books where id = $1`,
     [id],
   );
@@ -29,11 +29,11 @@ async function livro(id: string) {
 
 const DIAS_12_MESES = [365, 366];
 
-describe("admin_ativar_passe", () => {
+describe("admin_ativar_plano", () => {
   it("cria livro ativo por 12 meses com 1 responsável", async () => {
-    const id = await ativarPasse(db, ana, "Jair");
+    const id = await ativarPlano(db, ana, "Jair");
     const l = await livro(id);
-    expect(l.passe_estado).toBe("ativo");
+    expect(l.plano_estado).toBe("ativo");
     expect(DIAS_12_MESES).toContain(l.vence_em_dias);
     const membros = await db.query(
       `select user_id, papel from public.book_members where book_id = $1`,
@@ -43,7 +43,7 @@ describe("admin_ativar_passe", () => {
   });
 
   it("aceita autor sem nome", async () => {
-    const id = await ativarPasse(db, ana, "  ");
+    const id = await ativarPlano(db, ana, "  ");
     const r = await db.query<{ autor_nome: string | null }>(
       `select autor_nome from public.books where id = $1`,
       [id],
@@ -52,33 +52,33 @@ describe("admin_ativar_passe", () => {
   });
 
   it.each([0, 37])("recusa %i meses", async (meses) => {
-    await expect(ativarPasse(db, ana, "Jair", meses)).rejects.toThrow(
+    await expect(ativarPlano(db, ana, "Jair", meses)).rejects.toThrow(
       /meses fora do intervalo/,
     );
   });
 });
 
-describe("admin_renovar_passe", () => {
-  it("passe vencido volta a ativo por 12 meses a partir de hoje", async () => {
-    const id = await ativarPasse(db, ana, "Jair");
+describe("admin_renovar_plano", () => {
+  it("plano vencido volta a ativo por 12 meses a partir de hoje", async () => {
+    const id = await ativarPlano(db, ana, "Jair");
     await db.query(
-      `update public.books set passe_estado = 'somente_leitura', passe_ativado_em = now() - interval '13 months',
-       passe_vence_em = now() - interval '1 month' where id = $1`,
+      `update public.books set plano_estado = 'somente_leitura', plano_ativado_em = now() - interval '13 months',
+       plano_vence_em = now() - interval '1 month' where id = $1`,
       [id],
     );
-    await db.query(`select public.admin_renovar_passe($1, 12)`, [id]);
+    await db.query(`select public.admin_renovar_plano($1, 12)`, [id]);
     const l = await livro(id);
-    expect(l.passe_estado).toBe("ativo");
+    expect(l.plano_estado).toBe("ativo");
     expect(DIAS_12_MESES).toContain(l.vence_em_dias);
   });
 
   it("renovar cedo soma ao vencimento atual", async () => {
-    const id = await ativarPasse(db, ana, "Jair");
+    const id = await ativarPlano(db, ana, "Jair");
     await db.query(
-      `update public.books set passe_vence_em = now() + interval '3 months' where id = $1`,
+      `update public.books set plano_vence_em = now() + interval '3 months' where id = $1`,
       [id],
     );
-    await db.query(`select public.admin_renovar_passe($1, 12)`, [id]);
+    await db.query(`select public.admin_renovar_plano($1, 12)`, [id]);
     const l = await livro(id);
     expect(l.vence_em_dias).toBeGreaterThanOrEqual(455);
     expect(l.vence_em_dias).toBeLessThanOrEqual(458);
@@ -87,7 +87,7 @@ describe("admin_renovar_passe", () => {
   it("recusa livro inexistente", async () => {
     await expect(
       db.query(
-        `select public.admin_renovar_passe('00000000-0000-0000-0000-000000000000', 12)`,
+        `select public.admin_renovar_plano('00000000-0000-0000-0000-000000000000', 12)`,
       ),
     ).rejects.toThrow(/livro não encontrado/);
   });
@@ -95,7 +95,7 @@ describe("admin_renovar_passe", () => {
 
 describe("admin_trocar_responsavel", () => {
   it("troca o responsável do livro", async () => {
-    const id = await ativarPasse(db, ana, "Jair");
+    const id = await ativarPlano(db, ana, "Jair");
     const novo = await criarUsuario(db, "ana.certa@exemplo.com");
     await db.query(`select public.admin_trocar_responsavel($1, $2)`, [
       id,
@@ -109,27 +109,27 @@ describe("admin_trocar_responsavel", () => {
   });
 });
 
-describe("privado.vencer_passes (job diário)", () => {
+describe("privado.vencer_planos (job diário)", () => {
   it("muda só os vencidos e grava um evento por livro", async () => {
     const banco = await criarBanco();
     const dono = await criarUsuario(banco, "dono@exemplo.com");
-    const emDia = await ativarPasse(banco, dono, "Em dia");
-    const vencido = await ativarPasse(banco, dono, "Vencido");
+    const emDia = await ativarPlano(banco, dono, "Em dia");
+    const vencido = await ativarPlano(banco, dono, "Vencido");
     await banco.query(
-      `update public.books set passe_ativado_em = now() - interval '13 months', passe_vence_em = now() - interval '1 hour' where id = $1`,
+      `update public.books set plano_ativado_em = now() - interval '13 months', plano_vence_em = now() - interval '1 hour' where id = $1`,
       [vencido],
     );
 
     const r = await banco.query<{ total: number }>(
-      `select privado.vencer_passes() as total`,
+      `select privado.vencer_planos() as total`,
     );
     expect(r.rows[0].total).toBe(1);
 
-    const estados = await banco.query<{ id: string; passe_estado: string }>(
-      `select id, passe_estado from public.books`,
+    const estados = await banco.query<{ id: string; plano_estado: string }>(
+      `select id, plano_estado from public.books`,
     );
     const porId = Object.fromEntries(
-      estados.rows.map((l) => [l.id, l.passe_estado]),
+      estados.rows.map((l) => [l.id, l.plano_estado]),
     );
     expect(porId[emDia]).toBe("ativo");
     expect(porId[vencido]).toBe("somente_leitura");
@@ -138,11 +138,11 @@ describe("privado.vencer_passes (job diário)", () => {
       `select book_id, ator_tipo, acao from public.events`,
     );
     expect(eventos.rows).toEqual([
-      { book_id: vencido, ator_tipo: "sistema", acao: "passe_vencido" },
+      { book_id: vencido, ator_tipo: "sistema", acao: "plano_vencido" },
     ]);
 
     const deNovo = await banco.query<{ total: number }>(
-      `select privado.vencer_passes() as total`,
+      `select privado.vencer_planos() as total`,
     );
     expect(deNovo.rows[0].total).toBe(0);
     await banco.close();

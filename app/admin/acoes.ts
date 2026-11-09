@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { enviarAcesso, identidadeAceitavel } from "@/lib/acesso";
-import { DURACAO_PASSE_MESES } from "@/lib/config";
+import { DURACAO_PLANO_MESES } from "@/lib/config";
 import { registrarEvento } from "@/lib/eventos";
 import type { Resultado } from "@/lib/resultado";
 import { usuarioAtual } from "@/lib/sessao";
@@ -24,7 +24,7 @@ const esquemaAtivar = z.object({
   autor_nome: z.string().trim().max(120).optional(),
 });
 
-export async function ativarPasse(
+export async function ativarPlano(
   _anterior: Resultado | null,
   dados: FormData,
 ): Promise<Resultado> {
@@ -71,36 +71,36 @@ export async function ativarPasse(
     responsavel = data.user.id;
   }
 
-  const { data: livroId, error } = await db.rpc("admin_ativar_passe", {
+  const { data: livroId, error } = await db.rpc("admin_ativar_plano", {
     p_responsavel: responsavel,
     p_autor_nome: autor_nome ?? "",
-    p_meses: DURACAO_PASSE_MESES,
+    p_meses: DURACAO_PLANO_MESES,
   });
   if (error || !livroId)
     return {
       ok: false,
-      mensagem: "Não deu para ativar o passe. Tente de novo.",
+      mensagem: "Não deu para ativar o plano. Tente de novo.",
     };
 
   await registrarEvento({
     quem: quem.id,
     papel: "admin",
-    acao: "passe_ativado",
+    acao: "plano_ativado",
     livro: livroId,
   });
   const envio = await enviarAcesso(livroId, db);
   refresh();
   return envio.ok
-    ? { ok: true, mensagem: `Passe ativado. O e-mail foi para ${email}.` }
+    ? { ok: true, mensagem: `Plano ativado. O e-mail foi para ${email}.` }
     : {
         ok: false,
-        mensagem: "Passe ativado, mas o e-mail não saiu. Use Reenviar acesso.",
+        mensagem: "Plano ativado, mas o e-mail não saiu. Use Reenviar acesso.",
       };
 }
 
 const esquemaLivro = z.object({ livro_id: z.uuid() });
 
-export async function renovarPasse(
+export async function renovarPlano(
   _anterior: Resultado | null,
   dados: FormData,
 ): Promise<Resultado> {
@@ -109,9 +109,9 @@ export async function renovarPasse(
   const entrada = esquemaLivro.safeParse({ livro_id: dados.get("livro_id") });
   if (!entrada.success) return { ok: false, mensagem: "Livro não encontrado." };
 
-  const { error } = await clienteAdmin().rpc("admin_renovar_passe", {
+  const { error } = await clienteAdmin().rpc("admin_renovar_plano", {
     p_livro: entrada.data.livro_id,
-    p_meses: DURACAO_PASSE_MESES,
+    p_meses: DURACAO_PLANO_MESES,
   });
   if (error)
     return { ok: false, mensagem: "Não deu para renovar. Tente de novo." };
@@ -119,13 +119,13 @@ export async function renovarPasse(
   await registrarEvento({
     quem: quem.id,
     papel: "admin",
-    acao: "passe_renovado",
+    acao: "plano_renovado",
     livro: entrada.data.livro_id,
   });
   refresh();
   return {
     ok: true,
-    mensagem: `Renovado por mais ${DURACAO_PASSE_MESES} meses.`,
+    mensagem: `Renovado por mais ${DURACAO_PLANO_MESES} meses.`,
   };
 }
 

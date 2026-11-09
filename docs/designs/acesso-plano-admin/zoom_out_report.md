@@ -1,6 +1,6 @@
 # Relatório do revisor goldfish: Zoom Out (arquiteto cético)
 
-Alvo: `docs/designs/acesso-passe-admin.md`, arquivo inteiro. Padrão: zoom-out-standard. Revisor sem contexto da conversa.
+Alvo: `docs/designs/acesso-plano-admin.md`, arquivo inteiro. Padrão: zoom-out-standard. Revisor sem contexto da conversa.
 
 ## Majors
 

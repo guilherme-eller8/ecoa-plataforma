@@ -7,11 +7,11 @@ Cada achado foi classificado como **Aceito** (o design mudou) ou **Contestado** 
 | Achado | Decisão | Onde mudou |
 | --- | --- | --- |
 | B1 redirect curinga | Aceito: só URLs exatas | Login, guia de setup |
-| B2 conta criada antes por estranho | Aceito: cadastro desligado, `identidadeAceitavel` | Login, `ativarPasse`, CUJ 6 |
+| B2 conta criada antes por estranho | Aceito: cadastro desligado, `identidadeAceitavel` | Login, `ativarPlano`, CUJ 6 |
 | M1 limite contornável | Aceito: limite fica com o Supabase Auth; fluxo próprio removido | Login, Alternativa C |
 | M2 enumeração por tempo | Aceito: `after()` | Login |
 | M3 scanner queima link | Aceito: página com botão e POST | `/auth/confirmar` |
-| M4 chave secreta ignora passe | Aceito: regra escrita | Quem pode o quê |
+| M4 chave secreta ignora plano | Aceito: regra escrita | Quem pode o quê |
 | M5 `autor_foto_path` | Aceito: coluna sai (vai para o prompt 4) | SQL |
 | M6 grants padrão | Aceito: revogação global de EXECUTE e testes genéricos | SQL, `rls.test.ts` |
 | M7 e-mail digitado errado | Aceito: confirmação e `admin_trocar_responsavel` | CUJ 1, SQL |

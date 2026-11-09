@@ -79,14 +79,14 @@ export async function criarUsuario(db: PGlite, email: string) {
   return r.rows[0].id;
 }
 
-export async function ativarPasse(
+export async function ativarPlano(
   db: PGlite,
   usuario: string,
   autor: string,
   meses = 12,
 ) {
   const r = await db.query<{ id: string }>(
-    `select public.admin_ativar_passe($1, $2, $3) as id`,
+    `select public.admin_ativar_plano($1, $2, $3) as id`,
     [usuario, autor, meses],
   );
   return r.rows[0].id;

@@ -2,7 +2,7 @@
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
-  ativarPasse,
+  ativarPlano,
   como,
   criarBanco,
   criarUsuario,
@@ -26,8 +26,8 @@ beforeAll(async () => {
   anaId = await criarUsuario(db, "ana@exemplo.com");
   beto = await criarUsuario(db, "beto@exemplo.com");
   estranho = await criarUsuario(db, "estranho@exemplo.com");
-  livroA = await ativarPasse(db, anaId, "Jair");
-  livroB = await ativarPasse(db, beto, "Maria");
+  livroA = await ativarPlano(db, anaId, "Jair");
+  livroB = await ativarPlano(db, beto, "Maria");
   await db.query(
     `insert into public.author_access (book_id, token_hash) values ($1, repeat('a', 64)), ($2, repeat('b', 64))`,
     [livroA, livroB],
@@ -189,12 +189,12 @@ describe("responsável A no próprio livro", () => {
     });
   });
 
-  it("não mexe no passe", async () => {
+  it("não mexe no plano", async () => {
     await ana(async (tx) => {
       for (const sql of [
-        `update public.books set passe_vence_em = now() + interval '99 years' where id = $1`,
-        `update public.books set passe_estado = 'ativo' where id = $1`,
-        `update public.books set passe_ativado_em = now() where id = $1`,
+        `update public.books set plano_vence_em = now() + interval '99 years' where id = $1`,
+        `update public.books set plano_estado = 'ativo' where id = $1`,
+        `update public.books set plano_ativado_em = now() where id = $1`,
       ]) {
         expect(await tenta(tx, sql, [livroA])).toEqual(negado);
       }
@@ -218,9 +218,9 @@ describe("responsável A no próprio livro", () => {
     });
   });
 
-  it("não edita com o passe vencido, mesmo antes do job diário", async () => {
+  it("não edita com o plano vencido, mesmo antes do job diário", async () => {
     await db.query(
-      `update public.books set passe_ativado_em = now() - interval '2 years', passe_vence_em = now() - interval '1 day' where id = $1`,
+      `update public.books set plano_ativado_em = now() - interval '2 years', plano_vence_em = now() - interval '1 day' where id = $1`,
       [livroA],
     );
     try {
@@ -238,7 +238,7 @@ describe("responsável A no próprio livro", () => {
       });
     } finally {
       await db.query(
-        `update public.books set passe_ativado_em = now(), passe_vence_em = now() + interval '12 months' where id = $1`,
+        `update public.books set plano_ativado_em = now(), plano_vence_em = now() + interval '12 months' where id = $1`,
         [livroA],
       );
     }
@@ -288,12 +288,12 @@ describe("quem não é membro", () => {
 
 describe("funções do admin só com a chave secreta", () => {
   const chamadas = [
-    `select public.admin_ativar_passe('00000000-0000-0000-0000-000000000000', 'x', 12)`,
-    `select public.admin_renovar_passe('00000000-0000-0000-0000-000000000000', 12)`,
+    `select public.admin_ativar_plano('00000000-0000-0000-0000-000000000000', 'x', 12)`,
+    `select public.admin_renovar_plano('00000000-0000-0000-0000-000000000000', 12)`,
     `select public.admin_trocar_responsavel('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000')`,
     `select public.admin_usuario_por_email('ana@exemplo.com')`,
     `select * from public.admin_listar_livros()`,
-    `select privado.vencer_passes()`,
+    `select privado.vencer_planos()`,
   ];
 
   it.each(["anon", "authenticated"] as const)(

@@ -1,10 +1,10 @@
 // Lista fechada de ações registradas em events. Ação nova = uma linha aqui.
 export const ACOES = [
   "entrou", // abriu o livro (no máximo 1 por pessoa, livro e dia)
-  "passe_ativado",
-  "passe_renovado",
+  "plano_ativado",
+  "plano_renovado",
   "acesso_reenviado",
-  "passe_vencido", // só o job do banco grava (privado.vencer_passes)
+  "plano_vencido", // só o job do banco grava (privado.vencer_planos)
   // Já previstas no PRD (M10):
   "gravou",
   "editou",

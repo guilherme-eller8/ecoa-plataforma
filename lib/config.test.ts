@@ -7,14 +7,14 @@ import {
   MAX_ARQUIVOS_LOTE,
   MAX_COFACILITADORES,
   PAGINAS_INCLUSAS,
-  PRECO_PASSE,
+  PRECO_PLANO,
   VALOR_COPIA_EXTRA,
   VALOR_PAGINA_EXTRA,
 } from "./config";
 
 describe("lib/config", () => {
   it("mantém os números de negócio do PRD", () => {
-    expect(PRECO_PASSE).toBe(467);
+    expect(PRECO_PLANO).toBe(467);
     expect(PAGINAS_INCLUSAS).toBe(80);
     expect(MAX_COFACILITADORES).toBe(3);
     expect(MAX_ARQUIVOS_LOTE).toBe(30);

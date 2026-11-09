@@ -1,6 +1,6 @@
 import "server-only";
 import { notFound } from "next/navigation";
-import type { PapelMembro, PasseEstado } from "@/lib/supabase/tipos";
+import type { PapelMembro, PlanoEstado } from "@/lib/supabase/tipos";
 import { clienteSessao } from "@/lib/supabase/servidor";
 
 export type Usuario = { id: string; email: string | null; ehAdmin: boolean };
@@ -29,8 +29,8 @@ export async function exigirAdmin(): Promise<Usuario> {
 export type LivroDoMembro = {
   id: string;
   autor_nome: string | null;
-  passe_estado: PasseEstado;
-  passe_vence_em: string | null;
+  plano_estado: PlanoEstado;
+  plano_vence_em: string | null;
   papel: PapelMembro;
 };
 
@@ -42,17 +42,17 @@ export async function livrosDoMembro(
   const { data } = await supabase
     .from("book_members")
     .select(
-      "papel, books!inner(id, autor_nome, passe_estado, passe_vence_em, criado_em)",
+      "papel, books!inner(id, autor_nome, plano_estado, plano_vence_em, criado_em)",
     )
     .eq("user_id", usuarioId);
   return (data ?? [])
     .map((m) => ({ ...m.books, papel: m.papel }))
     .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
-    .map(({ id, autor_nome, passe_estado, passe_vence_em, papel }) => ({
+    .map(({ id, autor_nome, plano_estado, plano_vence_em, papel }) => ({
       id,
       autor_nome,
-      passe_estado,
-      passe_vence_em,
+      plano_estado,
+      plano_vence_em,
       papel,
     }));
 }
