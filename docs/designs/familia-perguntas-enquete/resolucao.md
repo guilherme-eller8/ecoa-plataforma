@@ -66,3 +66,9 @@ Cada achado foi classificado como **Aceito** (o design mudou) ou **Contestado** 
 | 18 relatórios no cabeçalho | Aceito: links corrigidos; o de zoom out não rodou (limite de uso) e saiu do cabeçalho | Cabeçalho |
 | 19 25 caracteres | Aceito | Links, Arquivos |
 | 20 texto do WhatsApp | Aceito: tudo sai de `lib/whatsapp.ts`, inclusive o exemplo | Comportamento |
+
+## Depois da aprovação (10/11/2026)
+
+| Ponto | Decisão | Onde mudou |
+| --- | --- | --- |
+| Guilherme: a saída não é necessariamente "Enviar ao autor"; o filho pode gravar o pai na mesa | Aceito. A 1ª aba vira "Para perguntar" (o enum continua `para_enviar`). O cartão tem "Enviar ao autor" sem pressão para enviar, e "Gravar agora" entra no prompt 5 com o mesmo peso. Uma pergunta gravada ao vivo vai direto para Respondidas pelo servidor; o trigger de transições já permite, porque só restringe a sessão. Sem mudança de schema | Mudanças, Comportamento detalhado, telas |

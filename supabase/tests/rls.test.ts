@@ -277,6 +277,13 @@ describe("quem não é membro", () => {
         "book_members",
         "author_access",
         "events",
+        "photos",
+        "causos",
+        "prompts",
+        "family_access",
+        "polls",
+        "poll_items",
+        "poll_votes",
       ]) {
         expect(await tenta(tx, `select 1 from public.${tabela}`)).toEqual(
           negado,
@@ -332,15 +339,20 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
     expect(r.rows).toEqual([]);
   });
 
-  it("nenhuma função é executável por anon", async () => {
-    const r = await db.query(
-      `select n.nspname, p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-       where n.nspname in ('public', 'privado') and has_function_privilege('anon', p.oid, 'execute')`,
+  it("anon executa só as portas do link da família", async () => {
+    const r = await db.query<{ nome: string }>(
+      `select n.nspname || '.' || p.proname as nome from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname in ('public', 'privado') and has_function_privilege('anon', p.oid, 'execute')
+       order by 1`,
     );
-    expect(r.rows).toEqual([]);
+    expect(r.rows.map((f) => f.nome)).toEqual([
+      "public.familia_enviar_causo",
+      "public.familia_pagina",
+      "public.familia_votar",
+    ]);
   });
 
-  it("authenticated executa só as funções usadas nas policies", async () => {
+  it("authenticated executa só as funções da lista", async () => {
     const r = await db.query<{ nome: string }>(
       `select n.nspname || '.' || p.proname as nome from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname in ('public', 'privado') and has_function_privilege('authenticated', p.oid, 'execute')
@@ -349,6 +361,11 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
     expect(r.rows.map((f) => f.nome)).toEqual([
       "privado.eh_membro",
       "privado.livro_editavel",
+      "public.enquete_abrir",
+      "public.enquete_adicionar_item",
+      "public.enquete_encerrar",
+      "public.enquete_remover_votos",
+      "public.enquete_salvar",
     ]);
   });
 

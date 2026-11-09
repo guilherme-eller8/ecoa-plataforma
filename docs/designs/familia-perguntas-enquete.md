@@ -13,7 +13,7 @@
 Este design abastece o livro antes de o autor gravar:
 
 - **Configuração inicial em 3 passos**, todos puláveis: quem é o autor, as primeiras 10 perguntas e as fotos.
-- **Tela Perguntas** com 5 abas: Para enviar, Enviadas, Respondidas, Causos e Enquete.
+- **Tela Perguntas** com 5 abas: Para perguntar, Enviadas, Respondidas, Causos e Enquete.
 - **Link permanente da família**, `/f/[token]`, para fixar no grupo de WhatsApp. Por ele a família sugere causos (áudio de até 3 minutos ou texto) e vota na enquete aberta.
 - **Kit de início**, que entrega os dois textos prontos: o convite do grupo e a mensagem para o autor.
 
@@ -37,6 +37,7 @@ O PRD resolvia a escolha com "Me conte sobre ele" e perguntas geradas por IA, ma
 | "Enquetes" fora das duas ondas | Entra no M3 | Um cliente esperando; a família escolhe as perguntas votando |
 | Link `/c/[token]`, só para causos | Link `/f/[token]`, da família: enquete e causo | Um link fixado no grupo, não dois |
 | Tabelas `book_context` e `glossary_entries` | Ficam para quando o "Me conte sobre ele" voltar | Sem uso neste prompt |
+| Aba "Para enviar" | Aba **"Para perguntar"** (o estado no banco continua `para_enviar`) | Decisão do Guilherme em 10/11/2026: a lista é a base do livro, não uma fila de envio. Há duas saídas com o mesmo peso: *Enviar ao autor* (`wa.me`) e *Gravar agora*, com o filho gravando o pai na mesa (modo conversa, prompt 5). Uma pergunta gravada ao vivo vai direto de Para perguntar para Respondidas (pelo servidor, no prompt 5; o trigger já permite) |
 | Realtime nas etapas ao vivo | Neste prompt, "ao vivo" é consulta a cada 4 s com a tela visível | O Realtime em tabela com votos vaza eventos de DELETE entre livros (revisão de segurança, M3); com 2 famílias, a consulta é barata e simples. O Realtime volta no prompt 6, com Broadcast por livro |
 | CLAUDE.md: token de link com "128 bits aleatórios" | Token **imprevisível** de ≥128 bits, derivado por HMAC com segredo versionado; só o hash no banco | Aprovado pelo Guilherme em 10/11/2026: o link fixado no grupo precisa ser mostrado de novo. O CLAUDE.md já foi ajustado (commit do design) |
 
@@ -47,7 +48,7 @@ O `docs/prd.md` é atualizado no mesmo PR (M2, M3, a jornada da família e "Fora
 - **Hipótese:** com a família votando, o responsável escolhe perguntas que geram histórias melhores, e a família se engaja antes da ceia.
 - **Sinal de sucesso:** no livro do cliente que está esperando, em 7 dias,
   - pelo menos 5 pessoas votam;
-  - pelo menos 3 perguntas saem da enquete para Para enviar e depois são enviadas ao autor.
+  - pelo menos 3 perguntas saem da enquete para Para perguntar e depois são enviadas ao autor.
 - **Critério de morte:** menos de 3 votantes em 7 dias. A aba Enquete sai do menu, e as tabelas ficam (sem custo).
 - **Como medir:** `count(distinct votante)` em `poll_votes` e o estado das perguntas com `origem = 'enquete'`. Os eventos `votou` (com o `votante` em `detalhes`) e `enquete_salvou` dão a linha do tempo.
 
@@ -78,7 +79,7 @@ O `docs/prd.md` é atualizado no mesmo PR (M2, M3, a jornada da família e "Fora
    - remover os votos de uma pessoa;
    - encerrar;
    - salvar as N mais votadas com 1 toque, ou uma a uma;
-   - tudo vai para Para enviar, sem duplicar.
+   - tudo vai para Para perguntar, sem duplicar.
    - Verificação: `ranking.test.ts`, teste de banco de `enquete_salvar`, aceite com 5 aparelhos.
 10. Kit de início: o convite do grupo com o link da família e a mensagem para o autor com o link pessoal, que é um placeholder até o prompt 5. Enviar ao autor abre o `wa.me`.
     - Verificação: `whatsapp.test.ts` (textos e `wa.me`), `links.test.ts` (token estável), e2e do kit no styleguide (os dois `href` começam com `https://wa.me/?text=`).
@@ -136,7 +137,7 @@ Nenhuma bloqueante. As três decisões da sessão estão nos itens 1 a 3 abaixo.
 1. No passo 2, desmarca 3 perguntas.
 2. Toca em Trocar e escolhe 2 do tema Infância.
 3. Toca em "Escrever a minha", escolhe Causo e digita "Conta da vez em Guarapari".
-4. Salva: 10 itens em Para enviar.
+4. Salva: 10 itens em Para perguntar.
 
 ### CUJ 3: A família sugere um causo
 
@@ -150,11 +151,11 @@ Nenhuma bloqueante. As três decisões da sessão estão nos itens 1 a 3 abaixo.
 1. Na aba Enquete, o responsável toca em "Nova enquete", marca 8 candidatos (do banco e 1 causo) e toca em Abrir.
 2. Cinco pessoas abrem o link, cada uma informa o nome, marca até 5 itens e toca em Votar.
 3. O responsável vê o ranking subir sem recarregar e toca em Encerrar.
-4. Toca em "Salvar as 3 mais votadas". As 3 aparecem em Para enviar.
+4. Toca em "Salvar as 3 mais votadas". As 3 aparecem em Para perguntar.
 
 ### CUJ 5: Enviar ao autor
 
-1. Em Para enviar, toca em "Enviar ao autor".
+1. Em Para perguntar, toca em "Enviar ao autor".
 2. O WhatsApp abre com "Pai, uma pergunta para o seu livro: … Responda gravando aqui: [link]".
 3. A pergunta vai para Enviadas.
 
@@ -371,7 +372,7 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 | `/livro/[id]/configurar/perguntas` | Salvar N perguntas | Trocar, Escrever a minha, Pular, Depois |
 | `/livro/[id]/configurar/fotos` | Escolher fotos → Continuar | Pular, Depois |
 | `/livro/[id]/kit` | Pegar o link do grupo (1ª vez), depois Enviar ao grupo (WhatsApp) | Copiar convite; Enviar ao autor; Copiar mensagem; Trocar o link (dois passos, avisa que o link antigo para) |
-| `/livro/[id]/perguntas` | Adicionar | Abas: Para enviar (Enviar ao autor, ⋯ Apagar/Pular), Enviadas, Respondidas, Causos, Enquete |
+| `/livro/[id]/perguntas` | Adicionar | Abas: Para perguntar (Enviar ao autor, ⋯ Apagar/Pular), Enviadas, Respondidas, Causos, Enquete |
 | `/livro/[id]/perguntas?aba=enquete` | Nova enquete, ou Encerrar / Salvar as N mais votadas | Ranking ao vivo, nomes tocáveis para remover, Salvar uma a uma |
 | `/f/[token]` | Votar (se há enquete), senão Sugerir um causo | Sugerir um causo como secundário, quando há enquete |
 | `/f/[token]` (inválido) | — | "Este link não vale mais. Peça o novo no grupo." (404) |
@@ -400,7 +401,7 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 
 | Lugar | Texto | Botão |
 | --- | --- | --- |
-| Para enviar | "Escolha o que perguntar ao Jair." | Adicionar |
+| Para perguntar | "Escolha o que perguntar ao Jair." | Adicionar |
 | Enviadas | "Nada enviado ainda." | — |
 | Respondidas | "As respostas do Jair aparecem aqui." (fica vazia até o prompt 5) | — |
 | Causos | "Os causos que a família sugerir chegam aqui." | Convidar a família (kit) |
@@ -413,7 +414,8 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
 - `/f` com token inválido sai com status 200 e `noindex`. Com `cacheComponents`, o `notFound()` dentro de `<Suspense>` vira 200 (o `lib/rotas.ts` já registra isso). Validar no proxy custaria uma chamada ao banco por acesso.
 
 **Perguntas:**
-- **Puladas:** ficam em Para enviar, num grupo recolhido "Puladas (n)" no fim, com "Voltar para a lista".
+- **A lista é a base, não uma fila de envio.** O cartão mostra o texto e as ações discretas ("Enviar ao autor" e ⋯). Neste prompt não há botão desabilitado de "Gravar agora": ele entra no prompt 5, ao lado de "Enviar ao autor", com o mesmo peso.
+- **Puladas:** ficam em Para perguntar, num grupo recolhido "Puladas (n)" no fim, com "Voltar para a lista".
 - **Enviadas:** cada cartão tem "Desfazer envio" (`enviada → para_enviar`).
 - **Enviar ao autor:** é um `<a href="https://wa.me/?text=…" target="_blank">`, para o celular abrir o WhatsApp no toque. No mesmo toque, sem esperar, a action marca a pergunta como `enviada`. Se a action falhar, um aviso diz "Não marquei como enviada" e oferece "Marcar agora".
 - **Mensagens:** todas saem de `lib/whatsapp.ts`. O `demo-folha.tsx` do styleguide passa a usar a mesma função.
@@ -433,7 +435,7 @@ O Supabase está no plano grátis: 1 GB de Storage para todas as famílias e sem
   - do banco (as que ainda não estão em perguntas);
   - texto próprio;
   - causos `novo` ou `na_enquete`.
-- Perguntas que já estão em Para enviar não entram como candidatas (evita duplicata, porque o `on conflict` só protege `banco_id`).
+- Perguntas que já estão em Para perguntar não entram como candidatas (evita duplicata, porque o `on conflict` só protege `banco_id`).
 - Um causo vira candidato com o texto dele cortado em 500 caracteres. Um causo só de áudio vira "Conte a história que {nome} pediu".
 - "Salvar" funciona com a enquete aberta ou encerrada.
 - Um item de causo salvo muda o causo para `virou_pergunta`.
@@ -1480,8 +1482,8 @@ drop role if exists porta_autor;
   1. Livro novo: só o nome → Salvar 10 → Pular fotos → kit, em menos de 30 s.
   2. Fixar o link da família num grupo de teste e abrir em 5 aparelhos. Cada um vota com um nome.
   3. Com Perguntas → Enquete aberta no computador, o ranking muda sem recarregar.
-  4. Encerrar, "Salvar as 3 mais votadas" e ver as 3 em Para enviar.
-  5. De outro aparelho, gravar um causo de 20 s. Ele aparece tocável na aba Causos em menos de 10 s. Virar pergunta leva a pergunta para Para enviar.
+  4. Encerrar, "Salvar as 3 mais votadas" e ver as 3 em Para perguntar.
+  5. De outro aparelho, gravar um causo de 20 s. Ele aparece tocável na aba Causos em menos de 10 s. Virar pergunta leva a pergunta para Para perguntar.
 
 ---
 
