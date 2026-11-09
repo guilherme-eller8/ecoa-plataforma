@@ -6,7 +6,7 @@ type Props = { autorNome: string | null; somenteLeitura: boolean };
 export function TelaLivroVazio({ autorNome, somenteLeitura }: Props) {
   const titulo = autorNome ? `O livro do ${autorNome}` : "Seu livro";
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-6 pt-10 pb-12 md:px-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-6 pt-10 pb-12">
       <div className="flex items-center justify-between gap-4">
         <Marca />
         {somenteLeitura ? (
@@ -19,7 +19,7 @@ export function TelaLivroVazio({ autorNome, somenteLeitura }: Props) {
         <h1 className="font-livro text-tinta text-[44px] leading-[1.05] md:text-[64px]">
           {titulo}
         </h1>
-        <p className="font-livro text-tinta-2 max-w-[26ch] text-[22px] leading-snug">
+        <p className="font-livro text-tinta-2 text-[22px] leading-snug text-balance">
           Ainda não tem nenhuma história. A primeira começa com uma pergunta.
         </p>
         <div className="flex flex-col gap-2 pt-4">

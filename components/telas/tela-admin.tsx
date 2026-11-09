@@ -210,7 +210,7 @@ function LinhaLivro({
           className={
             livro.estado === "ativo"
               ? "text-floresta font-semibold"
-              : "text-tinta font-semibold"
+              : "font-semibold text-[#7a2e14]"
           }
         >
           {ROTULO_ESTADO[livro.estado]}

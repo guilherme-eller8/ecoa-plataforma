@@ -12,7 +12,7 @@ export function TelaSemAcesso({ email, ehAdmin, sair }: Props) {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-10 pb-12">
       <Marca />
       <div className="flex flex-1 flex-col justify-center gap-6 py-12">
-        <h1 className="font-ui text-tinta text-[32px] leading-tight font-semibold">
+        <h1 className="font-ui text-tinta text-[26px] leading-tight font-semibold md:text-[32px]">
           Seu acesso ainda não foi ativado
         </h1>
         <p className="font-ui text-tinta-2 text-[17px]">
