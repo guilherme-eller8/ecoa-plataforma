@@ -1,7 +1,7 @@
 # Acesso, passe, admin e registro de uso
 
 - **Autor:** Guilherme Eller (com Claude)
-- **Status:** Proposto (revisão goldfish incorporada, aguardando aprovação)
+- **Status:** Aprovado e implementado (aceite feito em 09/11/2026)
 - **Data:** 2026-11-09
 - **Origem:** [concepts brief](./acesso-passe-admin/concepts_brief.md) · PRD: Papéis e permissões, M1, M10 (onda 1), Modelo de dados
 - **Revisões:** [segurança](./acesso-passe-admin/critic_report.md) · [zoom out](./acesso-passe-admin/zoom_out_report.md) · [prontidão](./acesso-passe-admin/implementation_readiness_report.md) · [resolução](./acesso-passe-admin/resolucao.md)
@@ -39,7 +39,9 @@ Hoje não existe banco, login nem forma de liberar acesso. Sem isso, nenhum prom
 
 ## Perguntas em aberto
 
-- **Google com cadastro desligado.** Com "Allow new users to sign up" desligado, a pessoa cuja conta o admin criou (só e-mail) entra com Google e o Supabase vincula a identidade Google à conta existente. Verificado no aceite. Se falhar: religar o cadastro, e o callback encerra a sessão de quem não for membro (plano B já desenhado em "Login").
+Nenhuma.
+
+- ~~**Google com cadastro desligado.**~~ **Resolvida no aceite (09/11/2026):** com "Allow new users to sign up" desligado, a conta criada pelo admin (só e-mail) entrou com Google, e o Supabase vinculou a identidade Google à conta existente (provedores `email` e `google`). Um Google não cadastrado não criou conta. O plano B não é necessário.
 
 ## Riscos e mitigações
 
