@@ -1,49 +1,68 @@
 # Acesso, passe, admin e registro de uso
 
 - **Autor:** Guilherme Eller (com Claude)
-- **Status:** Proposto
+- **Status:** Proposto (revisão goldfish incorporada, aguardando aprovação)
 - **Data:** 2026-11-09
 - **Origem:** [concepts brief](./acesso-passe-admin/concepts_brief.md) · PRD: Papéis e permissões, M1, M10 (onda 1), Modelo de dados
+- **Revisões:** [segurança](./acesso-passe-admin/critic_report.md) · [zoom out](./acesso-passe-admin/zoom_out_report.md) · [prontidão](./acesso-passe-admin/implementation_readiness_report.md) · [resolução](./acesso-passe-admin/resolucao.md)
 
 ---
 
 ## Visão geral
 
-Este design cobre o prompt 3 do PRD: a catraca da plataforma. Na onda 1, a Ecoa recebe o Pix e ativa o passe no `/admin`. Ativar cria o livro, cria o responsável e manda o e-mail de acesso. O responsável entra com Google ou com link por e-mail e vê a home vazia do livro. O passe dura 12 meses; vencido, o livro fica em somente leitura. Toda ação relevante vira uma linha em `events`.
+Este design cobre o prompt 3 do PRD: a catraca da plataforma. Na onda 1, a Ecoa recebe o Pix e ativa o passe no `/admin`. Ativar cria o livro, cria a conta do responsável e manda o e-mail de acesso. O responsável entra com Google ou com link por e-mail e vê a home vazia do livro. O passe dura 12 meses; vencido, o livro fica em somente leitura. Cada abertura do livro e cada ação do admin vira uma linha em `events`.
 
 ## O problema
 
-Hoje não existe banco, login nem forma de liberar acesso. Sem isso, nenhum dos prompts seguintes (configuração, gravação, IA) tem onde guardar dados nem como separar uma família da outra. A separação entre famílias precisa ser garantida pelo banco (RLS), porque um erro de código numa tela não pode expor o livro de outra família.
+Hoje não existe banco, login nem forma de liberar acesso. Sem isso, nenhum prompt seguinte (configuração, gravação, IA) tem onde guardar dados nem como separar uma família da outra. A separação precisa ser garantida pelo banco (RLS) e pela configuração do login: um erro numa tela, ou alguém criando conta antes do dono, não pode abrir o livro de outra família.
 
 ## Objetivos
 
-1. O admin ativa um passe informando só o e-mail do responsável (e, se quiser, o nome do autor). Em menos de 1 minuto o e-mail chega.
+1. O admin ativa um passe informando o e-mail do responsável (e, se quiser, o nome do autor), confirma o e-mail numa segunda tela, e o e-mail de acesso sai na hora. Verificação: manual no aceite.
 2. O responsável entra com Google ou link por e-mail e cai direto na home do seu livro.
-3. Um responsável não lê, não altera e não apaga nada de outro livro. Provado por teste automático que roda em `npm test`.
-4. Ninguém fora do servidor muda estado ou vencimento do passe, nem do próprio livro.
-5. Passe vencido bloqueia escrita no banco mesmo que o job diário atrase.
-6. `registrarEvento(quem, papel, ação, livro)` é a única porta de escrita em `events` no código da aplicação.
-7. O admin consegue responder "quem acessou o livro X ontem e o que fez" com uma consulta.
+3. Um responsável não lê, não altera e não apaga nada de outro livro. Verificação: `supabase/tests/rls.test.ts` em `npm test`.
+4. Só o admin cria contas. Ninguém se cadastra sozinho, nem por senha. Verificação: configuração no painel (guia de setup) e teste manual no aceite.
+5. Ninguém fora do servidor muda estado ou vencimento do passe, nem do próprio livro. Verificação: teste de RLS.
+6. Passe vencido bloqueia escrita feita com a sessão do usuário, mesmo que o job diário atrase. Verificação: teste de RLS.
+7. `registrarEvento` é a única porta de escrita em `events` no código TypeScript. Verificação: teste que procura `from("events")` fora de `lib/eventos.ts`. Exceção declarada: o job `privado.vencer_passes()`, que grava em SQL.
+8. "Quem acessou o livro X ontem e o que fez" responde com uma consulta. Verificação: consulta documentada, conferida no aceite.
 
 ## Não objetivos
 
 - Convite e limite de co-facilitadores (prompt 11). A tabela já aceita o papel.
-- Uso do link do autor (prompt 5). Aqui só a tabela e o hash do token.
-- Painel de aderência (prompt 15). Aqui só o registro.
+- Uso do link do autor (prompt 5): aqui só a tabela. Geração e hash do token entram no prompt 5.
+- Apelido, parentesco e foto do autor (prompt 4, com o formulário).
+- Painel de aderência (prompt 15).
 - Pagamento automático (prompt 14).
-- Design system completo (prompt 2). Aqui só 3 componentes mínimos.
+- Design system (prompt 2). Aqui, 3 componentes mínimos; o gate de design para no PASS, sem polir telas que o prompt 2 vai refazer.
+- Lista de livros para quem tem mais de um: sem caso real na onda 1 (abre o mais recente).
 
 ## Perguntas em aberto
 
-- **Vínculo Google ↔ conta criada pelo admin.** O admin cria o usuário com e-mail confirmado; quando a pessoa entra com Google usando o mesmo e-mail, o Supabase deve vincular as duas identidades ao mesmo usuário. Verificado no aceite. Se falhar, o responsável usa o link por e-mail e abrimos uma tarefa.
-- **Responsável sem conta Google** (e-mail corporativo ou Hotmail): entra pelo link por e-mail. Aceitável na onda 1.
+- **Google com cadastro desligado.** Com "Allow new users to sign up" desligado, a pessoa cuja conta o admin criou (só e-mail) entra com Google e o Supabase vincula a identidade Google à conta existente. Verificado no aceite. Se falhar: religar o cadastro, e o callback encerra a sessão de quem não for membro (plano B já desenhado em "Login").
+
+## Riscos e mitigações
+
+| Risco | Mitigação |
+| --- | --- |
+| Estranho cria `ana@…` antes do admin e herda o livro | Cadastro público e login por senha desligados; `ativarPasse` recusa conta com identidade diferente de `email`/`google` |
+| Redirect de login para domínio de terceiro (`*.vercel.app` de outra pessoa) | Lista de redirects só com URLs exatas do app e do branch de preview |
+| E-mail digitado errado entrega o livro a um estranho | Tela de confirmação com o e-mail em destaque; `admin_trocar_responsavel` |
+| Scanner de e-mail (Outlook, antivírus) queima o link de uso único | Link abre uma página com o botão *Entrar*; só o clique (POST) consome o token |
+| Bombardeio de e-mails pelo `signInWithOtp` público | Limites de Auth do Supabase (documentados no setup); `shouldCreateUser: false` |
+| Descobrir quem tem livro pelo tempo de resposta | Envio em `after()`; resposta imediata e igual para todos |
+| Código futuro com a chave secreta ignora o passe vencido | Regra escrita aqui: escrita do usuário usa o cliente da sessão; quem usar a chave secreta chama `livro_editavel` antes |
+| Grants padrão do Supabase voltam em tabelas e funções novas | Teste genérico: nenhum grant de tabela para `anon`; nenhuma função executável por `anon`; só as funções da lista executáveis por `authenticated`; RLS ligada em toda tabela |
+| Conta Google do admin comprometida | Admin lê o e-mail de todos. Mitigação na onda 1: verificação em 2 etapas na conta Google; MFA no Supabase fica para a onda 2 |
+| Resend fora do ar na ativação | Passe fica ativo; a tela diz "Passe ativado, mas o e-mail não saiu. Use Reenviar." |
+| Shim do PGlite diferente do Supabase real | `get_advisors` no projeto real e teste manual de leitura cruzada no aceite |
 
 ## Jornadas críticas (CUJs)
 
 ### CUJ 1: Ativar um passe
 - **Dado** que o admin está logado e o Pix foi confirmado,
-- **Quando** ele informa `ana@exemplo.com` e "Jair" e toca em *Ativar passe*,
-- **Então** um livro `ativo` com vencimento em 12 meses é criado, Ana vira responsável, o e-mail "Seu livro está pronto" chega, a linha aparece no topo da lista e o evento `passe_ativado` é registrado.
+- **Quando** ele digita `ana@exemplo.com` e "Jair", toca em *Ativar passe*, vê "Ativar para **ana@exemplo.com**?" e confirma,
+- **Então** um livro `ativo` com vencimento em 12 meses é criado, Ana vira responsável, o e-mail "O livro do Jair está pronto para começar" é enviado, a linha aparece no topo da lista e o evento `passe_ativado` é registrado. Dois toques rápidos não criam dois livros (botão desativado durante o envio).
 
 ### CUJ 2: Primeiro acesso com Google
 - **Dado** que Ana recebeu o e-mail,
@@ -53,131 +72,172 @@ Hoje não existe banco, login nem forma de liberar acesso. Sem isso, nenhum dos 
 ### CUJ 3: Entrar por link
 - **Dado** que Ana não usa Google,
 - **Quando** ela digita o e-mail em `/entrar` e toca em *Receber link*,
-- **Então** a tela responde "Se este e-mail tiver um livro, o link chega em instantes"; o e-mail chega; o link abre a home do livro (vale 1 hora).
+- **Então** a tela responde na hora "Se este e-mail tiver um livro, o link chega em instantes"; o e-mail chega; o link abre uma página com o botão *Entrar*; o toque abre a home do livro.
 
 ### CUJ 4: Passe vence
 - **Dado** um livro com `passe_vence_em` no passado,
 - **Quando** o job das 06:00 roda (ou mesmo antes dele),
-- **Então** qualquer escrita do responsável no livro é recusada pelo banco; depois do job, o estado mostra `somente_leitura`, a home mostra o selo "Somente leitura" e o evento `passe_vencido` é registrado com ator `sistema`.
+- **Então** qualquer escrita de Ana no livro é recusada pelo banco; a home mostra o selo "Somente leitura"; depois do job o estado gravado é `somente_leitura` e existe o evento `passe_vencido` com ator `sistema`.
 
-### CUJ 5: Renovar e reenviar
-- **Dado** um livro vencido ou perto de vencer,
-- **Quando** o admin toca em *Renovar* e confirma,
-- **Então** o vencimento passa a ser o maior entre hoje e o vencimento atual, mais 12 meses, e o estado volta a `ativo`. *Reenviar acesso* manda de novo o e-mail de acesso.
+### CUJ 5: Renovar, reenviar, trocar responsável
+- **Quando** o admin toca em *Renovar* e depois em *Confirmar +12 meses*, o vencimento vira o maior entre hoje e o vencimento atual, mais 12 meses, e o estado volta a `ativo`.
+- *Reenviar acesso* manda de novo o e-mail de acesso.
+- Trocar o responsável é um comando SQL documentado no guia (sem tela na onda 1).
 
-### CUJ 6: Alguém sem livro entra
-- **Dado** uma pessoa com Google que não é responsável de nenhum livro,
-- **Quando** ela entra,
-- **Então** vê "Seu acesso ainda não foi ativado" e nada mais.
+### CUJ 6: Alguém sem livro tenta entrar
+- **Dado** uma pessoa com Google cujo e-mail o admin não cadastrou,
+- **Quando** ela toca em *Entrar com Google*,
+- **Então** volta para `/entrar` com "Este e-mail ainda não tem um livro." e nenhuma conta é criada.
 
 ## Plano técnico
 
 ```text
 Celular/Computador
   │
-  ├─ /entrar ── Google ──► Supabase Auth ──► /auth/callback (troca código por sessão)
-  │          └─ e-mail ─► Server Action ─► generateLink (chave secreta) ─► Resend
-  │                                          link ─► /auth/confirmar (verifyOtp)
-  │                                                     │
-  │                                    registrarEvento('entrou') ◄─┘
-  ├─ /            → lê sessão → 1 livro: /livro/<id> · vários: lista · nenhum: "acesso não ativado"
-  ├─ /livro/<id>  → lê o livro com a sessão do usuário (RLS decide)
-  └─ /admin       → guard (role=admin no token) → admin_listar_livros() (confere de novo no banco)
-                    Ativar/Renovar/Reenviar → Server Action → chave secreta → funções SQL atômicas
-                                                             → Resend → registrarEvento
+  ├─ /entrar ── Google ──► Supabase Auth ──► /auth/callback (troca o código por sessão) ──► /
+  │          └─ e-mail ─► Server Action ─► after(signInWithOtp, shouldCreateUser=false)
+  │                        Supabase envia pelo SMTP do Resend: link → /auth/confirmar?token_hash=…
+  │                        /auth/confirmar mostra [Entrar] ─POST─► verifyOtp ──► /
+  │
+  ├─ proxy.ts     renova a sessão; sem sessão em /, /livro/*, /admin → /entrar
+  ├─ /            1 livro ou mais → /livro/<mais recente>; nenhum → "acesso não ativado"
+  ├─ /livro/<id>  lê o livro com a sessão (RLS) → tela vazia; after(registrarEvento 'entrou', 1 por dia)
+  └─ /admin       exigirAdmin() (app_metadata.role) → cliente com chave secreta
+                    lista: admin_listar_livros()
+                    Ativar/Renovar/Reenviar → funções SQL atômicas → Resend → registrarEvento
 
 Banco (Supabase, sa-east-1)
   books · book_members · author_access · events   (RLS ligada em todas)
-  privado.*  funções de checagem (fora da API)
+  privado.eh_membro · privado.livro_editavel       (fora da API)
   pg_cron 09:00 UTC → privado.vencer_passes()
 ```
 
 ### Quem pode o quê no banco
 
-| Tabela | anon | authenticated (membro) | authenticated (admin) | service_role (servidor) |
-| --- | --- | --- | --- | --- |
-| `books` | nada | lê os seus; altera só `autor_*` e só com passe ativo | lê todos | tudo |
-| `book_members` | nada | lê os do seu livro | lê todos | tudo |
-| `author_access` | nada | lê os do seu livro, **sem** `token_hash` | lê todos, sem `token_hash` | tudo |
-| `events` | nada | nada | lê todos | tudo |
+| Tabela | anon | authenticated (membro do livro) | service_role (servidor) |
+| --- | --- | --- | --- |
+| `books` | nada | lê o seu; altera só `autor_nome` e só com passe ativo e no prazo | tudo |
+| `book_members` | nada | lê os do seu livro | tudo |
+| `author_access` | nada | lê os do seu livro, **sem** `token_hash` | tudo |
+| `events` | nada | nada | tudo |
 
-Ninguém além do servidor insere, altera ou apaga membros, links e eventos. Apagar livro não tem policy (só o servidor, por pedido formal de LGPD).
+Um usuário logado sem livro (inclusive o admin, com a própria sessão) não lê nada. O admin trabalha só pelo servidor: `exigirAdmin()` confere `app_metadata.role = 'admin'` no token (só a chave secreta edita `app_metadata`; `user_metadata` o próprio usuário edita e não conta) e então usa o cliente com a chave secreta. Funções `admin_*` só executam com a chave secreta.
 
-**Admin** é quem tem `app_metadata.role = 'admin'` no token. O usuário não consegue editar `app_metadata` (só a chave secreta), diferente de `user_metadata`, que ele edita. Marcar o admin é um `update` SQL feito uma vez.
+**Regra para os próximos prompts:** escrita iniciada pelo usuário usa o cliente da sessão, para a RLS valer. Código que escreve com a chave secreta (jobs, admin) chama `privado.livro_editavel` antes, quando a escrita for de conteúdo do livro.
 
 ### Passe
 
-- Estados: `pendente` (existe para a onda 2, quando o livro nascer antes do pagamento), `ativo`, `somente_leitura`.
-- `livro_editavel(livro)` = estado `ativo` **e** `passe_vence_em > agora`. Toda policy de escrita dos próximos prompts usa essa função. Este prompt já a aplica no `update` de `books`.
-- Na tela, o estado mostrado é o efetivo: `ativo` com vencimento passado aparece como somente leitura.
-- Job: `pg_cron` todo dia às 09:00 UTC (06:00 em Brasília) chama `privado.vencer_passes()`, que muda o estado e grava `passe_vencido` com ator `sistema` na mesma instrução.
+- Estados: `pendente` (para a onda 2, quando o livro nascer antes do pagamento), `ativo`, `somente_leitura`.
+- `livro_editavel(livro)` = `ativo` **e** `passe_vence_em > agora`. Toda policy de escrita futura usa essa função. Neste prompt, ela já vale no `update` de `books`.
+- Na tela, o estado é o efetivo (`estadoEfetivo` em `lib/passe.ts`): `ativo` vencido aparece como somente leitura.
+- Um `update` com o passe vencido devolve 0 linhas, sem erro; a tela decide pela leitura prévia do livro (achou + `estadoEfetivo`), não pelo número de linhas.
+- Job: `pg_cron` às 09:00 UTC (06:00 em Brasília) chama `privado.vencer_passes()`, que muda o estado e grava `passe_vencido` com ator `sistema` na mesma instrução.
 
 ### Login
 
-- **Google:** `signInWithOAuth` com `redirectTo = <url do app>/auth/callback`. A rota troca o código por sessão (`exchangeCodeForSession`), registra `entrou` e redireciona para `/`.
-- **Link por e-mail:** Server Action valida o e-mail (zod), procura o usuário com `admin_usuario_por_email`. Só envia se ele for membro de algum livro ou admin, e no máximo 3 vezes em 10 minutos (contado em `events`, ação `link_enviado`). A resposta na tela é sempre a mesma, para não revelar quem tem livro. O link é gerado por `auth.admin.generateLink({ type: 'magiclink' })`; usamos o `hashed_token` para montar `<url do app>/auth/confirmar?token_hash=…&type=magiclink`, e essa rota chama `verifyOtp`. Como o link aponta direto para o app, não depende da lista de redirects do Supabase.
-- **Sessão:** `@supabase/ssr` com cookies. `proxy.ts` (nome novo do middleware no Next 16, roda em Node) renova a sessão a cada requisição e manda quem não tem sessão de `/admin` e `/livro/*` para `/entrar`.
-- **Next 16 com `cacheComponents`:** ler cookies ou `params` fora de `<Suspense>` é erro de build. Cada página tem uma casca estática e um componente assíncrono dentro de `<Suspense>` que lê a sessão.
-- **URL do app** para links: `APP_URL`, senão `https://$VERCEL_BRANCH_URL`, senão `http://localhost:3000`.
+- **Configuração do Supabase (guia de setup):**
+  - "Allow new users to sign up" desligado: só o admin cria contas, com `auth.admin.createUser({ email, email_confirm: true })`, sem senha.
+  - Provedores ligados: Email (link mágico) e Google.
+  - SMTP próprio apontando para o Resend.
+  - Modelo do e-mail "Magic Link" em português, com o link `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`.
+  - Validade do link ("Email OTP Expiration") em 3600 s.
+  - Limites de Auth no padrão.
+  - Redirects permitidos só com URLs exatas:
+    - `http://localhost:3000/**`
+    - `https://app.ecoa-memorias.com.br/**`
+    - a URL do branch de preview `https://<projeto>-git-<branch>-<time>.vercel.app/**`
+- **Google:** `signInWithOAuth({ provider: "google", options: { redirectTo: origin + "/auth/callback" } })`. `/auth/callback` aceita só `code` (não aceita `next` nem outro destino), chama `exchangeCodeForSession` e redireciona para `/`. Se o Supabase recusar (e-mail sem conta), volta para `/entrar?erro=sem_livro`. Outro erro: `/entrar?erro=falhou`.
+  - **Plano B, se o vínculo com cadastro desligado falhar:** religar o cadastro; o callback chama `signOut` e apaga a conta recém-criada quando o usuário não for membro de nenhum livro nem admin.
+- **Link por e-mail:** a Server Action `pedirLink` valida o e-mail (zod), agenda `after(() => supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: origin + "/auth/confirmar" } }))` e responde na hora `{ ok: true, mensagem: "Se este e-mail tiver um livro, o link chega em instantes." }`. O erro de e-mail desconhecido é ignorado. O limite de envio é o do Supabase Auth.
+- **`/auth/confirmar`:** página (não rota GET que consome o token). Mostra *Entrar* num formulário com `token_hash` escondido. A Server Action `confirmar` chama `verifyOtp({ type: "email", token_hash })` e redireciona para `/`. Token inválido ou vencido: "Este link já foi usado ou venceu" e o botão *Pedir outro link*.
+- **Sessão:** `@supabase/ssr` com cookies. `proxy.ts` (nome do middleware no Next 16, roda em Node) renova a sessão com `getClaims()` e aplica `decidirRota(caminho, temSessao)`: sem sessão em `/`, `/livro/*` ou `/admin*` → `/entrar`; com sessão em `/entrar` → `/`.
+- **Next 16 com `cacheComponents`:** ler cookies, `params` ou `searchParams` fora de `<Suspense>` quebra o build. `notFound()` e `redirect()` dentro de `<Suspense>` respondem 200 (meta tag), por isso redirects de sessão ficam no proxy e checagens que precisam de 404 de verdade (`/styleguide` sem `ECOA_PREVIA`) ficam no topo da página, fora do `<Suspense>`.
+- **URL do app** (`urlDoApp()`):
+  - `APP_URL`, se definida;
+  - senão, `https://` mais `DOMINIO_APP` quando `VERCEL_ENV=production`;
+  - senão, `https://` mais `VERCEL_BRANCH_URL`;
+  - senão, `http://localhost:3000`.
 
-### E-mails (Resend, remetente `Ecoa Memórias <acesso@ecoa-memorias.com.br>`)
+  No navegador, o login usa `window.location.origin`.
 
-- **Acesso** (ativar e reenviar): assunto "O livro do Jair está pronto para começar" (sem nome do autor: "Seu livro de memórias está pronto"). Botão *Abrir meu livro* → `/entrar` (não expira). Linha secundária: "Ou entre direto por este link (vale 1 hora)" com link mágico.
-- **Link de entrada:** assunto "Seu link para entrar na Ecoa". Botão *Entrar* com o link mágico.
-- HTML simples, texto em Newsreader com fallback Georgia, versão em texto puro. Templates em código, testados por snapshot do texto.
+### E-mails
+
+- **Acesso** (ativar e reenviar), enviado pelo Resend a partir do código. Remetente `Ecoa Memórias <acesso@ecoa-memorias.com.br>`. Assunto "O livro do Jair está pronto para começar"; sem nome do autor, "Seu livro de memórias está pronto". Uma frase e o botão *Abrir meu livro* → `urlDoApp() + "/entrar"` (não expira). HTML simples em Georgia, mais versão em texto puro. Nome do autor escapado.
+- **Link de entrada:** enviado pelo Supabase via SMTP do Resend, modelo no painel (texto no guia de setup, versionado no repositório). Assunto "Seu link para entrar na Ecoa".
 
 ### Eventos
 
-`registrarEvento({ quem, papel, acao, livro, detalhes })`:
+Assinatura única, em `lib/eventos.ts`:
 
-- `quem`: id do usuário (ou do link do autor no prompt 5; `null` para sistema).
-- `papel`: `responsavel | cofacilitador | autor | familia | admin | sistema`.
-- `acao`: lista fechada em código: `entrou`, `link_enviado`, `passe_ativado`, `passe_renovado`, `acesso_reenviado`, `passe_vencido`, e as já previstas no PRD `gravou`, `editou`, `sugeriu`, `gerou`. Nova ação = uma linha nesse arquivo.
-- `livro`: id ou `null` (admin entrando sem livro).
-- Valida com zod, grava com a chave secreta, nunca derruba a ação principal: se falhar, escreve no log do servidor e segue.
-- `entrou` é registrado uma vez por login (callback e confirmar), uma linha por livro de que a pessoa é membro; admin sem livro gera uma linha com livro `null`.
+```ts
+registrarEvento({ quem, papel, acao, livro, detalhes? })
+// quem → events.ator_id (uuid | null)
+// papel → events.ator_tipo
+// acao → events.acao (lista fechada em lib/eventos-acoes.ts)
+// livro → events.book_id (uuid | null)
+// detalhes → events.detalhes (só ids e números; nunca e-mail, nome ou texto livre)
+```
 
-Consulta do M10 ("quem acessou o livro X ontem"): `select e.criado_em, e.ator_tipo, u.email, e.acao from events e left join auth.users u on u.id = e.ator_id where e.book_id = X and e.criado_em >= current_date - 1 and e.criado_em < current_date order by 1;` (fica documentada; a tela vem no prompt 15).
+- Ações agora: `entrou`, `passe_ativado`, `passe_renovado`, `acesso_reenviado`, `passe_vencido` (só o job grava). Já previstas no PRD: `gravou`, `editou`, `sugeriu`, `gerou`.
+- Opção `umaVezPorDia: true`: antes de gravar, procura o mesmo `ator_id`, `acao` e `book_id` desde a meia-noite de Brasília; se existir, não grava. Uma corrida rara pode gerar 2 linhas no mesmo dia, o que é aceitável.
+- Grava com a chave secreta. Nunca derruba a ação principal: em falha, `console.error` só com a ação e os ids, e devolve `{ ok: false }`.
+- **`entrou`** é gravado quando o livro é aberto (`/livro/[id]`, via `after()`), uma vez por pessoa, livro e dia, com o papel do membro. É isso que responde o M10. O login em si não gera evento.
+- Ações do admin: papel `admin`, `quem` = id do admin, `livro` = livro afetado.
+
+Consulta do M10, no editor SQL do Supabase (a tela vem no prompt 15):
+
+```sql
+select e.criado_em at time zone 'America/Sao_Paulo' as quando, e.ator_tipo, u.email, e.acao
+from public.events e
+left join auth.users u on u.id = e.ator_id
+where e.book_id = '<id do livro>'
+  and e.criado_em >= (current_date - 1)::timestamp at time zone 'America/Sao_Paulo'
+  and e.criado_em <  current_date::timestamp at time zone 'America/Sao_Paulo'
+order by e.criado_em;
+```
 
 ### Telas
 
-Régua do CLAUDE.md: uma ação principal por tela, poucas palavras, celular primeiro. Interface em `font-ui`, nome do livro em `font-livro`.
+Uma ação principal por tela, poucas palavras, celular primeiro. Interface em `font-ui`, nome do livro em `font-livro`.
 
 | Rota | Ação principal | Conteúdo |
 | --- | --- | --- |
-| `/entrar` | *Entrar com Google* | Marca, título "Entre no seu livro", link discreto "Prefiro receber um link por e-mail" que revela o campo |
-| `/` | — | Redireciona; ou lista de livros (2+); ou "Seu acesso ainda não foi ativado" |
-| `/livro/[id]` | *Começar* (desativado, "em breve", até o prompt 4) | "O livro do Jair" e uma frase de estado vazio; selo "Somente leitura" se vencido |
-| `/admin` | *Ativar passe* | Formulário (e-mail, nome do autor) no topo; lista com e-mail, autor, estado, vence em; *Renovar* (pede confirmação) e *Reenviar acesso* por linha |
+| `/entrar` | *Entrar com Google* | Marca, "Entre no seu livro", link discreto "Prefiro receber um link por e-mail" que revela campo e *Receber link*; mensagem de erro conforme `?erro=` |
+| `/auth/confirmar` | *Entrar* | "Toque para entrar no seu livro" |
+| `/` | — | Redireciona para o livro mais recente, ou "Seu acesso ainda não foi ativado" |
+| `/livro/[id]` | *Começar* (desativado, "em breve", até o prompt 4) | "O livro do Jair" (ou "Seu livro") e uma frase; selo "Somente leitura" se vencido |
+| `/admin` | *Ativar passe* | Formulário (e-mail, nome do autor) → confirmação com o e-mail em destaque; lista com e-mail, autor, estado efetivo, vence em; por linha *Renovar* (dois passos) e *Reenviar acesso* |
 
-Para o gate de design (as telas com login não abrem sem Supabase no ambiente de teste), cada tela é um componente puro que recebe dados por props. A rota `/previa/[tela]` mostra esses componentes com dados falsos e só existe quando o build roda com `ECOA_PREVIA=1`; sem isso, responde 404.
+**Ligação entre telas e ações:** cada tela é um componente de apresentação em `components/telas/`, que recebe dados e, quando há formulário, a Server Action por prop (`acao: (estado, formData) => Promise<Resultado>`). Os formulários são componentes cliente com `useActionState`. Todas as actions devolvem `type Resultado = { ok: boolean; mensagem: string }`. Para o gate de design, `/styleguide/[tela]` renderiza as mesmas telas com dados falsos e actions falsas. Ela só existe com `ECOA_PREVIA=1`, checado no topo da página; sem isso, 404 de verdade. O prompt 2 amplia essa rota.
 
 ## Alternativas consideradas
 
 ### A: Vercel Cron para o job diário
-- **Prós:** código em TypeScript, logs na Vercel.
-- **Contras:** rota pública com segredo, mais uma variável, depende de rede entre Vercel e Supabase.
-- **Motivo:** Rejeitada pelo autor: pg_cron roda dentro do banco, sem rede nem segredo.
+- **Prós:** TypeScript, logs na Vercel.
+- **Contras:** rota pública protegida por segredo, mais uma variável, e depende de rede entre Vercel e Supabase.
+- **Motivo:** pg_cron roda dentro do banco, sem rede nem segredo; a regra `livro_editavel` cobre um atraso do job.
 
 ### B: Fila (Trigger.dev)
-- **Motivo:** Rejeitada pelo autor: a escolha da fila ainda aguarda OK e entra no prompt 6.
+- **Contras:** dependência nova, deploy separado e conta a mais, tudo para uma única instrução SQL por dia.
+- **Motivo:** a fila entra no prompt 6, quando houver trabalho de minutos.
 
-### C: SMTP do Supabase apontado para o Resend
-- **Prós:** zero código de envio.
-- **Contras:** texto do e-mail no painel, fora do Git; sem controle do limite de envio; o e-mail de acesso do admin teria que ser outro caminho de qualquer jeito.
-- **Motivo:** Rejeitada pelo autor: `generateLink` + Resend mantém os dois e-mails no código.
+### C: Link mágico próprio (`generateLink` + Resend)
+- **Prós:** modelo do e-mail no código.
+- **Contras:** reimplementa a busca do usuário, o limite de envio (que ficaria contornável pelo `signInWithOtp` público de qualquer jeito) e um segundo modelo de e-mail.
+- **Motivo:** o `signInWithOtp` nativo com SMTP do Resend tira uma função SQL e a lógica de limite. O modelo fica no painel, com cópia versionada no guia.
 
-### D: Testes de RLS contra o Supabase real ou Supabase CLI com Docker
+### D: Testes de RLS contra o Supabase real, ou Supabase CLI com Docker
 - **Contras:** rede, segredos e Docker; `npm test` deixaria de rodar em qualquer máquina.
-- **Motivo:** Rejeitada pelo autor: PGlite roda as mesmas migrations em WebAssembly. Risco aceito: o shim do `auth` imita o Supabase; a verificação final roda no projeto real (`get_advisors` e teste manual).
+- **Motivo:** PGlite roda as mesmas migrations em WebAssembly. O SQL deste documento já rodou nele. Risco do shim tratado na tabela de riscos.
 
-### E: Tabela `admins`
-- **Motivo:** Rejeitada pelo autor: `app_metadata.role` já vem no token e não é editável pelo usuário.
+### E: Tabela `admins` ou leitura do admin pela RLS
+- **Contras:** duas formas de o admin ler dados e um token no navegador que lê tudo pela API pública.
+- **Motivo:** `app_metadata.role` no token mais a chave secreta no servidor: um caminho só, e a RLS fica só para membros.
 
 ## Requisitos não funcionais
 
-- **Segurança:** RLS nas 4 tabelas; permissão por coluna; funções de checagem fora da API (`privado`), `security definer` com `search_path` vazio; funções de admin executáveis só pela chave secreta (a lista do admin confere o papel dentro do banco). Chave secreta só no servidor (`server-only`), nunca com `NEXT_PUBLIC_`. Token do autor só como SHA-256.
-- **LGPD:** banco em sa-east-1. Eventos guardam ids, não nomes; e-mail só em `auth.users`.
+- **Segurança:** coberta em "Quem pode o quê" e "Riscos e mitigações". Chave secreta só no servidor (`server-only`), nunca com `NEXT_PUBLIC_`.
+- **LGPD:** banco em sa-east-1. `events` guarda ids, não nomes; e-mail só em `auth.users`.
 - **Reversão:** cada migration tem o SQL de reversão em `supabase/reversao/`. A reversão da primeira apaga dados; só serve antes de haver famílias reais.
 - **Custo:** plano grátis do Supabase (2º projeto ativo da organização) e do Resend.
 
@@ -188,23 +248,24 @@ Para o gate de design (as telas com login não abrem sem Supabase no ambiente de
 ```sql
 -- 20261109120000_acesso_e_passe.sql
 -- Livros, membros, link do autor e registro de eventos, com RLS.
+-- Admin não lê pelo banco com a própria sessão: o servidor confere o papel e usa a chave secreta.
 
 -- Funções auxiliares ficam fora do schema exposto pela API.
 create schema if not exists privado;
 revoke all on schema privado from public;
 grant usage on schema privado to authenticated, service_role;
+-- Função nova nasce sem EXECUTE para PUBLIC (padrão do Postgres). O ajuste por schema não
+-- consegue tirar o padrão global, por isso a revogação é global para o dono das migrations.
+-- Em public, o Supabase continua concedendo a anon/authenticated: cada função revoga à mão.
+alter default privileges revoke execute on functions from public;
 
 create type public.passe_estado as enum ('pendente', 'ativo', 'somente_leitura');
 create type public.papel_membro as enum ('responsavel', 'cofacilitador');
-create type public.parentesco as enum ('pai', 'mãe', 'avô', 'avó', 'tio', 'tia', 'outro');
 create type public.ator_tipo as enum ('responsavel', 'cofacilitador', 'autor', 'familia', 'admin', 'sistema');
 
 create table public.books (
   id uuid primary key default gen_random_uuid(),
   autor_nome text check (autor_nome is null or char_length(btrim(autor_nome)) between 1 and 120),
-  autor_apelido text check (autor_apelido is null or char_length(autor_apelido) <= 60),
-  autor_parentesco public.parentesco,
-  autor_foto_path text,
   passe_estado public.passe_estado not null default 'pendente',
   passe_ativado_em timestamptz,
   passe_vence_em timestamptz,
@@ -237,6 +298,7 @@ create table public.author_access (
 );
 create unique index author_access_um_ativo on public.author_access (book_id) where revogado_em is null;
 
+-- detalhes: só ids e números. Nunca e-mail, nome ou texto livre.
 create table public.events (
   id bigint generated always as identity primary key,
   criado_em timestamptz not null default now(),
@@ -259,12 +321,6 @@ end $$;
 create trigger books_atualizado_em before update on public.books
   for each row execute function privado.tocar_atualizado_em();
 
--- Quem é quem
-create function privado.eh_admin() returns boolean
-language sql stable set search_path = '' as $$
-  select coalesce((select auth.jwt()) -> 'app_metadata' ->> 'role' = 'admin', false)
-$$;
-
 create function privado.eh_membro(p_book uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
@@ -273,15 +329,8 @@ language sql stable security definer set search_path = '' as $$
   )
 $$;
 
-create function privado.eh_responsavel(p_book uuid) returns boolean
-language sql stable security definer set search_path = '' as $$
-  select exists (
-    select 1 from public.book_members m
-    where m.book_id = p_book and m.user_id = (select auth.uid()) and m.papel = 'responsavel'
-  )
-$$;
-
 -- Ativo e dentro do prazo. Vale mesmo se o job diário atrasar.
+-- Toda escrita feita com a chave secreta precisa chamar esta função explicitamente.
 create function privado.livro_editavel(p_book uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
   select exists (
@@ -291,9 +340,7 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 revoke all on all functions in schema privado from public;
-grant execute on function
-  privado.eh_admin(), privado.eh_membro(uuid), privado.eh_responsavel(uuid), privado.livro_editavel(uuid)
-  to authenticated, service_role;
+grant execute on function privado.eh_membro(uuid), privado.livro_editavel(uuid) to authenticated, service_role;
 
 -- RLS em toda tabela
 alter table public.books enable row level security;
@@ -304,32 +351,28 @@ alter table public.events enable row level security;
 -- O Supabase concede tudo a anon/authenticated por padrão. Aqui só o necessário.
 revoke all on public.books, public.book_members, public.author_access, public.events from anon, authenticated;
 grant select on public.books to authenticated;
-grant update (autor_nome, autor_apelido, autor_parentesco, autor_foto_path) on public.books to authenticated;
+grant update (autor_nome) on public.books to authenticated;
 grant select on public.book_members to authenticated;
 grant select (id, book_id, criado_em, criado_por, revogado_em) on public.author_access to authenticated;
-grant select on public.events to authenticated;
 grant all on public.books, public.book_members, public.author_access, public.events to service_role;
+-- events: nenhuma permissão para anon/authenticated. Só o servidor lê e grava.
 
-create policy "membro ou admin lê o livro" on public.books
+create policy "membro lê o livro" on public.books
   for select to authenticated
-  using (privado.eh_membro(id) or (select privado.eh_admin()));
+  using (privado.eh_membro(id));
 
 create policy "membro edita o livro com passe ativo" on public.books
   for update to authenticated
   using (privado.eh_membro(id) and privado.livro_editavel(id))
   with check (privado.eh_membro(id) and privado.livro_editavel(id));
 
-create policy "membro ou admin lê os membros" on public.book_members
+create policy "membro lê os membros do livro" on public.book_members
   for select to authenticated
-  using (privado.eh_membro(book_id) or (select privado.eh_admin()));
+  using (privado.eh_membro(book_id));
 
-create policy "membro ou admin lê o link do autor" on public.author_access
+create policy "membro lê o link do autor do livro" on public.author_access
   for select to authenticated
-  using (privado.eh_membro(book_id) or (select privado.eh_admin()));
-
-create policy "admin lê os eventos" on public.events
-  for select to authenticated
-  using ((select privado.eh_admin()));
+  using (privado.eh_membro(book_id));
 
 -- Operações do admin: atômicas, só pelo servidor (service_role).
 create function public.admin_ativar_passe(p_responsavel uuid, p_autor_nome text, p_meses integer)
@@ -369,12 +412,20 @@ begin
   return v_vence;
 end $$;
 
+-- Troca o responsável (e-mail digitado errado na ativação).
+create function public.admin_trocar_responsavel(p_livro uuid, p_novo uuid)
+returns void language plpgsql security definer set search_path = '' as $$
+begin
+  delete from public.book_members where book_id = p_livro and papel = 'responsavel';
+  insert into public.book_members (book_id, user_id, papel) values (p_livro, p_novo, 'responsavel')
+  on conflict (book_id, user_id) do update set papel = 'responsavel';
+end $$;
+
 create function public.admin_usuario_por_email(p_email text)
 returns uuid language sql stable security definer set search_path = '' as $$
   select u.id from auth.users u where lower(u.email) = lower(btrim(p_email)) limit 1
 $$;
 
--- Lista do admin: também confere o papel dentro do banco.
 create function public.admin_listar_livros()
 returns table (
   id uuid,
@@ -384,31 +435,28 @@ returns table (
   criado_em timestamptz,
   responsavel_email text
 )
-language plpgsql stable security definer set search_path = '' as $$
-begin
-  if not privado.eh_admin() then
-    raise exception 'acesso negado' using errcode = '42501';
-  end if;
-  return query
-    select b.id, b.autor_nome, b.passe_estado, b.passe_vence_em, b.criado_em, u.email::text
-    from public.books b
-    left join public.book_members m on m.book_id = b.id and m.papel = 'responsavel'
-    left join auth.users u on u.id = m.user_id
-    order by b.criado_em desc;
-end $$;
+language sql stable security definer set search_path = '' as $$
+  select b.id, b.autor_nome, b.passe_estado, b.passe_vence_em, b.criado_em, u.email::text
+  from public.books b
+  left join public.book_members m on m.book_id = b.id and m.papel = 'responsavel'
+  left join auth.users u on u.id = m.user_id
+  order by b.criado_em desc
+$$;
 
 revoke all on function
   public.admin_ativar_passe(uuid, text, integer),
   public.admin_renovar_passe(uuid, integer),
+  public.admin_trocar_responsavel(uuid, uuid),
   public.admin_usuario_por_email(text),
   public.admin_listar_livros()
   from public, anon, authenticated;
 grant execute on function
   public.admin_ativar_passe(uuid, text, integer),
   public.admin_renovar_passe(uuid, integer),
-  public.admin_usuario_por_email(text)
+  public.admin_trocar_responsavel(uuid, uuid),
+  public.admin_usuario_por_email(text),
+  public.admin_listar_livros()
   to service_role;
-grant execute on function public.admin_listar_livros() to authenticated, service_role;
 ```
 
 ### `supabase/migrations/20261109120100_job_vencer_passes.sql`
@@ -468,6 +516,7 @@ drop function if exists privado.vencer_passes();
 -- ATENÇÃO: apaga livros, membros, links do autor e eventos. Só antes de haver dados reais.
 drop function if exists public.admin_listar_livros();
 drop function if exists public.admin_usuario_por_email(text);
+drop function if exists public.admin_trocar_responsavel(uuid, uuid);
 drop function if exists public.admin_renovar_passe(uuid, integer);
 drop function if exists public.admin_ativar_passe(uuid, text, integer);
 drop table if exists public.events;
@@ -475,147 +524,253 @@ drop table if exists public.author_access;
 drop table if exists public.book_members;
 drop table if exists public.books;
 drop function if exists privado.livro_editavel(uuid);
-drop function if exists privado.eh_responsavel(uuid);
 drop function if exists privado.eh_membro(uuid);
-drop function if exists privado.eh_admin();
 drop function if exists privado.tocar_atualizado_em();
+alter default privileges grant execute on functions to public;
 drop schema if exists privado;
 drop type if exists public.ator_tipo;
-drop type if exists public.parentesco;
 drop type if exists public.papel_membro;
 drop type if exists public.passe_estado;
 ```
 
-Esse SQL já rodou no PGlite (rascunho, fora do repositório) com estes resultados: o responsável A lê só o próprio livro; `update` e `delete` no livro B afetam 0 linhas ou são negados; mudar `passe_vence_em` do próprio livro é negado; ler `token_hash` é negado; `anon` não lê nada; quem tem `role=admin` em `user_metadata` (editável) não vira admin; livro vencido recusa edição antes do job; o job muda 1 livro e grava o evento; renovar cedo soma ao vencimento atual; a reversão deixa o schema `public` vazio.
+### `supabase/tests/auth-shim.sql` (só para os testes, imita o Supabase)
+
+```sql
+-- Imita o que o Supabase já tem antes das nossas migrations.
+create role anon nologin noinherit;
+create role authenticated nologin noinherit;
+create role service_role nologin noinherit bypassrls;
+create schema auth;
+grant usage on schema auth to anon, authenticated, service_role;
+create table auth.users (
+  id uuid primary key,
+  email varchar(255) unique,
+  raw_app_meta_data jsonb not null default '{}'::jsonb
+);
+create function auth.jwt() returns jsonb language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb
+$$;
+create function auth.uid() returns uuid language sql stable as $$
+  select nullif(auth.jwt() ->> 'sub', '')::uuid
+$$;
+grant execute on function auth.jwt(), auth.uid() to anon, authenticated, service_role;
+grant usage on schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+```
+
+**Já rodou no PGlite** (rascunho fora do repositório), com estes resultados:
+
+- O responsável A lê só o próprio livro. `update` em B afeta 0 linhas; `delete` em B e `insert` em `books` são negados.
+- Mudar `passe_vence_em` do próprio livro é negado.
+- Ler `events` e `token_hash` é negado. `admin_*` com a sessão de A, ou com `anon`, é negado.
+- Usuário logado sem livro, e o admin com a própria sessão, leem 0 linhas.
+- Livro vencido recusa edição antes do job. O job muda 1 livro e grava o evento.
+- Renovar cedo soma ao vencimento atual. `admin_trocar_responsavel` troca o responsável.
+- `anon` tem 0 grants de tabela. Só `eh_membro` e `livro_editavel` são executáveis por `authenticated`. Função nova em `privado` nasce sem EXECUTE.
+- A reversão deixa `public` vazio.
 
 ---
 
 ## Plano de implementação detalhado
 
-### Arquivos
-
-#### 1. `supabase/migrations/20261109120000_acesso_e_passe.sql` e `20261109120100_job_vencer_passes.sql` (criar)
-- **Escopo:** schema. Conteúdo exatamente o da seção "SQL de subida".
-
-#### 2. `supabase/reversao/*.down.sql` (criar)
-- **Escopo:** reversão. Conteúdo da seção "SQL de reversão". Fora de `migrations/` para a CLI do Supabase não aplicá-los.
-
-#### 3. `supabase/tests/auth-shim.sql` (criar)
-- **Escopo:** teste. Cria papéis `anon`, `authenticated`, `service_role` (este com `bypassrls`), schema `auth` com `auth.users (id, email, raw_app_meta_data)`, `auth.jwt()` lendo `request.jwt.claims`, `auth.uid()` lendo `sub`, e os privilégios padrão que o Supabase dá em `public`.
-
-#### 4. `supabase/tests/banco.ts` (criar)
-- **Escopo:** utilitário de teste. `criarBanco()` abre um PGlite em memória, aplica o shim e todas as migrations em ordem de nome; `como(db, papel, claims, fn)` roda `fn` numa transação com `set local role` e `request.jwt.claims`; `tenta(tx, sql)` usa savepoint e devolve `{ linhas, afetadas }` ou `{ erro }`.
-
-#### 5. `supabase/tests/rls.test.ts` (criar)
-- **Escopo:** Vitest. Livros A (responsável A) e B (responsável B), link do autor e evento em B. Casos:
-  - A lê só o livro A; `select` de B devolve 0 linhas em `books`, `book_members`, `author_access`.
-  - A não altera B (0 linhas) e não apaga B (negado) em cada tabela; `insert` em `book_members`, `author_access`, `events` negado.
-  - A não muda `passe_estado`, `passe_vence_em`, `passe_ativado_em` do próprio livro (negado).
-  - A não lê `token_hash` (negado); lê as outras colunas do link do próprio livro.
-  - A não lê `events`; admin lê.
-  - A não executa `admin_ativar_passe`, `admin_renovar_passe`, `admin_usuario_por_email`, `privado.vencer_passes`; `admin_listar_livros` dá "acesso negado" para A e devolve 2 linhas para o admin.
-  - `role=admin` em `user_metadata` não dá acesso de admin.
-  - `anon` não lê nenhuma das 4 tabelas.
-  - Livro vencido com estado ainda `ativo`: A não altera `autor_nome` (0 linhas).
-  - Toda tabela do schema `public` tem RLS ligada (consulta em `pg_class.relrowsecurity`): pega tabela futura esquecida.
-  - Reversão: aplicar os `.down.sql` deixa `public` sem tabelas.
-
-#### 6. `supabase/tests/passe.test.ts` (criar)
-- **Escopo:** Vitest no PGlite. `admin_ativar_passe` cria livro ativo com vencimento em 12 meses e 1 responsável; recusa meses fora de 1–36. `admin_renovar_passe` em livro vencido: vence ≈ agora + 12 meses e estado `ativo`; em livro com 3 meses restantes: vence ≈ vencimento atual + 12 meses. `privado.vencer_passes()` muda só os vencidos e grava 1 evento `passe_vencido` por livro.
-
-#### 7. `lib/config.ts` e `lib/config.test.ts` (modificar)
-- `DOMINIO_APP = "app.ecoa-memorias.com.br"`, `DOMINIO_QR = "ouvir.ecoa-memorias.com.br"`, novos `EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>"`, `LINK_EMAIL_LIMITE = 3`, `LINK_EMAIL_JANELA_MIN = 10`. O teste passa a conferir o domínio com hífen.
-
-#### 8. `docs/prd.md` (modificar)
-- Troca `ecoamemorias.com.br` por `ecoa-memorias.com.br` nas 4 menções.
-
-#### 9. `.env.example` (modificar)
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `APP_URL` (opcional), `ECOA_PREVIA` (só para o gate de design). Remove `ANON_KEY` e `SERVICE_ROLE_KEY` legadas.
-
-#### 10. `lib/env.ts` (criar)
-- zod: `envPublico()` (URL e chave publicável) e `envServidor()` (mais chave secreta e Resend, com `server-only`). Erro claro: "Falta SUPABASE_SECRET_KEY no .env.local". `urlDoApp()` com a ordem `APP_URL` → `VERCEL_BRANCH_URL` → localhost.
-
-#### 11. `lib/supabase/servidor.ts`, `lib/supabase/navegador.ts`, `lib/supabase/admin.ts`, `lib/supabase/proxy.ts` (criar)
-- `servidor`: `createServerClient` com `cookies()` do `next/headers`. `navegador`: `createBrowserClient`. `admin`: `createClient` com a chave secreta, `server-only`, sem persistir sessão. `proxy`: `atualizarSessao(request)` no padrão do `@supabase/ssr` (getClaims para renovar) e devolve `{ resposta, temSessao }`.
-- `lib/supabase/tipos.ts`: tipos gerados pelo `generate_typescript_types` do projeto real.
-
-#### 12. `proxy.ts` (criar, raiz)
-- Chama `atualizarSessao`; se a rota começa com `/admin` ou `/livro` e não há sessão, redireciona para `/entrar`. `matcher` exclui `_next/static`, `_next/image`, `favicon.ico` e arquivos com extensão.
-
-#### 13. `lib/sessao.ts` (criar)
-- `server-only`. `usuarioAtual()` → `{ id, email, ehAdmin }` ou `null`, via `getClaims()`. `exigirAdmin()` → usuário ou `notFound()`. `livrosDoUsuario()` → lista `{ id, autor_nome, papel, passe_estado, passe_vence_em }` com a sessão do usuário (RLS decide).
-
-#### 14. `lib/passe.ts` e `lib/passe.test.ts` (criar)
-- Função pura `estadoEfetivo({ passe_estado, passe_vence_em }, agora)` → `pendente | ativo | somente_leitura` e `podeEscrever(...)`. Testes: ativo no prazo, ativo vencido, somente leitura, pendente, vencimento exatamente agora.
-
-#### 15. `lib/eventos-acoes.ts` e `lib/eventos.ts` e `lib/eventos.test.ts` (criar)
-- `ACOES` (tupla `as const`) e `PAPEIS`. `registrarEvento(entrada, cliente = clienteAdmin())`: valida com zod, faz `insert` em `events`, devolve `{ ok: true }` ou `{ ok: false }` e loga o erro sem dados pessoais. Teste com cliente falso: grava o formato certo; ação fora da lista não grava; falha do banco não lança.
-
-#### 16. `lib/tokens.ts` e `lib/tokens.test.ts` (criar)
-- `gerarToken()` → 16 bytes aleatórios em base64url; `hashToken(token)` → SHA-256 em hex (64 caracteres); `compararHash(a, b)` com `timingSafeEqual`. Testes: tamanho, unicidade em 1000 gerações, hash estável e compatível com o `check` da tabela.
-
-#### 17. `lib/email/enviar.ts`, `lib/email/modelos.ts`, `lib/email/modelos.test.ts` (criar)
-- `modelos`: `emailAcesso({ autorNome, urlEntrar, urlLinkMagico })` e `emailLinkEntrada({ urlLinkMagico })` → `{ assunto, html, texto }`, com escape de HTML no nome do autor. `enviar`: `server-only`, Resend com `EMAIL_REMETENTE`; devolve `{ ok }` sem lançar. Testes: assunto com e sem nome do autor, links presentes, nome com `<script>` escapado.
-
-#### 18. `lib/acesso.ts` (criar)
-- `server-only`. `gerarLinkMagico(email)` → URL `/auth/confirmar?...` a partir do `hashed_token`. `enviarAcesso(livroId)` → busca e-mail do responsável e nome do autor com a chave secreta, gera link, envia o e-mail de acesso.
-
-#### 19. `app/entrar/page.tsx`, `app/entrar/formulario-entrar.tsx`, `app/entrar/acoes.ts` (criar)
-- Página estática com o componente cliente. Google: `createBrowserClient().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <origem>/auth/callback } })`. Server Action `pedirLink(email)`: zod, `admin_usuario_por_email`, checa membro/admin, checa limite em `events`, envia, `registrarEvento('link_enviado')`, resposta sempre igual. Mostra erro de login quando a URL tem `?erro=1`.
-
-#### 20. `app/auth/callback/route.ts` e `app/auth/confirmar/route.ts` (criar)
-- `callback`: `exchangeCodeForSession(code)`; `confirmar`: `verifyOtp({ type: 'magiclink', token_hash })`. Ambos registram `entrou` para cada livro do usuário (ou livro `null` se admin sem livro) e redirecionam para `/`; em erro, para `/entrar?erro=1`.
-
-#### 21. `app/page.tsx` (modificar) e `app/livro/[id]/page.tsx` (criar)
-- `/`: casca + `<Suspense>` com componente que lê a sessão: sem sessão → `/entrar`; 1 livro → `/livro/<id>`; 2+ → lista; 0 → `TelaSemAcesso`. `/livro/[id]`: lê o livro com a sessão (RLS); não encontrado → `notFound()`; renderiza `TelaLivroVazio`.
-
-#### 22. `app/admin/page.tsx`, `app/admin/acoes.ts`, `app/admin/formulario-ativar.tsx`, `app/admin/linha-livro.tsx` (criar)
-- Página: `<Suspense>` + `exigirAdmin()` + `admin_listar_livros()` com a sessão. Ações (todas começam por `exigirAdmin()` e validam com zod):
-  - `ativarPasse({ email, autorNome })`: acha ou cria o usuário (`auth.admin.createUser({ email, email_confirm: true })`), `admin_ativar_passe(usuario, autorNome, DURACAO_PASSE_MESES)`, `enviarAcesso`, `registrarEvento('passe_ativado', papel admin, livro)`. Se o e-mail falhar, o passe fica ativo e a tela diz "Passe ativado, mas o e-mail não saiu. Use Reenviar."
-  - `renovarPasse(livroId)`: `admin_renovar_passe(livroId, DURACAO_PASSE_MESES)`, evento `passe_renovado`.
-  - `reenviarAcesso(livroId)`: `enviarAcesso`, evento `acesso_reenviado`.
-  - Todas chamam `revalidatePath('/admin')` (ou `refresh`, conforme docs do Next 16 lidas na implementação).
-
-#### 23. `components/telas/*.tsx` (criar)
-- `TelaEntrar`, `TelaSemAcesso`, `TelaLivroVazio`, `TelaListaLivros`, `TelaAdmin`: componentes puros, só props.
-
-#### 24. `components/ui/botao.tsx`, `campo.tsx`, `estado-vazio.tsx` (criar)
-- Botão principal e secundário (alvo de toque ≥ 48 px, foco visível), campo com rótulo, estado vazio (frase + ação). Tokens de `app/globals.css`.
-
-#### 25. `app/previa/[tela]/page.tsx` e `lib/previa.ts` (criar)
-- Se `process.env.ECOA_PREVIA !== '1'`, `notFound()`. Senão, renderiza a tela pedida com dados falsos de `lib/previa.ts`.
-
-#### 26. `e2e/home.spec.ts` (modificar) e `e2e/entrar.spec.ts` (criar)
-- `/` sem sessão → `/entrar`; `/entrar` tem um botão "Entrar com Google" e o link de e-mail revela o campo; `/admin` e `/livro/x` sem sessão → `/entrar`; `/previa/entrar` → 404 sem `ECOA_PREVIA`. O e2e roda sem Supabase real (variáveis falsas no `webServer` do Playwright).
-
-#### 27. `playwright.config.ts` (modificar)
-- `webServer.env` com URL e chaves falsas para o build não falhar sem `.env.local`.
-
-#### 28. `docs/setup/supabase-google-resend.md` (criar)
-- Passo a passo: Google Cloud (tela de consentimento externa, cliente OAuth Web, origem e redirect `https://<ref>.supabase.co/auth/v1/callback`); Supabase (Auth → Providers → Google; URL Configuration com Site URL e `http://localhost:3000/**`, `https://*.vercel.app/**`); Resend (API key só de envio, domínio já verificado); `.env.local`; variáveis na Vercel; marcar admin: `update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = '…';`; consulta do M10.
-
-#### 29. `package.json` (modificar)
-- Dependências já instaladas: `@supabase/supabase-js`, `@supabase/ssr`, `resend`, `server-only`; dev `@electric-sql/pglite`.
-
 ### Ordem
 
-1. Migrations + shim + testes de RLS e passe (vermelho → verde no PGlite).
-2. `lib/*` puros com testes.
-3. Clientes Supabase, proxy, sessão, rotas de auth.
-4. Telas, prévia, admin.
-5. Projeto Supabase real: criar, aplicar migrations, `get_advisors`, gerar tipos.
-6. Gates e guia de setup.
+1. Migrations, reversões, shim e testes de banco (PGlite).
+2. `vitest.config.mts`, `lib/` puros e seus testes.
+3. **Parada 2 (depois do seu OK):** criar o projeto `ecoa-plataforma` em sa-east-1, aplicar as migrations, rodar `get_advisors` e gerar `lib/supabase/tipos.ts`. Até aqui os clientes não usam o tipo genérico; ele entra nesse passo.
+4. Clientes Supabase, `proxy.ts`, sessão, rotas de auth.
+5. Telas, `/styleguide`, admin.
+6. Gates, guia de setup, decisão de domínio.
+
+### Arquivos
+
+#### Banco
+
+1. **`supabase/migrations/20261109120000_acesso_e_passe.sql`, `supabase/migrations/20261109120100_job_vencer_passes.sql` (criar).** Conteúdo exato das seções de SQL. Aplicados no projeto real com `apply_migration`, com `name` igual ao nome do arquivo sem extensão (`20261109120000_acesso_e_passe`), para o histórico bater com a CLI.
+2. **`supabase/reversao/20261109120100_job_vencer_passes.down.sql`, `supabase/reversao/20261109120000_acesso_e_passe.down.sql` (criar).** Conteúdo da seção de reversão. Ficam fora de `migrations/` para a CLI não aplicá-los.
+3. **`supabase/tests/auth-shim.sql` (criar).** Conteúdo exato da seção do shim.
+4. **`supabase/tests/banco.ts` (criar).** Funções:
+   - `criarBanco()`: abre um PGlite em memória, aplica o shim e as migrations em ordem de nome, e devolve o banco.
+   - `como(db, papel, claims, fn)`: roda `fn` numa transação com `set local role` e `set_config('request.jwt.claims', …, true)`.
+   - `tenta(tx, sql)`: usa savepoint e devolve `{ linhas, afetadas }` ou `{ erro }`.
+   - `reverter(db)`: aplica os `.down.sql` em ordem inversa.
+5. **`supabase/tests/rls.test.ts` (criar).** Livros A e B (responsáveis A e B), usuário X sem livro, link do autor e evento em B. Casos:
+   - **A:**
+     - Lê só o livro A em `books`, `book_members` e `author_access`.
+     - Em B: `update` afeta 0 linhas; `delete` é negado, em cada tabela.
+     - `insert` em `books`, `book_members`, `author_access` e `events` é negado.
+     - Não muda `passe_estado`, `passe_vence_em` nem `passe_ativado_em` do próprio livro.
+     - `token_hash` é negado; as outras colunas do link do próprio livro, ok.
+     - `events` é negado.
+     - Livro A vencido com estado `ativo`: `update autor_nome` afeta 0 linhas.
+   - **X sem livro, e X com `app_metadata.role = admin`:** 0 linhas nas 3 tabelas.
+   - **`anon`:** negado nas 4 tabelas e nas funções `admin_*`.
+   - **Funções:** todas as `admin_*` e `privado.vencer_passes` negadas para `authenticated`.
+   - **Genéricos:**
+     - Toda tabela de `public` tem RLS ligada.
+     - `anon` não tem grant de tabela em `public`.
+     - Nenhuma função de `public` ou `privado` é executável por `anon`.
+     - As funções executáveis por `authenticated` são exatamente `privado.eh_membro` e `privado.livro_editavel`.
+   - **Reversão:** deixa `public` sem tabelas.
+6. **`supabase/tests/passe.test.ts` (criar).** No PGlite:
+   - **`admin_ativar_passe`:** cria livro ativo que vence em 12 meses, com 1 responsável; recusa meses 0 e 37.
+   - **`admin_renovar_passe`:**
+     - vencido: vence em ≈ agora + 12 meses e o estado vira `ativo`;
+     - faltando 3 meses: vence em ≈ vencimento atual + 12 meses;
+     - id inexistente: erro.
+   - **`admin_trocar_responsavel`:** troca o responsável.
+   - **`privado.vencer_passes()`:** muda só os vencidos e grava 1 evento `passe_vencido` por livro.
+
+#### Configuração e bibliotecas
+
+7. **`vitest.config.mts` (modificar).** Acrescentar `resolve.alias: { "server-only": "server-only/empty.js" }` e incluir `supabase/tests/**/*.test.ts`.
+8. **`lib/config.ts`, `lib/config.test.ts` (modificar).**
+   - `DOMINIO_APP = "app.ecoa-memorias.com.br"` e `DOMINIO_QR = "ouvir.ecoa-memorias.com.br"`.
+   - Novo `EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>"`.
+   - O teste confere o domínio com hífen.
+9. **`docs/decisoes/dominio.md` (criar), `docs/prd.md` (modificar).**
+   - A decisão registra que o domínio é `ecoa-memorias.com.br`, verificado no Resend, e que o QR nunca muda depois do dia 26/12.
+   - No PRD, trocar todas as ocorrências de `ecoamemorias.com.br`.
+   - Commit separado: `docs: decide domínio ecoa-memorias.com.br`.
+10. **`.env.example` (modificar).**
+    - Variáveis: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, `APP_URL` (opcional), `ECOA_PREVIA` (só para o gate de design).
+    - `ANTHROPIC_API_KEY` continua.
+    - Saem `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY`, as legadas.
+11. **`lib/env-publico.ts` (criar).** Lê `process.env.NEXT_PUBLIC_SUPABASE_URL` e `process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` literalmente e valida com zod. Erro: "Falta NEXT_PUBLIC_SUPABASE_URL no .env.local".
+12. **`lib/env-servidor.ts`, `lib/env-servidor.test.ts` (criar).**
+    - `server-only`.
+    - `envServidor()` lê a chave secreta e `RESEND_API_KEY`.
+    - `urlDoApp(env = process.env)` segue a ordem da seção Login.
+    - Testes: os 4 casos de `urlDoApp`.
+13. **`lib/supabase/navegador.ts`, `lib/supabase/servidor.ts`, `lib/supabase/admin.ts` (criar).**
+    - **`navegador`:** `createBrowserClient` com `env-publico`.
+    - **`servidor`:** `createServerClient` com `await cookies()` (`getAll`/`setAll`, este dentro de `try` para Server Components).
+    - **`admin`:** `server-only`; `createClient` com a chave secreta e `auth: { persistSession: false, autoRefreshToken: false }`.
+14. **`lib/supabase/tipos.ts` (criar no passo 3).** Saída de `generate_typescript_types`; os 3 clientes passam a usar `<Database>`.
+15. **`lib/rotas.ts`, `lib/rotas.test.ts` (criar).**
+    - `decidirRota(caminho, temSessao)` devolve `null` ou o destino do redirect.
+    - Testes:
+      - `/`, `/livro/x` e `/admin` sem sessão → `/entrar`;
+      - `/entrar` com sessão → `/`;
+      - `/auth/confirmar` e `/styleguide/x` → `null`.
+16. **`proxy.ts` (criar, raiz).**
+    - Cria o `createServerClient` com os cookies da requisição e da resposta (padrão do `@supabase/ssr`), chama `getClaims()` e aplica `decidirRota`.
+    - `matcher` exclui `_next/static`, `_next/image`, `favicon.ico` e caminhos com extensão.
+17. **`lib/sessao.ts` (criar).** `server-only`. Funções:
+    - **`usuarioAtual()`:** `{ id, email, ehAdmin }` ou `null`, via `getClaims()`; `ehAdmin = claims.app_metadata?.role === "admin"`.
+    - **`exigirAdmin()`:** devolve o usuário, ou chama `notFound()`. Nas páginas, é usada no topo, fora do `<Suspense>`.
+    - **`livroMaisRecente(usuarioId)`:** `book_members` filtrado por `user_id` com join em `books`, ordenado por `criado_em desc`, limite 1, com o cliente da sessão.
+18. **`lib/passe.ts`, `lib/passe.test.ts` (criar).**
+    - `estadoEfetivo({ passe_estado, passe_vence_em }, agora)` e `podeEscrever(...)`.
+    - Testes: ativo no prazo, ativo vencido, somente leitura, pendente e vencimento igual a agora.
+19. **`lib/eventos-acoes.ts` (criar).** `ACOES` e `PAPEIS` como tuplas `as const`.
+20. **`lib/eventos.ts`, `lib/eventos.test.ts` (criar).**
+    - `registrarEvento(entrada, opcoes?, cliente = clienteAdmin())`, com a assinatura da seção Eventos.
+    - Testes com cliente falso:
+      - grava as colunas certas;
+      - ação fora da lista não grava;
+      - `umaVezPorDia` não grava duas vezes;
+      - falha do banco devolve `{ ok: false }` sem lançar.
+21. **`lib/eventos-porta-unica.test.ts` (criar).** Lê `app/`, `lib/` e `components/` e falha se encontrar `from("events")` fora de `lib/eventos.ts`.
+22. **`lib/email/modelos.ts`, `lib/email/modelos.test.ts`, `lib/email/enviar.ts` (criar).**
+    - **`emailAcesso({ autorNome, urlEntrar })`:** devolve `{ assunto, html, texto }`.
+    - **`enviar`:** `server-only`, usa o Resend com `EMAIL_REMETENTE` e devolve `{ ok }` sem lançar.
+    - **Testes:**
+      - os dois assuntos;
+      - o link presente;
+      - nome com `<script>` escapado;
+      - nenhuma chave no corpo.
+23. **`lib/acesso.ts` (criar).** `server-only`.
+    - `enviarAcesso(livroId)`: lê o responsável em `book_members`, o e-mail com `auth.admin.getUserById`, o autor em `books`, e envia `emailAcesso` com `urlDoApp() + "/entrar"`.
+    - `identidadeAceitavel(usuario)`: só identidades `email`/`google`, e nenhuma senha definida. Testada em `lib/acesso.test.ts`.
+
+#### Telas e rotas
+
+24. **`components/ui/botao.tsx`, `components/ui/campo.tsx`, `components/ui/estado-vazio.tsx` (criar).**
+    - Botão principal e secundário: altura ≥ 48 px, foco visível, `disabled` com `aria-busy` durante o envio.
+    - Campo com rótulo visível.
+    - Estado vazio: frase e ação.
+25. **`components/telas/tela-entrar.tsx`, `tela-confirmar.tsx`, `tela-sem-acesso.tsx`, `tela-livro-vazio.tsx`, `tela-admin.tsx` (criar).** Apresentação pura, com dados e actions por props, conforme a seção Telas. Componentes cliente apenas onde há formulário.
+    - `tela-admin` inclui o formulário de ativar com o passo de confirmação.
+    - Cada linha tem *Renovar* em dois passos (o 1º toque troca o botão por *Confirmar +12 meses*) e *Reenviar acesso*.
+26. **`app/entrar/page.tsx`, `app/entrar/acoes.ts` (criar).**
+    - A página é estática. Um componente cliente dentro de `<Suspense>` lê `useSearchParams().get("erro")` (`sem_livro` ou `falhou`) e renderiza `TelaEntrar`.
+    - Google: `createBrowserClient().auth.signInWithOAuth(...)`.
+    - `acoes.ts` contém `pedirLink`, conforme a seção Login.
+    - A lógica fica em `prepararPedidoDeLink(formData)`, pura, testada em `app/entrar/acoes.test.ts`: e-mail inválido devolve erro de formato; qualquer e-mail válido devolve a mesma mensagem.
+27. **`app/auth/callback/route.ts` (criar).** Route Handler GET, como descrito em Login.
+28. **`app/auth/confirmar/page.tsx`, `app/auth/confirmar/acoes.ts` (criar).** Página com `<Suspense>` que lê `searchParams.token_hash` e renderiza `TelaConfirmar`. A action `confirmar` chama `verifyOtp` e `redirect("/")`; em erro, devolve `{ ok: false, mensagem }`.
+29. **`app/page.tsx` (modificar).** Casca mais `<Suspense>`. O componente pega `usuarioAtual()` e `livroMaisRecente()`: se achar o livro, `redirect("/livro/<id>")`; senão, renderiza `TelaSemAcesso`.
+30. **`app/livro/[id]/page.tsx` (criar).**
+    - Casca mais `<Suspense>`. O componente lê `params`, `usuarioAtual()` e o livro com o cliente da sessão. Não achou → `notFound()`.
+    - Lê o papel em `book_members` e renderiza `TelaLivroVazio` com `estadoEfetivo`.
+    - `after(() => registrarEvento({ quem, papel, acao: "entrou", livro }, { umaVezPorDia: true }))`.
+31. **`app/admin/page.tsx`, `app/admin/acoes.ts` (criar).**
+    - A página chama `exigirAdmin()` no topo e, dentro de `<Suspense>`, `admin_listar_livros()` com o cliente admin.
+    - Toda action começa por `exigirAdmin()`, valida com zod, devolve `Resultado` e termina com `refresh()` de `next/cache`.
+    - **`ativarPasse`:**
+      1. Procura o e-mail com `admin_usuario_por_email`. Se existir e `identidadeAceitavel` for falsa, recusa: "Esta conta não pode ser usada. Fale com o suporte."
+      2. Se não existir, cria com `createUser({ email, email_confirm: true })`.
+      3. Chama `admin_ativar_passe(usuario, autorNome, DURACAO_PASSE_MESES)`.
+      4. Envia o e-mail com `enviarAcesso`.
+      5. Registra o evento `passe_ativado`.
+    - **`renovarPasse`:** `admin_renovar_passe(livroId, DURACAO_PASSE_MESES)` e o evento `passe_renovado`.
+    - **`reenviarAcesso`:** `enviarAcesso` e o evento `acesso_reenviado`.
+32. **`app/styleguide/[tela]/page.tsx`, `lib/styleguide.ts` (criar).**
+    - No topo, se `process.env.ECOA_PREVIA !== "1"`, chama `notFound()`.
+    - `generateStaticParams` devolve `entrar`, `confirmar`, `sem-acesso`, `livro`, `livro-somente-leitura` e `admin`.
+    - Renderiza a tela com os dados e as actions falsas de `lib/styleguide.ts`.
+
+#### Testes de ponta a ponta e documentação
+
+33. **`e2e/home.spec.ts` (substituir), `e2e/entrar.spec.ts` (criar).**
+    - O teste atual (Newsreader na `/`) sai, porque a `/` virou redirect.
+    - Novos testes:
+      - `/` sem sessão vai para `/entrar`;
+      - `/entrar` tem um único botão principal, "Entrar com Google", e a fonte Newsreader carregada na marca;
+      - o link de e-mail revela o campo; enviar mostra a mensagem igual;
+      - `/admin` e `/livro/x` sem sessão vão para `/entrar`;
+      - `/styleguide/entrar` responde 404 (`response.status()`);
+      - `/auth/confirmar?token_hash=x` mostra o botão *Entrar* sem consumir nada.
+    - Roda contra um servidor sem `ECOA_PREVIA` e sem Supabase real.
+34. **`playwright.config.ts` (modificar).** `webServer.env` com `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_teste`, `SUPABASE_SECRET_KEY=sb_secret_teste`, `RESEND_API_KEY=re_teste` e `ECOA_PREVIA=` vazio. `reuseExistingServer: false`, para não aproveitar um servidor de prévia aberto.
+35. **`docs/setup/supabase-google-resend.md` (criar).** Passo a passo:
+    - **Google Cloud:** tela de consentimento externa; cliente OAuth "Aplicativo da Web" com redirect `https://<ref>.supabase.co/auth/v1/callback`.
+    - **Supabase:**
+      - Auth → Sign In / Providers: cadastro desligado, Google ligado com Client ID e Secret, Email ligado.
+      - URL Configuration: Site URL e as 3 URLs exatas.
+      - SMTP: `smtp.resend.com`, porta 465, usuário `resend`, senha = API key do Resend, remetente `acesso@ecoa-memorias.com.br`.
+      - Modelo "Magic Link" em português (texto completo no guia).
+      - "Email OTP Expiration" em 3600.
+    - **Resend:** criar uma API key só de envio.
+    - **Ambiente:** `.env.local` e as variáveis na Vercel, com `APP_URL` só no ambiente de preview.
+    - **SQL de manutenção:**
+      - marcar admin: `update auth.users set raw_app_meta_data = raw_app_meta_data || '{"role":"admin"}' where email = '…';` (vale no próximo login);
+      - trocar o responsável: `select public.admin_trocar_responsavel('<livro>', '<usuário>');`;
+      - consulta do M10.
+    - Ligar a verificação em 2 etapas na conta Google do admin.
 
 ### Plano de verificação
 
-- **Build:** `npm run build`.
-- **Unidade e RLS:** `npm test` (inclui PGlite).
-- **Lint e formato:** `npm run lint`, `npm run format`.
-- **E2E:** `npm run test:e2e`.
-- **Design:** `ECOA_PREVIA=1 npm run build && npm run start`, `npm run taste:lint`, `npm run taste:inspect` em 390, 768 e 1440 px para `/entrar` e `/previa/*`.
-- **Banco real:** `get_advisors` (segurança) sem alerta novo; `cron.job` com `vencer-passes`.
-- **Aceite manual (preview da Vercel, celular):** ativar → e-mail → Google → home vazia; conferir o evento `entrou` com a consulta do M10.
+- `npm run build`, `npm run lint`, `npm test` (inclui PGlite) e `npm run test:e2e`, nesta ordem. O e2e roda antes de qualquer servidor de prévia.
+- **Gate de design:**
+  1. Rodar `ECOA_PREVIA=1 npm run build && ECOA_PREVIA=1 npm run start`.
+  2. Rodar `npm run taste:lint`.
+  3. Rodar `node .claude/skills/design-taste-frontend/scripts/inspect.mjs http://localhost:3000/styleguide/<tela> --allow palette-cream` para cada uma das 6 telas, acrescentando `--app` em `admin`.
+  4. Corrigir todo FAIL e parar no PASS.
+- **Banco real:**
+  - `get_advisors` (segurança) sem alerta;
+  - `select jobname, schedule from cron.job` com `vencer-passes`;
+  - teste manual: com a sessão de uma conta sem livro, a API REST devolve 0 linhas em `books`.
+- **Aceite (preview da Vercel, no celular):**
+  1. Ativar o passe para o e-mail do Guilherme.
+  2. O e-mail chega.
+  3. *Abrir meu livro* → *Entrar com Google* → home vazia.
+  4. A consulta do M10 mostra `entrou`.
+  5. Um e-mail Google não cadastrado volta com "Este e-mail ainda não tem um livro."
 
 ---
 
-*Rascunhado com EGM*
+_Rascunhado com EGM_
