@@ -2,7 +2,7 @@
 
 @AGENTS.md
 
-Antes de qualquer tarefa, leia as seções de `docs/prd.md` citadas no prompt. O PRD é a fonte da verdade; este arquivo só guarda as regras que valem sempre.
+Antes de qualquer tarefa, leia as seções de `docs/prd.md` citadas no prompt. O PRD é a fonte da verdade; este arquivo só guarda as regras que valem sempre. O porquê das decisões de produto e arquitetura (e o que se perde com cada uma) está em `docs/decisoes/produto-e-arquitetura.md`: leia antes de propor mudar algo ali.
 
 ## Produto
 
