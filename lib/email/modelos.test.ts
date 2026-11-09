@@ -1,0 +1,36 @@
+import { describe, expect, it } from "vitest";
+import { emailAcesso } from "./modelos";
+
+const url = "https://app.ecoa-memorias.com.br/entrar";
+
+describe("emailAcesso", () => {
+  it("usa o nome do autor no assunto", () => {
+    const e = emailAcesso({ autorNome: "Jair", urlEntrar: url });
+    expect(e.assunto).toBe("O livro do Jair está pronto para começar");
+    expect(e.html).toContain(`href="${url}"`);
+    expect(e.texto).toContain(url);
+  });
+
+  it("sem nome do autor, usa o assunto genérico", () => {
+    expect(emailAcesso({ autorNome: null, urlEntrar: url }).assunto).toBe(
+      "Seu livro de memórias está pronto",
+    );
+    expect(emailAcesso({ autorNome: "  ", urlEntrar: url }).assunto).toBe(
+      "Seu livro de memórias está pronto",
+    );
+  });
+
+  it("escapa HTML no nome do autor", () => {
+    const e = emailAcesso({
+      autorNome: "<script>alert(1)</script>",
+      urlEntrar: url,
+    });
+    expect(e.html).not.toContain("<script>");
+    expect(e.html).toContain("&lt;script&gt;");
+  });
+
+  it("não leva link mágico nem chave no corpo", () => {
+    const e = emailAcesso({ autorNome: "Jair", urlEntrar: url });
+    expect(e.html).not.toMatch(/token|sb_secret|re_/);
+  });
+});

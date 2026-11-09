@@ -1,21 +1,22 @@
 import { expect, test } from "@playwright/test";
 
-test("a home abre com o título em Newsreader", async ({ page }) => {
+test("sem sessão, a home leva para /entrar", async ({ page }) => {
   await page.goto("/");
+  await expect(page).toHaveURL(/\/entrar$/);
+});
 
-  const titulo = page.getByRole("heading", { level: 1 });
-  await expect(titulo).toHaveText("Ecoa Memórias");
-  await expect(page).toHaveTitle("Ecoa Memórias");
+test.describe("rotas protegidas sem sessão", () => {
+  for (const rota of ["/livro/qualquer", "/admin"]) {
+    test(`${rota} leva para /entrar`, async ({ page }) => {
+      await page.goto(rota);
+      await expect(page).toHaveURL(/\/entrar$/);
+    });
+  }
+});
 
-  const fonte = await titulo.evaluate((el) => getComputedStyle(el).fontFamily);
-  expect(fonte).toMatch(/Newsreader/);
-
-  // A fonte precisa ter carregado de fato, não só estar declarada.
-  const carregada = await page.evaluate(async () => {
-    await document.fonts.ready;
-    return [...document.fonts].some(
-      (f) => /Newsreader/.test(f.family) && f.status === "loaded",
-    );
-  });
-  expect(carregada).toBe(true);
+test("a vitrine de telas não existe fora do gate de design", async ({
+  request,
+}) => {
+  const resposta = await request.get("/styleguide/entrar");
+  expect(resposta.status()).toBe(404);
 });

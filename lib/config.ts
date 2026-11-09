@@ -3,10 +3,10 @@
 
 export const MARCA = "Ecoa Memórias";
 
-// ── Passe ────────────────────────────────────────────────────────────────
+// ── Plano ────────────────────────────────────────────────────────────────
 // R$ 467 por ano: gravações ilimitadas e 1 livro de 80 páginas.
-export const PRECO_PASSE = 467; // exibir como "R$ 467"
-export const DURACAO_PASSE_MESES = 12; // conta a partir da ativação
+export const PRECO_PLANO = 467; // exibir como "R$ 467"
+export const DURACAO_PLANO_MESES = 12; // conta a partir da ativação
 
 // ── Livro ────────────────────────────────────────────────────────────────
 export const PAGINAS_INCLUSAS = 80;
@@ -25,6 +25,10 @@ export const MAX_ARQUIVOS_LOTE = 30; // por upload em lote
 export const MAX_COFACILITADORES = 3; // além do responsável
 
 // ── Domínios ─────────────────────────────────────────────────────────────
-export const DOMINIO_APP = "app.ecoamemorias.com.br";
+export const DOMINIO_APP = "app.ecoa-memorias.com.br";
 // O QR impresso aponta para cá. Nunca mudar: livros impressos dependem dele.
-export const DOMINIO_QR = "ouvir.ecoamemorias.com.br";
+export const DOMINIO_QR = "ouvir.ecoa-memorias.com.br";
+
+// ── E-mail ───────────────────────────────────────────────────────────────
+// Domínio verificado no Resend. Ver docs/decisoes/dominio.md.
+export const EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>";

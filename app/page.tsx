@@ -1,12 +1,28 @@
-import { MARCA } from "@/lib/config";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { TelaSemAcesso } from "@/components/telas/tela-sem-acesso";
+import { livrosDoMembro, usuarioAtual } from "@/lib/sessao";
+import { sair } from "./acoes-sessao";
 
-export default function Home() {
+// Sem sessão, o proxy.ts já mandou para /entrar. Aqui só decide qual livro abrir.
+export default function Inicio() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-3 px-5 text-center">
-      <h1 className="font-livro text-tinta text-5xl">{MARCA}</h1>
-      <p className="font-livro text-tinta-2 text-xl">
-        Do primeiro áudio ao livro.
-      </p>
-    </main>
+    <Suspense>
+      <Roteador />
+    </Suspense>
+  );
+}
+
+async function Roteador() {
+  const usuario = await usuarioAtual();
+  if (!usuario) redirect("/entrar");
+  const [maisRecente] = await livrosDoMembro(usuario.id);
+  if (maisRecente) redirect(`/livro/${maisRecente.id}`);
+  return (
+    <TelaSemAcesso
+      email={usuario.email}
+      ehAdmin={usuario.ehAdmin}
+      sair={sair}
+    />
   );
 }
