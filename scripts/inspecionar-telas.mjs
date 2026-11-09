@@ -15,6 +15,15 @@ const TELAS = {
   entrar: "/styleguide/entrar",
   livro: "/styleguide/livro",
   admin: "/styleguide/admin",
+  "configurar-quem": "/styleguide/configurar-quem",
+  "configurar-perguntas": "/styleguide/configurar-perguntas",
+  "configurar-fotos": "/styleguide/configurar-fotos",
+  kit: "/styleguide/kit",
+  perguntas: "/styleguide/perguntas",
+  "perguntas-causos": "/styleguide/perguntas-causos",
+  "perguntas-enquete": "/styleguide/perguntas-enquete",
+  familia: "/styleguide/familia",
+  "familia-causo": "/styleguide/familia-causo",
 };
 
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);

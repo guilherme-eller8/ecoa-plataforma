@@ -9,6 +9,18 @@ export const TELAS = [
   "livro",
   "livro-somente-leitura",
   "admin",
+  "configurar-quem",
+  "configurar-perguntas",
+  "configurar-fotos",
+  "kit",
+  "kit-sem-link",
+  "perguntas",
+  "perguntas-causos",
+  "perguntas-enquete",
+  "perguntas-vazia",
+  "familia",
+  "familia-causo",
+  "familia-invalida",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

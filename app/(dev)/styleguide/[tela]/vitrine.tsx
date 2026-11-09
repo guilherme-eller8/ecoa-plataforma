@@ -3,7 +3,30 @@
 import { TelaAdmin } from "@/components/telas/tela-admin";
 import { TelaConfirmar } from "@/components/telas/tela-confirmar";
 import { TelaEntrar } from "@/components/telas/tela-entrar";
-import { TelaLivroVazio } from "@/components/telas/tela-livro-vazio";
+import {
+  ConfigurarFotos,
+  ConfigurarPerguntas,
+  ConfigurarQuem,
+} from "@/components/telas/configurar";
+import {
+  TelaFamilia,
+  TelaFamiliaInvalida,
+} from "@/components/telas/tela-familia";
+import { TelaKit } from "@/components/telas/tela-kit";
+import { TelaLivro } from "@/components/telas/tela-livro";
+import { TelaPerguntas } from "@/components/telas/tela-perguntas";
+import {
+  ACOES_FALSAS,
+  CAUSOS_JAIR,
+  ENQUETE_JAIR,
+  FOTOS_JAIR,
+  LINK_AUTOR_EXEMPLO,
+  LINK_FAMILIA_EXEMPLO,
+  LIVRO_JAIR,
+  LIVRO_NOVO,
+  PAGINA_FAMILIA,
+  PERGUNTAS_JAIR,
+} from "@/lib/exemplos/prompt4";
 import { TelaSemAcesso } from "@/components/telas/tela-sem-acesso";
 import type { Resultado } from "@/lib/resultado";
 import { LIVROS_FALSOS, type Tela } from "@/lib/styleguide";
@@ -31,9 +54,19 @@ export function Vitrine({ tela }: { tela: Tela }) {
         <TelaSemAcesso email="joao@exemplo.com" ehAdmin={false} sair={nada} />
       );
     case "livro":
-      return <TelaLivroVazio autorNome="Jair" somenteLeitura={false} />;
+      return (
+        <TelaLivro
+          livro={LIVRO_JAIR}
+          resumo={{ paraPerguntar: 4, causosNovos: 1, enqueteAberta: true }}
+        />
+      );
     case "livro-somente-leitura":
-      return <TelaLivroVazio autorNome="Jair" somenteLeitura />;
+      return (
+        <TelaLivro
+          livro={{ ...LIVRO_JAIR, podeEscrever: false }}
+          resumo={{ paraPerguntar: 4, causosNovos: 0, enqueteAberta: false }}
+        />
+      );
     case "admin":
       return (
         <TelaAdmin
@@ -43,5 +76,96 @@ export function Vitrine({ tela }: { tela: Tela }) {
           reenviar={acaoFalsa}
         />
       );
+    case "configurar-quem":
+      return (
+        <ConfigurarQuem
+          livro={LIVRO_NOVO}
+          acoes={ACOES_FALSAS.configuracao}
+          fotos={ACOES_FALSAS.fotos}
+        />
+      );
+    case "configurar-perguntas":
+      return (
+        <ConfigurarPerguntas
+          livro={LIVRO_NOVO}
+          acoes={ACOES_FALSAS.configuracao}
+          fotos={ACOES_FALSAS.fotos}
+        />
+      );
+    case "configurar-fotos":
+      return (
+        <ConfigurarFotos
+          livro={LIVRO_NOVO}
+          acoes={ACOES_FALSAS.configuracao}
+          fotos={ACOES_FALSAS.fotos}
+        />
+      );
+    case "kit":
+      return (
+        <TelaKit
+          livro={LIVRO_JAIR}
+          linkFamilia={LINK_FAMILIA_EXEMPLO}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          acoes={ACOES_FALSAS.kit}
+        />
+      );
+    case "kit-sem-link":
+      return (
+        <TelaKit
+          livro={LIVRO_JAIR}
+          linkFamilia={null}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          acoes={ACOES_FALSAS.kit}
+        />
+      );
+    case "perguntas":
+    case "perguntas-causos":
+    case "perguntas-enquete":
+      return (
+        <TelaPerguntas
+          livro={LIVRO_JAIR}
+          perguntas={PERGUNTAS_JAIR}
+          causos={CAUSOS_JAIR}
+          enquete={ENQUETE_JAIR}
+          fotos={FOTOS_JAIR}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          acoes={ACOES_FALSAS.perguntas}
+          acoesFotos={ACOES_FALSAS.fotos}
+          abaInicial={
+            tela === "perguntas"
+              ? "perguntar"
+              : tela === "perguntas-causos"
+                ? "causos"
+                : "enquete"
+          }
+        />
+      );
+    case "perguntas-vazia":
+      return (
+        <TelaPerguntas
+          livro={LIVRO_JAIR}
+          perguntas={[]}
+          causos={[]}
+          enquete={null}
+          fotos={[]}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          acoes={ACOES_FALSAS.perguntas}
+          acoesFotos={ACOES_FALSAS.fotos}
+        />
+      );
+    case "familia":
+      return (
+        <TelaFamilia pagina={PAGINA_FAMILIA} acoes={ACOES_FALSAS.familia} />
+      );
+    case "familia-causo":
+      return (
+        <TelaFamilia
+          pagina={PAGINA_FAMILIA}
+          acoes={ACOES_FALSAS.familia}
+          inicial="causo"
+        />
+      );
+    case "familia-invalida":
+      return <TelaFamiliaInvalida />;
   }
 }
