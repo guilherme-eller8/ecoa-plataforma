@@ -268,7 +268,7 @@ O resultado são dois PDFs, o miolo e a capa aberta, que a Ecoa envia à gráfic
 
 ### QR codes permanentes
 
-- O QR aponta para `ouvir.ecoamemorias.com.br/{código}`, com código de 8 caracteres sem letras ambíguas. Esse subdomínio redireciona para o player, onde quer que o áudio esteja.
+- O QR aponta para `ouvir.ecoa-memorias.com.br/{código}`, com código de 8 caracteres sem letras ambíguas. Esse subdomínio redireciona para o player, onde quer que o áudio esteja.
 - Correção de erro nível Q, mínimo de 2 × 2 cm, preto sobre o papel, com margem de silêncio.
 - O player abre sem login, toca o áudio original e mostra o título. Funciona com o passe vencido.
 - **Teste automático:** cada QR do PDF é decodificado por software antes de liberar o download.
@@ -311,7 +311,7 @@ A stack repete a da landing e acrescenta só o que o produto exige: tempo real n
 | Pagamento (onda 2) | Link de pagamento do Mercado Pago com notificação automática | Pix e cartão em 12x, sem dado de cartão na Ecoa |
 | E-mail | Resend | Já usado na landing |
 | App instalável | PWA com atalho de compartilhamento no Android | Sem loja de apps |
-| Domínios | `app.ecoamemorias.com.br` e `ouvir.ecoamemorias.com.br` (QR) | O destino do QR pode mudar sem reimprimir livros |
+| Domínios | `app.ecoa-memorias.com.br` e `ouvir.ecoa-memorias.com.br` (QR) | O destino do QR pode mudar sem reimprimir livros |
 
 ### Tabelas
 
@@ -391,7 +391,7 @@ Tudo abaixo foi cortado de propósito e volta quando um cliente real pedir.
 - [ ] **Abrir CNPJ e conta no Mercado Pago.** Bloqueia o pagamento automático da onda 2.
 - [ ] **Parcelamento:** 12x sem juros (a Ecoa absorve a taxa) ou com juros para o cliente.
 - [ ] **Cotação da gráfica:** 80 páginas, capa dura, colorido, 21 × 21 cm. Define a margem dos R$ 467, o valor por página e por cópia extra, o modo de cor, a lombada e o múltiplo de páginas.
-- [ ] **Domínio `ecoamemorias.com.br`** registrado e apontado para a Vercel (os subdomínios `app` e `ouvir` dependem dele).
+- [ ] **Domínio `ecoa-memorias.com.br`** registrado e apontado para a Vercel (os subdomínios `app` e `ouvir` dependem dele).
 - [ ] **Banco de 150 perguntas:** rascunho gerado no prompt 4, revisão da tia Caia.
 - [ ] **Padrão-ouro:** 5 a 10 histórias editadas pela tia Caia antes do prompt 1 terminar.
 - [ ] **Áudios de teste:** 5 áudios reais dos pais dos 2 parceiros de design, incluindo conversa, ruído e áudio encaminhado do WhatsApp.
@@ -574,7 +574,7 @@ Leia docs/prd.md: M7, M9 (página de amostra) e Livro pronto para a gráfica (QR
 
 1. Complete a área do autor: Minhas histórias (ouvir, ler e corrigir o texto, gerando uma versão "editada pelo autor" com selo para o responsável) e Meu livro (leitura das histórias prontas, sem mensagens da família).
 2. Crie desde já a tabela family_messages, vazia, com RLS (SQL antes), e um teste automático provando que nenhuma rota acessada com o token do autor retorna dados dela.
-3. Tabela qr_codes (8 caracteres sem letras ambíguas, nunca apagados) e player público em ouvir.ecoamemorias.com.br/[código]. Me guie na configuração do subdomínio.
+3. Tabela qr_codes (8 caracteres sem letras ambíguas, nunca apagados) e player público em ouvir.ecoa-memorias.com.br/[código]. Me guie na configuração do subdomínio.
 4. Teste de 1 dia: a mesma página (título, ano, foto, texto, QR) em Typst e em HTML com Paged.js. Compare tipografia, sangria, tempo de geração e facilidade de rodar no servidor; recomende um em 5 linhas e espere o meu OK.
 5. Botão Gerar página de amostra numa história pronta: PDF de 1 página no tamanho do livro, com o QR decodificado por software antes do download.
 

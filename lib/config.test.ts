@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   DOMINIO_APP,
   DOMINIO_QR,
+  EMAIL_REMETENTE,
   FORMATO_LIVRO,
   MAX_ARQUIVOS_LOTE,
   MAX_COFACILITADORES,
@@ -30,5 +31,11 @@ describe("lib/config", () => {
       expect(dominio).toMatch(/^[a-z0-9.-]+\.com\.br$/);
     }
     expect(DOMINIO_APP).not.toBe(DOMINIO_QR);
+  });
+
+  it("usa o domínio com hífen, verificado no Resend, para app, QR e e-mail", () => {
+    expect(DOMINIO_APP).toBe("app.ecoa-memorias.com.br");
+    expect(DOMINIO_QR).toBe("ouvir.ecoa-memorias.com.br");
+    expect(EMAIL_REMETENTE).toMatch(/<[^@]+@ecoa-memorias\.com\.br>$/);
   });
 });
