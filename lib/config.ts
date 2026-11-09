@@ -39,3 +39,30 @@ export const LEMBRETE_APOS_DIAS = 3;
 // Estimativa de páginas no 21x21 enquanto o livro não é paginado de verdade.
 export const PALAVRAS_POR_PAGINA_ESTIMADA = 320;
 export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
+
+// ── Perguntas e configuração inicial ─────────────────────────────────────
+export const PERGUNTAS_INICIAIS = 10; // marcadas no passo 2, por parentesco
+export const ATUALIZAR_A_CADA_S = 4; // abas Causos e Enquete abertas na tela
+
+// ── Fotos do acervo ──────────────────────────────────────────────────────
+// Comprimidas no navegador: JPEG, lado maior até 3000 px (21 cm a 300 DPI pede 2480).
+export const FOTO_LADO_MAX_PX = 3000;
+export const FOTO_QUALIDADE_JPEG = 0.9;
+export const MAX_FOTO_MB = 5; // igual ao limite do bucket acervo
+export const MAX_FOTOS_POR_ENVIO = 30;
+export const MAX_FOTOS_POR_LIVRO = 200; // espelhado em privado.max_fotos_por_livro()
+
+// ── Família: causos e enquete ────────────────────────────────────────────
+// Os que têm "espelhado" também são conferidos no banco; supabase/tests/config-banco.test.ts
+// garante que os valores batem.
+export const VOTOS_POR_PESSOA = 5; // espelhado em privado.votos_por_pessoa()
+export const MAX_ITENS_ENQUETE = 30; // espelhado em privado.max_itens_enquete()
+export const MAX_VOTANTES_POR_ENQUETE = 150; // espelhado
+export const MAX_TROCAS_VOTO_POR_HORA = 300; // espelhado
+export const MAX_CAUSOS_POR_HORA = 20; // espelhado, por livro
+export const MAX_CAUSOS_POR_DIA = 40; // espelhado, por livro
+export const MAX_CAUSO_AUDIO_MIN = 3;
+export const MAX_CAUSO_AUDIO_MB = 2; // igual ao limite do bucket causos
+export const CAUSO_AUDIO_KBPS = 48; // 3 min ≈ 1,1 MB
+export const CONSENTIMENTO_CAUSO_VERSAO = 1; // mudou a frase? suba a versão
+export const TEXTO_PERGUNTA_MAX = 500; // igual ao CHECK de prompts e poll_items

@@ -35,10 +35,12 @@ export type Claims = {
   [k: string]: unknown;
 };
 
-/** Roda `fn` como um papel do Supabase (anon, authenticated), com os claims do token. */
+export type Papel = "anon" | "authenticated" | "service_role" | "porta_autor";
+
+/** Roda `fn` como um papel do Supabase, com os claims do token. */
 export async function como<T>(
   db: PGlite,
-  papel: "anon" | "authenticated",
+  papel: Papel,
   claims: Claims,
   fn: (tx: Transaction) => Promise<T>,
 ): Promise<T> {
@@ -90,4 +92,58 @@ export async function ativarPlano(
     [usuario, autor, meses],
   );
   return r.rows[0].id;
+}
+
+/** Valor de tentativa que falhou com `codigo` (mensagem exata das funções do banco). */
+export function erroCom(codigo: string) {
+  return { erro: codigo };
+}
+
+const sha256 = async (texto: string) => {
+  const { createHash } = await import("node:crypto");
+  return createHash("sha256").update(texto, "utf8").digest("hex");
+};
+
+/** Cria (ou troca) o link da família pelo caminho do servidor. Devolve o id da linha. */
+export async function criarLinkFamilia(
+  db: PGlite,
+  livro: string,
+  usuario: string,
+  token: string,
+) {
+  const id = crypto.randomUUID();
+  await db.query(
+    `select public.servico_trocar_link_familia($1, $2, $3, $4, 1::smallint)`,
+    [livro, usuario, id, await sha256(token)],
+  );
+  return id;
+}
+
+/** Abre uma enquete com a sessão do usuário e devolve o id dela e dos itens, na ordem. */
+export async function abrirEnquete(
+  db: PGlite,
+  livro: string,
+  usuario: string,
+  itens: { texto: string; banco_id?: string; causo_id?: string }[],
+) {
+  return como(db, "authenticated", { sub: usuario }, async (tx) => {
+    const r = await tx.query<{ id: string }>(
+      `select public.enquete_abrir($1, $2::jsonb) as id`,
+      [livro, JSON.stringify(itens)],
+    );
+    const enquete = r.rows[0].id;
+    const i = await tx.query<{ id: string }>(
+      `select id from public.poll_items where poll_id = $1 order by ordem`,
+      [enquete],
+    );
+    return { enquete, itens: i.rows.map((x) => x.id) };
+  });
+}
+
+/** Põe o plano do livro como vencido (estado ativo, data passada). */
+export async function vencerPlano(db: PGlite, livro: string) {
+  await db.query(
+    `update public.books set plano_ativado_em = now() - interval '2 years', plano_vence_em = now() - interval '1 day' where id = $1`,
+    [livro],
+  );
 }
