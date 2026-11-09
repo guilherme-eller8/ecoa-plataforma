@@ -69,8 +69,11 @@ export const MAX_FOTOS_POR_LIVRO = 200; // espelhado em privado.max_fotos_por_li
 // ── Família: causos e enquete ────────────────────────────────────────────
 // Os que têm "espelhado" também são conferidos no banco; supabase/tests/config-banco.test.ts
 // garante que os valores batem.
-export const VOTOS_POR_PESSOA = 5; // espelhado em privado.votos_por_pessoa()
-export const MAX_ITENS_ENQUETE = 30; // espelhado em privado.max_itens_enquete()
+// Enquete por fase (P35): até 2 por fase; teto total = 2 × 9 categorias (8 fases + outras).
+export const VOTOS_POR_FASE = 2; // espelhado em privado.votos_por_fase()
+export const VOTOS_POR_PESSOA = 18; // espelhado em privado.votos_por_pessoa()
+// A lista inteira do banco (150) mais as próprias e as sugestões da família.
+export const MAX_ITENS_ENQUETE = 200; // espelhado em privado.max_itens_enquete()
 export const MAX_VOTANTES_POR_ENQUETE = 150; // espelhado
 export const MAX_TROCAS_VOTO_POR_HORA = 300; // espelhado
 export const MAX_CAUSOS_POR_HORA = 20; // espelhado, por livro

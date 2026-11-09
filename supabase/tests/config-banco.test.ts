@@ -19,6 +19,7 @@ afterAll(async () => {
 describe("lib/config.ts x banco", () => {
   it.each([
     ["votos_por_pessoa", config.VOTOS_POR_PESSOA],
+    ["votos_por_fase", config.VOTOS_POR_FASE],
     ["max_itens_enquete", config.MAX_ITENS_ENQUETE],
     ["max_votantes_por_enquete", config.MAX_VOTANTES_POR_ENQUETE],
     ["max_trocas_voto_por_hora", config.MAX_TROCAS_VOTO_POR_HORA],

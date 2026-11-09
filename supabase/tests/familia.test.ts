@@ -122,11 +122,16 @@ describe("página da família", () => {
       autor: string;
       aberto: boolean;
       votos_por_pessoa: number;
-      enquete: { id: string; itens: { id: string }[] };
+      votos_por_fase: number;
+      enquete: { id: string; itens: { id: string; fase: string }[] };
     };
     expect(p.autor).toBe("Jair");
     expect(p.aberto).toBe(true);
-    expect(p.votos_por_pessoa).toBe(5);
+    expect(p.votos_por_pessoa).toBe(18);
+    expect(p.votos_por_fase).toBe(2);
+    expect(new Set(p.enquete.itens.map((i) => i.fase))).toEqual(
+      new Set(["outras"]),
+    );
     expect(p.enquete.id).toBe(enqueteA.enquete);
     expect(p.enquete.itens.map((i) => i.id)).toEqual(enqueteA.itens);
   });
@@ -155,7 +160,7 @@ describe("votar", () => {
       tokenA,
       aparelho(10),
       "Ana",
-      enqueteA.itens.slice(0, 3),
+      enqueteA.itens.slice(0, 2), // os itens de A são "outras": até 2
     );
     expect(primeiro).not.toHaveProperty("erro");
     const antes = await db.query<{ votante: string }>(
@@ -213,11 +218,11 @@ describe("votar", () => {
     });
   });
 
-  it("6 itens: quantidade_invalida; 31 itens: dados_invalidos", async () => {
+  it("6 itens da mesma fase: quantidade_invalida; 201 itens: dados_invalidos", async () => {
     expect(await votar(tokenA, aparelho(15), "Fê", enqueteA.itens)).toEqual({
       erro: "quantidade_invalida",
     });
-    const muitos = Array.from({ length: 31 }, () => crypto.randomUUID());
+    const muitos = Array.from({ length: 201 }, () => crypto.randomUUID());
     expect(await votar(tokenA, aparelho(15), "Fê", muitos)).toEqual({
       erro: "dados_invalidos",
     });
@@ -542,5 +547,108 @@ describe("anon direto nas tabelas", () => {
     expect(r.erro).toMatch(/permission denied/);
     const w = await anon((tx) => tenta(tx, `delete from public.${tabela}`));
     expect(w.erro).toMatch(/permission denied/);
+  });
+});
+
+// P35: a família vê a enquete por fase da vida e marca até 2 em cada uma.
+describe("enquete por fase", () => {
+  let livroC: string;
+  let enqueteC: { enquete: string; itens: string[] };
+  const tokenC = "v1_CCCCCCCCCCCCCCCCCCCCCC";
+  // ordem: infancia ×3, amor ×2, trabalho ×2, outras ×3
+  const itensC = [
+    { texto: "Infância um", banco_id: "infancia-01" },
+    { texto: "Infância dois", banco_id: "infancia-02" },
+    { texto: "Infância três", banco_id: "infancia-03" },
+    { texto: "Amor um", banco_id: "amor-01" },
+    { texto: "Amor dois", banco_id: "amor-02" },
+    { texto: "Trabalho um", banco_id: "trabalho-01" },
+    { texto: "Trabalho dois", banco_id: "trabalho-02" },
+    { texto: "Própria um" },
+    { texto: "Própria dois" },
+    { texto: "Própria três" },
+  ];
+
+  beforeAll(async () => {
+    const carla = await criarUsuario(db, "carla.fases@exemplo.com");
+    livroC = await ativarPlano(db, carla, "Zé");
+    await criarLinkFamilia(db, livroC, carla, tokenC);
+    enqueteC = await abrirEnquete(db, livroC, carla, itensC);
+  });
+
+  it("a página traz a fase de cada item", async () => {
+    const p = (await pagina(tokenC)) as {
+      enquete: { itens: { fase: string }[] };
+    };
+    expect(p.enquete.itens.map((i) => i.fase)).toEqual([
+      "infancia",
+      "infancia",
+      "infancia",
+      "amor",
+      "amor",
+      "trabalho",
+      "trabalho",
+      "outras",
+      "outras",
+      "outras",
+    ]);
+  });
+
+  it("2 em cada uma de 4 fases: aceito", async () => {
+    const [i1, i2, , a1, a2, t1, t2, o1, o2] = enqueteC.itens;
+    const r = await votar(tokenC, aparelho(40), "Lia", [
+      i1,
+      i2,
+      a1,
+      a2,
+      t1,
+      t2,
+      o1,
+      o2,
+    ]);
+    expect(r).not.toHaveProperty("erro");
+    const n = await db.query<{ n: number }>(
+      `select count(*)::int as n from public.poll_votes where poll_id = $1`,
+      [enqueteC.enquete],
+    );
+    expect(n.rows[0].n).toBe(8);
+  });
+
+  it("3 na mesma fase: quantidade_invalida", async () => {
+    const [i1, i2, i3] = enqueteC.itens;
+    expect(await votar(tokenC, aparelho(41), "Mel", [i1, i2, i3])).toEqual({
+      erro: "quantidade_invalida",
+    });
+  });
+
+  it("'outras' também tem limite de 2", async () => {
+    const [, , , , , , , o1, o2, o3] = enqueteC.itens;
+    expect(await votar(tokenC, aparelho(42), "Nina", [o1, o2, o3])).toEqual({
+      erro: "quantidade_invalida",
+    });
+  });
+
+  it("a lista inteira do banco (160 itens) abre; 201 é recusado", async () => {
+    const dani = await criarUsuario(db, "dani@exemplo.com");
+    const livroD = await ativarPlano(db, dani, "Lu");
+    const fases = ["raizes", "infancia", "estudos", "juventude", "trabalho"];
+    const muitos = (n: number) =>
+      Array.from({ length: n }, (_, k) => ({
+        texto: `Pergunta número ${k + 1}`,
+        banco_id: `${fases[k % fases.length]}-${String(k + 1).padStart(3, "0")}`,
+      }));
+    const ok = await abrirEnquete(db, livroD, dani, muitos(160));
+    expect(ok.itens).toHaveLength(160);
+    await db.query(
+      `update public.polls set estado = 'encerrada', encerrada_em = now() where id = $1`,
+      [ok.enquete],
+    );
+    const r = await como(db, "authenticated", { sub: dani }, (tx) =>
+      tenta(tx, `select public.enquete_abrir($1, $2::jsonb)`, [
+        livroD,
+        JSON.stringify(muitos(201)),
+      ]),
+    );
+    expect(r.erro).toBe("dados_invalidos");
   });
 });
