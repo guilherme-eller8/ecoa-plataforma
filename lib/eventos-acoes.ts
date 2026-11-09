@@ -23,6 +23,8 @@ export const ACOES = [
   "enquete_salvou",
   "removeu_voto",
   "votou", // família; detalhes: { votante }
+  // Prompt 5A: áudios gravados fora da plataforma.
+  "subiu_audio", // detalhes: { recording, com_pergunta }
 ] as const;
 
 export const PAPEIS = [

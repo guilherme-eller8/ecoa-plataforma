@@ -124,6 +124,43 @@ export type AcoesPerguntas = {
   removerVotos: (enquete: string, votante: string) => Promise<Resposta>;
 };
 
+// ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
+export type AudioDaTela = {
+  id: string;
+  titulo: string | null;
+  nomeArquivo: string;
+  pergunta: string | null; // texto da pergunta ligada
+  duracaoS: number | null;
+  tamanhoBytes: number;
+  recebidoEm: string;
+  url: string | null; // assinada por 1 h
+  processado: boolean;
+};
+
+export type AudioParaSubir = {
+  nome: string;
+  tamanho: number;
+  duracaoS: number | null;
+  promptId: string | null;
+  titulo: string | null;
+};
+
+// Upload retomável direto ao Storage: TUS com o token no cabeçalho x-signature.
+export type AudioPreparado = {
+  id: string;
+  caminho: string;
+  token: string;
+  contentType: string;
+};
+
+export type AcoesAudios = {
+  prepararAudios: (
+    arquivos: AudioParaSubir[],
+  ) => Promise<Resposta<AudioPreparado[]>>;
+  reassinarAudio: (id: string) => Promise<Resposta<AudioPreparado>>;
+  confirmarAudio: (id: string) => Promise<Resposta>;
+};
+
 export type AcoesKit = {
   pegarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
   trocarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;

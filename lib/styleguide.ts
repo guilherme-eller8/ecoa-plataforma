@@ -21,6 +21,10 @@ export const TELAS = [
   "familia",
   "familia-causo",
   "familia-invalida",
+  "nova-historia",
+  "nova-historia-arquivos",
+  "audios",
+  "audios-vazia",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

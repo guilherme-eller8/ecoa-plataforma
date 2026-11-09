@@ -1,8 +1,8 @@
-// Home do livro: uma ação principal (Perguntas), o cartão de configuração pendente e o
-// convite da família. Substitui a tela vazia do prompt 3.
+// Home do livro: uma ação principal (Nova história, P26), Perguntas como secundária, os
+// áudios recebidos, o cartão de configuração pendente e o convite da família.
 import Link from "next/link";
 import { classesDoBotao } from "@/components/ui/botao";
-import { IconePerguntas } from "@/components/ui/icones";
+import { IconePerguntas, IconeSubir } from "@/components/ui/icones";
 import { Marca } from "@/components/ui/marca";
 import { pendentes, type Passo } from "@/lib/livro/configuracao";
 import type { LivroDaTela } from "@/lib/livro/tipos";
@@ -17,6 +17,7 @@ export type ResumoDoLivro = {
   paraPerguntar: number;
   causosNovos: number;
   enqueteAberta: boolean;
+  audios: number;
 };
 
 export function TelaLivro({
@@ -60,15 +61,39 @@ export function TelaLivro({
             : ""}
           {resumo.enqueteAberta ? " · enquete aberta" : ""}
         </p>
-        <Link
-          href={`${base}/perguntas`}
-          className={
-            classesDoBotao({ larguraTotal: true }) + " sm:w-auto sm:self-start"
-          }
-        >
-          <IconePerguntas tamanho={20} />
-          <span>Perguntas</span>
-        </Link>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          {livro.podeEscrever ? (
+            <Link
+              href={`${base}/historias/nova`}
+              className={classesDoBotao({ larguraTotal: true }) + " sm:w-auto"}
+            >
+              <IconeSubir tamanho={20} />
+              <span>Nova história</span>
+            </Link>
+          ) : null}
+          <Link
+            href={`${base}/perguntas`}
+            className={
+              classesDoBotao({
+                variante: livro.podeEscrever ? "secundario" : "principal",
+                larguraTotal: true,
+              }) + " sm:w-auto"
+            }
+          >
+            <IconePerguntas tamanho={20} />
+            <span>Perguntas</span>
+          </Link>
+        </div>
+        {resumo.audios ? (
+          <Link
+            href={`${base}/audios`}
+            className="text-ui-17 text-floresta min-h-alvo inline-flex items-center self-start font-medium underline-offset-4 hover:underline"
+          >
+            {resumo.audios === 1
+              ? "1 áudio recebido"
+              : `${resumo.audios} áudios recebidos`}
+          </Link>
+        ) : null}
       </section>
 
       {falta.length ? (

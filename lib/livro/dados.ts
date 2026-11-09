@@ -6,6 +6,7 @@ import { clienteSessao } from "@/lib/supabase/servidor";
 import type { LivroDoMembro } from "@/lib/sessao";
 import { configuracaoDo, nomeDoAutor } from "./acesso";
 import type {
+  AudioDaTela,
   CausoDaTela,
   EnqueteDaTela,
   FotoDaTela,
@@ -19,7 +20,10 @@ import type {
 
 const UMA_HORA = 60 * 60;
 
-async function assinar(bucket: "acervo" | "causos", caminhos: string[]) {
+async function assinar(
+  bucket: "acervo" | "causos" | "audios",
+  caminhos: string[],
+) {
   if (caminhos.length === 0) return new Map<string, string>();
   const { data } = await clienteAdmin()
     .storage.from(bucket)
@@ -187,4 +191,44 @@ export async function linkDaFamilia(livro: string): Promise<string | null> {
   return urlFamilia(
     tokenDoLink("familia", data.id, data.chave_versao, envLinks()),
   );
+}
+
+/** Áudios que já chegaram, do mais novo ao mais antigo, com URL assinada por 1 h. */
+export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
+  const supabase = await clienteSessao();
+  const { data } = await supabase
+    .from("recordings")
+    .select(
+      "id, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, prompts(texto)",
+    )
+    .eq("book_id", livro)
+    .eq("upload", "recebido")
+    .order("recebido_em", { ascending: false });
+  const linhas = data ?? [];
+  const urls = await assinar(
+    "audios",
+    linhas.map((a) => a.caminho),
+  );
+  return linhas.map((a) => ({
+    id: a.id,
+    titulo: a.titulo,
+    nomeArquivo: a.nome_arquivo,
+    pergunta: a.prompts?.texto ?? null,
+    duracaoS: a.duracao_s,
+    tamanhoBytes: a.tamanho_bytes,
+    recebidoEm: a.recebido_em ?? "",
+    url: urls.get(a.caminho) ?? null,
+    processado: Boolean(a.processado_em),
+  }));
+}
+
+/** Quantos áudios chegaram (para a home). */
+export async function totalDeAudios(livro: string): Promise<number> {
+  const supabase = await clienteSessao();
+  const { count } = await supabase
+    .from("recordings")
+    .select("id", { count: "exact", head: true })
+    .eq("book_id", livro)
+    .eq("upload", "recebido");
+  return count ?? 0;
 }

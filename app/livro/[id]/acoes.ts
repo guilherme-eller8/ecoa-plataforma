@@ -11,6 +11,13 @@ import { after } from "next/server";
 import { z } from "zod";
 import { fotoDoLivro, caminhoFoto } from "@/lib/arquivos";
 import {
+  audioDoLivro,
+  caminhoAudio,
+  formatoDoArquivo,
+  MAX_AUDIO_BYTES,
+} from "@/lib/audios/formatos";
+import {
+  MAX_ARQUIVOS_LOTE,
   MAX_FOTOS_POR_ENVIO,
   MAX_FOTOS_POR_LIVRO,
   TEXTO_PERGUNTA_MAX,
@@ -32,6 +39,8 @@ import {
   type Passo,
 } from "@/lib/livro/configuracao";
 import type {
+  AudioParaSubir,
+  AudioPreparado,
   CandidatoDaEnquete,
   FotoPreparada,
   FotoSubida,
@@ -690,4 +699,158 @@ export async function trocarLinkDaFamilia(
   if (r.ok) evento(c, "trocou_link_familia");
   atualizar(livroId);
   return r;
+}
+
+// ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
+// A linha nasce "enviando" com a sessão (a RLS confere membro e plano); o servidor assina o
+// upload só daquele caminho; ao fim, confere o objeto no Storage e confirma com a chave
+// secreta (servico_confirmar_audio), que também passa a pergunta ligada para respondida.
+
+const esquemaAudios = z
+  .array(
+    z.object({
+      nome: z.string().min(1).max(200),
+      tamanho: z.number().int().min(1).max(MAX_AUDIO_BYTES),
+      duracaoS: z.number().min(0).max(21600).nullable(),
+      promptId: z.uuid().nullable(),
+      titulo: z.string().trim().max(120).nullable(),
+    }),
+  )
+  .min(1)
+  .max(MAX_ARQUIVOS_LOTE);
+
+async function assinarUpload(
+  id: string,
+  caminho: string,
+  contentType: string,
+): Promise<AudioPreparado | null> {
+  const { data, error } = await clienteAdmin()
+    .storage.from("audios")
+    .createSignedUploadUrl(caminho, { upsert: true });
+  if (error || !data) return null;
+  return { id, caminho, token: data.token, contentType };
+}
+
+export async function prepararAudios(
+  livroId: string,
+  arquivos: AudioParaSubir[],
+): Promise<Resposta<AudioPreparado[]>> {
+  const v = esquemaAudios.safeParse(arquivos);
+  if (!v.success)
+    return {
+      ok: false,
+      mensagem: `Escolha até ${MAX_ARQUIVOS_LOTE} áudios de até ${Math.round(MAX_AUDIO_BYTES / 1024 / 1024)} MB cada.`,
+    };
+  const formatos = v.data.map((a) => formatoDoArquivo(a.nome));
+  if (formatos.some((f) => !f))
+    return {
+      ok: false,
+      mensagem: "Use .opus, .m4a, .mp3, .ogg, .wav ou .webm.",
+    };
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+
+  const perguntas = [
+    ...new Set(v.data.flatMap((a) => (a.promptId ? [a.promptId] : []))),
+  ];
+  if (perguntas.length) {
+    const { data } = await c.supabase
+      .from("prompts")
+      .select("id")
+      .eq("book_id", c.livro.id)
+      .in("id", perguntas)
+      .in("estado", ["para_enviar", "enviada"]);
+    if ((data ?? []).length !== perguntas.length)
+      return {
+        ok: false,
+        mensagem: "Uma das perguntas não está mais na lista. Escolha de novo.",
+      };
+  }
+
+  const linhas = v.data.map((a, i) => {
+    const f = formatos[i]!;
+    const id = crypto.randomUUID();
+    return {
+      id,
+      book_id: c.livro.id,
+      origem: "upload" as const,
+      prompt_id: a.promptId,
+      titulo: a.titulo || null,
+      nome_arquivo: a.nome,
+      caminho: caminhoAudio(c.livro.id, id, f.ext),
+      content_type: f.contentType,
+      tamanho_bytes: a.tamanho,
+      duracao_s: a.duracaoS ? Math.max(1, Math.round(a.duracaoS)) : null,
+    };
+  });
+  // Sem .select(): a RLS só mostra áudio já recebido.
+  const { error } = await c.supabase.from("recordings").insert(linhas);
+  if (error) return falhou(error);
+
+  const preparados: AudioPreparado[] = [];
+  for (const l of linhas) {
+    const p = await assinarUpload(l.id, l.caminho, l.content_type);
+    if (!p) return falhou(null);
+    preparados.push(p);
+  }
+  return { ok: true, dados: preparados };
+}
+
+/** A linha "enviando" do livro (invisível para a sessão: lida com a chave secreta). */
+async function audioEnviando(c: Contexto, id: string) {
+  if (!uuid.safeParse(id).success) return null;
+  const { data } = await clienteAdmin()
+    .from("recordings")
+    .select("id, caminho, content_type, tamanho_bytes, prompt_id, upload")
+    .eq("id", id)
+    .eq("book_id", c.livro.id)
+    .maybeSingle();
+  if (!data || !audioDoLivro(data.caminho, c.livro.id, data.id)) return null;
+  return data;
+}
+
+/** Token novo para tentar de novo um upload que parou (o token vale 2 h). */
+export async function reassinarAudio(
+  livroId: string,
+  id: string,
+): Promise<Resposta<AudioPreparado>> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const a = await audioEnviando(c, id);
+  if (!a || a.upload !== "enviando")
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  const p = await assinarUpload(a.id, a.caminho, a.content_type);
+  return p ? { ok: true, dados: p } : falhou(null);
+}
+
+export async function confirmarAudio(
+  livroId: string,
+  id: string,
+): Promise<Resposta> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const a = await audioEnviando(c, id);
+  if (!a) return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  if (a.upload === "recebido") return { ok: true };
+
+  const admin = clienteAdmin();
+  const { data: info, error: erroInfo } = await admin.storage
+    .from("audios")
+    .info(a.caminho);
+  if (erroInfo || !info || Number(info.size) !== a.tamanho_bytes)
+    return {
+      ok: false,
+      mensagem: "O áudio não chegou inteiro. Tente de novo.",
+    };
+  const { data: ok, error } = await admin.rpc("servico_confirmar_audio", {
+    p_id: a.id,
+    p_tamanho_bytes: a.tamanho_bytes,
+  });
+  if (error || !ok) return falhou(error);
+  evento(c, "subiu_audio", {
+    recording: a.id,
+    com_pergunta: Boolean(a.prompt_id),
+  });
+  atualizar(livroId);
+  return { ok: true };
 }

@@ -1,5 +1,6 @@
 import "server-only";
 import type {
+  AcoesAudios,
   AcoesConfiguracao,
   AcoesFotos,
   AcoesKit,
@@ -36,5 +37,10 @@ export function acoesDoLivro(id: string) {
     pegarLinkDaFamilia: a.pegarLinkDaFamilia.bind(null, id),
     trocarLinkDaFamilia: a.trocarLinkDaFamilia.bind(null, id),
   };
-  return { configuracao, fotos, perguntas, kit };
+  const audios: AcoesAudios = {
+    prepararAudios: a.prepararAudios.bind(null, id),
+    reassinarAudio: a.reassinarAudio.bind(null, id),
+    confirmarAudio: a.confirmarAudio.bind(null, id),
+  };
+  return { configuracao, fotos, perguntas, kit, audios };
 }

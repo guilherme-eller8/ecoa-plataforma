@@ -470,14 +470,21 @@ describe("sugestão de pergunta", () => {
   });
 
   it("a página da família nunca devolve o celular do autor", async () => {
-    await db.query(`update public.books set autor_celular = '+5531999998888' where id = $1`, [livroA]);
+    await db.query(
+      `update public.books set autor_celular = '+5531999998888' where id = $1`,
+      [livroA],
+    );
     const p = await pagina(tokenA);
     expect(JSON.stringify(p)).not.toContain("99999");
   });
 
   it("celular fora do formato é recusado", async () => {
     const r = await como(db, "service_role", {}, (tx) =>
-      tenta(tx, `update public.books set autor_celular = '31 99999-8888' where id = $1`, [livroA]),
+      tenta(
+        tx,
+        `update public.books set autor_celular = '31 99999-8888' where id = $1`,
+        [livroA],
+      ),
     );
     expect(r.erro).toMatch(/autor_celular/);
   });

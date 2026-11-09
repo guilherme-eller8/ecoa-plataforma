@@ -10,6 +10,7 @@ import {
   enqueteDoLivro,
   livroDaTela,
   perguntasDoLivro,
+  totalDeAudios,
 } from "@/lib/livro/dados";
 
 export default function PaginaLivro({ params }: PageProps<"/livro/[id]">) {
@@ -36,10 +37,11 @@ async function Livro({ id }: { id: string }) {
     ),
   );
 
-  const [perguntas, causos, enquete] = await Promise.all([
+  const [perguntas, causos, enquete, audios] = await Promise.all([
     perguntasDoLivro(id),
     causosDoLivro(id),
     enqueteDoLivro(id),
+    totalDeAudios(id),
   ]);
   return (
     <TelaLivro
@@ -49,6 +51,7 @@ async function Livro({ id }: { id: string }) {
           .length,
         causosNovos: causos.filter((c) => c.estado === "novo").length,
         enqueteAberta: enquete?.estado === "aberta",
+        audios,
       }}
     />
   );

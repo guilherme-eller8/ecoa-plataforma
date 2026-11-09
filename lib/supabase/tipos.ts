@@ -528,6 +528,75 @@ export type Database = {
           },
         ];
       };
+      recordings: {
+        Row: {
+          book_id: string;
+          caminho: string;
+          content_type: string;
+          criado_em: string;
+          criado_por: string | null;
+          duracao_s: number | null;
+          id: string;
+          nome_arquivo: string;
+          origem: Database["public"]["Enums"]["recording_origem"];
+          processado_em: string | null;
+          prompt_id: string | null;
+          recebido_em: string | null;
+          tamanho_bytes: number;
+          titulo: string | null;
+          upload: Database["public"]["Enums"]["recording_upload"];
+        };
+        Insert: {
+          book_id: string;
+          caminho: string;
+          content_type: string;
+          criado_em?: string;
+          criado_por?: string | null;
+          duracao_s?: number | null;
+          id: string;
+          nome_arquivo: string;
+          origem?: Database["public"]["Enums"]["recording_origem"];
+          processado_em?: string | null;
+          prompt_id?: string | null;
+          recebido_em?: string | null;
+          tamanho_bytes: number;
+          titulo?: string | null;
+          upload?: Database["public"]["Enums"]["recording_upload"];
+        };
+        Update: {
+          book_id?: string;
+          caminho?: string;
+          content_type?: string;
+          criado_em?: string;
+          criado_por?: string | null;
+          duracao_s?: number | null;
+          id?: string;
+          nome_arquivo?: string;
+          origem?: Database["public"]["Enums"]["recording_origem"];
+          processado_em?: string | null;
+          prompt_id?: string | null;
+          recebido_em?: string | null;
+          tamanho_bytes?: number;
+          titulo?: string | null;
+          upload?: Database["public"]["Enums"]["recording_upload"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "recordings_book_id_fkey";
+            columns: ["book_id"];
+            isOneToOne: false;
+            referencedRelation: "books";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "recordings_book_id_prompt_id_fkey";
+            columns: ["book_id", "prompt_id"];
+            isOneToOne: false;
+            referencedRelation: "prompts";
+            referencedColumns: ["book_id", "id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -603,6 +672,10 @@ export type Database = {
         Args: { p_causo: string; p_token: string };
         Returns: string | null;
       };
+      servico_confirmar_audio: {
+        Args: { p_id: string; p_tamanho_bytes: number };
+        Returns: boolean;
+      };
       servico_confirmar_audio_causo: {
         Args: { p_causo: string; p_duracao_s: number; p_token: string };
         Returns: boolean;
@@ -634,6 +707,8 @@ export type Database = {
       prompt_estado: "para_enviar" | "enviada" | "respondida" | "pulada";
       prompt_origem: "banco" | "propria" | "causo" | "enquete";
       prompt_tipo: "pergunta" | "causo";
+      recording_origem: "autor" | "livre" | "conversa" | "upload" | "lote";
+      recording_upload: "enviando" | "recebido";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -651,6 +726,8 @@ export type PromptOrigem = Enums["prompt_origem"];
 export type PromptEstado = Enums["prompt_estado"];
 export type CausoEstado = Enums["causo_estado"];
 export type EnqueteEstado = Enums["enquete_estado"];
+export type RecordingOrigem = Enums["recording_origem"];
+export type RecordingUpload = Enums["recording_upload"];
 
 export const PARENTESCOS: readonly Parentesco[] = [
   "pai",

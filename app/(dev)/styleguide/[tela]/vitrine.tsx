@@ -1,6 +1,15 @@
 "use client";
 
 import { TelaAdmin } from "@/components/telas/tela-admin";
+import { TelaAudios } from "@/components/telas/tela-audios";
+import { TelaNovaHistoria } from "@/components/telas/tela-nova-historia";
+import {
+  ACOES_AUDIOS_FALSAS,
+  AUDIOS_JAIR,
+  ENVIAR_FALSO,
+  itensDeExemplo,
+  PERGUNTAS_PENDENTES,
+} from "@/lib/exemplos/prompt5a";
 import { TelaConfirmar } from "@/components/telas/tela-confirmar";
 import { TelaEntrar } from "@/components/telas/tela-entrar";
 import {
@@ -36,6 +45,21 @@ const nada = async () => {};
 
 export function Vitrine({ tela }: { tela: Tela }) {
   switch (tela) {
+    case "nova-historia":
+    case "nova-historia-arquivos":
+      return (
+        <TelaNovaHistoria
+          livro={LIVRO_JAIR}
+          perguntas={PERGUNTAS_PENDENTES}
+          acoes={ACOES_AUDIOS_FALSAS}
+          enviarArquivo={ENVIAR_FALSO}
+          inicial={tela === "nova-historia" ? [] : itensDeExemplo()}
+        />
+      );
+    case "audios":
+      return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_JAIR} />;
+    case "audios-vazia":
+      return <TelaAudios livro={LIVRO_JAIR} audios={[]} />;
     case "entrar":
       return <TelaEntrar pedirLink={acaoFalsa} entrarComGoogle={nada} />;
     case "entrar-email":
@@ -57,14 +81,24 @@ export function Vitrine({ tela }: { tela: Tela }) {
       return (
         <TelaLivro
           livro={LIVRO_JAIR}
-          resumo={{ paraPerguntar: 4, causosNovos: 1, enqueteAberta: true }}
+          resumo={{
+            paraPerguntar: 4,
+            causosNovos: 1,
+            enqueteAberta: true,
+            audios: 3,
+          }}
         />
       );
     case "livro-somente-leitura":
       return (
         <TelaLivro
           livro={{ ...LIVRO_JAIR, podeEscrever: false }}
-          resumo={{ paraPerguntar: 4, causosNovos: 0, enqueteAberta: false }}
+          resumo={{
+            paraPerguntar: 4,
+            causosNovos: 0,
+            enqueteAberta: false,
+            audios: 0,
+          }}
         />
       );
     case "admin":
