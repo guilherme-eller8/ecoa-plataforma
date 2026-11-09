@@ -1,3 +1,5 @@
+> **Histórico.** A fonte da verdade das decisões agora é `docs/decisoes.md`. Este arquivo guarda o raciocínio das decisões até o prompt 4 e não recebe mais entradas.
+
 # Decisões de produto e arquitetura (com o porquê)
 
 Data: 2026-11-09 · Status: **registro**. O `docs/prd.md` continua sendo a fonte da verdade do que construir; este arquivo guarda **por que** cada decisão foi tomada e **o que se perde** com ela. Se um prompt contradisser algo aqui, pare e pergunte antes de seguir.

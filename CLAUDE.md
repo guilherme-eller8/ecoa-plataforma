@@ -2,7 +2,7 @@
 
 @AGENTS.md
 
-Antes de qualquer tarefa, leia as seções de `docs/prd.md` citadas no prompt. O PRD é a fonte da verdade; este arquivo só guarda as regras que valem sempre. O porquê das decisões de produto e arquitetura (e o que se perde com cada uma) está em `docs/decisoes/produto-e-arquitetura.md`: leia antes de propor mudar algo ali.
+Antes de qualquer tarefa, leia as seções de `docs/prd.md` citadas no prompt. O PRD é a fonte da verdade; este arquivo só guarda as regras que valem sempre. Leia `docs/decisoes.md` antes de propor qualquer mudança de produto ou de arquitetura. Se uma tarefa contrariar uma decisão de lá, pare e pergunte. Toda decisão nova aprovada entra no fim da tabela correspondente, com data e motivo; a antiga ganha "Substituída por #N" e nunca é apagada.
 
 ## Produto
 
@@ -49,5 +49,7 @@ EGM artifact directory: docs/designs
 1. Build de produção rodando (`npm run build && npm run start`).
 2. `npm run taste:lint` e `npm run taste:inspect` (390, 768 e 1440 px).
 3. Corrigir todo FAIL, criticar as screenshots e corrigir os 3 maiores problemas, em no máximo 3 rodadas.
+
+Toda tela nova tem estado vazio (uma frase e um botão) e, se tiver um gesto não óbvio, uma dica de primeira vez de no máximo 1 linha.
 
 Régua: um avô de 80 anos e um filho com pressa entendem cada tela em 3 segundos. Uma ação principal por tela, poucas palavras, celular primeiro. Conteúdo do livro em Newsreader (`font-livro`) e interface na fonte do sistema (`font-ui`). A skill `.claude/skills/design-taste-frontend` é de terceiros: não editar.
