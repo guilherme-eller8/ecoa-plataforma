@@ -22,7 +22,7 @@ Next.js 16.4.3 (App Router, `cacheComponents`), TypeScript strict, Tailwind 4, z
 ## Segurança (inegociável)
 
 - **RLS em toda tabela**, sem exceção, com teste automático de isolamento entre livros.
-- **Tokens de link só como hash** (128 bits aleatórios, um recurso por link, revogável). Nunca o token puro no banco, nem nome de pessoa na URL.
+- **Tokens de link só como hash** (imprevisíveis, com 128 bits ou mais, um recurso por link, revogáveis). Nunca o token puro no banco, nem nome de pessoa na URL. O link que precisa ser mostrado de novo é derivado por HMAC de um segredo versionado (`LINKS_SEGREDO_V{n}`); nunca edite o valor de uma versão, crie outra.
 - **O token do autor nunca lê `family_messages`** nem o capítulo de mensagens. Garantido por RLS e por teste, não só pela tela.
 - **Segredos só em `.env.local`** e nas variáveis da Vercel. Nunca no código, em logs, no commit ou com o prefixo `NEXT_PUBLIC_`.
 - Áudio original, `qr_codes` e `book_exports` nunca são apagados por ação comum do usuário.
