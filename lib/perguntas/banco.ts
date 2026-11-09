@@ -1,4 +1,5 @@
 // Banco de perguntas: supabase/seed/perguntas.json (rascunho em revisão humana).
+// Os temas são as fases da vida, em ordem cronológica.
 // Validado ao importar: um JSON quebrado derruba o build, não a tela.
 import { z } from "zod";
 import { PERGUNTAS_INICIAIS } from "@/lib/config";
@@ -45,7 +46,14 @@ const esquema = z
     for (const p of b.perguntas)
       if (!temas.has(p.tema))
         ctx.addIssue({ code: "custom", message: `tema desconhecido: ${p.id}` });
-    for (const [parentesco, lista] of Object.entries(b.iniciais))
+    const ordemDasFases = b.temas.map((t) => t.id).join(",");
+    for (const [parentesco, lista] of Object.entries(b.iniciais)) {
+      const fases = lista.map((id) => ids.get(id)?.tema).join(",");
+      if (fases !== ordemDasFases)
+        ctx.addIssue({
+          code: "custom",
+          message: `${parentesco}: as iniciais precisam ter 1 por fase, na ordem`,
+        });
       for (const id of lista) {
         const p = ids.get(id);
         if (!p)
@@ -59,6 +67,7 @@ const esquema = z
             message: `${parentesco}: ${id} é de fé`,
           });
       }
+    }
   });
 
 const banco = esquema.parse(json);
@@ -86,7 +95,7 @@ export function perguntasDoTema(
   );
 }
 
-/** As 10 iniciais do parentesco; sem parentesco, as de "outro". */
+/** As iniciais do parentesco, 1 por fase da vida; sem parentesco, as de "outro". */
 export function iniciaisDo(
   parentesco: Parentesco | null | undefined,
 ): PerguntaDoBanco[] {

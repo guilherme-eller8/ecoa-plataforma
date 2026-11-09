@@ -1,19 +1,19 @@
 {
   "status": "rascunho",
   "revisado_por": null,
-  "nota": "Rascunho para revisão humana (tia Caia). Ids estáveis: a revisão pode mudar o texto, nunca o id. 'fe' marca as perguntas de fé, que ficam fora das 10 iniciais. Origem: 127 perguntas do banco 'Cronológico + Fé Reformada' e 23 novas neutras. As perguntas legado-04, legado-10, legado-20 e legado-25 não tinham a marca Fé & Aliança no anexo, mas usam vocabulário religioso (milagre, caminhada com Deus, mordomia, oração); ficaram marcadas como fé para o filtro. Conferir na revisão.",
+  "nota": "Rascunho para revisão humana (tia Caia). Ids estáveis: a revisão pode mudar o texto, nunca o id. Temas = fases da vida, em ordem cronológica. Iniciais: 1 pergunta por fase, por parentesco. 'fe' marca as perguntas de fé, que ficam fora das iniciais. Origem: 127 perguntas do banco 'Cronológico + Fé Reformada' e 23 novas neutras. As perguntas legado-04, legado-10, legado-20 e legado-25 não tinham a marca Fé & Aliança no anexo, mas usam vocabulário religioso (milagre, caminhada com Deus, mordomia, oração); ficaram marcadas como fé para o filtro. Conferir na revisão.",
   "temas": [
     {
       "id": "raizes",
-      "nome": "Pais, raízes e origens"
+      "nome": "Família e raízes"
     },
     {
       "id": "infancia",
-      "nome": "Infância e brincadeiras"
+      "nome": "Infância"
     },
     {
       "id": "estudos",
-      "nome": "Primeiros estudos"
+      "nome": "Escola"
     },
     {
       "id": "juventude",
@@ -21,7 +21,7 @@
     },
     {
       "id": "trabalho",
-      "nome": "Trabalho e vocação"
+      "nome": "Trabalho"
     },
     {
       "id": "amor",
@@ -29,11 +29,11 @@
     },
     {
       "id": "filhos",
-      "nome": "Filhos e família"
+      "nome": "Filhos"
     },
     {
       "id": "legado",
-      "nome": "Celebrações e legado"
+      "nome": "Maturidade e legado"
     }
   ],
   "perguntas": [
@@ -940,88 +940,74 @@
   ],
   "iniciais": {
     "pai": [
-      "raizes-01",
       "raizes-04",
-      "infancia-01",
-      "infancia-03",
-      "juventude-08",
-      "trabalho-01",
-      "trabalho-04",
-      "amor-01",
-      "filhos-02",
-      "legado-24"
-    ],
-    "mae": [
-      "raizes-01",
-      "raizes-09",
-      "infancia-01",
-      "infancia-10",
-      "juventude-04",
-      "trabalho-01",
-      "amor-02",
-      "filhos-01",
-      "filhos-05",
-      "legado-18"
-    ],
-    "avo": [
-      "raizes-02",
-      "raizes-05",
-      "infancia-01",
-      "juventude-07",
-      "trabalho-01",
-      "amor-01",
-      "filhos-02",
-      "filhos-11",
-      "legado-12",
-      "legado-21"
-    ],
-    "avoa": [
-      "raizes-03",
-      "raizes-09",
-      "infancia-07",
-      "juventude-04",
-      "amor-03",
-      "filhos-01",
-      "filhos-11",
-      "legado-01",
-      "legado-18",
-      "legado-23"
-    ],
-    "tio": [
-      "raizes-06",
-      "infancia-02",
-      "infancia-03",
-      "juventude-06",
-      "juventude-12",
-      "trabalho-01",
-      "trabalho-07",
-      "amor-01",
-      "legado-08",
-      "legado-24"
-    ],
-    "tia": [
-      "raizes-06",
-      "raizes-09",
-      "infancia-07",
-      "juventude-02",
-      "juventude-04",
-      "trabalho-01",
-      "amor-03",
-      "legado-08",
-      "legado-15",
-      "legado-24"
-    ],
-    "outro": [
-      "raizes-01",
-      "raizes-02",
       "infancia-01",
       "estudos-02",
       "juventude-08",
       "trabalho-01",
       "amor-01",
-      "legado-02",
-      "legado-14",
+      "filhos-02",
       "legado-24"
+    ],
+    "mae": [
+      "raizes-09",
+      "infancia-10",
+      "estudos-02",
+      "juventude-04",
+      "trabalho-01",
+      "amor-02",
+      "filhos-01",
+      "legado-18"
+    ],
+    "avo": [
+      "raizes-05",
+      "infancia-01",
+      "estudos-01",
+      "juventude-07",
+      "trabalho-01",
+      "amor-01",
+      "filhos-11",
+      "legado-21"
+    ],
+    "avoa": [
+      "raizes-03",
+      "infancia-07",
+      "estudos-04",
+      "juventude-04",
+      "trabalho-05",
+      "amor-03",
+      "filhos-11",
+      "legado-23"
+    ],
+    "tio": [
+      "raizes-06",
+      "infancia-03",
+      "estudos-03",
+      "juventude-06",
+      "trabalho-07",
+      "amor-01",
+      "filhos-05",
+      "legado-08"
+    ],
+    "tia": [
+      "raizes-06",
+      "infancia-07",
+      "estudos-02",
+      "juventude-02",
+      "trabalho-01",
+      "amor-03",
+      "filhos-05",
+      "legado-15"
+    ],
+    "outro": [
+      "raizes-01",
+      "infancia-01",
+      "estudos-02",
+      "juventude-08",
+      "trabalho-01",
+      "amor-01",
+      "filhos-02",
+      "legado-14"
     ]
   }
 }

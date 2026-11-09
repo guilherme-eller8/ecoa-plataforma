@@ -38,6 +38,7 @@ import type {
   Resposta,
 } from "@/lib/livro/tipos";
 import { perguntaPorId } from "@/lib/perguntas/banco";
+import { normalizarCelular } from "@/lib/telefone";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import {
@@ -109,6 +110,7 @@ function atualizar(livroId: string) {
 const esquemaQuem = z.object({
   nome: z.string().trim().min(1, "Escreva o nome.").max(120),
   apelido: z.string().trim().max(60),
+  celular: z.string().max(30),
   parentesco: z.enum(PARENTESCOS as [Parentesco, ...Parentesco[]]).nullable(),
 });
 
@@ -127,7 +129,12 @@ async function gravarConfiguracao(
 
 export async function salvarQuem(
   livroId: string,
-  dados: { nome: string; apelido: string; parentesco: Parentesco | null },
+  dados: {
+    nome: string;
+    apelido: string;
+    celular: string;
+    parentesco: Parentesco | null;
+  },
 ): Promise<Resposta> {
   const c = await paraEscrever(livroId);
   if (ehErro(c)) return c;
@@ -137,12 +144,16 @@ export async function salvarQuem(
       ok: false,
       mensagem: v.error.issues[0]?.message ?? "Confira o nome.",
     };
+  const celular = normalizarCelular(v.data.celular);
+  if (celular === undefined)
+    return { ok: false, mensagem: "Confira o celular: DDD e número." };
   const configuracao = marcar(configuracaoDo(c.livro), "quem", "feito") as Json;
   const { data, error } = await c.supabase
     .from("books")
     .update({
       autor_nome: v.data.nome,
       autor_apelido: v.data.apelido || null,
+      autor_celular: celular,
       autor_parentesco: v.data.parentesco,
       configuracao,
     })
@@ -431,9 +442,16 @@ export async function virarPergunta(
     };
   const c = await paraEscrever(livroId);
   if (ehErro(c)) return c;
+  const { data: sugestao } = await c.supabase
+    .from("causos")
+    .select("tipo")
+    .eq("id", v.data.causo)
+    .eq("book_id", c.livro.id)
+    .maybeSingle();
+  if (!sugestao) return { ok: false, mensagem: "Sugestão não encontrada." };
   const { error } = await c.supabase.from("prompts").insert({
     book_id: c.livro.id,
-    tipo: "causo",
+    tipo: sugestao.tipo,
     texto: v.data.texto,
     origem: "causo",
     causo_id: v.data.causo,
@@ -449,11 +467,19 @@ export async function virarPergunta(
   return { ok: true };
 }
 
-/** Texto do candidato a partir do causo: o texto dele (até 500) ou o pedido de quem sugeriu. */
-function textoDoCauso(c: { nome: string; texto: string | null }) {
+/** Texto do candidato a partir da sugestão: o texto dela (até 500) ou um pedido pelo áudio. */
+function textoDoCauso(c: {
+  nome: string;
+  texto: string | null;
+  tipo: "pergunta" | "causo";
+}) {
   const t = c.texto?.trim();
   if (t && t.length >= 3) return t.slice(0, TEXTO_PERGUNTA_MAX);
-  return `Conte a história que ${c.nome} pediu.`.slice(0, TEXTO_PERGUNTA_MAX);
+  return (
+    c.tipo === "pergunta"
+      ? `Pergunta de ${c.nome} (ouça o áudio).`
+      : `Conte a história que ${c.nome} pediu.`
+  ).slice(0, TEXTO_PERGUNTA_MAX);
 }
 
 export async function porNaEnquete(
@@ -467,7 +493,7 @@ export async function porNaEnquete(
   const [{ data: dados }, { data: aberta }] = await Promise.all([
     c.supabase
       .from("causos")
-      .select("id, nome, texto")
+      .select("id, nome, texto, tipo")
       .eq("id", causo)
       .eq("book_id", c.livro.id)
       .maybeSingle(),
@@ -482,7 +508,11 @@ export async function porNaEnquete(
   if (!aberta) return { ok: true, dados: { adicionado: false } }; // a tela abre "Nova enquete"
   const { error } = await c.supabase.rpc("enquete_adicionar_item", {
     p_enquete: aberta.id,
-    p_item: { texto: textoDoCauso(dados), tipo: "causo", causo_id: dados.id },
+    p_item: {
+      texto: textoDoCauso(dados),
+      tipo: dados.tipo,
+      causo_id: dados.id,
+    },
   });
   if (error) return falhou(error);
   atualizar(livroId);

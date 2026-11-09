@@ -139,10 +139,7 @@ export default function AreaDoAutor() {
             </h2>
             <ul className="flex flex-col">
               {outrasPerguntas.map((p) => (
-                <li
-                  key={p.id}
-                  className="py-1"
-                >
+                <li key={p.id} className="py-1">
                   <a
                     href="#"
                     className="min-h-alvo-autor font-livro text-livro-20 text-tinta hover:text-floresta flex items-center py-3"

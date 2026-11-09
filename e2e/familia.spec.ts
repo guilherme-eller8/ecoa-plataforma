@@ -20,6 +20,7 @@ test.describe("link da família (exemplo)", () => {
   });
 
   test("sugerir causo por texto exige o consentimento", async ({ page }) => {
+    // A família escolhe entre pergunta e causo; o causo vem marcado.
     await page.goto("/styleguide/familia-causo");
     await page.getByLabel("Seu nome").fill("Ana");
     await page.getByRole("radio", { name: "Escrever" }).click();
@@ -31,7 +32,24 @@ test.describe("link da família (exemplo)", () => {
     await page.getByRole("checkbox").check();
     await expect(enviar).toBeEnabled();
     await enviar.click();
-    await expect(page.getByText("Obrigado! Seu causo chegou.")).toBeVisible();
+    await expect(
+      page.getByText("Obrigado! Sua sugestão chegou."),
+    ).toBeVisible();
+  });
+
+  test("a família também sugere uma pergunta", async ({ page }) => {
+    await page.goto("/styleguide/familia-causo");
+    await page.getByRole("radio", { name: "Uma pergunta para ele" }).click();
+    await page.getByLabel("Seu nome").fill("Bia");
+    await page.getByRole("radio", { name: "Escrever" }).click();
+    await page
+      .getByLabel("A pergunta")
+      .fill("Como foi chegar em Belo Horizonte?");
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: "Enviar" }).click();
+    await expect(
+      page.getByText("Obrigado! Sua sugestão chegou."),
+    ).toBeVisible();
   });
 
   test("sem rolagem lateral no celular", async ({ page }) => {

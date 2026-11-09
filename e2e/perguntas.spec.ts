@@ -15,7 +15,7 @@ test.describe("tela Perguntas (exemplo)", () => {
       .getByRole("link", { name: /Enviar ao Vô Jair/ })
       .first();
     const href = await enviar.getAttribute("href");
-    expect(href).toMatch(/^https:\/\/wa\.me\/\?text=/);
+    expect(href).toMatch(/^https:\/\/wa\.me\/\d*\?text=/);
     expect(decodeURIComponent(href!.split("text=")[1])).toContain("Vô Jair");
   });
 
@@ -45,13 +45,15 @@ test.describe("tela Perguntas (exemplo)", () => {
     ).toBeVisible();
   });
 
-  test("causos chegam com Virar pergunta", async ({ page }) => {
+  test("sugestões chegam com Pôr na lista, marcadas Pergunta ou Causo", async ({
+    page,
+  }) => {
     await page.goto("/styleguide/perguntas-causos");
     await expect(
       page.locator("p", { hasText: /Rural atolou na estrada/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Virar pergunta" }).first(),
+      page.getByRole("button", { name: "Pôr na lista" }).first(),
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /Ouvir/ })).toBeVisible();
   });
@@ -64,7 +66,7 @@ test.describe("tela Perguntas (exemplo)", () => {
     await expect(links).toHaveCount(2);
     for (const l of await links.all())
       expect(await l.getAttribute("href")).toMatch(
-        /^https:\/\/wa\.me\/\?text=/,
+        /^https:\/\/wa\.me\/\d*\?text=/,
       );
   });
 });

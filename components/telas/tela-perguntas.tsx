@@ -1,7 +1,7 @@
 "use client";
 
 // Tela Perguntas: a base do livro. Cada pergunta pode ser enviada ao autor ou, a partir do
-// prompt 5, gravada ao vivo. Abas: Para perguntar · Enviadas · Respondidas · Causos · Enquete.
+// prompt 5, gravada ao vivo. Abas: Para perguntar · Enviadas · Respondidas · Sugestões · Enquete.
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
@@ -138,6 +138,7 @@ function CartaoPergunta({
                     pergunta: p.texto,
                     link: linkAutor,
                   }),
+                  livro.autorCelular,
                 )}
                 target="_blank"
                 rel="noreferrer"
@@ -405,12 +406,12 @@ function FolhaAdicionar({
   );
 }
 
-// ── Causos ───────────────────────────────────────────────────────────────
+// ── Sugestões da família (perguntas e causos) ────────────────────────────
 
 const ESTADO_DO_CAUSO: Record<CausoDaTela["estado"], string | null> = {
   novo: null,
   na_enquete: "Na enquete",
-  virou_pergunta: "Virou pergunta",
+  virou_pergunta: "Na lista",
   arquivado: "Arquivado",
 };
 
@@ -418,7 +419,9 @@ function textoSugerido(c: CausoDaTela) {
   const t = c.texto?.trim();
   return t && t.length >= 3
     ? t.slice(0, TEXTO_PERGUNTA_MAX)
-    : `Conte a história que ${c.nome} pediu.`;
+    : c.tipo === "pergunta"
+      ? `Pergunta de ${c.nome} (ouça o áudio).`
+      : `Conte a história que ${c.nome} pediu.`;
 }
 
 function CartaoCauso({
@@ -437,7 +440,7 @@ function CartaoCauso({
   const [url, setUrl] = useState<string | null>(null);
   const [virar, setVirar] = useState(false);
   const [texto, setTexto] = useState({
-    tipo: "causo" as PromptTipo,
+    tipo: c.tipo as PromptTipo,
     texto: textoSugerido(c),
   });
   const { pendente, erro, rodar } = useAcao();
@@ -450,6 +453,7 @@ function CartaoCauso({
   return (
     <li className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-4">
       <p className="text-ui-15 text-tinta-2">
+        <Etiqueta>{c.tipo === "pergunta" ? "Pergunta" : "Causo"}</Etiqueta>{" "}
         <span className="text-tinta font-medium">{c.nome}</span> · {quando}
         {estado ? (
           <span className="ml-2">
@@ -493,7 +497,7 @@ function CartaoCauso({
       {livro.podeEscrever && c.estado !== "virou_pergunta" ? (
         <div className="flex flex-wrap gap-2">
           <Botao variante="secundario" onClick={() => setVirar(true)}>
-            Virar pergunta
+            Pôr na lista
           </Botao>
           {c.estado === "novo" ? (
             <Botao variante="texto" onClick={() => aoPorNaEnquete(c)}>
@@ -506,7 +510,7 @@ function CartaoCauso({
       <FolhaInferior
         aberta={virar}
         aoFechar={() => setVirar(false)}
-        titulo="Virar pergunta"
+        titulo="Pôr na lista"
       >
         <EscreverPergunta
           valor={texto}
@@ -572,7 +576,7 @@ function NovaEnquete({
         const c = causos.find((x) => x.id === id)!;
         return {
           texto: textoSugerido(c),
-          tipo: "causo" as const,
+          tipo: c.tipo,
           causo_id: id,
         };
       }),
@@ -590,7 +594,7 @@ function NovaEnquete({
       {disponiveis.length ? (
         <fieldset className="flex flex-col gap-2">
           <legend className="text-ui-17 text-tinta mb-2 font-medium">
-            Causos da família
+            Sugestões da família
           </legend>
           {disponiveis.map((c) => (
             <label
@@ -941,7 +945,7 @@ export function TelaPerguntas({
         <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           Perguntas
         </h1>
-        {/* Uma ação principal por tela: Adicionar só na lista; Causos e Enquete têm a sua. */}
+        {/* Uma ação principal por tela: Adicionar só na lista; Sugestões e Enquete têm a sua. */}
         {escrever && aba === "perguntar" && paraPerguntar.length > 0 ? (
           <Botao onClick={() => setAdicionar(true)}>Adicionar</Botao>
         ) : null}
@@ -1009,7 +1013,7 @@ export function TelaPerguntas({
           },
           {
             id: "causos",
-            rotulo: "Causos",
+            rotulo: "Sugestões",
             contagem: causosNovos || undefined,
             conteudo: causos.length ? (
               <ul className="flex flex-col gap-3">
@@ -1026,7 +1030,7 @@ export function TelaPerguntas({
               </ul>
             ) : (
               <EstadoVazio
-                frase="Os causos que a família sugerir chegam aqui."
+                frase="As perguntas e os causos que a família sugerir chegam aqui."
                 acao={
                   <Link
                     href={`/livro/${livro.id}/kit`}

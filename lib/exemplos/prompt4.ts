@@ -18,6 +18,7 @@ export const LIVRO_JAIR: LivroDaTela = {
   autor: "Vô Jair",
   autorNome: "Jair",
   autorApelido: "Vô Jair",
+  autorCelular: "+5531999998888",
   parentesco: "avo",
   fotoAutorUrl: null,
   configuracao: { quem: "feito", perguntas: "feito", fotos: "depois" },
@@ -28,6 +29,7 @@ export const LIVRO_NOVO: LivroDaTela = {
   ...LIVRO_JAIR,
   autor: "Jair",
   autorApelido: null,
+  autorCelular: null,
   parentesco: null,
   configuracao: {},
 };
@@ -72,7 +74,18 @@ export const PERGUNTAS_JAIR: PerguntaDaTela[] = [
 
 export const CAUSOS_JAIR: CausoDaTela[] = [
   {
+    id: "00000000-0000-4000-8000-000000000203",
+    tipo: "pergunta",
+    nome: "Bia",
+    texto: "Como foi o dia em que você chegou em Belo Horizonte?",
+    temAudio: false,
+    duracaoS: null,
+    estado: "novo",
+    criadoEm: "2026-11-10T09:00:00Z",
+  },
+  {
     id: "00000000-0000-4000-8000-000000000201",
+    tipo: "causo",
     nome: "Ana",
     texto: null,
     temAudio: true,
@@ -82,6 +95,7 @@ export const CAUSOS_JAIR: CausoDaTela[] = [
   },
   {
     id: "00000000-0000-4000-8000-000000000202",
+    tipo: "causo",
     nome: "Marcos",
     texto:
       "Pede pra ele contar do dia em que a Rural atolou na estrada de terra a caminho de Sete Lagoas.",

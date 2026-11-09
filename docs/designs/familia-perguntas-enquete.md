@@ -1488,3 +1488,15 @@ drop role if exists porta_autor;
 ---
 
 _Rascunhado com EGM_
+
+## Depois do aceite (11/11/2026)
+
+O Guilherme testou no celular e pediu 4 mudanças, todas aprovadas antes do código:
+
+| Pedido | Decisão | Onde |
+| --- | --- | --- |
+| As 10 perguntas pré-marcadas parecem aleatórias | O passo 2 mostra as perguntas **por fase da vida** (8 fases, em ordem cronológica), com 1 marcada por fase (8 no total, por parentesco). *Ver mais* abre a fase; a sugestão desmarcada continua visível | `perguntas.json` (nomes das fases e `iniciais` com 1 por fase), `PERGUNTAS_INICIAIS = 8`, `ConfigurarPerguntas` |
+| Sem o celular do autor, não há mensagem direta | Campo opcional *Celular do …* no passo 1 (`books.autor_celular`, formato `+55…`, só membros leem). Com ele, *Enviar ao autor* abre `wa.me/<número>`; sem ele, o WhatsApp pede o contato e o kit mostra "Pôr o celular" | migration `20261111120000`, `lib/telefone.ts`, `lib/whatsapp.ts` |
+| O link na mensagem ao autor não é clicável | O texto dos cartões do kit mostra os links como links | `partesComLinks`, `tela-kit.tsx` |
+| A família também deve sugerir perguntas | *Sugerir pergunta ou causo* no link da família (`causos.tipo`); chega na aba **Sugestões**, onde o responsável põe na lista ou na enquete. A sugestão não entra sozinha na enquete: o responsável faz a curadoria | migration `20261111120000` (`familia_enviar_causo` com `p_tipo`), `tela-familia.tsx`, `tela-perguntas.tsx` |
+

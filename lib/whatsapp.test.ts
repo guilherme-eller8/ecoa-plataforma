@@ -4,6 +4,7 @@ import {
   linkWhatsApp,
   mensagemAoAutor,
   mensagemPergunta,
+  partesComLinks,
 } from "./whatsapp";
 
 describe("mensagens do WhatsApp", () => {
@@ -32,5 +33,20 @@ describe("mensagens do WhatsApp", () => {
     });
     expect(m).toContain('"Como era a casa?"');
     expect(m).toContain("https://x/a/1");
+  });
+
+  it("com celular, abre a conversa direto", () => {
+    expect(linkWhatsApp("oi", "+5531999998888")).toBe(
+      "https://wa.me/5531999998888?text=oi",
+    );
+    expect(linkWhatsApp("oi", null)).toBe("https://wa.me/?text=oi");
+  });
+
+  it("separa os links do texto", () => {
+    expect(partesComLinks("Veja:\nhttps://x.com/f/v1_a e pronto")).toEqual([
+      { texto: "Veja:\n", link: false },
+      { texto: "https://x.com/f/v1_a", link: true },
+      { texto: " e pronto", link: false },
+    ]);
   });
 });

@@ -7,7 +7,12 @@ import { useState, useTransition } from "react";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import { IconeEnviar } from "@/components/ui/icones";
 import type { AcoesKit, LivroDaTela } from "@/lib/livro/tipos";
-import { conviteDoGrupo, linkWhatsApp, mensagemAoAutor } from "@/lib/whatsapp";
+import {
+  conviteDoGrupo,
+  linkWhatsApp,
+  mensagemAoAutor,
+  partesComLinks,
+} from "@/lib/whatsapp";
 
 function Copiar({ texto }: { texto: string }) {
   const [copiado, setCopiado] = useState(false);
@@ -34,21 +39,39 @@ function Cartao({
   texto,
   enviar,
   secundario = false,
+  celular,
+  rodape,
 }: {
   titulo: string;
   texto: string;
   enviar: string;
   secundario?: boolean;
+  celular?: string | null;
+  rodape?: React.ReactNode;
 }) {
   return (
     <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
       <h2 className="text-ui-20 text-tinta font-medium">{titulo}</h2>
       <p className="font-livro text-livro-20 text-tinta [overflow-wrap:anywhere] whitespace-pre-line">
-        {texto}
+        {partesComLinks(texto).map((parte, i) =>
+          parte.link ? (
+            <a
+              key={i}
+              href={parte.texto}
+              target="_blank"
+              rel="noreferrer"
+              className="text-floresta underline underline-offset-4"
+            >
+              {parte.texto}
+            </a>
+          ) : (
+            <span key={i}>{parte.texto}</span>
+          ),
+        )}
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <a
-          href={linkWhatsApp(texto)}
+          href={linkWhatsApp(texto, celular)}
           target="_blank"
           rel="noreferrer"
           className={classesDoBotao({
@@ -60,6 +83,7 @@ function Cartao({
         </a>
         <Copiar texto={texto} />
       </div>
+      {rodape}
     </section>
   );
 }
@@ -135,6 +159,17 @@ export function TelaKit({
         texto={mensagemAoAutor({ autor: livro.autor, link: linkAutor })}
         enviar={`Enviar ao ${livro.autor}`}
         secundario
+        celular={livro.autorCelular}
+        rodape={
+          livro.autorCelular ? null : (
+            <Link
+              href={`/livro/${livro.id}/configurar/quem`}
+              className="text-ui-15 text-tinta-2 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
+            >
+              Sem o celular, o WhatsApp pede o contato. Pôr o celular
+            </Link>
+          )
+        }
       />
 
       {erro ? (

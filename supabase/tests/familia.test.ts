@@ -448,6 +448,41 @@ describe("causos", () => {
   });
 });
 
+describe("sugestão de pergunta", () => {
+  it("entra com tipo pergunta; sem tipo, é causo", async () => {
+    const r = await anon(async (tx) => {
+      const q = await tx.query<{ r: { id: string } }>(
+        `select public.familia_enviar_causo($1, 'Bia', 'Como foi o dia do casamento?', null, true, 1::smallint, 'pergunta') as r`,
+        [tokenA],
+      );
+      return q.rows[0].r;
+    });
+    const tipos = await db.query<{ tipo: string }>(
+      `select tipo from public.causos where id = $1`,
+      [r.id],
+    );
+    expect(tipos.rows[0].tipo).toBe("pergunta");
+    const padrao = await db.query<{ n: number }>(
+      `select count(*)::int as n from public.causos where tipo = 'causo' and book_id = $1`,
+      [livroA],
+    );
+    expect(padrao.rows[0].n).toBeGreaterThan(0);
+  });
+
+  it("a página da família nunca devolve o celular do autor", async () => {
+    await db.query(`update public.books set autor_celular = '+5531999998888' where id = $1`, [livroA]);
+    const p = await pagina(tokenA);
+    expect(JSON.stringify(p)).not.toContain("99999");
+  });
+
+  it("celular fora do formato é recusado", async () => {
+    const r = await como(db, "service_role", {}, (tx) =>
+      tenta(tx, `update public.books set autor_celular = '31 99999-8888' where id = $1`, [livroA]),
+    );
+    expect(r.erro).toMatch(/autor_celular/);
+  });
+});
+
 describe("link da família", () => {
   it("quem não é membro não troca o link", async () => {
     const r = await como(db, "service_role", {}, (tx) =>

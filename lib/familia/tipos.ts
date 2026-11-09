@@ -29,6 +29,7 @@ export type AcoesFamilia = {
     itens: string[],
   ) => Promise<{ ok: true } | { ok: false; mensagem: string }>;
   enviarCauso: (dados: {
+    tipo: "pergunta" | "causo";
     nome: string;
     texto: string | null;
     audio: { mime: string } | null;

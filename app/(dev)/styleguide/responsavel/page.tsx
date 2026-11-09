@@ -278,10 +278,7 @@ export default function HomeResponsavel() {
             </p>
             <ul className="flex flex-col">
               {causos.map((c) => (
-                <li
-                  key={c.id}
-                  className="flex flex-col gap-2 py-4 first:pt-0"
-                >
+                <li key={c.id} className="flex flex-col gap-2 py-4 first:pt-0">
                   <p className="text-ui-15 text-tinta-2">
                     {c.quem}, {c.relacao}
                   </p>
@@ -321,10 +318,7 @@ export default function HomeResponsavel() {
             </h2>
             <ul className="flex flex-col">
               {enviadas.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex flex-col gap-1 py-4 first:pt-0"
-                >
+                <li key={p.id} className="flex flex-col gap-1 py-4 first:pt-0">
                   <p className="font-livro text-livro-20 text-tinta">
                     {p.texto}
                   </p>

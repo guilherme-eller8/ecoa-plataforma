@@ -77,7 +77,7 @@ Três pessoas usam a plataforma, e nenhuma precisa de tutorial.
 
 ### Família
 
-1. Recebe no grupo o link da família (`/f/…`, fixado no grupo). Vota nas perguntas da enquete aberta, se houver, e toca em *Sugerir um causo*: informa o nome e grava um áudio ou escreve: "Pede pra ele contar aquela vez em Guarapari que dormiu demais e perdeu a praia".
+1. Recebe no grupo o link da família (`/f/…`, fixado no grupo). Vota nas perguntas da enquete aberta, se houver, e toca em *Sugerir pergunta ou causo*: informa o nome e grava um áudio ou escreve: "Pede pra ele contar aquela vez em Guarapari que dormiu demais e perdeu a praia".
 2. A sugestão chega ao responsável exatamente como foi enviada, sem IA. Com 1 toque ela vira pergunta, e o áudio de quem sugeriu pode tocar para o autor na tela de gravação ("A Ana pediu:").
 3. Onda 2: recebe o link *Deixe uma mensagem para o livro*, grava ou escreve, anexa uma foto e confere o texto antes de enviar.
 
@@ -111,8 +111,8 @@ Dez módulos, cada um com a onda em que entra e critérios de aceite verificáve
 
 ### M2. Configuração inicial (onda 1; co-facilitadores na onda 2)
 
-- **Quem é:** nome (o único campo obrigatório), apelido, parentesco (pai, mãe, avô, avó, tio, tia, outro) e foto.
-- **Primeiras perguntas:** as 10 iniciais do parentesco (banco de perguntas) já marcadas; desmarcar, trocar por outras do banco ou escrever perguntas e causos próprios.
+- **Quem é:** nome (o único campo obrigatório), apelido, celular do autor (opcional: com ele, *Enviar ao autor* abre a conversa direto no WhatsApp; sem ele, o WhatsApp pede o contato), parentesco (pai, mãe, avô, avó, tio, tia, outro) e foto.
+- **Primeiras perguntas, por fase da vida:** Família e raízes, Infância, Escola, Juventude, Trabalho, Amor e casamento, Filhos, Maturidade e legado. 1 pergunta por fase já vem marcada (8, escolhidas pelo parentesco); *Ver mais* abre a fase toda; dá para desmarcar e escrever perguntas e causos próprios.
 - **Me conte sobre ele (depois do laboratório de IA, prompt 1):** texto livre ou áudio de até 5 minutos. A IA extrai o glossário (pessoas, lugares, apelidos), os grandes temas da vida e 10 perguntas personalizadas. O glossário pode ser revisado depois, sem obrigação.
 - **Fotos:** várias de uma vez. Ficam no acervo e podem virar perguntas com foto.
 - **Quem mais ajuda (onda 2):** convite para até 3 co-facilitadores, por e-mail ou link.
@@ -122,9 +122,9 @@ Dez módulos, cada um com a onda em que entra e critérios de aceite verificáve
 ### M3. Perguntas e causos (onda 1)
 
 - Banco de 150 perguntas em 8 temas (`supabase/seed/perguntas.json`, perguntas de fé marcadas e fora das iniciais), mais as personalizadas do M2, as próprias do responsável e as perguntas com foto.
-- **A lista é a base do livro, não uma fila de envio.** Abas: *Para perguntar*, *Enviadas*, *Respondidas*, *Causos* e *Enquete*. Cada pergunta pode ser enviada ao autor ou gravada ao vivo (modo conversa, prompt 5).
-- **Link da família** (`/f/[token]`): link fixo para o grupo, sem login. Mostra a enquete aberta, se houver, e o botão *Sugerir um causo*.
-- **Causos da família:** a pessoa informa o nome e grava um áudio de até 3 minutos ou escreve, com consentimento. A sugestão chega na aba *Causos* exatamente como foi enviada, sem IA.
+- **A lista é a base do livro, não uma fila de envio.** Abas: *Para perguntar*, *Enviadas*, *Respondidas*, *Sugestões* e *Enquete*. Cada pergunta pode ser enviada ao autor ou gravada ao vivo (modo conversa, prompt 5).
+- **Link da família** (`/f/[token]`): link fixo para o grupo, sem login. Mostra a enquete aberta, se houver, e o botão *Sugerir pergunta ou causo*.
+- **Sugestões da família:** a pessoa escolhe *Um causo para ele contar* ou *Uma pergunta para ele*, informa o nome e grava um áudio de até 3 minutos ou escreve, com consentimento. A sugestão chega na aba *Sugestões* exatamente como foi enviada, sem IA; o responsável põe na lista ou na enquete.
 - **Enquete:** o responsável escolhe os candidatos (do banco, causos ou texto próprio) e abre; quem abre o link informa o nome e marca até 5 itens (um conjunto de votos por aparelho; uma enquete aberta por livro). Ranking que se atualiza sozinho, com votos e nomes; remover os votos de uma pessoa; encerrar; salvar as N mais votadas com 1 toque ou uma a uma, tudo em *Para perguntar*.
 - **Causo vira pergunta** com 1 toque. A pergunta pode levar o áudio de quem sugeriu, que toca para o autor na tela de gravação.
 - Estados: `para_enviar`, `enviada`, `respondida`, `pulada`.

@@ -53,6 +53,7 @@ export async function livroDaTela(
     autor: nomeDoAutor(livro),
     autorNome: livro.autor_nome,
     autorApelido: livro.autor_apelido,
+    autorCelular: livro.autor_celular,
     parentesco: livro.autor_parentesco,
     fotoAutorUrl,
     configuracao: configuracaoDo(livro),
@@ -96,12 +97,13 @@ export async function causosDoLivro(livro: string): Promise<CausoDaTela[]> {
   const { data } = await supabase
     .from("causos")
     .select(
-      "id, nome, texto, audio_caminho, audio_recebido_em, duracao_s, estado, criado_em",
+      "id, tipo, nome, texto, audio_caminho, audio_recebido_em, duracao_s, estado, criado_em",
     )
     .eq("book_id", livro)
     .order("criado_em", { ascending: false });
   return (data ?? []).map((c) => ({
     id: c.id,
+    tipo: c.tipo,
     nome: c.nome,
     texto: c.texto,
     temAudio: Boolean(c.audio_caminho && c.audio_recebido_em),

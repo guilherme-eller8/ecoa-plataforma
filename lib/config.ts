@@ -41,7 +41,7 @@ export const PALAVRAS_POR_PAGINA_ESTIMADA = 320;
 export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
 
 // ── Perguntas e configuração inicial ─────────────────────────────────────
-export const PERGUNTAS_INICIAIS = 10; // marcadas no passo 2, por parentesco
+export const PERGUNTAS_INICIAIS = 8; // marcadas no passo 2: 1 por fase da vida, por parentesco
 export const ATUALIZAR_A_CADA_S = 4; // abas Causos e Enquete abertas na tela
 
 // ── Fotos do acervo ──────────────────────────────────────────────────────

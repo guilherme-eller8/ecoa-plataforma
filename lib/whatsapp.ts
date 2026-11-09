@@ -1,8 +1,20 @@
 // Mensagens prontas para o WhatsApp do responsável. Sem API: o botão abre o wa.me e a
 // pessoa escolhe o contato ou o grupo.
 
-export function linkWhatsApp(texto: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+/** Com o celular, abre a conversa com a pessoa; sem ele, o WhatsApp pede o contato. */
+export function linkWhatsApp(texto: string, celular?: string | null): string {
+  const numero = celular?.replace(/\D/g, "") ?? "";
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
+/** Quebra o texto em trechos de texto e de link, para a tela mostrar o link clicável. */
+export function partesComLinks(
+  texto: string,
+): { texto: string; link: boolean }[] {
+  return texto
+    .split(/(https?:\/\/[^\s]+)/g)
+    .filter((t) => t !== "")
+    .map((t) => ({ texto: t, link: /^https?:\/\//.test(t) }));
 }
 
 export function conviteDoGrupo({

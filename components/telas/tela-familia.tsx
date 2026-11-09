@@ -76,7 +76,7 @@ export function TelaFamilia({
       ) : vista === "obrigado" ? (
         <section className="flex flex-col gap-5">
           <p className="font-livro text-livro-24 text-tinta">
-            Obrigado! Seu causo chegou.
+            Obrigado! Sua sugestão chegou.
           </p>
           <Botao
             variante="secundario"
@@ -110,7 +110,7 @@ export function TelaFamilia({
             larguraTotal
             onClick={() => setVista("causo")}
           >
-            Sugerir um causo
+            Sugerir pergunta ou causo
           </Botao>
         </>
       )}
@@ -246,6 +246,7 @@ function SugerirCauso({
   aoEnviar: () => void;
   aoCancelar: () => void;
 }) {
+  const [tipo, setTipo] = useState<"pergunta" | "causo">("causo");
   const [modo, setModo] = useState<"gravar" | "escrever">("gravar");
   const [audio, setAudio] = useState<AudioGravado | null>(null);
   const [texto, setTexto] = useState("");
@@ -294,6 +295,7 @@ function SugerirCauso({
           return aoEnviar();
         }
         const r = await acoes.enviarCauso({
+          tipo,
           nome: nome.trim(),
           texto: modo === "escrever" ? texto.trim() : null,
           audio: modo === "gravar" && audio ? { mime: audio.mime } : null,
@@ -318,8 +320,37 @@ function SugerirCauso({
   return (
     <section className="flex flex-col gap-6" aria-labelledby="titulo-causo">
       <h2 id="titulo-causo" className="text-ui-24 text-tinta font-medium">
-        Que causo o {autor} deve contar?
+        O que você quer ouvir do {autor}?
       </h2>
+      <div
+        role="radiogroup"
+        aria-label="O que sugerir"
+        className="flex flex-col gap-2"
+      >
+        {(
+          [
+            ["causo", "Um causo para ele contar"],
+            ["pergunta", "Uma pergunta para ele"],
+          ] as const
+        ).map(([t, rotulo]) => (
+          <button
+            key={t}
+            type="button"
+            role="radio"
+            aria-checked={tipo === t}
+            disabled={Boolean(pendenteDeAudio)}
+            onClick={() => setTipo(t)}
+            className={
+              "min-h-alvo rounded-interno text-ui-17 border px-4 text-left " +
+              (tipo === t
+                ? "border-floresta/40 bg-floresta-claro text-tinta font-medium"
+                : "border-linha-forte bg-papel text-tinta")
+            }
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
       <Campo
         rotulo="Seu nome"
         value={nome}
@@ -350,8 +381,12 @@ function SugerirCauso({
         <GravadorCauso aoMudar={setAudio} />
       ) : (
         <CampoTexto
-          rotulo="O causo"
-          placeholder={`Pede pra ele contar aquela vez em Guarapari que dormiu demais`}
+          rotulo={tipo === "causo" ? "O causo" : "A pergunta"}
+          placeholder={
+            tipo === "causo"
+              ? "Pede pra ele contar aquela vez em Guarapari que dormiu demais"
+              : "Como foi o dia em que você chegou em Belo Horizonte?"
+          }
           value={texto}
           maxLength={2000}
           onChange={(e) => setTexto(e.target.value)}

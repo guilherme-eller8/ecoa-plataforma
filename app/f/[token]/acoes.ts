@@ -84,6 +84,7 @@ async function assinarUpload(
 export async function enviarCauso(
   token: string,
   dados: {
+    tipo: "pergunta" | "causo";
     nome: string;
     texto: string | null;
     audio: { mime: string } | null;
@@ -108,6 +109,7 @@ export async function enviarCauso(
     p_audio_tipo: tipo?.ext ?? null,
     p_consentimento: dados.consentimento === true,
     p_consentimento_versao: CONSENTIMENTO_CAUSO_VERSAO,
+    p_tipo: dados.tipo === "pergunta" ? "pergunta" : "causo",
   });
   if (error) return { ok: false as const, mensagem: fraseDoErro(error) };
   const r = z.object({ id: z.uuid(), livro: z.uuid() }).safeParse(data);

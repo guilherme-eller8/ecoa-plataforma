@@ -8,7 +8,6 @@ import { Campo, CampoTexto } from "@/components/ui/campo";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { Seletor } from "@/components/ui/seletor";
 import { UploadFotos } from "@/components/fotos/upload-fotos";
-import { EscolherDoBanco } from "@/components/perguntas/escolher-do-banco";
 import { TEXTO_PERGUNTA_MAX } from "@/lib/config";
 import { proximoPasso, PASSOS, type Passo } from "@/lib/livro/configuracao";
 import type {
@@ -16,7 +15,13 @@ import type {
   AcoesFotos,
   LivroDaTela,
 } from "@/lib/livro/tipos";
-import { iniciaisDo, perguntaPorId } from "@/lib/perguntas/banco";
+import {
+  TEMAS,
+  iniciaisDo,
+  perguntasDoTema,
+  type Tema,
+} from "@/lib/perguntas/banco";
+import { formatarCelular } from "@/lib/telefone";
 import type { Parentesco, PromptTipo } from "@/lib/supabase/tipos";
 
 const PARENTESCOS: { valor: Parentesco; rotulo: string }[] = [
@@ -120,18 +125,21 @@ export function ConfigurarQuem({ livro, acoes, fotos }: Props) {
   const nav = useNavegar(livro);
   const [nome, setNome] = useState(livro.autorNome ?? "");
   const [apelido, setApelido] = useState(livro.autorApelido ?? "");
+  const [celular, setCelular] = useState(formatarCelular(livro.autorCelular));
   const [parentesco, setParentesco] = useState<Parentesco | "">(
     livro.parentesco ?? "",
   );
   const [comFoto, setComFoto] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
+  const chamado = apelido.trim() || nome.trim() || "autor";
 
   function continuar() {
     iniciar(async () => {
       const r = await acoes.salvarQuem({
         nome,
         apelido,
+        celular,
         parentesco: parentesco || null,
       });
       if (!r.ok) return setErro(r.mensagem);
@@ -172,6 +180,15 @@ export function ConfigurarQuem({ livro, acoes, fotos }: Props) {
         placeholder="Vô Jair"
         autoComplete="off"
       />
+      <Campo
+        rotulo={`Celular do ${chamado} (opcional)`}
+        value={celular}
+        onChange={(e) => setCelular(e.target.value)}
+        placeholder="(31) 99999-8888"
+        inputMode="tel"
+        autoComplete="off"
+        dica="Para mandar as perguntas direto no WhatsApp dele."
+      />
       <Seletor
         rotulo="Parentesco (opcional)"
         vazio="Escolher"
@@ -196,13 +213,124 @@ export function ConfigurarQuem({ livro, acoes, fotos }: Props) {
 
 type Propria = { tipo: PromptTipo; texto: string };
 
+function ItemDePergunta({
+  texto,
+  marcada,
+  aoAlternar,
+  fe = false,
+}: {
+  texto: string;
+  marcada: boolean;
+  aoAlternar: () => void;
+  fe?: boolean;
+}) {
+  return (
+    <li>
+      <label
+        className={
+          "rounded-interno min-h-alvo flex cursor-pointer items-start gap-3 border px-4 py-3 " +
+          (marcada
+            ? "border-floresta/40 bg-floresta-claro"
+            : "border-linha bg-papel")
+        }
+      >
+        <input
+          type="checkbox"
+          checked={marcada}
+          onChange={aoAlternar}
+          className="accent-floresta mt-1 size-5 shrink-0"
+        />
+        <span className="font-livro text-livro-20 text-tinta">
+          {texto}
+          {fe ? (
+            <span className="text-ui-13 text-tinta-2 ml-2 font-sans">Fé</span>
+          ) : null}
+        </span>
+      </label>
+    </li>
+  );
+}
+
+// Uma fase da vida: as perguntas marcadas aparecem sempre; "Ver mais" abre a fase toda.
+function Fase({
+  tema,
+  marcadas,
+  sugeridas,
+  aoAlternar,
+}: {
+  tema: Tema;
+  marcadas: string[];
+  sugeridas: string[]; // as iniciais: continuam visíveis mesmo desmarcadas
+  aoAlternar: (id: string) => void;
+}) {
+  const [aberta, setAberta] = useState(false);
+  const [comFe, setComFe] = useState(false);
+  const todas = perguntasDoTema(tema.id, comFe ? {} : { fe: false });
+  const marcadasAqui = perguntasDoTema(tema.id).filter((p) =>
+    marcadas.includes(p.id),
+  );
+  const visiveisFechada = perguntasDoTema(tema.id).filter(
+    (p) => marcadas.includes(p.id) || sugeridas.includes(p.id),
+  );
+  const lista = aberta ? todas : visiveisFechada;
+  const id = `fase-${tema.id}`;
+  return (
+    <section aria-labelledby={id} className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id={id} className="text-ui-17 text-tinta font-medium">
+          {tema.nome}
+        </h2>
+        <span className="text-ui-15 text-tinta-2">
+          {marcadasAqui.length === 1
+            ? "1 marcada"
+            : `${marcadasAqui.length} marcadas`}
+        </span>
+      </div>
+      {lista.length ? (
+        <ul className="flex flex-col gap-2">
+          {lista.map((p) => (
+            <ItemDePergunta
+              key={p.id}
+              texto={p.texto}
+              fe={p.fe}
+              marcada={marcadas.includes(p.id)}
+              aoAlternar={() => aoAlternar(p.id)}
+            />
+          ))}
+        </ul>
+      ) : null}
+      <div className="flex flex-wrap items-center gap-x-4">
+        <Botao
+          variante="texto"
+          aria-expanded={aberta}
+          aria-controls={`${id}-lista`}
+          onClick={() => setAberta((a) => !a)}
+        >
+          {aberta ? "Ver menos" : `Ver mais de ${tema.nome}`}
+        </Botao>
+        {aberta ? (
+          <label className="text-ui-15 text-tinta-2 inline-flex min-h-11 items-center gap-2">
+            <input
+              type="checkbox"
+              checked={comFe}
+              onChange={(e) => setComFe(e.target.checked)}
+              className="accent-floresta size-5"
+            />
+            Perguntas de fé
+          </label>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export function ConfigurarPerguntas({ livro, acoes }: Props) {
   const nav = useNavegar(livro);
   const [marcadas, setMarcadas] = useState(() =>
     iniciaisDo(livro.parentesco).map((p) => p.id),
   );
   const [proprias, setProprias] = useState<Propria[]>([]);
-  const [folha, setFolha] = useState<"trocar" | "escrever" | null>(null);
+  const [escrever, setEscrever] = useState(false);
   const [rascunho, setRascunho] = useState<Propria>({
     tipo: "pergunta",
     texto: "",
@@ -210,6 +338,13 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
   const total = marcadas.length + proprias.length;
+  const sugeridas = iniciaisDo(livro.parentesco).map((p) => p.id);
+
+  function alternar(id: string) {
+    setMarcadas((m) =>
+      m.includes(id) ? m.filter((x) => x !== id) : [...m, id],
+    );
+  }
 
   function salvar() {
     iniciar(async () => {
@@ -218,10 +353,6 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
       nav.depoisDe("perguntas");
     });
   }
-
-  const visiveis = [
-    ...new Set([...iniciaisDo(livro.parentesco).map((p) => p.id), ...marcadas]),
-  ];
 
   return (
     <Moldura
@@ -241,83 +372,58 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
         </Botao>
       }
     >
-      <ul className="flex flex-col gap-2">
-        {visiveis.map((id) => {
-          const p = perguntaPorId(id);
-          if (!p) return null;
-          const marcada = marcadas.includes(id);
-          return (
-            <li key={id}>
-              <label
-                className={
-                  "rounded-interno min-h-alvo flex cursor-pointer items-start gap-3 border px-4 py-3 " +
-                  (marcada
-                    ? "border-floresta/40 bg-floresta-claro"
-                    : "border-linha bg-papel")
-                }
+      <p className="text-ui-17 text-tinta-2">
+        Uma pergunta por fase da vida, da infância até hoje.
+      </p>
+      {TEMAS.map((tema) => (
+        <Fase
+          key={tema.id}
+          tema={tema}
+          marcadas={marcadas}
+          sugeridas={sugeridas}
+          aoAlternar={alternar}
+        />
+      ))}
+      {proprias.length ? (
+        <section className="flex flex-col gap-2" aria-label="Suas perguntas">
+          <h2 className="text-ui-17 text-tinta font-medium">Suas</h2>
+          <ul className="flex flex-col gap-2">
+            {proprias.map((p, i) => (
+              <li
+                key={`p${i}`}
+                className="rounded-interno border-floresta/40 bg-floresta-claro flex items-start gap-3 border px-4 py-3"
               >
-                <input
-                  type="checkbox"
-                  checked={marcada}
-                  onChange={() =>
-                    setMarcadas((m) =>
-                      marcada ? m.filter((x) => x !== id) : [...m, id],
-                    )
-                  }
-                  className="accent-floresta mt-1 size-5 shrink-0"
-                />
-                <span className="font-livro text-livro-20 text-tinta">
+                <span className="font-livro text-livro-20 text-tinta flex-1">
                   {p.texto}
+                  <span className="text-ui-13 text-tinta-2 ml-2 font-sans">
+                    {p.tipo === "causo" ? "Causo" : "Pergunta"}
+                  </span>
                 </span>
-              </label>
-            </li>
-          );
-        })}
-        {proprias.map((p, i) => (
-          <li
-            key={`p${i}`}
-            className="rounded-interno border-floresta/40 bg-floresta-claro flex items-start gap-3 border px-4 py-3"
-          >
-            <span className="font-livro text-livro-20 text-tinta flex-1">
-              {p.texto}
-              <span className="text-ui-13 text-tinta-2 ml-2 font-sans">
-                {p.tipo === "causo" ? "Causo" : "Sua"}
-              </span>
-            </span>
-            <button
-              type="button"
-              aria-label="Tirar"
-              onClick={() => setProprias((l) => l.filter((_, k) => k !== i))}
-              className="text-ui-15 text-tinta-2 hover:text-tinta min-h-11 px-2"
-            >
-              Tirar
-            </button>
-          </li>
-        ))}
-      </ul>
-      <div className="flex flex-wrap gap-3">
-        <Botao variante="secundario" onClick={() => setFolha("trocar")}>
-          Trocar
-        </Botao>
-        <Botao variante="secundario" onClick={() => setFolha("escrever")}>
-          Escrever a minha
-        </Botao>
-      </div>
-
-      <FolhaInferior
-        aberta={folha === "trocar"}
-        aoFechar={() => setFolha(null)}
-        titulo="Banco de perguntas"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setProprias((l) => l.filter((_, k) => k !== i))
+                  }
+                  className="text-ui-15 text-tinta-2 hover:text-tinta min-h-11 px-2"
+                >
+                  Tirar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+      <Botao
+        variante="secundario"
+        className="self-start"
+        onClick={() => setEscrever(true)}
       >
-        <EscolherDoBanco marcadas={marcadas} aoMudar={setMarcadas} />
-        <Botao larguraTotal onClick={() => setFolha(null)}>
-          Pronto
-        </Botao>
-      </FolhaInferior>
+        Escrever a minha
+      </Botao>
 
       <FolhaInferior
-        aberta={folha === "escrever"}
-        aoFechar={() => setFolha(null)}
+        aberta={escrever}
+        aoFechar={() => setEscrever(false)}
         titulo="Escrever a minha"
       >
         <EscreverPergunta
@@ -329,7 +435,7 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
               { ...rascunho, texto: rascunho.texto.trim() },
             ]);
             setRascunho({ tipo: "pergunta", texto: "" });
-            setFolha(null);
+            setEscrever(false);
           }}
         />
       </FolhaInferior>

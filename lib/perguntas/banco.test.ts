@@ -21,11 +21,15 @@ describe("banco de perguntas", () => {
       expect(perguntasDoTema(t.id).length).toBeGreaterThanOrEqual(15);
   });
 
-  it.each(PARENTESCOS)("%s: 10 iniciais, sem nenhuma de fé", (parentesco) => {
-    const iniciais = iniciaisDo(parentesco);
-    expect(iniciais).toHaveLength(PERGUNTAS_INICIAIS);
-    expect(iniciais.every((p) => p && !p.fe)).toBe(true);
-  });
+  it.each(PARENTESCOS)(
+    "%s: 1 inicial por fase da vida, em ordem, sem nenhuma de fé",
+    (parentesco) => {
+      const iniciais = iniciaisDo(parentesco);
+      expect(iniciais).toHaveLength(PERGUNTAS_INICIAIS);
+      expect(iniciais.map((p) => p.tema)).toEqual(TEMAS.map((t) => t.id));
+      expect(iniciais.every((p) => p && !p.fe)).toBe(true);
+    },
+  );
 
   it("sem parentesco usa o conjunto 'outro'", () => {
     expect(iniciaisDo(null)).toEqual(iniciaisDo("outro"));

@@ -92,6 +92,7 @@ export type Database = {
         Row: {
           atualizado_em: string;
           autor_apelido: string | null;
+          autor_celular: string | null;
           autor_foto_id: string | null;
           autor_nome: string | null;
           autor_parentesco: Database["public"]["Enums"]["parentesco"] | null;
@@ -105,6 +106,7 @@ export type Database = {
         Insert: {
           atualizado_em?: string;
           autor_apelido?: string | null;
+          autor_celular?: string | null;
           autor_foto_id?: string | null;
           autor_nome?: string | null;
           autor_parentesco?: Database["public"]["Enums"]["parentesco"] | null;
@@ -118,6 +120,7 @@ export type Database = {
         Update: {
           atualizado_em?: string;
           autor_apelido?: string | null;
+          autor_celular?: string | null;
           autor_foto_id?: string | null;
           autor_nome?: string | null;
           autor_parentesco?: Database["public"]["Enums"]["parentesco"] | null;
@@ -151,6 +154,7 @@ export type Database = {
           id: string;
           nome: string;
           texto: string | null;
+          tipo: Database["public"]["Enums"]["prompt_tipo"];
         };
         Insert: {
           audio_caminho?: string | null;
@@ -164,6 +168,7 @@ export type Database = {
           id?: string;
           nome: string;
           texto?: string | null;
+          tipo?: Database["public"]["Enums"]["prompt_tipo"];
         };
         Update: {
           audio_caminho?: string | null;
@@ -177,6 +182,7 @@ export type Database = {
           id?: string;
           nome?: string;
           texto?: string | null;
+          tipo?: Database["public"]["Enums"]["prompt_tipo"];
         };
         Relationships: [
           {
@@ -575,6 +581,7 @@ export type Database = {
           p_consentimento_versao: number;
           p_nome: string;
           p_texto: string | null;
+          p_tipo?: Database["public"]["Enums"]["prompt_tipo"];
           p_token: string;
         };
         Returns: Json;

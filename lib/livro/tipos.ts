@@ -20,6 +20,7 @@ export type LivroDaTela = {
   autor: string; // apelido ou nome, como a tela mostra
   autorNome: string | null;
   autorApelido: string | null;
+  autorCelular: string | null; // +5531999998888
   parentesco: Parentesco | null;
   fotoAutorUrl: string | null;
   configuracao: Configuracao;
@@ -41,6 +42,7 @@ export type PerguntaDaTela = {
 
 export type CausoDaTela = {
   id: string;
+  tipo: PromptTipo; // a família sugere pergunta ou causo
   nome: string;
   texto: string | null;
   temAudio: boolean;
@@ -81,6 +83,7 @@ export type AcoesConfiguracao = {
   salvarQuem: (dados: {
     nome: string;
     apelido: string;
+    celular: string;
     parentesco: Parentesco | null;
   }) => Promise<Resposta>;
   salvarPerguntas: (dados: {
