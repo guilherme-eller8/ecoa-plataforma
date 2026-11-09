@@ -26,7 +26,7 @@ A integração da Vercel com o GitHub ainda não enxerga este repositório, ent�
 | `SUPABASE_SECRET_KEY` | mesma tela → **Secret keys** → crie uma chamada `vercel` (começa com `sb_secret_`). Nunca no chat, nunca com `NEXT_PUBLIC_` |
 | `RESEND_API_KEY` | do passo 3 abaixo (chave `app-plataforma`) |
 
-5. Deploy. Depois, em **Deployments**, abra o deploy do branch `claude/gracious-hypatia-1rdyrv` e copie o domínio que termina em `.vercel.app` (ex.: `ecoa-plataforma-git-claude-…-guilhermeeller7-gmailcoms-projects.vercel.app`). Ele é a **URL do preview** usada nos passos seguintes.
+5. Deploy. Depois, em **Deployments**, abra o deploy do branch `claude/gracious-hypatia-1rdyrv` e copie o domínio que termina em `.vercel.app` (ex.: `ecoa-plataforma-git-claude-…-guilhermeeller7-gmailcoms-projects.vercel.app`). Ele é a **URL do preview** usada nos passos seguintes. Para o branch `claude/gracious-hypatia-1rdyrv`, ela é `ecoa-plataforma-git-c-667868-guilhermeeller7-gmailcoms-projects.vercel.app` (fixa enquanto o branch existir).
 
 > O preview fica atrás do login da Vercel (Deployment Protection). No celular, entre na Vercel uma vez no mesmo navegador.
 
@@ -72,7 +72,7 @@ No painel do projeto `ecoa-plataforma`:
 - **Redirect URLs**, só estas 3 e sem curinga de domínio:
   - `http://localhost:3000/**`
   - `https://app.ecoa-memorias.com.br/**`
-  - `https://<URL do preview>/**`
+  - `https://ecoa-plataforma-git-c-667868-guilhermeeller7-gmailcoms-projects.vercel.app/**`
 
 > Não use `https://*.vercel.app/**`: aceitaria o site de qualquer pessoa na Vercel, e um atacante desviaria o login para lá.
 
@@ -136,7 +136,7 @@ Copie `.env.example` para `.env.local`, preencha as mesmas 4 variáveis do passo
 
 ## 7. Aceite no celular
 
-1. Abra `https://<URL do preview>/admin` e entre com Google.
+1. Abra `https://ecoa-plataforma-git-c-667868-guilhermeeller7-gmailcoms-projects.vercel.app/admin` e entre com Google.
 2. **Ativar passe** com um e-mail seu que não seja o de admin, de preferência um Gmail, e "Jair" como autor. Confirme.
 3. O e-mail "O livro do Jair está pronto para começar" chega. Toque em **Abrir meu livro**, depois em **Entrar com Google**, com essa conta.
 4. Aparece "O livro do Jair", com o estado vazio.
