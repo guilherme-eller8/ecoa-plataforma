@@ -61,7 +61,7 @@ export function TelaAudios({
         ← Livro do {livro.autor}
       </Link>
       <div className="flex flex-col gap-2">
-        <h1 className="font-livro text-livro-44 text-tinta leading-[1.05]">
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           Áudios recebidos
         </h1>
         {audios.length ? (
@@ -89,7 +89,21 @@ export function TelaAudios({
         <>
           <ul className="flex flex-col gap-4">
             {audios.map((a) => {
-              const nome = a.titulo ?? a.pergunta ?? a.nomeArquivo;
+              // Nome de arquivo ("PTT-2026…opus") não é título de livro: sem título nem
+              // pergunta, o cartão mostra a data, e o arquivo vai para a linha de apoio.
+              const quando = a.recebidoEm
+                ? DATA.format(new Date(a.recebidoEm))
+                : null;
+              const nome =
+                a.titulo ??
+                a.pergunta ??
+                (quando ? `Áudio de ${quando.split(",")[0]}` : "Áudio");
+              const apoio = [
+                a.titulo || a.pergunta ? quando : a.nomeArquivo,
+                formatarDuracao(a.duracaoS),
+              ]
+                .filter(Boolean)
+                .join(" · ");
               return (
                 <li
                   key={a.id}
@@ -103,20 +117,17 @@ export function TelaAudios({
                       Responde: {a.pergunta}
                     </p>
                   ) : null}
-                  <p className="text-ui-15 text-tinta-2">
-                    {[
-                      a.recebidoEm ? DATA.format(new Date(a.recebidoEm)) : null,
-                      formatarDuracao(a.duracaoS),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                      {apoio}
+                    </p>
+                    {a.processado ? null : (
+                      <span className="text-ui-13 bg-polen-2 text-tinta-2 rounded-full px-3 py-1">
+                        Aguardando processamento
+                      </span>
+                    )}
+                  </div>
                   <Player url={a.url} nome={nome} />
-                  {a.processado ? null : (
-                    <span className="text-ui-13 bg-polen-2 text-tinta-2 self-start rounded-full px-3 py-1">
-                      Aguardando processamento
-                    </span>
-                  )}
                 </li>
               );
             })}

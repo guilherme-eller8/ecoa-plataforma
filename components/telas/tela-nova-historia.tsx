@@ -32,7 +32,7 @@ export function TelaNovaHistoria({
       >
         ← Livro do {livro.autor}
       </Link>
-      <h1 className="font-livro text-livro-44 text-tinta leading-[1.05]">
+      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
         Nova história
       </h1>
       {livro.podeEscrever ? (

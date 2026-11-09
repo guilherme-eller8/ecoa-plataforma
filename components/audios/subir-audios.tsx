@@ -38,6 +38,7 @@ export type ItemAudio = {
   estado: EstadoItem;
   progresso: number; // 0 a 1
   preparado?: AudioPreparado;
+  comTitulo?: boolean; // revelação progressiva: o campo só aparece quando pedido
 };
 
 export function novoItem(arquivo: File, extra: Partial<ItemAudio> = {}) {
@@ -248,13 +249,25 @@ export function SubirAudios({
                     }
                   />
                 ) : null}
-                <Campo
-                  rotulo="Título (opcional)"
-                  value={x.titulo}
-                  maxLength={120}
-                  disabled={ocupado}
-                  onChange={(e) => mudar(x.chave, { titulo: e.target.value })}
-                />
+                {x.comTitulo || x.titulo ? (
+                  <Campo
+                    rotulo="Título (opcional)"
+                    value={x.titulo}
+                    maxLength={120}
+                    disabled={ocupado}
+                    autoFocus={x.comTitulo && !x.titulo}
+                    onChange={(e) => mudar(x.chave, { titulo: e.target.value })}
+                  />
+                ) : (
+                  <Botao
+                    variante="texto"
+                    className="self-end justify-self-start"
+                    disabled={ocupado}
+                    onClick={() => mudar(x.chave, { comTitulo: true })}
+                  >
+                    Dar um título
+                  </Botao>
+                )}
               </div>
             ) : (
               <Progresso estado={x.estado} fracao={x.progresso} />

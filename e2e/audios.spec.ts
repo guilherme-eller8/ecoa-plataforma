@@ -47,7 +47,8 @@ test.describe("Nova história: subir áudios (exemplo)", () => {
     const pergunta = page.getByLabel("Pergunta (opcional)").first();
     const opcao = await pergunta.locator("option").nth(1).textContent();
     await pergunta.selectOption({ label: opcao! });
-    await page.getByLabel("Título (opcional)").nth(2).fill("Na roça");
+    await page.getByRole("button", { name: "Dar um título" }).nth(2).click();
+    await page.getByLabel("Título (opcional)").fill("Na roça");
 
     await page.getByRole("button", { name: "Enviar 3 áudios" }).click();
     await expect(page.getByText("Pronto. 3 áudios guardados.")).toBeVisible({
@@ -80,6 +81,8 @@ test.describe("Áudios recebidos (exemplo)", () => {
     await expect(page.locator("audio")).toHaveCount(3);
     await expect(page.getByText("Aguardando processamento")).toHaveCount(3);
     await expect(page.getByText("O dia em que a ponte caiu")).toBeVisible();
+    // sem título nem pergunta, o nome do arquivo não vira título
+    await expect(page.getByText("Áudio de 8 de nov.")).toBeVisible();
     await expect(
       page.getByRole("button", { name: /apagar|excluir/i }),
     ).toHaveCount(0);

@@ -24,6 +24,10 @@ const TELAS = {
   "perguntas-enquete": "/styleguide/perguntas-enquete",
   familia: "/styleguide/familia",
   "familia-causo": "/styleguide/familia-causo",
+  "nova-historia": "/styleguide/nova-historia",
+  "nova-historia-arquivos": "/styleguide/nova-historia-arquivos",
+  audios: "/styleguide/audios",
+  "audios-vazia": "/styleguide/audios-vazia",
 };
 
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);
