@@ -28,6 +28,9 @@ const TELAS = {
   "nova-historia-arquivos": "/styleguide/nova-historia-arquivos",
   audios: "/styleguide/audios",
   "audios-vazia": "/styleguide/audios-vazia",
+  "nova-enquete": "/styleguide/nova-enquete",
+  "nova-enquete-etapa": "/styleguide/nova-enquete-etapa",
+  "nova-enquete-revisar": "/styleguide/nova-enquete-revisar",
 };
 
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);

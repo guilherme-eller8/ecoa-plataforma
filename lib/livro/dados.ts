@@ -134,7 +134,7 @@ export async function enqueteDoLivro(
   const [{ data: itens }, { data: votos }] = await Promise.all([
     supabase
       .from("poll_items")
-      .select("id, texto, ordem, prompt_id")
+      .select("id, texto, ordem, prompt_id, banco_id")
       .eq("poll_id", enquete.id)
       .order("ordem"),
     supabase

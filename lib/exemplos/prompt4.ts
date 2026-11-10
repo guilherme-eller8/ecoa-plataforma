@@ -11,6 +11,7 @@ import type {
   PerguntaDaTela,
 } from "@/lib/livro/tipos";
 import type { AcoesFamilia, PaginaDaFamilia } from "@/lib/familia/tipos";
+import { faseDoItem } from "@/lib/enquete/fases";
 import { iniciaisDo } from "@/lib/perguntas/banco";
 
 export const LIVRO_JAIR: LivroDaTela = {
@@ -106,18 +107,19 @@ export const CAUSOS_JAIR: CausoDaTela[] = [
   },
 ];
 
-const item = (i: number, texto: string) => ({
+const item = (i: number, texto: string, banco_id: string | null) => ({
   id: `00000000-0000-4000-8000-0000000003${String(i).padStart(2, "0")}`,
   texto,
   ordem: i,
   prompt_id: null,
+  banco_id,
 });
 const ITENS = [
-  item(0, "Como era a casa onde você cresceu?"),
-  item(1, "Como você conheceu a vó?"),
-  item(2, "Qual foi o seu primeiro trabalho?"),
-  item(3, "Conte do dia em que a Rural atolou a caminho de Sete Lagoas."),
-  item(4, "Qual foi a viagem mais inesquecível de vocês?"),
+  item(0, "Como era a casa onde você cresceu?", "infancia-01"),
+  item(1, "Como você conheceu a vó?", "amor-01"),
+  item(2, "Qual foi o seu primeiro trabalho?", "trabalho-01"),
+  item(3, "Conte do dia em que a Rural atolou a caminho de Sete Lagoas.", null),
+  item(4, "Qual foi a viagem mais inesquecível de vocês?", "amor-02"),
 ];
 const voto = (i: number, votante: string, nome: string, s: number) => ({
   poll_item_id: ITENS[i].id,
@@ -148,7 +150,8 @@ export const FOTOS_JAIR: FotoDaTela[] = [];
 export const PAGINA_FAMILIA: PaginaDaFamilia = {
   autor: "Vô Jair",
   aberto: true,
-  votos_por_pessoa: 5,
+  votos_por_pessoa: 18,
+  votos_por_fase: 2,
   enquete: {
     id: ENQUETE_JAIR.id,
     itens: [
@@ -156,11 +159,25 @@ export const PAGINA_FAMILIA: PaginaDaFamilia = {
         id: i.id,
         texto: i.texto,
         tipo: "pergunta" as const,
+        fase: faseDoItem(i.banco_id),
       })),
       {
         id: "00000000-0000-4000-8000-000000000305",
         texto: "O que você aprontava na escola?",
         tipo: "pergunta",
+        fase: "estudos",
+      },
+      {
+        id: "00000000-0000-4000-8000-000000000306",
+        texto: "Qual era a brincadeira que fazia você perder a hora?",
+        tipo: "pergunta",
+        fase: "infancia",
+      },
+      {
+        id: "00000000-0000-4000-8000-000000000307",
+        texto: "Que cheiro da infância você nunca esqueceu?",
+        tipo: "pergunta",
+        fase: "infancia",
       },
     ],
     meus_votos: [],

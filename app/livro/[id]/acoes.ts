@@ -19,6 +19,7 @@ import {
 import {
   MAX_ARQUIVOS_LOTE,
   MAX_FOTOS_POR_ENVIO,
+  MAX_ITENS_ENQUETE,
   MAX_FOTOS_POR_LIVRO,
   TEXTO_PERGUNTA_MAX,
 } from "@/lib/config";
@@ -568,14 +569,18 @@ const esquemaCandidatos = z
     }),
   )
   .min(2)
-  .max(30);
+  .max(MAX_ITENS_ENQUETE);
 
 export async function abrirEnquete(
   livroId: string,
   candidatos: CandidatoDaEnquete[],
 ): Promise<Resposta> {
   const v = esquemaCandidatos.safeParse(candidatos);
-  if (!v.success) return { ok: false, mensagem: "Escolha de 2 a 30 opções." };
+  if (!v.success)
+    return {
+      ok: false,
+      mensagem: `Escolha de 2 a ${MAX_ITENS_ENQUETE} perguntas.`,
+    };
   const c = await paraEscrever(livroId);
   if (ehErro(c)) return c;
   const { error } = await c.supabase.rpc("enquete_abrir", {

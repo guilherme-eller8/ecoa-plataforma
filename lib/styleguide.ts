@@ -25,6 +25,9 @@ export const TELAS = [
   "nova-historia-arquivos",
   "audios",
   "audios-vazia",
+  "nova-enquete",
+  "nova-enquete-etapa",
+  "nova-enquete-revisar",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

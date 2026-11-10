@@ -5,7 +5,7 @@ export const FRASES_DOS_CODIGOS = {
   link_invalido: "Este link não vale mais. Peça o novo no grupo.",
   livro_fechado: "Este livro não aceita mudanças agora.",
   dados_invalidos: "Algo não está certo. Confira e tente de novo.",
-  quantidade_invalida: "Escolha pelo menos uma e no máximo o limite.",
+  quantidade_invalida: "Escolha pelo menos uma e no máximo 2 por fase.",
   sem_enquete: "A enquete já terminou.",
   item_invalido: "Uma das opções não vale mais. Atualize a tela.",
   limite_votantes: "A enquete chegou ao limite de pessoas.",

@@ -2,6 +2,7 @@
 
 import { TelaAdmin } from "@/components/telas/tela-admin";
 import { TelaAudios } from "@/components/telas/tela-audios";
+import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
 import { TelaNovaHistoria } from "@/components/telas/tela-nova-historia";
 import {
   ACOES_AUDIOS_FALSAS,
@@ -45,6 +46,25 @@ const nada = async () => {};
 
 export function Vitrine({ tela }: { tela: Tela }) {
   switch (tela) {
+    case "nova-enquete":
+    case "nova-enquete-etapa":
+    case "nova-enquete-revisar":
+      return (
+        <TelaNovaEnquete
+          livro={LIVRO_JAIR}
+          causos={CAUSOS_JAIR.filter(
+            (c) => c.estado === "novo" || c.estado === "na_enquete",
+          )}
+          abrirEnquete={ACOES_FALSAS.perguntas.abrirEnquete}
+          inicial={
+            tela === "nova-enquete"
+              ? { vista: "como" }
+              : tela === "nova-enquete-etapa"
+                ? { vista: 1 }
+                : { vista: "revisar", todas: true }
+          }
+        />
+      );
     case "nova-historia":
     case "nova-historia-arquivos":
       return (

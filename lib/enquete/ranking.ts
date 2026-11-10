@@ -6,6 +6,7 @@ export type ItemDaEnquete = {
   texto: string;
   ordem: number;
   prompt_id: string | null;
+  banco_id: string | null; // define a fase (P35); null = Outras perguntas
 };
 export type VotoDaEnquete = {
   poll_item_id: string;

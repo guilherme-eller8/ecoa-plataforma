@@ -11,6 +11,7 @@ import {
   GravadorCauso,
   type AudioGravado,
 } from "@/components/familia/gravador-causo";
+import { agruparPorFase } from "@/lib/enquete/fases";
 import type { AcoesFamilia, PaginaDaFamilia } from "@/lib/familia/tipos";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 
@@ -100,6 +101,7 @@ export function TelaFamilia({
           {pagina.enquete ? (
             <Votar
               pagina={pagina}
+              autor={autor}
               nome={nome}
               aoMudarNome={setNome}
               acoes={acoes}
@@ -118,24 +120,28 @@ export function TelaFamilia({
   );
 }
 
+// Votar em etapas (P35): uma fase da vida por tela, até 2 em cada, e a revisão antes de votar.
 function Votar({
   pagina,
+  autor,
   nome,
   aoMudarNome,
   acoes,
 }: {
   pagina: PaginaDaFamilia;
+  autor: string;
   nome: string;
   aoMudarNome: (n: string) => void;
   acoes: AcoesFamilia;
 }) {
   const enquete = pagina.enquete!;
-  const limite = pagina.votos_por_pessoa;
+  const porFase = pagina.votos_por_fase;
+  const etapas = agruparPorFase(enquete.itens, (i) => i.fase);
   const [marcados, setMarcados] = useState<string[]>(enquete.meus_votos);
   const [votou, setVotou] = useState(enquete.meus_votos.length > 0);
+  const [vista, setVista] = useState<number | "revisar">(0);
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
-  const cheio = marcados.length >= limite;
 
   if (votou)
     return (
@@ -146,7 +152,10 @@ function Votar({
         <Botao
           variante="texto"
           className="self-start"
-          onClick={() => setVotou(false)}
+          onClick={() => {
+            setVotou(false);
+            setVista("revisar");
+          }}
         >
           Mudar meu voto
         </Botao>
@@ -163,18 +172,110 @@ function Votar({
     });
   }
 
+  if (vista === "revisar") {
+    const escolhidos = etapas
+      .map((g, i) => ({
+        ...g,
+        indice: i,
+        itens: g.itens.filter((x) => marcados.includes(x.id)),
+      }))
+      .filter((g) => g.itens.length);
+    return (
+      <section className="flex flex-col gap-5" aria-labelledby="titulo-enquete">
+        <div className="flex flex-col gap-1">
+          <h2 id="titulo-enquete" className="text-ui-24 text-tinta font-medium">
+            Revisar seu voto
+          </h2>
+          <p className="text-ui-15 text-tinta-2">
+            {marcados.length === 1
+              ? "1 história escolhida"
+              : `${marcados.length} histórias escolhidas`}
+          </p>
+        </div>
+        {escolhidos.length ? (
+          <ul className="flex flex-col gap-3">
+            {escolhidos.map((g) => (
+              <li
+                key={g.categoria.id}
+                className="rounded-cartao bg-papel border-linha flex flex-col gap-2 border p-4"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-ui-17 text-tinta font-medium">
+                    {g.categoria.nome}
+                  </p>
+                  <Botao variante="texto" onClick={() => setVista(g.indice)}>
+                    Mudar
+                  </Botao>
+                </div>
+                {g.itens.map((x) => (
+                  <p key={x.id} className="font-livro text-livro-20 text-tinta">
+                    {x.texto}
+                  </p>
+                ))}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-ui-17 text-tinta-2">Nenhuma escolhida ainda.</p>
+        )}
+        <Campo
+          rotulo="Seu nome"
+          value={nome}
+          onChange={(e) => aoMudarNome(e.target.value)}
+          autoComplete="given-name"
+        />
+        {erro ? (
+          <p role="alert" className="text-ui-15 text-erro">
+            {erro}
+          </p>
+        ) : null}
+        <div className="flex items-center gap-3">
+          <Botao
+            variante="secundario"
+            onClick={() => setVista(Math.max(0, etapas.length - 1))}
+          >
+            Voltar
+          </Botao>
+          <Botao
+            className="flex-1"
+            carregando={pendente}
+            disabled={!nome.trim() || marcados.length === 0}
+            onClick={votar}
+          >
+            Votar
+          </Botao>
+        </div>
+      </section>
+    );
+  }
+
+  const etapa = etapas[vista];
+  if (!etapa) return null;
+  const naFase = etapa.itens.filter((x) => marcados.includes(x.id)).length;
+  const cheia = naFase >= porFase;
+  const ultima = vista === etapas.length - 1;
+
   return (
     <section className="flex flex-col gap-5" aria-labelledby="titulo-enquete">
+      {vista === 0 ? (
+        <p className="text-ui-17 text-tinta">
+          Escolha as histórias que você quer ouvir do {autor}. Até {porFase} por
+          fase.
+        </p>
+      ) : null}
       <div className="flex flex-col gap-1">
+        <p className="text-ui-15 text-tinta-2">
+          Etapa {vista + 1} de {etapas.length}
+        </p>
         <h2 id="titulo-enquete" className="text-ui-24 text-tinta font-medium">
-          O que perguntar?
+          {etapa.categoria.nome}
         </h2>
         <p className="text-ui-15 text-tinta-2" aria-live="polite">
-          Escolha até {limite} · {marcados.length} de {limite}
+          {naFase} de {porFase}
         </p>
       </div>
       <ul className="flex flex-col gap-2">
-        {enquete.itens.map((item) => {
+        {etapa.itens.map((item) => {
           const marcado = marcados.includes(item.id);
           return (
             <li key={item.id}>
@@ -184,13 +285,13 @@ function Votar({
                   (marcado
                     ? "border-floresta/40 bg-floresta-claro"
                     : "border-linha bg-papel") +
-                  (!marcado && cheio ? " opacity-55" : "")
+                  (!marcado && cheia ? " opacity-55" : "")
                 }
               >
                 <input
                   type="checkbox"
                   checked={marcado}
-                  disabled={!marcado && cheio}
+                  disabled={!marcado && cheia}
                   onChange={() =>
                     setMarcados((m) =>
                       marcado
@@ -208,25 +309,19 @@ function Votar({
           );
         })}
       </ul>
-      <Campo
-        rotulo="Seu nome"
-        value={nome}
-        onChange={(e) => aoMudarNome(e.target.value)}
-        autoComplete="given-name"
-      />
-      {erro ? (
-        <p role="alert" className="text-ui-15 text-erro">
-          {erro}
-        </p>
-      ) : null}
-      <Botao
-        larguraTotal
-        carregando={pendente}
-        disabled={!nome.trim() || marcados.length === 0}
-        onClick={votar}
-      >
-        Votar
-      </Botao>
+      <div className="flex items-center gap-3">
+        {vista > 0 ? (
+          <Botao variante="secundario" onClick={() => setVista(vista - 1)}>
+            Voltar
+          </Botao>
+        ) : null}
+        <Botao
+          className="flex-1"
+          onClick={() => setVista(ultima ? "revisar" : vista + 1)}
+        >
+          {ultima ? "Revisar" : naFase ? "Próxima" : "Pular"}
+        </Botao>
+      </div>
     </section>
   );
 }

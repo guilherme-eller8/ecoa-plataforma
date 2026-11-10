@@ -14,12 +14,16 @@ import { AtualizarSozinho } from "@/components/livro/atualizar-sozinho";
 import { EscolherDoBanco } from "@/components/perguntas/escolher-do-banco";
 import { UploadFotos } from "@/components/fotos/upload-fotos";
 import { EscreverPergunta } from "@/components/telas/configurar";
-import { MAX_ITENS_ENQUETE, TEXTO_PERGUNTA_MAX } from "@/lib/config";
-import { ranking, topN, totalDeVotantes } from "@/lib/enquete/ranking";
+import { agruparPorFase, faseDoItem } from "@/lib/enquete/fases";
+import {
+  ranking,
+  topN,
+  totalDeVotantes,
+  type LinhaDoRanking,
+} from "@/lib/enquete/ranking";
 import type {
   AcoesFotos,
   AcoesPerguntas,
-  CandidatoDaEnquete,
   CausoDaTela,
   EnqueteDaTela,
   FotoDaTela,
@@ -27,7 +31,7 @@ import type {
   PerguntaDaTela,
   Resposta,
 } from "@/lib/livro/tipos";
-import { perguntaPorId } from "@/lib/perguntas/banco";
+import { textoSugerido } from "@/lib/perguntas/sugestao";
 import type { PromptTipo } from "@/lib/supabase/tipos";
 import { falarDuracao } from "@/lib/ui/tempo";
 import { linkWhatsApp, mensagemPergunta } from "@/lib/whatsapp";
@@ -409,15 +413,6 @@ const ESTADO_DO_CAUSO: Record<CausoDaTela["estado"], string | null> = {
   arquivado: "Arquivado",
 };
 
-function textoSugerido(c: CausoDaTela) {
-  const t = c.texto?.trim();
-  return t && t.length >= 3
-    ? t.slice(0, TEXTO_PERGUNTA_MAX)
-    : c.tipo === "pergunta"
-      ? `Pergunta de ${c.nome} (ouça o áudio).`
-      : `Conte a história que ${c.nome} pediu.`;
-}
-
 function CartaoCauso({
   c,
   livro,
@@ -531,138 +526,6 @@ function CartaoCauso({
 
 // ── Enquete ──────────────────────────────────────────────────────────────
 
-function NovaEnquete({
-  aberta,
-  aoFechar,
-  perguntas,
-  causos,
-  causoInicial,
-  acoes,
-}: {
-  aberta: boolean;
-  aoFechar: () => void;
-  perguntas: PerguntaDaTela[];
-  causos: CausoDaTela[];
-  causoInicial: string | null;
-  acoes: AcoesPerguntas;
-}) {
-  const [doBanco, setDoBanco] = useState<string[]>([]);
-  const [dosCausos, setDosCausos] = useState<string[]>(
-    causoInicial ? [causoInicial] : [],
-  );
-  const [proprias, setProprias] = useState<string[]>([]);
-  const [rascunho, setRascunho] = useState("");
-  const { pendente, erro, rodar } = useAcao();
-  const disponiveis = causos.filter(
-    (c) => c.estado === "novo" || c.estado === "na_enquete",
-  );
-  const total = doBanco.length + dosCausos.length + proprias.length;
-  const jaNoLivro = perguntas.flatMap((p) => (p.bancoId ? [p.bancoId] : []));
-
-  function abrir() {
-    const candidatos: CandidatoDaEnquete[] = [
-      ...doBanco.map((id) => ({
-        texto: perguntaPorId(id)!.texto,
-        tipo: "pergunta" as const,
-        banco_id: id,
-      })),
-      ...dosCausos.map((id) => {
-        const c = causos.find((x) => x.id === id)!;
-        return {
-          texto: textoSugerido(c),
-          tipo: c.tipo,
-          causo_id: id,
-        };
-      }),
-      ...proprias.map((texto) => ({ texto, tipo: "pergunta" as const })),
-    ];
-    rodar(() => acoes.abrirEnquete(candidatos), aoFechar);
-  }
-
-  return (
-    <FolhaInferior aberta={aberta} aoFechar={aoFechar} titulo="Nova enquete">
-      <p className="text-ui-15 text-tinta-2">
-        Escolha de 2 a {MAX_ITENS_ENQUETE} opções · {total}{" "}
-        {total === 1 ? "escolhida" : "escolhidas"}
-      </p>
-      {disponiveis.length ? (
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-ui-17 text-tinta mb-2 font-medium">
-            Sugestões da família
-          </legend>
-          {disponiveis.map((c) => (
-            <label
-              key={c.id}
-              className="rounded-interno border-linha bg-papel min-h-alvo flex items-start gap-3 border px-4 py-3"
-            >
-              <input
-                type="checkbox"
-                checked={dosCausos.includes(c.id)}
-                onChange={() =>
-                  setDosCausos((l) =>
-                    l.includes(c.id)
-                      ? l.filter((x) => x !== c.id)
-                      : [...l, c.id],
-                  )
-                }
-                className="accent-floresta mt-1 size-5 shrink-0"
-              />
-              <span className="font-livro text-livro-20 text-tinta">
-                {textoSugerido(c)}
-              </span>
-            </label>
-          ))}
-        </fieldset>
-      ) : null}
-      <div className="flex flex-col gap-2">
-        <p className="text-ui-17 text-tinta font-medium">Do banco</p>
-        <EscolherDoBanco
-          marcadas={doBanco}
-          aoMudar={setDoBanco}
-          esconder={jaNoLivro}
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <p className="text-ui-17 text-tinta font-medium">Sua pergunta</p>
-        {proprias.map((t, i) => (
-          <p key={i} className="font-livro text-livro-20 text-tinta">
-            {t}
-          </p>
-        ))}
-        <div className="flex gap-2">
-          <input
-            value={rascunho}
-            maxLength={TEXTO_PERGUNTA_MAX}
-            onChange={(e) => setRascunho(e.target.value)}
-            aria-label="Sua pergunta"
-            placeholder="Escreva e toque em Pôr"
-            className="rounded-interno border-linha-forte bg-papel text-ui-17 min-h-alvo flex-1 border px-4"
-          />
-          <Botao
-            variante="secundario"
-            disabled={rascunho.trim().length < 3}
-            onClick={() => {
-              setProprias((l) => [...l, rascunho.trim()]);
-              setRascunho("");
-            }}
-          >
-            Pôr
-          </Botao>
-        </div>
-      </div>
-      <Erro mensagem={erro} />
-      <Botao
-        larguraTotal
-        carregando={pendente}
-        disabled={total < 2 || total > MAX_ITENS_ENQUETE}
-        onClick={abrir}
-      >
-        Abrir enquete
-      </Botao>
-    </FolhaInferior>
-  );
-}
-
 function Resultados({
   enquete,
   livro,
@@ -689,6 +552,67 @@ function Resultados({
   const maximo = Math.max(1, ...linhas.map((l) => l.votos));
   const aberta = enquete.estado === "aberta";
   const escrever = livro.podeEscrever;
+  const grupos = agruparPorFase(linhas, (l) => faseDoItem(l.banco_id));
+  const posicaoNaFase = new Map(
+    grupos.flatMap((g) => g.itens.map((l, i) => [l.id, i + 1] as const)),
+  );
+  const linha = (l: LinhaDoRanking) => (
+    <li
+      key={l.id}
+      className="rounded-cartao bg-papel border-linha flex flex-col gap-2 border p-4"
+    >
+      <div className="flex items-start gap-3">
+        <span className="num text-ui-17 text-tinta-2 w-6 shrink-0">
+          {posicaoNaFase.get(l.id)}
+        </span>
+        <p className="font-livro text-livro-20 text-tinta flex-1">{l.texto}</p>
+        <span className="num text-ui-20 text-tinta font-medium">{l.votos}</span>
+      </div>
+      <div
+        className="bg-polen-2 h-1.5 overflow-hidden rounded-full"
+        aria-hidden="true"
+      >
+        <div
+          className="bg-floresta h-full"
+          style={{ width: `${(l.votos / maximo) * 100}%` }}
+        />
+      </div>
+      {l.votantes.length ? (
+        <div className="flex flex-wrap gap-1.5">
+          {l.votantes.map((v) =>
+            escrever ? (
+              <button
+                key={v.votante + l.id}
+                type="button"
+                onClick={() => setRemover(v)}
+                className="text-ui-13 rounded-chip bg-polen-2 text-tinta hover:bg-linha min-h-8 px-2"
+              >
+                {v.nome}
+              </button>
+            ) : (
+              <Etiqueta key={v.votante + l.id}>{v.nome}</Etiqueta>
+            ),
+          )}
+        </div>
+      ) : null}
+      {escrever ? (
+        l.prompt_id ? (
+          <span className="text-ui-15 text-floresta">Em Para perguntar</span>
+        ) : (
+          <Botao
+            variante="texto"
+            className="self-start"
+            disabled={pendente}
+            onClick={() =>
+              rodar(() => acoes.salvarDaEnquete(enquete.id, [l.id]))
+            }
+          >
+            Salvar esta
+          </Botao>
+        )
+      ) : null}
+    </li>
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -696,71 +620,30 @@ function Resultados({
         {aberta ? "Enquete aberta" : "Enquete encerrada"} ·{" "}
         {pessoas === 1 ? "1 pessoa votou" : `${pessoas} pessoas votaram`}
       </p>
-      <ol className="flex flex-col gap-3">
-        {linhas.map((l) => (
-          <li
-            key={l.id}
-            className="rounded-cartao bg-papel border-linha flex flex-col gap-2 border p-4"
-          >
-            <div className="flex items-start gap-3">
-              <span className="num text-ui-17 text-tinta-2 w-6 shrink-0">
-                {l.posicao}
-              </span>
-              <p className="font-livro text-livro-20 text-tinta flex-1">
-                {l.texto}
-              </p>
-              <span className="num text-ui-20 text-tinta font-medium">
-                {l.votos}
-              </span>
-            </div>
-            <div
-              className="bg-polen-2 h-1.5 overflow-hidden rounded-full"
-              aria-hidden="true"
-            >
-              <div
-                className="bg-floresta h-full"
-                style={{ width: `${(l.votos / maximo) * 100}%` }}
-              />
-            </div>
-            {l.votantes.length ? (
-              <div className="flex flex-wrap gap-1.5">
-                {l.votantes.map((v) =>
-                  escrever ? (
-                    <button
-                      key={v.votante + l.id}
-                      type="button"
-                      onClick={() => setRemover(v)}
-                      className="text-ui-13 rounded-chip bg-polen-2 text-tinta hover:bg-linha min-h-8 px-2"
-                    >
-                      {v.nome}
-                    </button>
-                  ) : (
-                    <Etiqueta key={v.votante + l.id}>{v.nome}</Etiqueta>
-                  ),
-                )}
-              </div>
+      {grupos.map((g) => {
+        const comVoto = g.itens.filter((l) => l.votos > 0);
+        const semVoto = g.itens.filter((l) => l.votos === 0);
+        return (
+          <section key={g.categoria.id} className="flex flex-col gap-3">
+            <h3 className="text-ui-17 text-tinta font-medium">
+              {g.categoria.nome}
+            </h3>
+            {comVoto.length ? (
+              <ol className="flex flex-col gap-3">{comVoto.map(linha)}</ol>
             ) : null}
-            {escrever ? (
-              l.prompt_id ? (
-                <span className="text-ui-15 text-floresta">
-                  Em Para perguntar
-                </span>
-              ) : (
-                <Botao
-                  variante="texto"
-                  className="self-start"
-                  disabled={pendente}
-                  onClick={() =>
-                    rodar(() => acoes.salvarDaEnquete(enquete.id, [l.id]))
-                  }
-                >
-                  Salvar esta
-                </Botao>
-              )
+            {semVoto.length ? (
+              <details>
+                <summary className="text-ui-15 text-tinta-2 min-h-11 cursor-pointer">
+                  Sem votos ({semVoto.length})
+                </summary>
+                <ol className="flex flex-col gap-3 pt-2">
+                  {semVoto.map(linha)}
+                </ol>
+              </details>
             ) : null}
-          </li>
-        ))}
-      </ol>
+          </section>
+        );
+      })}
 
       {escrever ? (
         <div className="bg-polen sticky bottom-0 -mx-4 flex flex-col gap-3 px-4 py-3">
@@ -882,9 +765,6 @@ export function TelaPerguntas({
   const caminho = usePathname();
   const [aba, setAba] = useState<AbaPerguntas>(abaInicial);
   const [adicionar, setAdicionar] = useState(false);
-  const [novaEnquete, setNovaEnquete] = useState<{
-    causo: string | null;
-  } | null>(null);
   const [tocando, setTocando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [, iniciar] = useTransition();
@@ -897,6 +777,7 @@ export function TelaPerguntas({
   const respondidas = por("respondida");
   const causosNovos = causos.filter((c) => c.estado === "novo").length;
   const escrever = livro.podeEscrever;
+  const novaEnquete = `/livro/${livro.id}/enquete/nova`;
 
   function mudarAba(id: string) {
     setAba(id as AbaPerguntas);
@@ -907,10 +788,7 @@ export function TelaPerguntas({
     iniciar(async () => {
       const r = await acoes.porNaEnquete(c.id);
       if (!r.ok) return setErro(r.mensagem);
-      if (!r.dados.adicionado) {
-        mudarAba("enquete");
-        setNovaEnquete({ causo: c.id });
-      }
+      if (!r.dados.adicionado) router.push(`${novaEnquete}?causo=${c.id}`);
     });
   }
 
@@ -927,7 +805,7 @@ export function TelaPerguntas({
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 pt-8 pb-12">
       <AtualizarSozinho
         ativo={aba === "causos" || aba === "enquete"}
-        pausado={tocando || Boolean(novaEnquete) || adicionar}
+        pausado={tocando || adicionar}
       />
       <Link
         href={`/livro/${livro.id}`}
@@ -1053,21 +931,22 @@ export function TelaPerguntas({
                     frase="Deixe a família votar no que perguntar."
                     acao={
                       escrever ? (
-                        <Botao onClick={() => setNovaEnquete({ causo: null })}>
-                          Nova enquete
-                        </Botao>
+                        <Link href={novaEnquete} className={classesDoBotao()}>
+                          <span>Nova enquete</span>
+                        </Link>
                       ) : null
                     }
                   />
                 )}
                 {enquete?.estado === "encerrada" && escrever ? (
-                  <Botao
-                    variante="secundario"
-                    className="self-start"
-                    onClick={() => setNovaEnquete({ causo: null })}
+                  <Link
+                    href={novaEnquete}
+                    className={
+                      classesDoBotao({ variante: "secundario" }) + " self-start"
+                    }
                   >
-                    Nova enquete
-                  </Botao>
+                    <span>Nova enquete</span>
+                  </Link>
                 ) : null}
                 {enquete?.estado === "aberta" ? (
                   <Link
@@ -1091,16 +970,6 @@ export function TelaPerguntas({
         acoes={acoes}
         acoesFotos={acoesFotos}
       />
-      {novaEnquete ? (
-        <NovaEnquete
-          aberta
-          aoFechar={() => setNovaEnquete(null)}
-          perguntas={perguntas}
-          causos={causos}
-          causoInicial={novaEnquete.causo}
-          acoes={acoes}
-        />
-      ) : null}
     </main>
   );
 }

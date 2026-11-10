@@ -12,6 +12,7 @@ const item = (id: string, ordem: number): ItemDaEnquete => ({
   texto: `Pergunta ${id}`,
   ordem,
   prompt_id: null,
+  banco_id: null,
 });
 const voto = (
   poll_item_id: string,

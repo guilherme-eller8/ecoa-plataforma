@@ -5,6 +5,7 @@ export const esquemaPaginaDaFamilia = z.object({
   autor: z.string().nullable(),
   aberto: z.boolean(),
   votos_por_pessoa: z.number().int(),
+  votos_por_fase: z.number().int(),
   enquete: z
     .object({
       id: z.string(),
@@ -13,6 +14,7 @@ export const esquemaPaginaDaFamilia = z.object({
           id: z.string(),
           texto: z.string(),
           tipo: z.enum(["pergunta", "causo"]),
+          fase: z.string(),
         }),
       ),
       meus_votos: z.array(z.string()),
