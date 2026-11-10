@@ -40,14 +40,14 @@ test.describe("Nova enquete (exemplo)", () => {
       page.getByRole("heading", { name: "Família e raízes" }),
     ).toBeVisible();
     await expect(page.getByText("Etapa 1 de 9")).toBeVisible();
-    await page.getByRole("button", { name: "Pular fase" }).click();
+    await page.getByRole("button", { name: "Próxima" }).click();
     await expect(page.getByRole("heading", { name: "Infância" })).toBeVisible();
     await page.getByRole("checkbox").nth(0).check();
     await page.getByRole("checkbox").nth(1).check();
     await expect(page.getByText("2 marcadas")).toBeVisible();
     await page.getByRole("button", { name: "Próxima" }).click();
     for (let i = 0; i < 6; i++)
-      await page.getByRole("button", { name: "Pular fase" }).click();
+      await page.getByRole("button", { name: "Próxima" }).click();
     await expect(
       page.getByRole("heading", { name: "Outras perguntas" }),
     ).toBeVisible();
@@ -62,7 +62,7 @@ test.describe("Nova enquete (exemplo)", () => {
     await page.goto("/styleguide/nova-enquete");
     await page.getByRole("button", { name: /Eu escolho antes/ }).click();
     for (let i = 0; i < 8; i++)
-      await page.getByRole("button", { name: "Pular fase" }).click();
+      await page.getByRole("button", { name: "Próxima" }).click();
     await page.getByRole("button", { name: "Revisar" }).click();
     await expect(
       page.getByText("Marque pelo menos 2 perguntas."),

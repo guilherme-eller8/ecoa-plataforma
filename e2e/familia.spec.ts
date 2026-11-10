@@ -26,7 +26,7 @@ test.describe("link da família (exemplo)", () => {
     // Etapa 2: Escola. Pula até a revisão.
     await expect(page.getByRole("heading", { name: "Escola" })).toBeVisible();
     for (let i = 0; i < 3; i++)
-      await page.getByRole("button", { name: "Pular" }).click();
+      await page.getByRole("button", { name: "Próxima" }).click();
     await page.getByRole("button", { name: "Revisar" }).click();
     // Revisão: só Infância, com as 2 escolhidas; votar exige o nome.
     await expect(

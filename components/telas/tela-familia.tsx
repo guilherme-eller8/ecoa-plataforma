@@ -319,7 +319,7 @@ function Votar({
           className="flex-1"
           onClick={() => setVista(ultima ? "revisar" : vista + 1)}
         >
-          {ultima ? "Revisar" : naFase ? "Próxima" : "Pular"}
+          {ultima ? "Revisar" : "Próxima"}
         </Botao>
       </div>
     </section>

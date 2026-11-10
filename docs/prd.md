@@ -77,7 +77,7 @@ Três pessoas usam a plataforma, e nenhuma precisa de tutorial.
 
 ### Família
 
-1. Recebe no grupo o link da família, vota nas perguntas da enquete e, em *Sugerir pergunta ou causo*, escolhe o tipo, informa o nome e grava um áudio ou escreve: "Pede pra ele contar aquela vez em Guarapari que dormiu demais e perdeu a praia".
+1. Recebe no grupo o link da família, vota nas perguntas da enquete fase por fase (até 2 por fase) e, em *Sugerir pergunta ou causo*, escolhe o tipo, informa o nome e grava um áudio ou escreve: "Pede pra ele contar aquela vez em Guarapari que dormiu demais e perdeu a praia".
 2. A sugestão chega ao responsável exatamente como foi enviada, sem IA. Com 1 toque ela vira pergunta, e o áudio de quem sugeriu pode tocar para o autor na tela de gravação ("A Ana pediu:").
 3. Onda 2: recebe o link *Deixe uma mensagem para o livro*, grava ou escreve, anexa uma foto e confere o texto antes de enviar.
 
@@ -125,8 +125,8 @@ Onze módulos, cada um com a onda em que entra e critérios de aceite verificáv
 - **A lista é a base do livro, não uma fila de envio:** cada pergunta pode ser enviada ao autor ou feita ao vivo (modo conversa).
 - **Fontes:** banco de 150 perguntas em 8 fases da vida, itens próprios do responsável em texto livre, perguntas com foto do acervo e sugestões da família.
 - **Link da família:** um link permanente para fixar no grupo de WhatsApp, sem login. Mostra a enquete aberta (se houver) e o botão *Sugerir pergunta ou causo*.
-- **Enquete:** o responsável escolhe os candidatos (do banco, próprios ou causos sugeridos) e abre a enquete. Quem abre o link informa o nome e marca até 5 favoritos. Um conjunto de votos por aparelho; o responsável pode remover um voto. Uma enquete aberta por livro.
-- **Resultados:** ranking ao vivo com o número de votos e quem votou. O responsável encerra a enquete e salva com 1 toque as mais votadas, ou escolhe uma a uma. Tudo vai para *Para perguntar*.
+- **Enquete, por fase da vida (P35):** o responsável escolhe como abrir: *Todas as perguntas* (a família vê as 150 do banco, mais as sugestões) ou *Eu escolho antes*, marcando fase por fase (8 fases e *Outras perguntas*, para as próprias e as sugestões da família). Antes de abrir, revisa tudo agrupado por fase, com *Mudar* em cada uma. A família vota em etapas, uma fase por tela, até 2 por fase, e revisa antes de votar; informa o nome. Um conjunto de votos por aparelho; o responsável pode remover um voto. Uma enquete aberta por livro, com até 200 opções.
+- **Resultados:** ranking ao vivo agrupado por fase, com o número de votos e quem votou; perguntas sem voto ficam recolhidas. O responsável encerra a enquete e salva com 1 toque as mais votadas, ou escolhe uma a uma. Tudo vai para *Para perguntar*.
 - **Sugestões da família:** a pessoa escolhe *Uma pergunta para ele* ou *Um causo para ele contar*, informa o nome e manda áudio de até 3 minutos ou texto. Chegam na aba *Sugestões* exatamente como enviadas, sem IA, com o selo do tipo. Com 1 toque viram item da lista ou opção da enquete, e o áudio de quem sugeriu pode tocar para o autor na tela de gravação ("A Ana pediu:").
 - **Segredo:** o autor nunca vê a enquete nem as sugestões.
 - Abas: *Para perguntar*, *Enviadas*, *Respondidas*, *Sugestões* e *Enquete*.
@@ -207,7 +207,7 @@ O produto ensina no momento do uso, não antes. Sem tour guiado nem carrossel de
 - **Dicas de primeira vez:** uma linha com "Entendi", mostrada uma única vez por tela e por pessoa, só para gestos não óbvios (tocar numa frase para ouvir, arrastar o controle de tamanho, juntar e separar histórias).
 - **Marco da primeira história:** um momento simples ("A primeira história do Jair está pronta") com o botão de compartilhar no grupo.
 - **Autor:** na primeira abertura, uma tela única ("Toque no círculo e conte. Pode pausar quando quiser.") e o consentimento.
-- **Família:** o link da família se explica em uma linha ("Escolha até 5 histórias que você quer ouvir do Jair").
+- **Família:** o link da família se explica em uma linha ("Escolha as histórias que você quer ouvir do Jair. Até 2 por fase.").
 - Cada passo concluído vira evento em `events`.
 - **Aceite:** um responsável novo chega à primeira história em menos de 48 horas sem ajuda da Ecoa, e o admin mostra em qual passo cada livro está.
 
@@ -346,7 +346,7 @@ A stack repete a da landing e acrescenta só o que o produto exige: tempo real n
 | `photos` | Acervo de fotos do livro, com dimensões e legenda |
 | `prompts` | Perguntas e causos: tipo, texto, foto, origem (banco, própria, família, enquete), áudio de quem sugeriu, estado |
 | `causos` | Sugestões da família: tipo (pergunta ou causo), nome, texto ou áudio, estado |
-| `polls` | Enquete: estado (aberta ou encerrada), votos por pessoa, aberta em, encerrada em |
+| `polls` | Enquete: estado (aberta ou encerrada), aberta em, encerrada em. Até 2 votos por fase por pessoa; a fase de cada opção vem do banco_id |
 | `poll_items` | Opções da enquete, cada uma ligada a uma pergunta ou causo |
 | `poll_votes` | Votos: nome de quem votou, identificador do aparelho, opção |
 | `recordings` | Áudios: origem (autor, livre, conversa, upload, lote), pergunta e título opcionais, duração, estado do upload, processado em |

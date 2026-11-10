@@ -370,7 +370,7 @@ function Etapa({
           Voltar
         </Botao>
         <Botao className="flex-1" onClick={aoAvancar}>
-          {ultima ? "Revisar" : marcadasNaFase ? "Próxima" : "Pular fase"}
+          {ultima ? "Revisar" : "Próxima"}
         </Botao>
       </div>
     </section>
