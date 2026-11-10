@@ -1,0 +1,151 @@
+"use client";
+
+// Áudios recebidos: tudo o que já chegou, com player. Nada se apaga nesta fase.
+import Link from "next/link";
+import { useState } from "react";
+import { classesDoBotao } from "@/components/ui/botao";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { IconeSubir } from "@/components/ui/icones";
+import { formatarDuracao } from "@/lib/audios/formatos";
+import type { AudioDaTela, LivroDaTela } from "@/lib/livro/tipos";
+
+const DATA = new Intl.DateTimeFormat("pt-BR", {
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "America/Sao_Paulo",
+});
+
+function Player({ url, nome }: { url: string | null; nome: string }) {
+  const [falhou, setFalhou] = useState(false);
+  if (!url)
+    return (
+      <p className="text-ui-15 text-tinta-2">
+        Não deu para carregar agora. Atualize a página.
+      </p>
+    );
+  if (falhou)
+    return (
+      <p className="text-ui-15 text-tinta-2">
+        Este celular não toca este formato. Ouça no computador ou atualize o
+        iPhone.
+      </p>
+    );
+  return (
+    <audio
+      controls
+      preload="none"
+      src={url}
+      aria-label={`Ouvir ${nome}`}
+      onError={() => setFalhou(true)}
+      className="w-full"
+    />
+  );
+}
+
+export function TelaAudios({
+  livro,
+  audios,
+}: {
+  livro: LivroDaTela;
+  audios: AudioDaTela[];
+}) {
+  const nova = `/livro/${livro.id}/historias/nova`;
+  return (
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12">
+      <Link
+        href={`/livro/${livro.id}`}
+        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
+      >
+        ← Livro do {livro.autor}
+      </Link>
+      <div className="flex flex-col gap-2">
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+          Áudios recebidos
+        </h1>
+        {audios.length ? (
+          <p className="text-ui-17 text-tinta-2">
+            {audios.length === 1
+              ? "1 áudio guardado"
+              : `${audios.length} áudios guardados`}
+          </p>
+        ) : null}
+      </div>
+
+      {audios.length === 0 ? (
+        <EstadoVazio
+          frase="Nenhum áudio ainda."
+          acao={
+            livro.podeEscrever ? (
+              <Link href={nova} className={classesDoBotao()}>
+                <IconeSubir tamanho={20} />
+                <span>Subir áudios</span>
+              </Link>
+            ) : null
+          }
+        />
+      ) : (
+        <>
+          <ul className="flex flex-col gap-4">
+            {audios.map((a) => {
+              // Nome de arquivo ("PTT-2026…opus") não é título de livro: sem título nem
+              // pergunta, o cartão mostra a data, e o arquivo vai para a linha de apoio.
+              const quando = a.recebidoEm
+                ? DATA.format(new Date(a.recebidoEm))
+                : null;
+              const nome =
+                a.titulo ??
+                a.pergunta ??
+                (quando ? `Áudio de ${quando.split(",")[0]}` : "Áudio");
+              const apoio = [
+                a.titulo || a.pergunta ? quando : a.nomeArquivo,
+                formatarDuracao(a.duracaoS),
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+                <li
+                  key={a.id}
+                  className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5"
+                >
+                  <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
+                    {nome}
+                  </p>
+                  {a.titulo && a.pergunta ? (
+                    <p className="text-ui-15 text-tinta-2">
+                      Responde: {a.pergunta}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                      {apoio}
+                    </p>
+                    {a.processado ? null : (
+                      <span className="text-ui-13 bg-polen-2 text-tinta-2 rounded-full px-3 py-1">
+                        Aguardando processamento
+                      </span>
+                    )}
+                  </div>
+                  <Player url={a.url} nome={nome} />
+                </li>
+              );
+            })}
+          </ul>
+          {livro.podeEscrever ? (
+            <Link
+              href={nova}
+              className={
+                classesDoBotao({ variante: "secundario", larguraTotal: true }) +
+                " sm:w-auto sm:self-start"
+              }
+            >
+              <IconeSubir tamanho={20} />
+              <span>Subir mais áudios</span>
+            </Link>
+          ) : null}
+        </>
+      )}
+    </main>
+  );
+}

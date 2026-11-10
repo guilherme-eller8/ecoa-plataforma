@@ -1,0 +1,52 @@
+{
+  "language_code": "por",
+  "text": "Pai, conta do trem. Eu peguei o trem em Cachoeiro.",
+  "words": [
+    {
+      "text": "Pai,",
+      "start": 0.1,
+      "end": 0.4,
+      "type": "word",
+      "speaker_id": "speaker_1",
+      "logprob": -0.05
+    },
+    {
+      "text": " ",
+      "start": 0.4,
+      "end": 0.45,
+      "type": "spacing",
+      "speaker_id": "speaker_1"
+    },
+    {
+      "text": "conta",
+      "start": 0.45,
+      "end": 0.8,
+      "type": "word",
+      "speaker_id": "speaker_1",
+      "logprob": -0.1
+    },
+    {
+      "text": "(risos)",
+      "start": 0.8,
+      "end": 1.2,
+      "type": "audio_event",
+      "speaker_id": "speaker_1"
+    },
+    {
+      "text": "Eu",
+      "start": 2.0,
+      "end": 2.2,
+      "type": "word",
+      "speaker_id": "speaker_0",
+      "logprob": -0.2
+    },
+    {
+      "text": "peguei",
+      "start": 2.2,
+      "end": 2.6,
+      "type": "word",
+      "speaker_id": "speaker_0",
+      "logprob": -0.3
+    }
+  ]
+}

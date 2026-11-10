@@ -1,0 +1,18 @@
+{
+  "autor": { "nome": "Joaquim da Silva", "apelido": "Seu Joaquim" },
+  "sobre": "Nasceu em Cachoeiro de Itapemirim, foi ajudante de pedreiro e depois mestre de obras. Casado com Dona Lurdes há 60 anos.",
+  "pessoas": [
+    { "nome": "Lurdes", "apelidos": ["Dona Lurdes"], "relacao": "esposa" },
+    { "nome": "Sebastião", "apelidos": ["Tião"], "relacao": "primo" }
+  ],
+  "lugares": [
+    { "nome": "Cachoeiro de Itapemirim", "apelidos": ["Cachoeiro"] },
+    { "nome": "Vitória", "apelidos": [] }
+  ],
+  "consentimento": {
+    "quem": "Joaquim da Silva, pedido feito pelo filho",
+    "data": "2026-11-12",
+    "escopo": "gravar as histórias para a família guardar e processar com IA (transcrição e edição)",
+    "reusoComoExemplo": false
+  }
+}

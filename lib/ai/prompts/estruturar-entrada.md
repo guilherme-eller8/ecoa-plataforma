@@ -1,0 +1,4 @@
+Arquivo: {{arquivo}}
+
+Segmentos:
+{{segmentos}}

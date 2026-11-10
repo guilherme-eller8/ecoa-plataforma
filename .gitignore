@@ -37,3 +37,8 @@ next-env.d.ts
 e2e/.results
 test-results/
 playwright-report/
+
+# laboratório de IA: voz e textos de família ficam só na máquina local
+/lab/*
+!/lab/README.md
+!/lab/glossario.exemplo.json

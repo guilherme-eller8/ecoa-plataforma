@@ -1,0 +1,56 @@
+// Dados falsos para ver as telas sem Supabase (gate de design). Só com ECOA_STYLEGUIDE=1 em produção.
+import type { LinhaAdmin } from "@/components/telas/tela-admin";
+
+export const TELAS = [
+  "entrar",
+  "entrar-email",
+  "confirmar",
+  "sem-acesso",
+  "livro",
+  "livro-somente-leitura",
+  "admin",
+  "configurar-quem",
+  "configurar-perguntas",
+  "configurar-fotos",
+  "kit",
+  "kit-sem-link",
+  "perguntas",
+  "perguntas-causos",
+  "perguntas-enquete",
+  "perguntas-vazia",
+  "familia",
+  "familia-causo",
+  "familia-invalida",
+  "nova-historia",
+  "nova-historia-arquivos",
+  "audios",
+  "audios-vazia",
+  "nova-enquete",
+  "nova-enquete-etapa",
+  "nova-enquete-revisar",
+] as const;
+export type Tela = (typeof TELAS)[number];
+
+export const LIVROS_FALSOS: LinhaAdmin[] = [
+  {
+    id: "1",
+    autorNome: "Jair",
+    email: "ana.souza@gmail.com",
+    estado: "ativo",
+    venceEm: "2027-11-09T12:00:00Z",
+  },
+  {
+    id: "2",
+    autorNome: "Dona Lurdes",
+    email: "marcos.lima@hotmail.com",
+    estado: "ativo",
+    venceEm: "2027-11-02T12:00:00Z",
+  },
+  {
+    id: "3",
+    autorNome: null,
+    email: "carla@empresa.com.br",
+    estado: "somente_leitura",
+    venceEm: "2026-10-30T12:00:00Z",
+  },
+];
