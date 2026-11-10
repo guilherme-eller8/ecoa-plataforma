@@ -1,0 +1,27 @@
+{
+  "id": "abc",
+  "status": "completed",
+  "words": [
+    {
+      "text": "Pai,",
+      "start": 100,
+      "end": 400,
+      "confidence": 0.95,
+      "speaker": "B"
+    },
+    {
+      "text": "conta",
+      "start": 450,
+      "end": 800,
+      "confidence": 0.9,
+      "speaker": "B"
+    },
+    {
+      "text": "Eu",
+      "start": 2000,
+      "end": 2200,
+      "confidence": 0.8,
+      "speaker": "A"
+    }
+  ]
+}
