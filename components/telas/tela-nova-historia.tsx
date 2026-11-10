@@ -1,8 +1,10 @@
 "use client";
 
-// Nova história (P26): por enquanto, uma porta só, Subir áudios. O prompt 5 acrescenta
-// Gravar conversa aqui mesmo.
+// Nova história (P26): Gravar conversa (a ação principal, pensando na mesa de jantar) ou
+// Subir áudios já gravados. Escolhidos os arquivos, a tela vira a lista de envio.
 import Link from "next/link";
+import { classesDoBotao } from "@/components/ui/botao";
+import { IconeMicrofone } from "@/components/ui/icones";
 import { SubirAudios, type ItemAudio } from "@/components/audios/subir-audios";
 import type { EnviarArquivo } from "@/lib/audios/tus";
 import type {
@@ -42,6 +44,18 @@ export function TelaNovaHistoria({
           acoes={acoes}
           enviarArquivo={enviarArquivo}
           inicial={inicial}
+          antes={
+            <Link
+              href={`/livro/${livro.id}/historias/gravar`}
+              className={
+                classesDoBotao({ larguraTotal: true }) +
+                " sm:w-auto sm:self-start"
+              }
+            >
+              <IconeMicrofone tamanho={20} />
+              <span>Gravar conversa</span>
+            </Link>
+          }
         />
       ) : (
         <p className="text-ui-17 text-tinta-2">

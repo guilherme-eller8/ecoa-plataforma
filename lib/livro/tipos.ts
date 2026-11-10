@@ -125,8 +125,11 @@ export type AcoesPerguntas = {
 };
 
 // ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
+export type OrigemAudio = "autor" | "livre" | "conversa" | "upload" | "lote";
+
 export type AudioDaTela = {
   id: string;
+  origem: OrigemAudio;
   titulo: string | null;
   nomeArquivo: string;
   pergunta: string | null; // texto da pergunta ligada
@@ -153,9 +156,12 @@ export type AudioPreparado = {
   contentType: string;
 };
 
+export type OpcoesAudios = { conversa?: { loteId: string } };
+
 export type AcoesAudios = {
   prepararAudios: (
     arquivos: AudioParaSubir[],
+    opcoes?: OpcoesAudios,
   ) => Promise<Resposta<AudioPreparado[]>>;
   reassinarAudio: (id: string) => Promise<Resposta<AudioPreparado>>;
   confirmarAudio: (id: string) => Promise<Resposta>;

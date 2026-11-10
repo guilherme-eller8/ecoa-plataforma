@@ -41,6 +41,8 @@ import {
 } from "@/lib/livro/configuracao";
 import type {
   AudioParaSubir,
+  OpcoesAudios,
+  OrigemAudio,
   AudioPreparado,
   CandidatoDaEnquete,
   FotoPreparada,
@@ -736,11 +738,23 @@ async function assinarUpload(
   return { id, caminho, token: data.token, contentType };
 }
 
+const esquemaOpcoesAudios = z
+  .object({ conversa: z.object({ loteId: z.uuid() }).optional() })
+  .optional();
+
+/**
+ * Sem opções: 1 arquivo é "upload"; 2 ou mais são um "lote" com o mesmo lote_id (prompt 7).
+ * Com `conversa`: exatamente 1 arquivo, uma parte da conversa gravada aqui (P39).
+ */
 export async function prepararAudios(
   livroId: string,
   arquivos: AudioParaSubir[],
+  opcoes?: OpcoesAudios,
 ): Promise<Resposta<AudioPreparado[]>> {
   const v = esquemaAudios.safeParse(arquivos);
+  const o = esquemaOpcoesAudios.safeParse(opcoes);
+  if (!o.success || (o.data?.conversa && arquivos.length !== 1))
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
   if (!v.success)
     return {
       ok: false,
@@ -764,7 +778,13 @@ export async function prepararAudios(
       .select("id")
       .eq("book_id", c.livro.id)
       .in("id", perguntas)
-      .in("estado", ["para_enviar", "enviada"]);
+      // A parte 2 de uma conversa chega depois que a parte 1 já marcou a pergunta.
+      .in(
+        "estado",
+        o.data?.conversa
+          ? ["para_enviar", "enviada", "respondida"]
+          : ["para_enviar", "enviada"],
+      );
     if ((data ?? []).length !== perguntas.length)
       return {
         ok: false,
@@ -772,13 +792,18 @@ export async function prepararAudios(
       };
   }
 
+  const conversa = o.data?.conversa;
+  const lote =
+    conversa?.loteId ?? (v.data.length > 1 ? crypto.randomUUID() : null);
+  const origem: OrigemAudio = conversa ? "conversa" : lote ? "lote" : "upload";
   const linhas = v.data.map((a, i) => {
     const f = formatos[i]!;
     const id = crypto.randomUUID();
     return {
       id,
       book_id: c.livro.id,
-      origem: "upload" as const,
+      origem,
+      lote_id: lote,
       prompt_id: a.promptId,
       titulo: a.titulo || null,
       nome_arquivo: a.nome,
@@ -806,7 +831,9 @@ async function audioEnviando(c: Contexto, id: string) {
   if (!uuid.safeParse(id).success) return null;
   const { data } = await clienteAdmin()
     .from("recordings")
-    .select("id, caminho, content_type, tamanho_bytes, prompt_id, upload")
+    .select(
+      "id, caminho, content_type, tamanho_bytes, prompt_id, upload, origem",
+    )
     .eq("id", id)
     .eq("book_id", c.livro.id)
     .maybeSingle();
@@ -852,10 +879,17 @@ export async function confirmarAudio(
     p_tamanho_bytes: a.tamanho_bytes,
   });
   if (error || !ok) return falhou(error);
-  evento(c, "subiu_audio", {
-    recording: a.id,
-    com_pergunta: Boolean(a.prompt_id),
-  });
+  if (a.origem === "conversa")
+    evento(c, "gravou", {
+      recording: a.id,
+      origem: a.origem,
+      com_pergunta: Boolean(a.prompt_id),
+    });
+  else
+    evento(c, "subiu_audio", {
+      recording: a.id,
+      com_pergunta: Boolean(a.prompt_id),
+    });
   atualizar(livroId);
   return { ok: true };
 }

@@ -61,12 +61,14 @@ export function SubirAudios({
   acoes,
   enviarArquivo = enviarPorTus,
   inicial = [],
+  antes,
 }: {
   livroId: string;
   perguntas: PerguntaDaTela[];
   acoes: AcoesAudios;
   enviarArquivo?: EnviarArquivo;
   inicial?: ItemAudio[];
+  antes?: React.ReactNode; // outra porta (Gravar conversa), só antes de escolher arquivos
 }) {
   const entrada = useRef<HTMLInputElement>(null);
   const [itens, setItens] = useState<ItemAudio[]>(inicial);
@@ -180,11 +182,15 @@ export function SubirAudios({
     return (
       <div className="flex flex-col gap-5">
         {seletor}
+        {antes}
         <p className="text-ui-17 text-tinta-2">
-          Áudios do WhatsApp ou do gravador do celular.
+          {antes
+            ? "Ou suba áudios do WhatsApp ou do gravador do celular."
+            : "Áudios do WhatsApp ou do gravador do celular."}
         </p>
         <Botao
           larguraTotal
+          variante={antes ? "secundario" : "principal"}
           icone={<IconeSubir tamanho={20} />}
           onClick={() => entrada.current?.click()}
           className="sm:w-auto sm:self-start"

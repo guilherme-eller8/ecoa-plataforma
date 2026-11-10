@@ -199,7 +199,7 @@ export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
   const { data } = await supabase
     .from("recordings")
     .select(
-      "id, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, prompts(texto)",
+      "id, origem, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, prompts(texto)",
     )
     .eq("book_id", livro)
     .eq("upload", "recebido")
@@ -211,6 +211,7 @@ export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
   );
   return linhas.map((a) => ({
     id: a.id,
+    origem: a.origem,
     titulo: a.titulo,
     nomeArquivo: a.nome_arquivo,
     pergunta: a.prompts?.texto ?? null,

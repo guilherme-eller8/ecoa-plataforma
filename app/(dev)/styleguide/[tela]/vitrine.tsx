@@ -3,6 +3,7 @@
 import { TelaAdmin } from "@/components/telas/tela-admin";
 import { TelaAudios } from "@/components/telas/tela-audios";
 import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
+import { TelaGravarConversa } from "@/components/telas/tela-gravar-conversa";
 import { TelaNovaHistoria } from "@/components/telas/tela-nova-historia";
 import {
   ACOES_AUDIOS_FALSAS,
@@ -10,6 +11,7 @@ import {
   ENVIAR_FALSO,
   itensDeExemplo,
   PERGUNTAS_PENDENTES,
+  SUBIR_FALSO,
 } from "@/lib/exemplos/prompt5a";
 import { TelaConfirmar } from "@/components/telas/tela-confirmar";
 import { TelaEntrar } from "@/components/telas/tela-entrar";
@@ -78,6 +80,21 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "audios":
       return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_JAIR} />;
+    case "gravar-conversa":
+    case "gravar-conversa-pergunta":
+    case "gravar-conversa-partes":
+      return (
+        <TelaGravarConversa
+          livro={LIVRO_JAIR}
+          perguntas={PERGUNTAS_PENDENTES}
+          acoes={ACOES_AUDIOS_FALSAS}
+          perguntaInicial={
+            tela === "gravar-conversa" ? null : PERGUNTAS_PENDENTES[0]?.id
+          }
+          subir={SUBIR_FALSO}
+          limiteParteS={tela === "gravar-conversa-partes" ? 3 : undefined}
+        />
+      );
     case "audios-vazia":
       return <TelaAudios livro={LIVRO_JAIR} audios={[]} />;
     case "entrar":

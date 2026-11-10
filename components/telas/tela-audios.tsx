@@ -17,6 +17,15 @@ const DATA = new Intl.DateTimeFormat("pt-BR", {
   timeZone: "America/Sao_Paulo",
 });
 
+// Só o que não é óbvio: subido pelo responsável é o padrão e não ganha rótulo.
+const ORIGEM: Partial<
+  Record<AudioDaTela["origem"], (autor: string) => string>
+> = {
+  conversa: () => "Conversa gravada aqui",
+  autor: (autor) => `Gravado por ${autor}`,
+  livre: (autor) => `Gravado por ${autor}`,
+};
+
 function Player({ url, nome }: { url: string | null; nome: string }) {
   const [falhou, setFalhou] = useState(false);
   if (!url)
@@ -94,12 +103,15 @@ export function TelaAudios({
               const quando = a.recebidoEm
                 ? DATA.format(new Date(a.recebidoEm))
                 : null;
+              const gravadoAqui = a.origem !== "upload" && a.origem !== "lote";
+              const tipo = a.origem === "conversa" ? "Conversa" : "Áudio";
               const nome =
                 a.titulo ??
                 a.pergunta ??
-                (quando ? `Áudio de ${quando.split(",")[0]}` : "Áudio");
+                (quando ? `${tipo} de ${quando.split(",")[0]}` : tipo);
               const apoio = [
-                a.titulo || a.pergunta ? quando : a.nomeArquivo,
+                ORIGEM[a.origem]?.(livro.autor),
+                a.titulo || a.pergunta || gravadoAqui ? quando : a.nomeArquivo,
                 formatarDuracao(a.duracaoS),
               ]
                 .filter(Boolean)

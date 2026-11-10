@@ -1,7 +1,8 @@
 // Upload retomável (TUS) direto ao Supabase Storage, com o token assinado pelo servidor no
 // cabeçalho x-signature: o navegador só consegue gravar naquele caminho. Se a internet cai,
 // o cliente tenta de novo sozinho; se a página recarrega e o mesmo arquivo é escolhido,
-// continua de onde parou (a impressão digital fica no localStorage).
+// continua de onde parou (a impressão digital fica no localStorage). Uma gravação remontada
+// dos pedaços do IndexedDB não tem nome nem data: a impressão digital vem do id dela.
 import * as tus from "tus-js-client";
 import { envPublico } from "@/lib/env-publico";
 import type { AudioPreparado } from "@/lib/livro/tipos";
@@ -23,12 +24,18 @@ export function endpointTus(urlSupabase: string) {
 }
 
 export type EnviarArquivo = (
-  arquivo: File,
+  arquivo: Blob,
   preparado: AudioPreparado,
   aoProgresso: (fracao: number) => void,
+  impressao?: string,
 ) => Promise<void>;
 
-export const enviarPorTus: EnviarArquivo = (arquivo, p, aoProgresso) => {
+export const enviarPorTus: EnviarArquivo = (
+  arquivo,
+  p,
+  aoProgresso,
+  impressao,
+) => {
   const env = envPublico();
   return new Promise((resolve, reject) => {
     const upload = new tus.Upload(arquivo, {
@@ -37,6 +44,9 @@ export const enviarPorTus: EnviarArquivo = (arquivo, p, aoProgresso) => {
       chunkSize: PEDACO,
       uploadDataDuringCreation: true,
       removeFingerprintOnSuccess: true,
+      ...(impressao
+        ? { fingerprint: async () => `ecoa-gravacao-${impressao}` }
+        : {}),
       headers: {
         apikey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
         "x-signature": p.token,
