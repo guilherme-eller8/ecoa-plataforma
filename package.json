@@ -13,17 +13,23 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "taste:lint": "node .claude/skills/design-taste-frontend/scripts/lint.mjs app components",
-    "taste:inspect": "node .claude/skills/design-taste-frontend/scripts/inspect.mjs --allow palette-cream http://localhost:3000",
+    "taste:inspect": "node scripts/inspecionar-telas.mjs",
     "lab": "node --env-file-if-exists=.env.local --import tsx scripts/lab/index.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.7.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "resend": "^6.37.0",
+    "server-only": "^0.0.1",
+    "tus-js-client": "^4.3.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
     "@playwright/test": "1.63.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^22.20.5",

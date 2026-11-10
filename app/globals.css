@@ -1,30 +1,209 @@
 @import "tailwindcss";
 
-/* ── Tokens herdados da landing ───────────────────────────────────────────
- * O design system completo chega no prompt 2. Aqui só as cores e as duas
- * camadas tipográficas: Newsreader para o conteúdo do livro, fonte do
- * sistema para a interface. */
+/* ── Design system da Ecoa ─────────────────────────────────────────────────
+ * Estilo: "editorial greeting" (tasteskill, seed 1418835723), com a paleta e
+ * a tipografia da landing mantidas. Toda cor, tamanho, raio e duração da
+ * interface sai daqui. Componentes usam só estes tokens.
+ *
+ * Duas camadas visuais:
+ *   - livro (Newsreader): o que vai para o papel. Histórias, perguntas, saudação.
+ *   - interface (fonte do sistema): botões, rótulos, campos, navegação.
+ */
 :root {
-  --polen: #f5efe4; /* papel pólen do miolo: fundo principal */
-  --papel: #fffdf8; /* superfícies um tom acima */
-  --tinta: #26211d; /* todo texto corrido */
-  --tinta-2: #6e6259; /* só notas secundárias */
-  --floresta: #1f3d33; /* o acento */
+  /* Cores herdadas da landing */
+  --polen: #f5efe4; /* papel pólen do miolo: o chão de toda tela */
+  --papel: #fffdf8; /* painéis, um degrau acima do chão */
+  --tinta: #26211d; /* todo texto corrido (13.9:1 sobre pólen) */
+  --tinta-2: #6e6259; /* só notas secundárias (5.2:1 sobre pólen) */
+  --floresta: #1f3d33; /* o único acento: ação principal e o dado principal */
+
+  /* Derivados funcionais (não são cores novas de marca) */
+  --polen-2: #ece4d5; /* degrau tonal: trilho, linha interna, hover */
+  --linha: #e6dccb; /* borda 1px de painel e campo (1.3:1) */
+  --linha-forte: #cfc2ad; /* borda de controle, um degrau acima */
+  --floresta-escuro: #162d25; /* hover/pressionado da ação principal */
+  --floresta-claro: #e3ebe5; /* fundo pálido de etapa ativa e seleção */
+  --gravando: #b3261e; /* o ponto de gravação, e só ele */
+  --erro: #a3261b;
+  --erro-fundo: #fbe9e5;
+  --aviso: #7a5200;
+  --aviso-fundo: #fbf1d6;
+
+  /* Tipografia: interface */
+  --ui-13: 0.8125rem;
+  --ui-15: 0.9375rem;
+  --ui-17: 1.0625rem;
+  --ui-20: 1.25rem;
+  --ui-24: 1.5rem;
+  /* Tipografia: livro */
+  --livro-20: 1.25rem; /* texto do autor */
+  --livro-24: 1.5rem;
+  --livro-28: 1.75rem; /* pergunta para o autor: mínimo do PRD */
+  --livro-36: 2.25rem;
+  --livro-44: 2.75rem; /* saudação */
+
+  /* Espaçamento, base 4 */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.25rem;
+  --esp-6: 1.5rem;
+  --esp-8: 2rem;
+  --esp-10: 2.5rem;
+  --esp-12: 3rem;
+  --esp-16: 4rem;
+
+  /* Raios: suave, decidido uma vez */
+  --raio-cartao: 20px;
+  --raio-interno: 12px;
+  --raio-chip: 8px;
+  --raio-controle: 999px;
+
+  /* Sombra só no que flutua (folha inferior, menu). Nada em repouso. */
+  --sombra-flutuante: 0 12px 40px rgb(38 33 29 / 0.16);
+
+  /* Alvos de toque */
+  --alvo: 48px;
+  --alvo-autor: 56px;
+  --gravar: 120px;
+
+  /* Movimento: só para dar retorno (gravando, escrevendo, salvo) */
+  --dur-rapida: 120ms;
+  --dur-media: 220ms;
+  --dur-lenta: 400ms;
+  --curva-saida: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-rapida: 0ms;
+    --dur-media: 0ms;
+    --dur-lenta: 0ms;
+  }
 }
 
 @theme inline {
   --color-polen: var(--polen);
+  --color-polen-2: var(--polen-2);
   --color-papel: var(--papel);
   --color-tinta: var(--tinta);
   --color-tinta-2: var(--tinta-2);
   --color-floresta: var(--floresta);
+  --color-floresta-escuro: var(--floresta-escuro);
+  --color-floresta-claro: var(--floresta-claro);
+  --color-linha: var(--linha);
+  --color-linha-forte: var(--linha-forte);
+  --color-gravando: var(--gravando);
+  --color-erro: var(--erro);
+  --color-erro-fundo: var(--erro-fundo);
+  --color-aviso: var(--aviso);
+  --color-aviso-fundo: var(--aviso-fundo);
+
   --font-livro: var(--font-newsreader), Georgia, serif;
   --font-ui:
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  --text-ui-13: var(--ui-13);
+  --text-ui-13--line-height: 1.4;
+  --text-ui-15: var(--ui-15);
+  --text-ui-15--line-height: 1.45;
+  --text-ui-17: var(--ui-17);
+  --text-ui-17--line-height: 1.45;
+  --text-ui-20: var(--ui-20);
+  --text-ui-20--line-height: 1.3;
+  --text-ui-24: var(--ui-24);
+  --text-ui-24--line-height: 1.2;
+  --text-livro-20: var(--livro-20);
+  --text-livro-20--line-height: 1.55;
+  --text-livro-24: var(--livro-24);
+  --text-livro-24--line-height: 1.3;
+  --text-livro-28: var(--livro-28);
+  --text-livro-28--line-height: 1.2;
+  --text-livro-36: var(--livro-36);
+  --text-livro-36--line-height: 1.1;
+  --text-livro-44: var(--livro-44);
+  --text-livro-44--line-height: 1.05;
+
+  --radius-cartao: var(--raio-cartao);
+  --radius-interno: var(--raio-interno);
+  --radius-chip: var(--raio-chip);
+  --radius-controle: var(--raio-controle);
+
+  --shadow-flutuante: var(--sombra-flutuante);
+
+  --spacing-alvo: var(--alvo);
+  --spacing-alvo-autor: var(--alvo-autor);
+  --spacing-gravar: var(--gravar);
+
+  --ease-saida: var(--curva-saida);
+  --animate-pulsar: pulsar 1.4s ease-in-out infinite;
+  --animate-cursor: cursor 1s steps(1) infinite;
+  --animate-surgir: surgir var(--dur-media) var(--curva-saida) both;
+}
+
+@keyframes pulsar {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Reduzir movimento: o ponto fica aceso, o cursor fica fixo, nada desliza. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+  }
 }
 
 body {
   background: var(--polen);
   color: var(--tinta);
   font-family: var(--font-ui);
+}
+
+/* Foco sempre visível, no acento, fora do elemento. */
+:focus-visible {
+  outline: 3px solid var(--floresta);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--floresta-claro);
+  color: var(--tinta);
+}
+
+/* Algarismos tabulares onde números alinham (cronômetro, contagens). */
+.num {
+  font-variant-numeric: tabular-nums;
 }

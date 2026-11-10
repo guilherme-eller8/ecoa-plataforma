@@ -3,10 +3,10 @@
 
 export const MARCA = "Ecoa Memórias";
 
-// ── Passe ────────────────────────────────────────────────────────────────
+// ── Plano ────────────────────────────────────────────────────────────────
 // R$ 467 por ano: gravações ilimitadas e 1 livro de 80 páginas.
-export const PRECO_PASSE = 467; // exibir como "R$ 467"
-export const DURACAO_PASSE_MESES = 12; // conta a partir da ativação
+export const PRECO_PLANO = 467; // exibir como "R$ 467"
+export const DURACAO_PLANO_MESES = 12; // conta a partir da ativação
 
 // ── Livro ────────────────────────────────────────────────────────────────
 export const PAGINAS_INCLUSAS = 80;
@@ -21,13 +21,68 @@ export const SANGRIA_MM = 3; // em cada lado
 export const MAX_GRAVACAO_MIN = 30; // por gravação
 export const MAX_ARQUIVOS_LOTE = 30; // por upload em lote
 
+// ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
+// 50 MB é o teto por arquivo do plano grátis do Supabase (o PRD pede 100; muda com o Pro).
+// Espelhado em privado.max_audio_bytes() e no limite do bucket "audios".
+export const MAX_AUDIO_MB = 50;
+export const FORMATOS_AUDIO = [
+  "opus",
+  "ogg",
+  "m4a",
+  "mp3",
+  "wav",
+  "webm",
+] as const;
+export const SUBIDAS_SIMULTANEAS = 2; // arquivos subindo ao mesmo tempo
+
 // ── Pessoas ──────────────────────────────────────────────────────────────
 export const MAX_COFACILITADORES = 3; // além do responsável
 
 // ── Domínios ─────────────────────────────────────────────────────────────
-export const DOMINIO_APP = "app.ecoamemorias.com.br";
+export const DOMINIO_APP = "app.ecoa-memorias.com.br";
 // O QR impresso aponta para cá. Nunca mudar: livros impressos dependem dele.
-export const DOMINIO_QR = "ouvir.ecoamemorias.com.br";
+export const DOMINIO_QR = "ouvir.ecoa-memorias.com.br";
+
+// ── E-mail ───────────────────────────────────────────────────────────────
+// Domínio verificado no Resend. Ver docs/decisoes/dominio.md.
+export const EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>";
+
+// ── Lembretes e estimativas ──────────────────────────────────────────────
+// Pergunta enviada há este número de dias sem resposta mostra "Lembrar com carinho".
+export const LEMBRETE_APOS_DIAS = 3;
+// Estimativa de páginas no 21x21 enquanto o livro não é paginado de verdade.
+export const PALAVRAS_POR_PAGINA_ESTIMADA = 320;
+export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
+
+// ── Perguntas e configuração inicial ─────────────────────────────────────
+export const PERGUNTAS_INICIAIS = 8; // marcadas no passo 2: 1 por fase da vida, por parentesco
+export const ATUALIZAR_A_CADA_S = 4; // abas Causos e Enquete abertas na tela
+
+// ── Fotos do acervo ──────────────────────────────────────────────────────
+// Comprimidas no navegador: JPEG, lado maior até 3000 px (21 cm a 300 DPI pede 2480).
+export const FOTO_LADO_MAX_PX = 3000;
+export const FOTO_QUALIDADE_JPEG = 0.9;
+export const MAX_FOTO_MB = 5; // igual ao limite do bucket acervo
+export const MAX_FOTOS_POR_ENVIO = 30;
+export const MAX_FOTOS_POR_LIVRO = 200; // espelhado em privado.max_fotos_por_livro()
+
+// ── Família: causos e enquete ────────────────────────────────────────────
+// Os que têm "espelhado" também são conferidos no banco; supabase/tests/config-banco.test.ts
+// garante que os valores batem.
+// Enquete por fase (P35): até 2 por fase; teto total = 2 × 9 categorias (8 fases + outras).
+export const VOTOS_POR_FASE = 2; // espelhado em privado.votos_por_fase()
+export const VOTOS_POR_PESSOA = 18; // espelhado em privado.votos_por_pessoa()
+// A lista inteira do banco (150) mais as próprias e as sugestões da família.
+export const MAX_ITENS_ENQUETE = 200; // espelhado em privado.max_itens_enquete()
+export const MAX_VOTANTES_POR_ENQUETE = 150; // espelhado
+export const MAX_TROCAS_VOTO_POR_HORA = 300; // espelhado
+export const MAX_CAUSOS_POR_HORA = 20; // espelhado, por livro
+export const MAX_CAUSOS_POR_DIA = 40; // espelhado, por livro
+export const MAX_CAUSO_AUDIO_MIN = 3;
+export const MAX_CAUSO_AUDIO_MB = 2; // igual ao limite do bucket causos
+export const CAUSO_AUDIO_KBPS = 48; // 3 min ≈ 1,1 MB
+export const CONSENTIMENTO_CAUSO_VERSAO = 1; // mudou a frase? suba a versão
+export const TEXTO_PERGUNTA_MAX = 500; // igual ao CHECK de prompts e poll_items
 
 // ── IA (laboratório e pipeline) ──────────────────────────────────────────
 // Ver docs/designs/laboratorio-ia.md. Preços em US$; conferir antes de decidir.
