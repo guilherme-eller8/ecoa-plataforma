@@ -35,6 +35,13 @@ Antes de qualquer alteração de schema, **mostre o SQL de subida e o de revers�
 
 Comece pelo fluxo do Elephant-Goldfish (`/egm:egm-brainstorm`, `/egm:egm-draft`, `/egm:egm-review`). O design doc é aprovado em português antes de qualquer código.
 
+Escopo e custo do EGM (T28):
+
+- **Só quando o prompt mexe em schema, RLS, tokens ou links sem login.** Tela sem banco usa um plano curto aprovado pelo Guilherme, sem revisores, mesmo que o prompt traga [EGM].
+- **No máximo 2 revisores**: `egm:egm-design` (crítico, foco em segurança) e `egm:egm-codebase-details`. Nada de zoom-out, compreensão, estilo ou estrutura.
+- **Revisores com `model: sonnet`** (autorizado pelo Guilherme em 10/11/2026).
+- **Uma rodada só.** Se um revisor cair por limite de uso, faça a revisão você mesmo, registre no design doc e siga, sem rodar de novo.
+
 EGM artifact directory: docs/designs
 
 ## Gate de fim de tarefa
@@ -42,7 +49,10 @@ EGM artifact directory: docs/designs
 1. `npm run build`, `npm run lint` e `npm test` sem erro (e `npm run test:e2e` quando houver tela).
 2. `npm run format`.
 3. Commit em português, no padrão Conventional Commits (`feat:`, `fix:`, `chore:`…).
-4. Ao final, um resumo em 5 linhas, sem jargão: o que foi construído e como testar no celular.
+4. Depois do push, quando o deploy de prévia ficar pronto: consulte os erros de runtime da Vercel e confira cada rota nova no deploy de verdade. O EGM revisa o design, não pega bug de código nem de integração (T28).
+5. Ao final, um resumo em 5 linhas, sem jargão: o que foi construído e como testar no celular.
+
+Um prompt por sessão: rode `/clear` entre prompts. O contexto vem deste arquivo, de `docs/prd.md` e de `docs/decisoes.md`, não da conversa anterior.
 
 ## Gate de design (prompts com tela)
 
