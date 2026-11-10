@@ -4,6 +4,8 @@
 // - familia_enviar_causo: p_texto e p_audio_tipo (um ou outro).
 // - servico_caminho_audio_causo: devolve null quando o causo não aceita upload.
 // - familia_pagina, familia_votar, familia_enviar_causo: retorno tipado em lib/familia/tipos.ts.
+// - autor_preparar_gravacao: p_prompt (história livre); servico_caminho_gravacao_autor devolve null.
+// - autor_pagina, autor_preparar_gravacao: retorno tipado em lib/autor/tipos.ts.
 
 export type Json =
   | string
@@ -23,6 +25,7 @@ export type Database = {
     Tables: {
       author_access: {
         Row: {
+          chave_versao: number;
           book_id: string;
           criado_em: string;
           criado_por: string | null;
@@ -31,6 +34,7 @@ export type Database = {
           token_hash: string;
         };
         Insert: {
+          chave_versao?: number;
           book_id: string;
           criado_em?: string;
           criado_por?: string | null;
@@ -39,6 +43,7 @@ export type Database = {
           token_hash: string;
         };
         Update: {
+          chave_versao?: number;
           book_id?: string;
           criado_em?: string;
           criado_por?: string | null;
@@ -90,6 +95,8 @@ export type Database = {
       };
       books: {
         Row: {
+          autor_consentimento_em: string | null;
+          autor_consentimento_versao: number | null;
           atualizado_em: string;
           autor_apelido: string | null;
           autor_celular: string | null;
@@ -104,6 +111,8 @@ export type Database = {
           plano_vence_em: string | null;
         };
         Insert: {
+          autor_consentimento_em?: string | null;
+          autor_consentimento_versao?: number | null;
           atualizado_em?: string;
           autor_apelido?: string | null;
           autor_celular?: string | null;
@@ -118,6 +127,8 @@ export type Database = {
           plano_vence_em?: string | null;
         };
         Update: {
+          autor_consentimento_em?: string | null;
+          autor_consentimento_versao?: number | null;
           atualizado_em?: string;
           autor_apelido?: string | null;
           autor_celular?: string | null;
@@ -457,6 +468,8 @@ export type Database = {
       };
       prompts: {
         Row: {
+          sugestao_audio_caminho: string | null;
+          sugestao_nome: string | null;
           atualizado_em: string;
           banco_id: string | null;
           book_id: string;
@@ -473,6 +486,8 @@ export type Database = {
           tipo: Database["public"]["Enums"]["prompt_tipo"];
         };
         Insert: {
+          sugestao_audio_caminho?: string | null;
+          sugestao_nome?: string | null;
           atualizado_em?: string;
           banco_id?: string | null;
           book_id: string;
@@ -489,6 +504,8 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["prompt_tipo"];
         };
         Update: {
+          sugestao_audio_caminho?: string | null;
+          sugestao_nome?: string | null;
           atualizado_em?: string;
           banco_id?: string | null;
           book_id?: string;
@@ -530,6 +547,8 @@ export type Database = {
       };
       recordings: {
         Row: {
+          author_access_id: string | null;
+          lote_id: string | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -547,6 +566,8 @@ export type Database = {
           upload: Database["public"]["Enums"]["recording_upload"];
         };
         Insert: {
+          author_access_id?: string | null;
+          lote_id?: string | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -564,6 +585,8 @@ export type Database = {
           upload?: Database["public"]["Enums"]["recording_upload"];
         };
         Update: {
+          author_access_id?: string | null;
+          lote_id?: string | null;
           book_id?: string;
           caminho?: string;
           content_type?: string;
@@ -581,6 +604,13 @@ export type Database = {
           upload?: Database["public"]["Enums"]["recording_upload"];
         };
         Relationships: [
+          {
+            foreignKeyName: "recordings_author_access_id_fkey";
+            columns: ["author_access_id"];
+            isOneToOne: false;
+            referencedRelation: "author_access";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "recordings_book_id_fkey";
             columns: ["book_id"];
@@ -626,6 +656,22 @@ export type Database = {
         Returns: undefined;
       };
       admin_usuario_por_email: { Args: { p_email: string }; Returns: string };
+      autor_consentir: {
+        Args: { p_token: string; p_versao: number };
+        Returns: boolean;
+      };
+      autor_pagina: { Args: { p_token: string }; Returns: Json };
+      autor_preparar_gravacao: {
+        Args: {
+          p_duracao_s: number;
+          p_ext: string;
+          p_id: string;
+          p_prompt: string | null;
+          p_tamanho_bytes: number;
+          p_token: string;
+        };
+        Returns: Json;
+      };
       enquete_abrir: {
         Args: { p_itens: Json; p_livro: string };
         Returns: string;
@@ -676,9 +722,27 @@ export type Database = {
         Args: { p_id: string; p_tamanho_bytes: number };
         Returns: boolean;
       };
+      servico_caminho_gravacao_autor: {
+        Args: { p_id: string; p_token: string };
+        Returns: string | null;
+      };
       servico_confirmar_audio_causo: {
         Args: { p_causo: string; p_duracao_s: number; p_token: string };
         Returns: boolean;
+      };
+      servico_confirmar_gravacao_autor: {
+        Args: { p_id: string; p_tamanho_bytes: number; p_token: string };
+        Returns: boolean;
+      };
+      servico_trocar_link_autor: {
+        Args: {
+          p_chave_versao: number;
+          p_id: string;
+          p_livro: string;
+          p_token_hash: string;
+          p_usuario: string;
+        };
+        Returns: undefined;
       };
       servico_trocar_link_familia: {
         Args: {
