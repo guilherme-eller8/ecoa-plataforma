@@ -16,6 +16,7 @@
     "taste:inspect": "node .claude/skills/design-taste-frontend/scripts/inspect.mjs --allow palette-cream http://localhost:3000"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.7.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -30,9 +31,11 @@
     "@vitejs/plugin-react": "^6.2.1",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "ffmpeg-static": "^5.3.0",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^5.1.0"

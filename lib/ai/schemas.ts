@@ -1,0 +1,158 @@
+// Contratos do pipeline de IA. Reaproveitados pela plataforma (prompt 6 em diante).
+import { z } from "zod";
+
+// ── Transcrição ──────────────────────────────────────────────────────────
+
+export type Palavra = {
+  texto: string;
+  inicio: number; // segundos
+  fim: number; // segundos
+  falante: string | null;
+  confianca: number | null;
+};
+
+export type Transcricao = {
+  provedor: string;
+  modelo: string;
+  palavras: Palavra[];
+  minutos: number;
+  ms: number;
+  bruto: unknown;
+};
+
+export type Segmento = {
+  id: number; // inteiro contínuo entre arquivos; no prompt aparece como S001
+  arquivo: string;
+  inicio: number;
+  fim: number;
+  falante: string; // qualificado pelo arquivo: "arquivo:falante"
+  texto: string;
+};
+
+// ── Lista única de tipos de afirmação (verificador, checagens e taxonomia) ──
+
+export const TIPOS_AFIRMACAO = [
+  "fato",
+  "nome",
+  "data",
+  "lugar",
+  "numero",
+  "emocao",
+  "juizo",
+  "causa",
+  "ordem",
+] as const;
+export const TipoAfirmacao = z.enum(TIPOS_AFIRMACAO);
+export type TipoAfirmacao = z.infer<typeof TipoAfirmacao>;
+
+// ── Saídas do Claude ─────────────────────────────────────────────────────
+
+export const Estrutura = z.object({
+  falantes: z.array(
+    z.object({
+      falante: z.string(),
+      papel: z.enum(["autor", "entrevistador", "outro"]),
+    }),
+  ),
+  vazios: z.array(z.number().int()),
+  mudancasDeAssunto: z.array(z.number().int()),
+});
+export type Estrutura = z.infer<typeof Estrutura>;
+
+export const Edicao = z.object({
+  titulo: z.string(),
+  paragrafos: z.array(
+    z.object({
+      texto: z.string(),
+      fontes: z.array(z.number().int()),
+    }),
+  ),
+  lacunas: z.array(z.object({ pergunta: z.string(), motivo: z.string() })),
+});
+export type Edicao = z.infer<typeof Edicao>;
+
+export const Verificacao = z.object({
+  marcadas: z.array(
+    z.object({
+      paragrafo: z.number().int(), // começa em 1
+      trecho: z.string(),
+      tipo: TipoAfirmacao,
+      status: z.enum(["parcial", "sem_sustentacao"]),
+      motivo: z.string(),
+    }),
+  ),
+});
+export type Verificacao = z.infer<typeof Verificacao>;
+
+export const CATEGORIAS_EDICAO = [
+  "invencao_removida",
+  "transcricao",
+  "voz_restaurada",
+  "corte_excessivo",
+  "informacao_nova",
+  "ordem",
+  "estilo",
+] as const;
+export const CategoriaEdicao = z.enum(CATEGORIAS_EDICAO);
+export type CategoriaEdicao = z.infer<typeof CategoriaEdicao>;
+
+export const ClassificacaoEdicoes = z.object({
+  mudancas: z.array(
+    z.object({
+      paragrafo: z.number().int(), // índice do par alinhado, começa em 1
+      categoria: CategoriaEdicao,
+      tipo: TipoAfirmacao.nullable(), // só para invencao_removida
+      antes: z.string(),
+      depois: z.string(),
+      sugestao: z.string(),
+    }),
+  ),
+});
+export type ClassificacaoEdicoes = z.infer<typeof ClassificacaoEdicoes>;
+
+// ── Marcações ("Confira") ────────────────────────────────────────────────
+
+export type Marcacao = {
+  paragrafo: number; // começa em 1
+  inicio: number; // caractere no texto do parágrafo
+  fim: number;
+  trecho: string;
+  tipo: TipoAfirmacao | "slop";
+  origem: "checagem" | "verificador";
+  motivo: string;
+};
+
+// ── Glossário do livro (lab/glossario.json) ──────────────────────────────
+
+const Entrada = z.object({
+  nome: z.string().min(1),
+  apelidos: z.array(z.string()).default([]),
+  relacao: z.string().optional(),
+});
+
+export const Glossario = z.object({
+  autor: z.object({ nome: z.string().min(1), apelido: z.string().optional() }),
+  sobre: z.string().default(""),
+  pessoas: z.array(Entrada).default([]),
+  lugares: z.array(Entrada).default([]),
+  consentimento: z
+    .object({
+      quem: z.string().min(1),
+      data: z.string().min(1),
+      escopo: z.string().min(1),
+      reusoComoExemplo: z.boolean().default(false),
+    })
+    .optional(),
+});
+export type Glossario = z.infer<typeof Glossario>;
+
+export function nomesDoGlossario(g: Glossario): string[] {
+  const nomes = [g.autor.nome, g.autor.apelido ?? ""];
+  for (const e of [...g.pessoas, ...g.lugares])
+    nomes.push(e.nome, ...e.apelidos);
+  return [...new Set(nomes.filter(Boolean))];
+}
+
+export function idSegmento(id: number): string {
+  return `S${String(id).padStart(3, "0")}`;
+}
