@@ -140,7 +140,7 @@ Cinco portas que produzem o mesmo objeto: gravações ligadas a uma história. A
 
 - **Resposta do autor:** pelo link pessoal, aberto numa pergunta. Gravador com pausar, retomar, ouvir antes de enviar e regravar, até 30 minutos. Consentimento na primeira gravação.
 - **História livre do autor:** *Contar uma história*, sem pergunta. A IA sugere o título.
-- **Modo conversa:** o mesmo gravador no celular do responsável, com a pergunta no topo como roteiro ou em conversa livre, sem pergunta.
+- **Modo conversa:** o mesmo gravador no celular do responsável, com a pergunta no topo como roteiro ou em conversa livre, sem pergunta. Sem teto de duração: a gravação segue em partes de 30 minutos, sem parar o microfone (P39).
 - **Upload de 1 áudio**, com pergunta opcional.
 - **Lotes e conversas longas:** vários áudios de uma vez (por exemplo, 12 áudios encaminhados pelo autor no WhatsApp) ou uma gravação longa com vários assuntos (por exemplo, 1 hora de conversa na ceia). A IA identifica os assuntos e propõe histórias: junta áudios do mesmo assunto e separa um áudio que tenha dois assuntos. O responsável confirma, junta ou separa com 1 toque antes da edição.
 - **Formatos:** .opus, .ogg, .m4a, .mp3, .wav e .webm, até 50 MB por arquivo (limite do plano grátis do Supabase; 100 MB quando o plano mudar) e 30 arquivos por lote.
@@ -539,7 +539,7 @@ Gate de design. Aceite: pelo meu iPhone e por um Android, subo 3 áudios encamin
 ```
 Leia docs/prd.md: M4 (menos a divisão em histórias), M11 (tela de primeira abertura do autor), M7 (só a parte de gravar) e Design e experiência (regras do autor). É o prompt de maior risco técnico no celular. Use o EGM.
 
-1. Tabelas stories e story_recordings, com RLS, e as colunas que faltarem em recordings (criada no prompt 5A: estender, nunca recriar). SQL antes de aplicar.
+1. As colunas que faltarem em recordings (criada no prompt 5A: estender, nunca recriar), com RLS. SQL antes de aplicar. stories e story_recordings foram para o prompt 6 (P36).
 2. Gravador único com MediaRecorder: gravar, pausar, retomar, ouvir, regravar, até 30 minutos, vibração ao iniciar. Pedaços guardados no IndexedDB durante a gravação e upload TUS retomável para o Supabase Storage.
 3. Área do autor em /a/[token]: "Olá, [apelido]", as perguntas para ele (com foto e áudio de quem sugeriu, quando houver) e Contar uma história, livre. Na primeira abertura, uma tela única ("Toque no círculo e conte. Pode pausar quando quiser.") e o consentimento.
 4. Botão principal Nova história no painel do responsável, com Gravar conversa (pergunta no topo como roteiro, ou conversa livre sem pergunta) e Subir áudio.
@@ -556,7 +556,7 @@ Gate de design. Aceite: me entregue um roteiro para eu testar no iPhone (Safari)
 Leia docs/prd.md: M5 e Pipeline de IA. Reaproveite o código e os prompts do laboratório. Use o EGM.
 
 1. Instale o serviço de fila escolhido no prompt 0.
-2. Tabelas transcripts, story_versions, ai_usage, book_context e glossary_entries, com RLS. SQL antes de aplicar.
+2. Tabelas stories, story_recordings, transcripts, story_versions, ai_usage, book_context e glossary_entries, com RLS. SQL antes de aplicar. stories e story_recordings saíram do prompt 5 (P36): quem cria a história é o pipeline, que decide pelo conteúdo (P27). As gravações que já existem em recordings ("aguardando processamento", inclusive as do 5A e as partes de uma conversa, ligadas por lote_id) entram na fila na primeira execução.
 3. Ao concluir um upload: transcrição (provedor vencedor do laboratório), estruturação, edição e verificação, com até 3 tentativas por etapa e erro visível no admin.
 4. Etapas ao vivo no cartão da história via Supabase Realtime: Enviando, Ouvindo, Escrevendo, Pronta para revisar. Em Escrevendo, o texto aparece sendo escrito (streaming da edição).
 5. Contexto do livro com cache de prompt. Ao fim de cada história, atualize o resumo dela em book_context e sugira nomes de pessoas e lugares para o glossário, que o responsável ajusta em Configurações.
