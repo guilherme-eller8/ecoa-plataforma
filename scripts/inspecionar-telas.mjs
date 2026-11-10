@@ -28,6 +28,8 @@ const TELAS = {
   "nova-historia-arquivos": "/styleguide/nova-historia-arquivos",
   audios: "/styleguide/audios",
   "audios-vazia": "/styleguide/audios-vazia",
+  "gravar-conversa": "/styleguide/gravar-conversa",
+  "gravar-conversa-pergunta": "/styleguide/gravar-conversa-pergunta",
   "nova-enquete": "/styleguide/nova-enquete",
   "nova-enquete-etapa": "/styleguide/nova-enquete-etapa",
   "nova-enquete-revisar": "/styleguide/nova-enquete-revisar",

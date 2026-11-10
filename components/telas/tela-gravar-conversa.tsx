@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { Gravar } from "@/components/gravacao/gravar";
 import { classesDoBotao } from "@/components/ui/botao";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
+import { IconeMicrofone } from "@/components/ui/icones";
 import { enviarPorTus } from "@/lib/audios/tus";
 import type { AdaptadorEnvio, SubirBlob } from "@/lib/gravacao/envio";
 import { armazemIndexedDb, type Armazem } from "@/lib/gravacao/local";
@@ -103,8 +104,9 @@ export function TelaGravarConversa({
               <button
                 type="button"
                 onClick={() => setEscolha(LIVRE)}
-                className="rounded-cartao border-linha-forte bg-papel text-ui-17 text-tinta hover:bg-polen-2 min-h-alvo w-full border px-5 py-4 text-left font-medium"
+                className="rounded-cartao border-floresta bg-papel text-ui-17 text-floresta hover:bg-polen-2 min-h-alvo flex w-full items-center gap-3 border-2 px-5 py-4 text-left font-medium"
               >
+                <IconeMicrofone tamanho={22} />
                 Conversa livre, sem pergunta
               </button>
             </li>
@@ -124,11 +126,13 @@ export function TelaGravarConversa({
       ) : (
         <>
           <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-            {pergunta?.texto ?? "Conversa livre"}
+            {pergunta ? "Gravar conversa" : "Conversa livre"}
           </h1>
-          <DicaPrimeiraVez chave="gravar-conversa">
-            Deixe o celular na mesa, perto de quem fala.
-          </DicaPrimeiraVez>
+          {pergunta ? (
+            <blockquote className="rounded-cartao bg-papel border-linha font-livro text-livro-24 text-tinta border p-5 leading-snug">
+              {pergunta.texto}
+            </blockquote>
+          ) : null}
           <Gravar
             destino={{ tipo: "livro", livroId: livro.id }}
             promptId={pergunta?.id ?? null}
@@ -156,6 +160,9 @@ export function TelaGravarConversa({
               </div>
             }
           />
+          <DicaPrimeiraVez chave="gravar-conversa">
+            Deixe o celular na mesa, perto de quem fala.
+          </DicaPrimeiraVez>
         </>
       )}
     </main>

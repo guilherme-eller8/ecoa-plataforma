@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { classesDoBotao } from "@/components/ui/botao";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
-import { IconeSubir } from "@/components/ui/icones";
+import { IconeMicrofone, IconeSubir } from "@/components/ui/icones";
 import { formatarDuracao } from "@/lib/audios/formatos";
 import type { AudioDaTela, LivroDaTela } from "@/lib/livro/tipos";
 
@@ -152,8 +152,8 @@ export function TelaAudios({
                 " sm:w-auto sm:self-start"
               }
             >
-              <IconeSubir tamanho={20} />
-              <span>Subir mais áudios</span>
+              <IconeMicrofone tamanho={20} />
+              <span>Nova história</span>
             </Link>
           ) : null}
         </>
