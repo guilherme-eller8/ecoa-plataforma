@@ -243,13 +243,17 @@ A IA edita como um jornalista que não inventa: cada parágrafo aponta para os t
 
 ### Padrão-ouro e testes
 
-- Antes do primeiro cliente: 5 a 10 histórias reais editadas pela tia Caia a partir da transcrição bruta. Esses pares viram os exemplos do prompt e o conjunto de testes.
-- Toda mudança de prompt roda contra esse conjunto. Um avaliador automático pontua fidelidade, voz preservada e legibilidade de 1 a 5, e a tia Caia avalia uma amostra.
-- **Critério para liberar:** nenhuma invenção de fato no conjunto e nota média de 4 ou mais em voz preservada.
+Sem padrão-ouro editado à mão antes do lançamento (T31). A qualidade melhora com o **uso real do design partner**: André grava o pai, Nelson, e as correções da família sobre o texto da IA viram a base de regras, estilo, glossário e testes (design doc `docs/designs/laboratorio-ia.md`).
+
+- **Desde o dia 1, sem simplificar:** a regra de não inventar, a marcação "Confira" e o consentimento. A versão da IA de cada história fica guardada sem alteração, para comparar com a versão corrigida.
+- **Hipótese do teste:** a família aceita o texto corrigindo no máximo 1 de cada 3 parágrafos, sem nenhuma invenção que passe sem "Confira".
+- **Métricas:** percentual de parágrafos corrigidos, invenções removidas em parágrafos sem "Confira" (escapes), percentual de "Confira" que eram invenção de verdade, custo e tempo por história.
+- **Critério de morte:** 1 escape de invenção que a família perceba, ou mais de 50% do texto reescrito em 3 histórias seguidas. Se acontecer, as telas param e a prioridade volta para regras e verificação.
+- **Voltam por gatilho:** rubrica e juiz de IA com 5 histórias corrigidas pelo André; canários e auditoria formal no 1º escape ou antes do 1º cliente pagante; exemplos no prompt com o 1º par com consentimento de reuso.
 
 ### Provedores
 
-- **Transcrição:** escolhida por teste com áudios reais dos pais dos parceiros de design (monólogo, conversa, ruído de mesa, áudio do WhatsApp). Critérios: acerto de nomes, separação de vozes, sotaque, velocidade e custo. Candidatos: ElevenLabs Scribe, Deepgram, AssemblyAI e OpenAI.
+- **Transcrição:** ElevenLabs Scribe (T32), escolhido por avaliação de mercado (acerto em português, falantes separados, tempo por palavra). AssemblyAI fica pronto atrás da mesma interface. A comparação com áudio real volta se o Scribe errar muitos nomes nas correções do André.
 - **Estruturação, edição e verificação:** Claude via API, com um modelo rápido para estruturar e um mais capaz para editar e verificar. Saídas em JSON validadas por zod.
 - **Custo:** registrado por etapa e por livro e visível no admin.
 
@@ -417,8 +421,9 @@ Tudo abaixo foi cortado de propósito e volta quando um cliente real pedir.
 - [ ] **Cotação da gráfica:** 80 páginas, capa dura, colorido, 21 × 21 cm. Define a margem dos R$ 467, o valor por página e por cópia extra, o modo de cor, a lombada e o múltiplo de páginas.
 - [ ] **Domínio `ecoamemorias.com.br`** registrado e apontado para a Vercel (os subdomínios `app` e `ouvir` dependem dele).
 - [ ] **Banco de 150 perguntas:** rascunho gerado no prompt 4, revisão da tia Caia.
-- [ ] **Padrão-ouro:** 5 a 10 histórias editadas pela tia Caia antes do prompt 1 terminar.
-- [ ] **Áudios de teste:** 5 áudios reais dos pais dos 2 parceiros de design, incluindo conversa, ruído e áudio encaminhado do WhatsApp.
+- [x] ~~**Padrão-ouro:** 5 a 10 histórias editadas pela tia Caia antes do prompt 1 terminar.~~ Substituído pelo uso real do André (T31).
+- [x] ~~**Áudios de teste:** 5 áudios reais dos pais dos 2 parceiros de design.~~ Substituído pelos áudios reais do André (T31).
+- [ ] **Preço atual do ElevenLabs Scribe** conferido no site antes da primeira cobrança real.
 
 ## Sequência de prompts para o Claude Code
 
@@ -557,11 +562,11 @@ Leia docs/prd.md: M5 e Pipeline de IA. Reaproveite o código e os prompts do lab
 
 1. Instale o serviço de fila escolhido no prompt 0.
 2. Tabelas stories, story_recordings, transcripts, story_versions, ai_usage, book_context e glossary_entries, com RLS. SQL antes de aplicar. stories e story_recordings saíram do prompt 5 (P36): quem cria a história é o pipeline, que decide pelo conteúdo (P27). As gravações que já existem em recordings ("aguardando processamento", inclusive as do 5A e as partes de uma conversa, ligadas por lote_id) entram na fila na primeira execução.
-3. Ao concluir um upload: transcrição (provedor vencedor do laboratório), estruturação, edição e verificação, com até 3 tentativas por etapa e erro visível no admin.
+3. Ao concluir um upload: transcrição (ElevenLabs Scribe, T32), estruturação, edição e verificação, com até 3 tentativas por etapa e erro visível no admin.
 4. Etapas ao vivo no cartão da história via Supabase Realtime: Enviando, Ouvindo, Escrevendo, Pronta para revisar. Em Escrevendo, o texto aparece sendo escrito (streaming da edição).
 5. Contexto do livro com cache de prompt. Ao fim de cada história, atualize o resumo dela em book_context e sugira nomes de pessoas e lugares para o glossário, que o responsável ajusta em Configurações.
 6. E-mail só se ninguém do livro estiver com a tela aberta. Na primeira história do livro, mostre o marco do M11 com o botão de compartilhar no grupo.
-7. npm run eval roda o padrão-ouro contra os prompts atuais e falha se houver fato inventado.
+7. A versão da IA de cada história fica guardada sem alteração, e a comparação com a versão corrigida pelo responsável (o `--comparar` do laboratório) mede parágrafos corrigidos, escapes de invenção e acerto do "Confira" (T31). Provedor: ElevenLabs Scribe (T32).
 
 Gate de design. Aceite: gravo 5 minutos pelo link do autor e, com a tela aberta no computador, vejo as primeiras palavras em menos de 60 segundos e o texto completo em menos de 3 minutos.
 ```
