@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import { IconeEnviar } from "@/components/ui/icones";
+import { useLinkDoAutor } from "@/components/livro/link-do-autor";
 import type { AcoesKit, LivroDaTela } from "@/lib/livro/tipos";
 import {
   conviteDoGrupo,
@@ -96,10 +97,16 @@ export function TelaKit({
 }: {
   livro: LivroDaTela;
   linkFamilia: string | null;
-  linkAutor: string;
+  linkAutor: string | null;
   acoes: AcoesKit;
 }) {
   const [link, setLink] = useState(linkFamilia);
+  const autor = useLinkDoAutor(
+    linkAutor,
+    acoes.pegarLinkDoAutor,
+    livro.podeEscrever,
+  );
+  const [confirmarTrocaAutor, setConfirmarTrocaAutor] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmarTroca, setConfirmarTroca] = useState(false);
   const [pendente, iniciar] = useTransition();
@@ -154,23 +161,87 @@ export function TelaKit({
         </section>
       )}
 
-      <Cartao
-        titulo={`Para o ${livro.autor}`}
-        texto={mensagemAoAutor({ autor: livro.autor, link: linkAutor })}
-        enviar={`Enviar ao ${livro.autor}`}
-        secundario
-        celular={livro.autorCelular}
-        rodape={
-          livro.autorCelular ? null : (
-            <Link
-              href={`/livro/${livro.id}/configurar/quem`}
-              className="text-ui-15 text-tinta-2 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
+      {autor.link ? (
+        <Cartao
+          titulo={`Para o ${livro.autor}`}
+          texto={mensagemAoAutor({ autor: livro.autor, link: autor.link })}
+          enviar={`Enviar ao ${livro.autor}`}
+          secundario
+          celular={livro.autorCelular}
+          rodape={
+            <>
+              {livro.autorCelular ? null : (
+                <Link
+                  href={`/livro/${livro.id}/configurar/quem`}
+                  className="text-ui-15 text-tinta-2 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
+                >
+                  Sem o celular, o WhatsApp pede o contato. Pôr o celular
+                </Link>
+              )}
+              {!livro.podeEscrever ? null : confirmarTrocaAutor ? (
+                <div className="flex flex-col gap-3">
+                  <p className="text-ui-15 text-tinta">
+                    O link antigo para de funcionar. Você vai precisar mandar o
+                    novo ao {livro.autor}.
+                  </p>
+                  <div className="flex gap-3">
+                    <Botao
+                      variante="secundario"
+                      carregando={pendente}
+                      onClick={() =>
+                        iniciar(async () => {
+                          const r = await acoes.trocarLinkDoAutor();
+                          if (!r.ok) return setErro(r.mensagem);
+                          setErro(null);
+                          setConfirmarTrocaAutor(false);
+                          autor.setLink(r.dados.url);
+                        })
+                      }
+                    >
+                      Trocar o link
+                    </Botao>
+                    <Botao
+                      variante="texto"
+                      onClick={() => setConfirmarTrocaAutor(false)}
+                    >
+                      Manter
+                    </Botao>
+                  </div>
+                </div>
+              ) : (
+                <Botao
+                  variante="texto"
+                  className="self-start"
+                  onClick={() => setConfirmarTrocaAutor(true)}
+                >
+                  Trocar o link do {livro.autor}
+                </Botao>
+              )}
+            </>
+          }
+        />
+      ) : (
+        <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
+          <h2 className="text-ui-20 text-tinta font-medium">
+            Para o {livro.autor}
+          </h2>
+          {autor.falhou ? (
+            <Botao
+              variante="secundario"
+              className="self-start"
+              onClick={autor.tentarDeNovo}
             >
-              Sem o celular, o WhatsApp pede o contato. Pôr o celular
-            </Link>
-          )
-        }
-      />
+              Pegar o link do {livro.autor}
+            </Botao>
+          ) : (
+            <p className="text-ui-17 text-tinta-2">
+              {livro.podeEscrever
+                ? "Preparando o link pessoal…"
+                : "Este livro está em somente leitura."}
+            </p>
+          )}
+        </section>
+      )}
 
       {erro ? (
         <p role="alert" className="text-ui-15 text-erro">

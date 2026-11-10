@@ -7,10 +7,10 @@ import {
   causosDoLivro,
   enqueteDoLivro,
   fotosDoLivro,
+  linkDoAutor,
   livroDaTela,
   perguntasDoLivro,
 } from "@/lib/livro/dados";
-import { linkDoAutor } from "@/lib/links";
 import { acoesDoLivro } from "../ligar-acoes";
 
 export const metadata: Metadata = { title: "Perguntas · Ecoa Memórias" };
@@ -31,13 +31,15 @@ export default function PaginaPerguntas({
 
 async function Perguntas({ id, aba }: { id: string; aba: AbaPerguntas }) {
   const { livro, podeEscrever } = await livroDaPagina(id);
-  const [tela, perguntas, causos, enquete, fotos] = await Promise.all([
-    livroDaTela(livro, podeEscrever),
-    perguntasDoLivro(id),
-    causosDoLivro(id),
-    enqueteDoLivro(id),
-    fotosDoLivro(id),
-  ]);
+  const [tela, perguntas, causos, enquete, fotos, linkAutor] =
+    await Promise.all([
+      livroDaTela(livro, podeEscrever),
+      perguntasDoLivro(id),
+      causosDoLivro(id),
+      enqueteDoLivro(id),
+      fotosDoLivro(id),
+      linkDoAutor(id),
+    ]);
   const acoes = acoesDoLivro(id);
   return (
     <TelaPerguntas
@@ -46,7 +48,7 @@ async function Perguntas({ id, aba }: { id: string; aba: AbaPerguntas }) {
       causos={causos}
       enquete={enquete}
       fotos={fotos}
-      linkAutor={linkDoAutor()}
+      linkAutor={linkAutor}
       acoes={acoes.perguntas}
       acoesFotos={acoes.fotos}
       abaInicial={aba}

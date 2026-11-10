@@ -13,9 +13,9 @@ import { fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import { COOKIE_APARELHO, aparelhoValido } from "@/lib/familia/aparelho";
 import { clienteAdmin } from "@/lib/supabase/admin";
+import { tokenValido } from "@/lib/links-formato";
 import { clienteAnonimo } from "@/lib/supabase/anonimo";
 
-const tokenValido = z.string().regex(/^v[0-9]{1,2}_[A-Za-z0-9_-]{22}$/);
 const LINK_INVALIDO = {
   ok: false as const,
   mensagem: "Este link não vale mais. Peça o novo no grupo.",

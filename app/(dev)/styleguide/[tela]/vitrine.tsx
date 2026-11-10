@@ -4,6 +4,12 @@ import { TelaAdmin } from "@/components/telas/tela-admin";
 import { TelaAudios } from "@/components/telas/tela-audios";
 import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
 import { TelaGravarConversa } from "@/components/telas/tela-gravar-conversa";
+import { TelaAutor, TelaAutorInvalido } from "@/components/telas/tela-autor";
+import {
+  ACOES_AUTOR_FALSAS,
+  PAGINA_AUTOR,
+  TOKEN_AUTOR_EXEMPLO,
+} from "@/lib/exemplos/prompt5";
 import { TelaNovaHistoria } from "@/components/telas/tela-nova-historia";
 import {
   ACOES_AUDIOS_FALSAS,
@@ -95,6 +101,33 @@ export function Vitrine({ tela }: { tela: Tela }) {
           limiteParteS={tela === "gravar-conversa-partes" ? 3 : undefined}
         />
       );
+    case "autor-primeira":
+    case "autor-inicio":
+    case "autor-inicio-vazio":
+    case "autor-gravar":
+    case "autor-gravar-livre":
+      return (
+        <TelaAutor
+          token={TOKEN_AUTOR_EXEMPLO}
+          pagina={{
+            ...PAGINA_AUTOR,
+            consentiu: tela !== "autor-primeira",
+            perguntas:
+              tela === "autor-inicio-vazio" ? [] : PAGINA_AUTOR.perguntas,
+          }}
+          modo={
+            tela === "autor-gravar"
+              ? { tipo: "gravar", perguntaId: PAGINA_AUTOR.perguntas[0].id }
+              : tela === "autor-gravar-livre"
+                ? { tipo: "gravar", perguntaId: null }
+                : { tipo: "inicio" }
+          }
+          acoes={ACOES_AUTOR_FALSAS}
+          subir={SUBIR_FALSO}
+        />
+      );
+    case "autor-invalido":
+      return <TelaAutorInvalido />;
     case "audios-vazia":
       return <TelaAudios livro={LIVRO_JAIR} audios={[]} />;
     case "entrar":

@@ -25,6 +25,10 @@ export const ACOES = [
   "votou", // família; detalhes: { votante }
   // Prompt 5A: áudios gravados fora da plataforma.
   "subiu_audio", // detalhes: { recording, com_pergunta }
+  // Prompt 5: gravador e link do autor. A gravação usa "gravou" com { recording, origem }.
+  "autor_consentiu",
+  "gerou_link_autor",
+  "trocou_link_autor",
 ] as const;
 
 export const PAPEIS = [

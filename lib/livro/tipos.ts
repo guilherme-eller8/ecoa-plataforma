@@ -101,7 +101,7 @@ export type AcoesFotos = {
   ) => Promise<Resposta<{ ids: string[] }>>;
 };
 
-export type AcoesPerguntas = {
+export type AcoesPerguntas = AcoesLinkDoAutor & {
   adicionarDoBanco: (
     bancoIds: string[],
   ) => Promise<Resposta<{ salvas: number }>>;
@@ -167,7 +167,12 @@ export type AcoesAudios = {
   confirmarAudio: (id: string) => Promise<Resposta>;
 };
 
-export type AcoesKit = {
+export type AcoesLinkDoAutor = {
+  pegarLinkDoAutor: () => Promise<Resposta<{ url: string }>>;
+};
+
+export type AcoesKit = AcoesLinkDoAutor & {
+  trocarLinkDoAutor: () => Promise<Resposta<{ url: string }>>;
   pegarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
   trocarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
 };

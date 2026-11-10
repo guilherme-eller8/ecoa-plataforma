@@ -35,7 +35,7 @@ export function urlFamilia(token: string): string {
   return `${urlDoApp()}/f/${token}`;
 }
 
-// TODO(prompt 5): link pessoal de verdade, derivado de author_access com tokenDoLink("autor", …).
-export function linkDoAutor(): string {
-  return `${urlDoApp()}/a/em-breve`;
+/** Início da área do autor. A pergunta é `${urlAutor(token)}/gravar/<id>` (montado na tela). */
+export function urlAutor(token: string): string {
+  return `${urlDoApp()}/a/${token}`;
 }

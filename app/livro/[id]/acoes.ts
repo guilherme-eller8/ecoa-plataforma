@@ -27,7 +27,7 @@ import { envLinks } from "@/lib/env-links";
 import { fraseDoErro } from "@/lib/erros-banco";
 import type { Acao } from "@/lib/eventos-acoes";
 import { registrarEvento } from "@/lib/eventos";
-import { hashDoToken, tokenDoLink, urlFamilia } from "@/lib/links";
+import { hashDoToken, tokenDoLink, urlAutor, urlFamilia } from "@/lib/links";
 import {
   livroDaAcao,
   configuracaoDo,
@@ -704,6 +704,63 @@ export async function trocarLinkDaFamilia(
   if (ehErro(c)) return c;
   const r = await novoLinkDaFamilia(c);
   if (r.ok) evento(c, "trocou_link_familia");
+  atualizar(livroId);
+  return r;
+}
+
+// ── Link do autor (prompt 5) ────────────────────────────────────────────
+// Mesmo modelo do link da família (T25): o banco guarda só o hash; o servidor recalcula o
+// token do id e da versão para mostrar o link de novo.
+
+async function novoLinkDoAutor(
+  c: Contexto,
+): Promise<Resposta<{ url: string }>> {
+  const env = envLinks();
+  const id = crypto.randomUUID();
+  const token = tokenDoLink("autor", id, env.versaoAtual, env);
+  const { error } = await clienteAdmin().rpc("servico_trocar_link_autor", {
+    p_livro: c.livro.id,
+    p_usuario: c.usuario.id,
+    p_id: id,
+    p_token_hash: hashDoToken(token),
+    p_chave_versao: env.versaoAtual,
+  });
+  if (error) return falhou(error);
+  return { ok: true, dados: { url: urlAutor(token) } };
+}
+
+/** Devolve o link ativo do autor; se ainda não existe, cria. */
+export async function pegarLinkDoAutor(
+  livroId: string,
+): Promise<Resposta<{ url: string }>> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const { data } = await c.supabase
+    .from("author_access")
+    .select("id, chave_versao")
+    .eq("book_id", c.livro.id)
+    .is("revogado_em", null)
+    .maybeSingle();
+  if (data)
+    return {
+      ok: true,
+      dados: {
+        url: urlAutor(tokenDoLink("autor", data.id, data.chave_versao)),
+      },
+    };
+  const r = await novoLinkDoAutor(c);
+  if (r.ok) evento(c, "gerou_link_autor");
+  return r;
+}
+
+/** Troca o link do autor: o antigo para de funcionar na hora. */
+export async function trocarLinkDoAutor(
+  livroId: string,
+): Promise<Resposta<{ url: string }>> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const r = await novoLinkDoAutor(c);
+  if (r.ok) evento(c, "trocou_link_autor");
   atualizar(livroId);
   return r;
 }

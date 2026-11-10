@@ -190,6 +190,9 @@ const okCom =
   <T>(dados: T) =>
   async () => ({ ok: true as const, dados });
 
+export const LINK_AUTOR_EXEMPLO =
+  "https://app.ecoa-memorias.com.br/a/v1_exemploAUTORexemplo000";
+
 export const ACOES_FALSAS = {
   configuracao: {
     salvarQuem: ok,
@@ -215,6 +218,7 @@ export const ACOES_FALSAS = {
     encerrarEnquete: ok,
     salvarDaEnquete: okCom({ salvas: 3 }),
     removerVotos: ok,
+    pegarLinkDoAutor: okCom({ url: LINK_AUTOR_EXEMPLO }),
   } satisfies AcoesPerguntas,
   kit: {
     pegarLinkDaFamilia: okCom({
@@ -222,6 +226,10 @@ export const ACOES_FALSAS = {
     }),
     trocarLinkDaFamilia: okCom({
       url: "https://app.ecoa-memorias.com.br/f/v1_novoNOVOnovoNOVOnovo00",
+    }),
+    pegarLinkDoAutor: okCom({ url: LINK_AUTOR_EXEMPLO }),
+    trocarLinkDoAutor: okCom({
+      url: "https://app.ecoa-memorias.com.br/a/v1_novoAUTORnovoAUTORnovo",
     }),
   } satisfies AcoesKit,
   familia: {
@@ -235,6 +243,5 @@ export const ACOES_FALSAS = {
   } satisfies AcoesFamilia,
 };
 
-export const LINK_AUTOR_EXEMPLO = "https://app.ecoa-memorias.com.br/a/em-breve";
 export const LINK_FAMILIA_EXEMPLO =
   "https://app.ecoa-memorias.com.br/f/v1_exemploEXEMPLOexemplo0";

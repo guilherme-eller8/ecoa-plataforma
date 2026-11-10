@@ -4,7 +4,7 @@
 import type { AudioPreparado } from "@/lib/livro/tipos";
 import { juntar, type Armazem, type GravacaoLocal } from "./local";
 
-export type CodigoEnvio = "expirada" | "link_invalido" | "limite";
+export type CodigoEnvio = "expirada" | "link_invalido" | "limite" | "recebida";
 
 export type RespostaEnvio<T = undefined> =
   | ({ ok: true } & (T extends undefined ? object : { dados: T }))
@@ -84,6 +84,11 @@ export async function enviarGravacao(
   await a.salvar(g);
 
   async function falha(r: { mensagem: string; codigo?: CodigoEnvio }) {
+    if (r.codigo === "recebida") {
+      // O servidor já tem o arquivo inteiro (a confirmação anterior se perdeu na volta).
+      await a.apagar(g!.id);
+      return { fim: "enviada" as const };
+    }
     if (r.codigo === "link_invalido") {
       g!.estado = "parada";
       await a.salvar(g!);

@@ -3,6 +3,10 @@
 // Tela Perguntas: a base do livro. Cada pergunta pode ser enviada ao autor ou, a partir do
 // prompt 5, gravada ao vivo. Abas: Para perguntar · Enviadas · Respondidas · Sugestões · Enquete.
 import Link from "next/link";
+import {
+  linkDaPergunta,
+  useLinkDoAutor,
+} from "@/components/livro/link-do-autor";
 import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { Abas } from "@/components/ui/abas";
@@ -45,7 +49,7 @@ type Props = {
   causos: CausoDaTela[];
   enquete: EnqueteDaTela | null;
   fotos: FotoDaTela[];
-  linkAutor: string;
+  linkAutor: string | null;
   acoes: AcoesPerguntas;
   acoesFotos: AcoesFotos;
   abaInicial?: AbaPerguntas;
@@ -101,7 +105,7 @@ function CartaoPergunta({
 }: {
   p: PerguntaDaTela;
   livro: LivroDaTela;
-  linkAutor: string;
+  linkAutor: string | null;
   acoes: AcoesPerguntas;
 }) {
   const { pendente, erro, rodar } = useAcao();
@@ -129,23 +133,32 @@ function CartaoPergunta({
         <div className="flex flex-wrap items-center gap-2">
           {p.estado === "para_enviar" ? (
             <>
-              <a
-                href={linkWhatsApp(
-                  mensagemPergunta({
-                    autor: livro.autor,
-                    pergunta: p.texto,
-                    link: linkAutor,
-                  }),
-                  livro.autorCelular,
-                )}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => rodar(() => acoes.mudarEstado(p.id, "enviada"))}
-                className={classesDoBotao({ variante: "secundario" })}
-              >
-                <IconeEnviar tamanho={18} />
-                <span>Enviar ao {livro.autor}</span>
-              </a>
+              {linkAutor ? (
+                <a
+                  href={linkWhatsApp(
+                    mensagemPergunta({
+                      autor: livro.autor,
+                      pergunta: p.texto,
+                      link: linkDaPergunta(linkAutor, p.id),
+                    }),
+                    livro.autorCelular,
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() =>
+                    rodar(() => acoes.mudarEstado(p.id, "enviada"))
+                  }
+                  className={classesDoBotao({ variante: "secundario" })}
+                >
+                  <IconeEnviar tamanho={18} />
+                  <span>Enviar ao {livro.autor}</span>
+                </a>
+              ) : (
+                <Botao variante="secundario" disabled>
+                  <IconeEnviar tamanho={18} />
+                  <span>Enviar ao {livro.autor}</span>
+                </Botao>
+              )}
               <Botao
                 variante="texto"
                 aria-expanded={menu}
@@ -154,7 +167,13 @@ function CartaoPergunta({
                 Mais
               </Botao>
               {menu ? (
-                <div className="flex w-full gap-2">
+                <div className="flex w-full flex-wrap gap-2">
+                  <Link
+                    href={`/livro/${livro.id}/historias/gravar?pergunta=${p.id}`}
+                    className={classesDoBotao({ variante: "texto" })}
+                  >
+                    Gravar agora
+                  </Link>
                   <Botao
                     variante="texto"
                     disabled={pendente}
@@ -211,7 +230,7 @@ function CartaoPergunta({
 function ListaDePerguntas(props: {
   lista: PerguntaDaTela[];
   livro: LivroDaTela;
-  linkAutor: string;
+  linkAutor: string | null;
   acoes: AcoesPerguntas;
 }) {
   return (
@@ -763,6 +782,11 @@ export function TelaPerguntas({
 }: Props) {
   const router = useRouter();
   const caminho = usePathname();
+  const { link: linkDoAutorAtual } = useLinkDoAutor(
+    linkAutor,
+    acoes.pegarLinkDoAutor,
+    livro.podeEscrever,
+  );
   const [aba, setAba] = useState<AbaPerguntas>(abaInicial);
   const [adicionar, setAdicionar] = useState(false);
   const [tocando, setTocando] = useState(false);
@@ -796,7 +820,7 @@ export function TelaPerguntas({
     <ListaDePerguntas
       lista={l}
       livro={livro}
-      linkAutor={linkAutor}
+      linkAutor={linkDoAutorAtual}
       acoes={acoes}
     />
   );
