@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Newsreader } from "next/font/google";
+import { RegistrarServiceWorker } from "@/components/pwa/registrar-sw";
 import { MARCA } from "@/lib/config";
 import "./globals.css";
 
@@ -19,7 +20,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="pt-BR" className={`${newsreader.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <RegistrarServiceWorker />
+      </body>
     </html>
   );
 }

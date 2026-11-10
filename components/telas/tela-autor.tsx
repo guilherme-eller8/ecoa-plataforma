@@ -3,11 +3,11 @@
 // Área do autor (/a/[token], sem login, M7 e M11). Regras do autor: pergunta com 28 px ou mais,
 // texto com 20 px, alvos de 56 px, botão de gravar de 120 px. Uma ação principal por tela.
 import Link from "next/link";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Gravar } from "@/components/gravacao/gravar";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
-import { IconeMicrofone } from "@/components/ui/icones";
+import { IconeMicrofone, IconePausa, IconeTocar } from "@/components/ui/icones";
 import { MarcaEcoa } from "@/components/ui/marca";
 import { enviarPorTus } from "@/lib/audios/tus";
 import type {
@@ -67,7 +67,7 @@ function PrimeiraAbertura({
       <p className="font-livro text-livro-28 text-tinta leading-snug">
         Toque no círculo e conte. Pode pausar quando quiser.
       </p>
-      <p className="text-ui-20 text-tinta-2">
+      <p className="text-ui-20 text-tinta">
         Suas histórias vão virar um livro para a sua família. Podemos guardar a
         sua voz para isso?
       </p>
@@ -200,6 +200,10 @@ function Inicio({
                           {p.sugestaoNome} pediu
                         </span>
                       ) : null}
+                      <span className="text-ui-17 text-floresta inline-flex items-center gap-2 font-medium">
+                        <IconeMicrofone tamanho={20} />
+                        Gravar a resposta
+                      </span>
                     </Link>
                   </li>
                 ))}
@@ -209,6 +213,41 @@ function Inicio({
         </>
       )}
     </Moldura>
+  );
+}
+
+/** O áudio de quem sugeriu, num botão grande (o player do navegador é pequeno demais). */
+function OuvirPedido({ nome, url }: { nome: string; url: string }) {
+  const audio = useRef<HTMLAudioElement>(null);
+  const [tocando, setTocando] = useState(false);
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-ui-20 text-tinta-2">{nome} pediu:</p>
+      <audio
+        ref={audio}
+        src={url}
+        preload="none"
+        onPlay={() => setTocando(true)}
+        onPause={() => setTocando(false)}
+        onEnded={() => setTocando(false)}
+      />
+      <Botao
+        variante="secundario"
+        tamanho="autor"
+        larguraTotal
+        icone={
+          tocando ? <IconePausa tamanho={22} /> : <IconeTocar tamanho={22} />
+        }
+        onClick={() => {
+          const a = audio.current;
+          if (!a) return;
+          if (a.paused) void a.play().catch(() => {});
+          else a.pause();
+        }}
+      >
+        {tocando ? "Parar" : `Ouvir ${nome}`}
+      </Botao>
+    </div>
   );
 }
 
@@ -227,17 +266,10 @@ function Roteiro({ pergunta }: { pergunta: PerguntaDoAutor }) {
         {pergunta.texto}
       </h1>
       {pergunta.sugestaoNome && pergunta.sugestaoAudioUrl ? (
-        <div className="flex flex-col gap-2">
-          <p className="text-ui-20 text-tinta-2">
-            {pergunta.sugestaoNome} pediu:
-          </p>
-          <audio
-            controls
-            preload="none"
-            src={pergunta.sugestaoAudioUrl}
-            className="w-full"
-          />
-        </div>
+        <OuvirPedido
+          nome={pergunta.sugestaoNome}
+          url={pergunta.sugestaoAudioUrl}
+        />
       ) : null}
     </div>
   );

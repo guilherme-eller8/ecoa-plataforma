@@ -51,6 +51,7 @@ test("responde a uma pergunta: grava, ouve e envia", async ({ page }) => {
   await page.goto("/styleguide/autor-gravar");
   await expect(page.getByRole("heading", { name: /Guarapari/ })).toBeVisible();
   await expect(page.getByText("Ana pediu:")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ouvir Ana" })).toBeVisible();
   await gravarPor(page, 2000);
   await page.getByRole("button", { name: "Concluir" }).click();
   await page.getByRole("button", { name: "Enviar" }).click();

@@ -5,6 +5,7 @@ import { TelaAudios } from "@/components/telas/tela-audios";
 import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
 import { TelaGravarConversa } from "@/components/telas/tela-gravar-conversa";
 import { TelaAutor, TelaAutorInvalido } from "@/components/telas/tela-autor";
+import { TelaCompartilhar } from "@/components/telas/tela-compartilhar";
 import {
   ACOES_AUTOR_FALSAS,
   PAGINA_AUTOR,
@@ -48,6 +49,12 @@ import {
 import { TelaSemAcesso } from "@/components/telas/tela-sem-acesso";
 import type { Resultado } from "@/lib/resultado";
 import { LIVROS_FALSOS, type Tela } from "@/lib/styleguide";
+
+// Dois áudios "recebidos do WhatsApp" para a tela de exemplo do Compartilhar.
+const lerDeExemplo = async () => [
+  new File([new Uint8Array(180 * 1024)], "PTT-20261110-WA0007.opus"),
+  new File([new Uint8Array(95 * 1024)], "PTT-20261110-WA0008.opus"),
+];
 
 const acaoFalsa = async (): Promise<Resultado | null> => null;
 const nada = async () => {};
@@ -128,6 +135,25 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "autor-invalido":
       return <TelaAutorInvalido />;
+    case "compartilhar":
+    case "compartilhar-livros":
+    case "compartilhar-erro":
+      return (
+        <TelaCompartilhar
+          livro={tela === "compartilhar" ? LIVRO_JAIR : null}
+          livros={[
+            { id: LIVRO_JAIR.id, autor: LIVRO_JAIR.autor },
+            {
+              id: "00000000-0000-4000-8000-000000000999",
+              autor: "Dona Lurdes",
+            },
+          ]}
+          perguntas={PERGUNTAS_PENDENTES}
+          acoes={ACOES_AUDIOS_FALSAS}
+          erro={tela === "compartilhar-erro"}
+          ler={lerDeExemplo}
+        />
+      );
     case "audios-vazia":
       return <TelaAudios livro={LIVRO_JAIR} audios={[]} />;
     case "entrar":
