@@ -280,11 +280,11 @@ begin
   -- Uma fila por livro: a busca, os tetos e o insert não correm em paralelo.
   perform pg_advisory_xact_lock(hashtextextended('gravacoes_autor:' || v_livro::text, 0));
 
-  -- Busca sem RLS de livro: um id de outro livro precisa dar dados_invalidos, não 23505.
-  if exists (select 1 from public.recordings r where r.id = p_id) then
-    select r.upload, r.caminho, r.criado_em into v from public.recordings r
-    where r.id = p_id and r.book_id = v_livro and r.author_access_id is not null;
-    if not found then raise exception 'dados_invalidos'; end if;
+  -- A política só mostra gravações do autor deste livro; um id de outro livro não aparece
+  -- aqui e cai no unique_violation do insert, tratado no fim.
+  select r.upload, r.caminho, r.criado_em into v from public.recordings r
+  where r.id = p_id and r.book_id = v_livro and r.author_access_id is not null;
+  if found then
     if v.upload = 'recebido' then
       return jsonb_build_object('id', p_id, 'caminho', v.caminho, 'recebida', true);
     end if;
@@ -314,6 +314,8 @@ begin
     case p_ext when 'm4a' then 'audio/mp4' else 'audio/webm' end,
     p_tamanho_bytes, p_duracao_s, v_acesso, null);
   return jsonb_build_object('id', p_id, 'caminho', v_caminho, 'recebida', false);
+exception when unique_violation then
+  raise exception 'dados_invalidos';
 end $$;
 
 -- Só o servidor: caminho a assinar, só se a gravação for do livro do token.

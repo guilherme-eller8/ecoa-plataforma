@@ -339,13 +339,16 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
     expect(r.rows).toEqual([]);
   });
 
-  it("anon executa só as portas do link da família", async () => {
+  it("anon executa só as portas dos links da família e do autor", async () => {
     const r = await db.query<{ nome: string }>(
       `select n.nspname || '.' || p.proname as nome from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname in ('public', 'privado') and has_function_privilege('anon', p.oid, 'execute')
        order by 1`,
     );
     expect(r.rows.map((f) => f.nome)).toEqual([
+      "public.autor_consentir",
+      "public.autor_pagina",
+      "public.autor_preparar_gravacao",
       "public.familia_enviar_causo",
       "public.familia_pagina",
       "public.familia_votar",

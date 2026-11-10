@@ -18,7 +18,12 @@ export const FORMATO_LIVRO = "21x21"; // em cm; confirmar com a gráfica
 export const SANGRIA_MM = 3; // em cada lado
 
 // ── Coleta ───────────────────────────────────────────────────────────────
-export const MAX_GRAVACAO_MIN = 30; // por gravação
+export const MAX_GRAVACAO_MIN = 30; // por gravação (espelhado em privado.max_gravacao_s); a conversa segue em partes (P39)
+export const GRAVACAO_KBPS = 48; // voz em Opus/AAC; 30 min ≈ 11 MB
+export const MAX_GRAVACOES_AUTOR_DIA = 30; // espelhado, por livro, pelo link do autor (T29)
+export const MAX_MB_AUTOR_DIA = 300; // espelhado, por livro, pelo link do autor (T29)
+export const MAX_ENVIOS_ABERTOS_AUTOR = 5; // espelhado no SQL de autor_preparar_gravacao
+export const CONSENTIMENTO_AUTOR_VERSAO = 1; // mudou a frase? suba a versão
 export const MAX_ARQUIVOS_LOTE = 30; // por upload em lote
 
 // ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
@@ -80,7 +85,6 @@ export const MAX_CAUSOS_POR_HORA = 20; // espelhado, por livro
 export const MAX_CAUSOS_POR_DIA = 40; // espelhado, por livro
 export const MAX_CAUSO_AUDIO_MIN = 3;
 export const MAX_CAUSO_AUDIO_MB = 2; // igual ao limite do bucket causos
-export const CAUSO_AUDIO_KBPS = 48; // 3 min ≈ 1,1 MB
 export const CONSENTIMENTO_CAUSO_VERSAO = 1; // mudou a frase? suba a versão
 export const TEXTO_PERGUNTA_MAX = 500; // igual ao CHECK de prompts e poll_items
 

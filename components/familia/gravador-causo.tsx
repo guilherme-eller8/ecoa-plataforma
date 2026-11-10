@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Botao } from "@/components/ui/botao";
 import { Gravador, type EstadoGravador } from "@/components/ui/gravador";
-import { CAUSO_AUDIO_KBPS, MAX_CAUSO_AUDIO_MIN } from "@/lib/config";
+import { GRAVACAO_KBPS, MAX_CAUSO_AUDIO_MIN } from "@/lib/config";
 import { falarDuracao } from "@/lib/ui/tempo";
 
 export type AudioGravado = { blob: Blob; mime: string; segundos: number };
@@ -69,7 +69,7 @@ export function GravadorCauso({
       const mimeType = tipoSuportado();
       const r = new MediaRecorder(stream, {
         ...(mimeType ? { mimeType } : {}),
-        audioBitsPerSecond: CAUSO_AUDIO_KBPS * 1000,
+        audioBitsPerSecond: GRAVACAO_KBPS * 1000,
       });
       pedacos.current = [];
       r.ondataavailable = (e) => e.data.size && pedacos.current.push(e.data);

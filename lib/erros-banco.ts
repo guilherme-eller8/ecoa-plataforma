@@ -19,6 +19,10 @@ export const FRASES_DOS_CODIGOS = {
   cota_fotos: "O acervo chegou ao limite de fotos.",
   transicao_invalida: "Essa mudança não é possível.",
   link_ja_revogado: "Este link já foi trocado.",
+  pergunta_invalida: "Esta pergunta não está mais disponível.",
+  limite_gravacoes:
+    "Muitas gravações hoje. Sua gravação está guardada e sobe mais tarde.",
+  gravacao_expirada: "Esta gravação precisa ser enviada de novo.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

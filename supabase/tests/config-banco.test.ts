@@ -27,6 +27,9 @@ describe("lib/config.ts x banco", () => {
     ["max_causos_por_dia", config.MAX_CAUSOS_POR_DIA],
     ["max_fotos_por_livro", config.MAX_FOTOS_POR_LIVRO],
     ["max_audio_bytes", config.MAX_AUDIO_MB * 1024 * 1024],
+    ["max_gravacao_s", config.MAX_GRAVACAO_MIN * 60],
+    ["max_gravacoes_autor_por_dia", config.MAX_GRAVACOES_AUTOR_DIA],
+    ["max_bytes_autor_por_dia", config.MAX_MB_AUTOR_DIA * 1024 * 1024],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);
