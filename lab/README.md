@@ -35,6 +35,7 @@ npm run lab
 
 ## Ciclo com o design partner
 
+0. **História da plataforma** (prompt 6): `npm run lab -- --baixar <id da história>` (o id está no endereço da tela da história) grava a versão da IA em `lab/saidas/plataforma-<id>/`. Precisa de `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SECRET_KEY` no `.env.local`. Daí em diante, o ciclo é o mesmo.
 1. Mande o `ia.md` (ou cole num Google Docs) para quem conhece o autor.
 2. A pessoa corrige o texto: tira o que não foi dito, conserta nomes, recoloca expressões dele. Se quiser explicar uma correção, deixa `<!-- motivo: ... -->`.
 3. Salve a versão corrigida como `lab/saidas/<historia>/editado.md`, com o título na 1ª linha (`# Título`) e um parágrafo por bloco.
