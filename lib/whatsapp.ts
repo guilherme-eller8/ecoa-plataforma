@@ -62,3 +62,18 @@ export function mensagemPergunta({
     `Responda gravando aqui: ${link}`,
   ].join("\n\n");
 }
+
+/** Marco da 1ª história (M11): o responsável conta no grupo da família. */
+export function mensagemPrimeiraHistoria({
+  autor,
+  link,
+}: {
+  autor: string;
+  link: string;
+}) {
+  return [
+    `A primeira história do livro do ${autor} está escrita!`,
+    `Ainda dá tempo de sugerir causos e votar nas próximas perguntas:`,
+    link,
+  ].join("\n\n");
+}

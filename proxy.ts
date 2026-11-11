@@ -90,6 +90,7 @@ export const config = {
   matcher: [
     "/f/:path*",
     "/a/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.[a-z0-9]+$).*)",
+    // /api/inngest fica de fora: o Inngest chama a rota a cada passo, sem sessão.
+    "/((?!_next/static|_next/image|api/inngest|favicon.ico|.*\\.[a-z0-9]+$).*)",
   ],
 };

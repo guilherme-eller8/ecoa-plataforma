@@ -5,7 +5,12 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { z } from "zod";
 import type { Uso } from "./custo";
 
-export type Etapa = "estruturar" | "editar" | "verificar" | "classificar";
+export type Etapa =
+  | "estruturar"
+  | "editar"
+  | "verificar"
+  | "classificar"
+  | "memoria";
 
 export type ChamadaIA<T> = {
   etapa: Etapa;
@@ -21,6 +26,13 @@ export type ChamadaIA<T> = {
   /** Campo JSON cujo 1º caractere marca a "primeira palavra" na tela (ex.: "texto"). */
   campoPrimeiraPalavra?: string;
   aoPrimeiraPalavra?: () => void;
+  /**
+   * Texto ao vivo: recebe o JSON acumulado até agora e o número da tentativa (uma nova
+   * tentativa recomeça do zero). Chamado no máximo a cada `intervaloTextoMs`. Se devolver
+   * uma promessa, ela é aguardada antes de `gerar` terminar.
+   */
+  aoTexto?: (acumulado: string, tentativa: number) => void | Promise<void>;
+  intervaloTextoMs?: number;
 };
 
 export type RespostaIA<T> = {
@@ -36,7 +48,21 @@ export interface ClienteIA {
   gerar<T>(chamada: ChamadaIA<T>): Promise<RespostaIA<T>>;
 }
 
-export class ErroIA extends Error {}
+/** Falha depois de esgotar as tentativas. `uso` soma o que já foi gasto (e cobrado). */
+export class ErroIA extends Error {
+  constructor(
+    mensagem: string,
+    readonly uso: Uso = { entrada: 0, saida: 0, cacheLido: 0, cacheGravado: 0 },
+    readonly codigo:
+      | "recusa"
+      | "api"
+      | "json_invalido"
+      | "cortada" = "json_invalido",
+  ) {
+    super(mensagem);
+    this.name = "ErroIA";
+  }
+}
 
 /** Detecta o 1º caractere do primeiro valor de `"campo": "..."` num JSON parcial. */
 export function detectorPrimeiraPalavra(
@@ -56,10 +82,14 @@ export class ClienteAnthropic implements ClienteIA {
   async gerar<T>(c: ChamadaIA<T>): Promise<RespostaIA<T>> {
     const uso: Uso = { entrada: 0, saida: 0, cacheLido: 0, cacheGravado: 0 };
     let ultimoErro = "";
+    let ultimoCodigo: ErroIA["codigo"] = "json_invalido";
+    const pendentes: Promise<void>[] = [];
+    const esperarTexto = () => Promise.allSettled(pendentes.splice(0));
     for (let tentativa = 1; tentativa <= 2; tentativa++) {
       const inicio = Date.now();
       let msPrimeira: number | null = null;
       let acumulado = "";
+      let ultimoTexto = 0;
       const detectar = c.campoPrimeiraPalavra
         ? detectorPrimeiraPalavra(c.campoPrimeiraPalavra)
         : null;
@@ -90,11 +120,16 @@ export class ClienteAnthropic implements ClienteIA {
         },
       });
       stream.on("text", (delta) => {
-        if (msPrimeira !== null || !detectar) return;
         acumulado += delta;
-        if (detectar(acumulado)) {
+        if (msPrimeira === null && detectar?.(acumulado)) {
           msPrimeira = Date.now() - inicio;
           c.aoPrimeiraPalavra?.();
+        }
+        const agora = Date.now();
+        if (c.aoTexto && agora - ultimoTexto >= (c.intervaloTextoMs ?? 0)) {
+          ultimoTexto = agora;
+          const r = c.aoTexto(acumulado, tentativa);
+          if (r) pendentes.push(r);
         }
       });
 
@@ -102,10 +137,18 @@ export class ClienteAnthropic implements ClienteIA {
       try {
         mensagem = await stream.finalMessage();
       } catch (e) {
-        if (e instanceof Anthropic.APIError) throw e; // o SDK já tentou de novo nos erros temporários
+        await esperarTexto();
+        if (e instanceof Anthropic.APIError) {
+          // O SDK já tentou de novo nos erros temporários. A mensagem do provedor não traz o texto.
+          throw new ErroIA(`${c.etapa}: API respondeu ${e.status ?? "?"}`, uso, "api");
+        }
+        // JSON fora do schema: tenta mais uma vez. O uso desta tentativa não chega até aqui
+        // (o SDK lança antes de devolver a mensagem), então o custo registrado fica por baixo.
         ultimoErro = e instanceof Error ? e.message : String(e);
-        continue; // JSON fora do schema: tenta mais uma vez
+        ultimoCodigo = "json_invalido";
+        continue;
       }
+      await esperarTexto();
 
       uso.entrada += mensagem.usage.input_tokens;
       uso.saida += mensagem.usage.output_tokens;
@@ -113,20 +156,23 @@ export class ClienteAnthropic implements ClienteIA {
       uso.cacheGravado += mensagem.usage.cache_creation_input_tokens ?? 0;
 
       if (mensagem.stop_reason === "refusal") {
-        throw new ErroIA(`${c.etapa}: o modelo recusou a tarefa`);
+        throw new ErroIA(`${c.etapa}: o modelo recusou a tarefa`, uso, "recusa");
       }
       if (mensagem.stop_reason === "max_tokens") {
         ultimoErro = `resposta cortada em ${c.maxTokens} tokens`;
+        ultimoCodigo = "cortada";
         continue;
       }
       const dados = mensagem.parsed_output as T | null | undefined;
       if (dados == null) {
         ultimoErro = "resposta sem JSON";
+        ultimoCodigo = "json_invalido";
         continue;
       }
       const invalido = c.validar?.(dados) ?? null;
       if (invalido) {
         ultimoErro = invalido;
+        ultimoCodigo = "json_invalido";
         continue;
       }
       return {
@@ -138,6 +184,10 @@ export class ClienteAnthropic implements ClienteIA {
         tentativas: tentativa,
       };
     }
-    throw new ErroIA(`${c.etapa}: falhou 2 vezes (${ultimoErro})`);
+    throw new ErroIA(
+      `${c.etapa}: falhou 2 vezes (${ultimoErro})`,
+      uso,
+      ultimoCodigo,
+    );
   }
 }

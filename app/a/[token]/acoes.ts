@@ -4,6 +4,7 @@
 // de novo (funções autor_* com dono porta_autor, T29). A chave secreta só assina o upload de
 // uma gravação que a porta do autor acabou de criar e confirma que o arquivo chegou inteiro.
 
+import { dispararSeAvulsa } from "@/lib/pipeline/disparo";
 import { after } from "next/server";
 import { z } from "zod";
 import {
@@ -55,7 +56,7 @@ async function gravacaoDoToken(token: string, id: string) {
   const { data: r } = await admin
     .from("recordings")
     .select(
-      "id, book_id, caminho, content_type, tamanho_bytes, upload, criado_em, author_access_id, prompt_id, origem",
+      "id, book_id, caminho, content_type, tamanho_bytes, upload, criado_em, author_access_id, prompt_id, origem, lote_id, processado_em",
     )
     .eq("id", id)
     .not("author_access_id", "is", null)
@@ -199,7 +200,10 @@ export async function confirmarGravacao(
   if (!z.uuid().safeParse(id).success) return DE_NOVO;
   const r = await gravacaoDoToken(token, id);
   if (!r) return LINK_INVALIDO;
-  if (r.upload === "recebido") return { ok: true };
+  if (r.upload === "recebido") {
+    after(() => dispararSeAvulsa(r));
+    return { ok: true };
+  }
 
   const admin = clienteAdmin();
   const { data: info } = await admin.storage.from("audios").info(r.caminho);
@@ -230,5 +234,6 @@ export async function confirmarGravacao(
       },
     }),
   );
+  after(() => dispararSeAvulsa(r));
   return { ok: true };
 }

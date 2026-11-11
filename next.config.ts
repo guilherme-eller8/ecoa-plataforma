@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
+  // Os prompts são lidos do disco em tempo de execução (leitura dinâmica: o tracing não vê).
+  outputFileTracingIncludes: {
+    "/api/inngest": ["./lib/ai/prompts/**/*"],
+  },
   partialPrefetching: true,
   // O service worker nunca fica em cache: uma versão nova vale na próxima abertura.
   async headers() {

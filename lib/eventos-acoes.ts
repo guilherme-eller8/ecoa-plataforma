@@ -29,6 +29,12 @@ export const ACOES = [
   "autor_consentiu",
   "gerou_link_autor",
   "trocou_link_autor",
+  // Prompt 6: pipeline. detalhes: { story } ou { recording }.
+  "historia_pronta", // sistema; o e-mail saiu (ninguém viu a história na tela)
+  "memoria_falhou", // sistema; a história ficou pronta, mas sem resumo e nomes
+  "consentiu_ia", // responsável confirmou o processamento com IA (P41)
+  "processamento_refeito", // admin: Tentar de novo ou Processar
+  "nome_ajustado", // aceitou, corrigiu, recusou ou acrescentou um nome do glossário
 ] as const;
 
 export const PAPEIS = [
