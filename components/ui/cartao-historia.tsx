@@ -1,5 +1,5 @@
 // Cartão de história com as etapas ao vivo (PRD, M5):
-// Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta.
+// Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta. Ou: Não deu certo.
 // Só apresentação: recebe o estado pronto, não busca nada.
 import type { ReactNode } from "react";
 import {
@@ -12,13 +12,13 @@ import {
 import { falarDuracao } from "@/lib/ui/tempo";
 import { IconeCheck } from "./icones";
 
-export type EstadoCartao = Etapa | "pronta";
+export type EstadoCartao = Etapa | "pronta" | "falhou";
 
 type Props = {
-  titulo: string;
+  titulo: string | null; // null enquanto a IA não deu o título
   estado: EstadoCartao;
   origem: string;
-  duracaoSeg: number;
+  duracaoSeg: number | null;
   trecho?: string;
   paginas?: number;
   selo?: string; // ex.: "Corrigida pelo Jair"
@@ -90,6 +90,8 @@ export function CartaoHistoria({
 }: Props) {
   const processando =
     estado === "enviando" || estado === "ouvindo" || estado === "escrevendo";
+  const nome =
+    titulo?.trim() || (processando ? "Nova história" : "História sem título");
   return (
     <article
       className={
@@ -100,10 +102,16 @@ export function CartaoHistoria({
       }
     >
       <header className="flex flex-col gap-1">
-        <h3 className="font-livro text-livro-24 text-tinta">{titulo}</h3>
+        <h3 className="font-livro text-livro-24 text-tinta">{nome}</h3>
         <p className="text-ui-15 text-tinta-2">
-          {origem} · <span className="num">{falarDuracao(duracaoSeg)}</span> de
-          áudio
+          {origem}
+          {duracaoSeg ? (
+            <>
+              {" "}
+              · <span className="num">{falarDuracao(duracaoSeg)}</span> de
+              áudio
+            </>
+          ) : null}
           {estado === "pronta" && paginas ? (
             <>
               {" "}
@@ -113,10 +121,16 @@ export function CartaoHistoria({
         </p>
       </header>
 
-      {estado === "pronta" ? null : <Etapas atual={estado} />}
+      {estado === "pronta" ? null : estado === "falhou" ? (
+        <p className="text-ui-15 text-tinta-2" aria-live="polite">
+          Não deu certo. Já estamos vendo.
+        </p>
+      ) : (
+        <Etapas atual={estado} />
+      )}
 
       {estado === "escrevendo" && trecho ? (
-        <p className="font-livro text-livro-20 text-tinta">
+        <p className="font-livro text-livro-20 text-tinta whitespace-pre-line">
           {trecho}
           <span
             aria-hidden="true"

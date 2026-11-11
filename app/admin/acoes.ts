@@ -5,6 +5,7 @@ import { z } from "zod";
 import { enviarAcesso, identidadeAceitavel } from "@/lib/acesso";
 import { DURACAO_PLANO_MESES } from "@/lib/config";
 import { registrarEvento } from "@/lib/eventos";
+import { dispararGravacao } from "@/lib/pipeline/disparo";
 import type { Resultado } from "@/lib/resultado";
 import { usuarioAtual } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -151,4 +152,63 @@ export async function reenviarAcesso(
     livro: entrada.data.livro_id,
   });
   return { ok: true, mensagem: "E-mail de acesso reenviado." };
+}
+
+// ── Processamento (prompt 6) ─────────────────────────────────────────────
+
+/** Tentar de novo: só sai de "falhou" (atômico no banco); só então reenvia o evento. */
+export async function tentarDeNovo(historiaId: string): Promise<Resultado> {
+  const quem = await admin();
+  if (!quem) return NEGADO;
+  if (!z.uuid().safeParse(historiaId).success)
+    return { ok: false, mensagem: "História não encontrada." };
+  const db = clienteAdmin();
+  const { data: sr } = await db
+    .from("story_recordings")
+    .select("recording_id, book_id")
+    .eq("story_id", historiaId)
+    .order("ordem")
+    .limit(1)
+    .maybeSingle();
+  if (!sr) return { ok: false, mensagem: "História não encontrada." };
+  const { data: reaberta } = await db.rpc("servico_mudar_etapa", {
+    p_story: historiaId,
+    p_para: "ouvindo",
+  });
+  if (!reaberta)
+    return { ok: false, mensagem: "Esta história não está mais com falha." };
+  await dispararGravacao(sr.recording_id, `admin:${Date.now()}`);
+  await registrarEvento({
+    quem: quem.id,
+    papel: "admin",
+    acao: "processamento_refeito",
+    livro: sr.book_id,
+    detalhes: { story: historiaId },
+  });
+  refresh();
+  return { ok: true, mensagem: "Processando de novo." };
+}
+
+/** Processar: gravação recebida que não virou história (o banco decide se pode). */
+export async function processarAgora(gravacaoId: string): Promise<Resultado> {
+  const quem = await admin();
+  if (!quem) return NEGADO;
+  if (!z.uuid().safeParse(gravacaoId).success)
+    return { ok: false, mensagem: "Gravação não encontrada." };
+  const { data: g } = await clienteAdmin()
+    .from("recordings")
+    .select("book_id")
+    .eq("id", gravacaoId)
+    .maybeSingle();
+  if (!g) return { ok: false, mensagem: "Gravação não encontrada." };
+  await dispararGravacao(gravacaoId, `admin:${Date.now()}`);
+  await registrarEvento({
+    quem: quem.id,
+    papel: "admin",
+    acao: "processamento_refeito",
+    livro: g.book_id,
+    detalhes: { recording: gravacaoId },
+  });
+  refresh();
+  return { ok: true, mensagem: "Enviado para a fila." };
 }

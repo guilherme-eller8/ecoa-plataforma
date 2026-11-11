@@ -47,6 +47,8 @@ export async function livroDaTela(
     fotoAutorUrl,
     configuracao: configuracaoDo(livro),
     podeEscrever,
+    ehResponsavel: livro.papel === "responsavel",
+    iaConfirmada: Boolean(livro.ia_consentimento_em),
   };
 }
 

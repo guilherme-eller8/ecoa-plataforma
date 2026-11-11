@@ -1,5 +1,6 @@
 // Tipos que o servidor monta e as telas recebem. Sem nada de servidor aqui: as telas do
 // styleguide usam os mesmos tipos com dados falsos.
+import type { SituacaoDoAudio } from "@/lib/historias/tipos";
 import type {
   CausoEstado,
   EnqueteEstado,
@@ -25,6 +26,8 @@ export type LivroDaTela = {
   fotoAutorUrl: string | null;
   configuracao: Configuracao;
   podeEscrever: boolean;
+  ehResponsavel: boolean;
+  iaConfirmada: boolean; // o responsável já confirmou o processamento com IA (P41)
 };
 
 export type PerguntaDaTela = {
@@ -138,6 +141,7 @@ export type AudioDaTela = {
   recebidoEm: string;
   url: string | null; // assinada por 1 h
   processado: boolean;
+  situacao?: SituacaoDoAudio; // prompt 6: virou história ou por que espera
 };
 
 export type AudioParaSubir = {

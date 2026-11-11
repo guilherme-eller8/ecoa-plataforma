@@ -319,7 +319,7 @@ describe("glossário", () => {
     await sessao(beto, async (tx) => {
       expect((await tenta(tx, `insert into public.glossary_entries (book_id, tipo, nome, estado) values ($1, 'pessoa', 'Tião', 'sugerido')`, [livroB])).erro).toBeDefined();
       expect((await tenta(tx, `insert into public.glossary_entries (book_id, tipo, nome, estado) values ($1, 'pessoa', 'Tião', 'aceito')`, [livroB])).erro).toBeUndefined();
-      expect((await tenta(tx, `update public.glossary_entries set estado = 'recusado' where nome = 'Guarapari'`)).afetadas).toBe(1);
+      expect(await tenta(tx, `update public.glossary_entries set estado = 'recusado' where nome = 'Guarapari'`)).toMatchObject({ afetadas: 1 });
       expect((await tenta(tx, `delete from public.glossary_entries`)).erro).toMatch(/permission denied/);
       expect((await tenta(tx, `insert into public.glossary_entries (book_id, tipo, nome, estado) values ($1, 'pessoa', 'X', 'aceito')`, [livroA])).erro).toBeDefined();
     });
@@ -344,7 +344,7 @@ describe("canal do Realtime (livro:{id})", () => {
     return como(db, papel, usuario ? { sub: usuario } : {}, async (tx) => {
       await tx.query(`select set_config('realtime.topic', $1, true)`, [topico]);
       const r = await tenta(tx, `select id from realtime.messages`);
-      return r.erro ? r.erro : r.linhas;
+      return "erro" in r && r.erro ? r.erro : (r as { linhas: number }).linhas;
     });
   }
 

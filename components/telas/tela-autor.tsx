@@ -69,7 +69,7 @@ function PrimeiraAbertura({
       </p>
       <p className="text-ui-20 text-tinta">
         Suas histórias vão virar um livro para a sua família. Podemos guardar a
-        sua voz para isso?
+        sua voz e escrever o texto com ajuda de inteligência artificial?
       </p>
       <Botao
         tamanho="autor"

@@ -24,6 +24,8 @@ export const LIVRO_JAIR: LivroDaTela = {
   fotoAutorUrl: null,
   configuracao: { quem: "feito", perguntas: "feito", fotos: "depois" },
   podeEscrever: true,
+  ehResponsavel: true,
+  iaConfirmada: true,
 };
 
 export const LIVRO_NOVO: LivroDaTela = {

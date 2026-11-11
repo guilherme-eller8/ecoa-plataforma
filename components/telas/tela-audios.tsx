@@ -53,6 +53,41 @@ function Player({ url, nome }: { url: string | null; nome: string }) {
   );
 }
 
+const ETAPA: Record<string, string> = {
+  ouvindo: "Ouvindo…",
+  escrevendo: "Escrevendo…",
+  pronta: "Virou história",
+  falhou: "Não deu certo",
+};
+
+function Situacao({ livroId, audio }: { livroId: string; audio: AudioDaTela }) {
+  const s = audio.situacao;
+  const selo = "text-ui-13 rounded-full px-3 py-1";
+  if (!s)
+    return audio.processado ? null : (
+      <span className={`${selo} bg-polen-2 text-tinta-2`}>Aguardando</span>
+    );
+  if (s.tipo === "historia")
+    return (
+      <Link
+        href={`/livro/${livroId}/historias/${s.historia}`}
+        className={`${selo} bg-floresta-claro text-floresta font-medium`}
+      >
+        {ETAPA[s.estado]}
+      </Link>
+    );
+  return s.confirmar ? (
+    <Link
+      href={`/livro/${livroId}/configuracoes#ia`}
+      className={`${selo} bg-polen-2 text-floresta font-medium underline-offset-4 hover:underline`}
+    >
+      {s.rotulo}
+    </Link>
+  ) : (
+    <span className={`${selo} bg-polen-2 text-tinta-2`}>{s.rotulo}</span>
+  );
+}
+
 export function TelaAudios({
   livro,
   audios,
@@ -133,11 +168,7 @@ export function TelaAudios({
                     <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
                       {apoio}
                     </p>
-                    {a.processado ? null : (
-                      <span className="text-ui-13 bg-polen-2 text-tinta-2 rounded-full px-3 py-1">
-                        Aguardando processamento
-                      </span>
-                    )}
+                    <Situacao livroId={livro.id} audio={a} />
                   </div>
                   <Player url={a.url} nome={nome} />
                 </li>
