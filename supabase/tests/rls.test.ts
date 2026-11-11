@@ -362,13 +362,16 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
        order by 1`,
     );
     expect(r.rows.map((f) => f.nome)).toEqual([
+      "privado.apelidos_validos",
       "privado.eh_membro",
       "privado.livro_editavel",
+      "public.consentir_processamento_ia",
       "public.enquete_abrir",
       "public.enquete_adicionar_item",
       "public.enquete_encerrar",
       "public.enquete_remover_votos",
       "public.enquete_salvar",
+      "public.marcar_historia_vista",
     ]);
   });
 

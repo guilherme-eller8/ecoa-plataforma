@@ -23,6 +23,8 @@ export const FRASES_DOS_CODIGOS = {
   limite_gravacoes:
     "Muitas gravações hoje. Sua gravação está guardada e sobe mais tarde.",
   gravacao_expirada: "Esta gravação precisa ser enviada de novo.",
+  versao_imutavel: "Esta versão não pode ser mudada.",
+  glossario_cheio: "A lista de nomes chegou ao limite.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

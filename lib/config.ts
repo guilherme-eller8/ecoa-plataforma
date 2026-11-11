@@ -23,7 +23,7 @@ export const GRAVACAO_KBPS = 48; // voz em Opus/AAC; 30 min ≈ 11 MB
 export const MAX_GRAVACOES_AUTOR_DIA = 30; // espelhado, por livro, pelo link do autor (T29)
 export const MAX_MB_AUTOR_DIA = 300; // espelhado, por livro, pelo link do autor (T29)
 export const MAX_ENVIOS_ABERTOS_AUTOR = 5; // espelhado no SQL de autor_preparar_gravacao
-export const CONSENTIMENTO_AUTOR_VERSAO = 1; // mudou a frase? suba a versão
+export const CONSENTIMENTO_AUTOR_VERSAO = 2; // mudou a frase? suba a versão (v2 cita a IA, P41)
 export const MAX_ARQUIVOS_LOTE = 30; // por upload em lote
 
 // ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
@@ -141,3 +141,17 @@ export const META_CUSTO_LIVRO_BRL = 30;
 export const PREMISSA_HISTORIAS_POR_LIVRO = 25;
 export const PREMISSA_MIN_AUDIO_POR_HISTORIA = 6;
 export const PREMISSA_TROCAS_TAMANHO_POR_HISTORIA = 2;
+
+// ── Pipeline (prompt 6, docs/designs/pipeline-texto-ao-vivo.md) ───────────
+// Os quatro primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const MAX_HISTORIA_MIN = 30; // gravação avulsa mais longa que isso espera a divisão (P40)
+export const MAX_MINUTOS_IA_DIA = 240; // áudio processado por livro em 24 h (T38)
+export const MAX_NOMES_GLOSSARIO = 300; // sugeridos + aceitos por livro
+export const MAX_NOMES_POR_HISTORIA = 10; // sugestões da IA por história
+export const CONSENTIMENTO_IA_VERSAO = 1; // confirmação do responsável (P41); mudou a frase? suba
+export const ESPERA_EMAIL_MIN = 2; // e-mail só se ninguém viu a história pronta nesse tempo (P42)
+export const INTERVALO_TEXTO_MS = 400; // texto ao vivo: no máximo 1 mensagem por intervalo
+export const MAX_RESUMOS_CONTEXTO = 40; // histórias prontas no contexto do livro
+export const TENTATIVAS_POR_PASSO = 3; // Inngest: 1 + 2 novas tentativas
+export const VARREDURA_GRAVACAO_MIN = 5; // gravação recebida sem história há mais que isso: reenvia
+export const VARREDURA_PARADA_MIN = 20; // história em andamento há mais que isso: falhou ("parada")

@@ -20,3 +20,20 @@ grant usage on schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+
+-- Realtime (só o necessário para a política do canal privado). O teste escolhe o tópico com
+-- set realtime.topic = 'livro:{id}', como o Realtime faz ao autorizar quem assina o canal.
+create schema realtime;
+grant usage on schema realtime to anon, authenticated, service_role;
+create table realtime.messages (
+  id bigint generated always as identity primary key,
+  topic text not null,
+  extension text not null,
+  payload jsonb
+);
+alter table realtime.messages enable row level security;
+grant select on realtime.messages to anon, authenticated;
+create function realtime.topic() returns text language sql stable as $$
+  select nullif(current_setting('realtime.topic', true), '')
+$$;
+grant execute on function realtime.topic() to anon, authenticated, service_role;

@@ -1,6 +1,6 @@
 # Pipeline com texto ao vivo (prompt 6)
 
-Status: **v2 para aprovação**, revisada por 2 revisores (T28) · 2026-11-11 · PRD: M5, Pipeline de IA, M11 (marco da 1ª história), Modelo de dados · Decisões: P18, P25, P27, P36, T5, T8, T9, T10, T11, T17, T18, T28, T31, T32, T34
+Status: **aprovado pelo Guilherme em 2026-11-11** (v2), revisado por 2 revisores (T28) · 2026-11-11 · PRD: M5, Pipeline de IA, M11 (marco da 1ª história), Modelo de dados · Decisões: P18, P25, P27, P36, T5, T8, T9, T10, T11, T17, T18, T28, T31, T32, T34
 
 Relatórios: `pipeline-texto-ao-vivo/critic_report.md` (segurança e banco) e `pipeline-texto-ao-vivo/codebase_details_report.md` (código). A seção 12 mostra o que mudou por causa de cada um.
 

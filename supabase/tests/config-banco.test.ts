@@ -30,6 +30,11 @@ describe("lib/config.ts x banco", () => {
     ["max_gravacao_s", config.MAX_GRAVACAO_MIN * 60],
     ["max_gravacoes_autor_por_dia", config.MAX_GRAVACOES_AUTOR_DIA],
     ["max_bytes_autor_por_dia", config.MAX_MB_AUTOR_DIA * 1024 * 1024],
+    ["max_historia_s", config.MAX_HISTORIA_MIN * 60],
+    ["max_minutos_ia_por_dia", config.MAX_MINUTOS_IA_DIA],
+    ["max_nomes_glossario", config.MAX_NOMES_GLOSSARIO],
+    ["max_nomes_por_historia", config.MAX_NOMES_POR_HISTORIA],
+    ["consentimento_ia_versao", config.CONSENTIMENTO_IA_VERSAO],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);
