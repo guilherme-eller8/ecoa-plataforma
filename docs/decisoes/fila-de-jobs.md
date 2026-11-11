@@ -1,6 +1,14 @@
 # Decisão: fila de jobs (Inngest × Trigger.dev)
 
-Data: 2026-11-08 · Status: **recomendação, aguardando OK** · Nada instalado.
+Data: 2026-11-08 · Status: **aprovada em 2026-11-11 (T33): Trigger.dev v4, cloud** · Projeto `proj_xpayjgisiwpadkufryyi` criado pelo Guilherme · A instalação (SDK, `trigger.config.ts`, jobs) é do prompt 6.
+
+## Como ligar (ordem)
+
+1. **Feito:** conta e projeto no Trigger.dev.
+2. **Guilherme:** integração com o GitHub, só no repositório `guilherme-eller8/ecoa-plataforma`, com `main` → produção (e *Preview branches*, se o plano permitir).
+3. **Prompt 6:** SDK e `trigger.config.ts` com o projeto acima, sem rodar `trigger.dev init` (ele pede login pelo navegador e cria arquivos fora da branch).
+4. **Guilherme, depois do passo 3:** integração com a Vercel (Production → Production, Preview → Preview), sem *atomic deploy* no começo e sem sincronizar `LINKS_SEGREDO_V*`.
+5. **Guilherme:** `ANTHROPIC_API_KEY` e `ELEVENLABS_API_KEY` nas variáveis da Vercel (Production e Preview); a integração leva ao Trigger.dev. Nunca no chat.
 
 ## Recomendação (5 linhas)
 
