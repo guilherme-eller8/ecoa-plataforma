@@ -1,14 +1,15 @@
 # Decisão: fila de jobs (Inngest × Trigger.dev)
 
-Data: 2026-11-08 · Status: **aprovada em 2026-11-11 (T33): Trigger.dev v4, cloud** · Projeto `proj_xpayjgisiwpadkufryyi` criado pelo Guilherme · A instalação (SDK, `trigger.config.ts`, jobs) é do prompt 6.
+Data: 2026-11-08 · **Decisão final em 2026-11-11: Inngest (T34).** O Trigger.dev (T33) foi descartado no mesmo dia: em 01/11/2026 ele informou um vazamento de variáveis de ambiente de parte dos clientes, e a integração com a Vercel copiaria para lá a chave secreta do Supabase. O projeto `proj_xpayjgisiwpadkufryyi` foi criado e não recebeu nenhuma chave nem acesso a repositório.
 
-## Como ligar (ordem)
+## Como ligar o Inngest (prompt 6)
 
-1. **Feito:** conta e projeto no Trigger.dev.
-2. **Guilherme:** integração com o GitHub, só no repositório `guilherme-eller8/ecoa-plataforma`, com `main` → produção (e *Preview branches*, se o plano permitir).
-3. **Prompt 6:** SDK e `trigger.config.ts` com o projeto acima, sem rodar `trigger.dev init` (ele pede login pelo navegador e cria arquivos fora da branch).
-4. **Guilherme, depois do passo 3:** integração com a Vercel (Production → Production, Preview → Preview), sem *atomic deploy* no começo e sem sincronizar `LINKS_SEGREDO_V*`.
-5. **Guilherme:** `ANTHROPIC_API_KEY` e `ELEVENLABS_API_KEY` nas variáveis da Vercel (Production e Preview); a integração leva ao Trigger.dev. Nunca no chat.
+1. **Guilherme:** conta no Inngest e a integração dele na Vercel (Marketplace), ligada ao projeto `ecoa-plataforma`. Ela cria só as chaves do próprio Inngest (`INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`) na Vercel.
+2. **Prompt 6:** SDK, rota `/api/inngest` e as funções do pipeline. As chaves do Supabase, da Anthropic e do ElevenLabs ficam só na Vercel.
+3. **Guilherme:** `ANTHROPIC_API_KEY` e `ELEVENLABS_API_KEY` nas variáveis da Vercel (Production e Preview). Nunca no chat.
+4. **Prompt 6:** conferir o teto de tempo das funções no plano da Vercel e dividir os passos para caber nele.
+
+A análise original (abaixo) é mantida como histórico.
 
 ## Recomendação (5 linhas)
 
