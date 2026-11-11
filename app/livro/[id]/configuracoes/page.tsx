@@ -4,7 +4,11 @@ import { TelaConfiguracoes } from "@/components/telas/tela-configuracoes";
 import { nomesDoLivro } from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { livroDaTela } from "@/lib/livro/dados";
-import { acrescentarNome, ajustarNome, confirmarProcessamentoIA } from "./acoes";
+import {
+  acrescentarNome,
+  ajustarNome,
+  confirmarProcessamentoIA,
+} from "./acoes";
 
 export const metadata: Metadata = { title: "Configurações · Ecoa Memórias" };
 

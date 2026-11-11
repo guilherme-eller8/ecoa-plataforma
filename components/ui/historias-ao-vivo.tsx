@@ -17,7 +17,7 @@ import {
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { CartaoHistoria } from "./cartao-historia";
 
-type AoVivo = {
+export type AoVivo = {
   etapa?: EtapaPublicada;
   tentativa: number;
   titulo: string | null;
@@ -35,6 +35,7 @@ const ORIGEM: Record<string, string> = {
 function useCanalDoLivro(
   livroId: string,
   aoReceber: (m: MensagemCanal) => void,
+  ligado: boolean,
 ) {
   const router = useRouter();
   const receber = useRef(aoReceber);
@@ -42,6 +43,7 @@ function useCanalDoLivro(
     receber.current = aoReceber;
   });
   useEffect(() => {
+    if (!ligado) return;
     const supabase = clienteNavegador();
     let vivo = true;
     let canal: ReturnType<typeof supabase.channel> | null = null;
@@ -61,7 +63,7 @@ function useCanalDoLivro(
       vivo = false;
       if (canal) void supabase.removeChannel(canal);
     };
-  }, [livroId, router]);
+  }, [livroId, router, ligado]);
 }
 
 export function HistoriasAoVivo({
@@ -69,14 +71,18 @@ export function HistoriasAoVivo({
   historias,
   marcarVista,
   vazio,
+  canal = true,
+  inicial = {},
 }: {
   livroId: string;
   historias: HistoriaDaTela[];
   marcarVista: (historia: string) => Promise<void>;
   vazio?: React.ReactNode;
+  canal?: boolean; // false na vitrine (sem Supabase)
+  inicial?: Record<string, AoVivo>; // vitrine: texto ao vivo de exemplo
 }) {
   const router = useRouter();
-  const [aoVivo, setAoVivo] = useState<Record<string, AoVivo>>({});
+  const [aoVivo, setAoVivo] = useState<Record<string, AoVivo>>(inicial);
   const vistas = useRef(new Set<string>());
 
   const ver = (id: string) => {
@@ -91,33 +97,40 @@ export function HistoriasAoVivo({
     for (const h of historias) if (h.estado === "pronta" && !h.vista) ver(h.id);
   });
 
-  useCanalDoLivro(livroId, (m) => {
-    if (!historias.some((h) => h.id === m.historia)) router.refresh();
-    setAoVivo((atual) => {
-      const antes = atual[m.historia] ?? {
-        tentativa: 0,
-        titulo: null,
-        paragrafos: [],
-      };
-      if (m.tipo === "etapa")
-        return { ...atual, [m.historia]: { ...antes, etapa: m.etapa } };
-      if (m.tentativa < antes.tentativa) return atual;
-      return {
-        ...atual,
-        [m.historia]: {
-          ...antes,
-          etapa: antes.etapa ?? "escrevendo",
-          tentativa: m.tentativa,
-          titulo: m.titulo,
-          paragrafos: m.paragrafos,
-        },
-      };
-    });
-    if (m.tipo === "etapa" && (m.etapa === "revisar" || m.etapa === "falhou")) {
-      if (m.etapa === "revisar") ver(m.historia);
-      router.refresh();
-    }
-  });
+  useCanalDoLivro(
+    livroId,
+    (m) => {
+      if (!historias.some((h) => h.id === m.historia)) router.refresh();
+      setAoVivo((atual) => {
+        const antes = atual[m.historia] ?? {
+          tentativa: 0,
+          titulo: null,
+          paragrafos: [],
+        };
+        if (m.tipo === "etapa")
+          return { ...atual, [m.historia]: { ...antes, etapa: m.etapa } };
+        if (m.tentativa < antes.tentativa) return atual;
+        return {
+          ...atual,
+          [m.historia]: {
+            ...antes,
+            etapa: antes.etapa ?? "escrevendo",
+            tentativa: m.tentativa,
+            titulo: m.titulo,
+            paragrafos: m.paragrafos,
+          },
+        };
+      });
+      if (
+        m.tipo === "etapa" &&
+        (m.etapa === "revisar" || m.etapa === "falhou")
+      ) {
+        if (m.etapa === "revisar") ver(m.historia);
+        router.refresh();
+      }
+    },
+    canal,
+  );
 
   if (historias.length === 0) return <>{vazio}</>;
 
@@ -141,7 +154,9 @@ export function HistoriasAoVivo({
               titulo={h.titulo ?? vivo?.titulo ?? null}
               estado={estado}
               origem={
-                h.pergunta ? `Responde: ${h.pergunta}` : (ORIGEM[h.origem ?? ""] ?? "Áudio")
+                h.pergunta
+                  ? `Responde: ${h.pergunta}`
+                  : (ORIGEM[h.origem ?? ""] ?? "Áudio")
               }
               duracaoSeg={h.duracaoS}
               trecho={trecho}

@@ -6,11 +6,7 @@ import type { z } from "zod";
 import type { Uso } from "./custo";
 
 export type Etapa =
-  | "estruturar"
-  | "editar"
-  | "verificar"
-  | "classificar"
-  | "memoria";
+  "estruturar" | "editar" | "verificar" | "classificar" | "memoria";
 
 export type ChamadaIA<T> = {
   etapa: Etapa;
@@ -54,10 +50,7 @@ export class ErroIA extends Error {
     mensagem: string,
     readonly uso: Uso = { entrada: 0, saida: 0, cacheLido: 0, cacheGravado: 0 },
     readonly codigo:
-      | "recusa"
-      | "api"
-      | "json_invalido"
-      | "cortada" = "json_invalido",
+      "recusa" | "api" | "json_invalido" | "cortada" = "json_invalido",
   ) {
     super(mensagem);
     this.name = "ErroIA";
@@ -140,7 +133,11 @@ export class ClienteAnthropic implements ClienteIA {
         await esperarTexto();
         if (e instanceof Anthropic.APIError) {
           // O SDK já tentou de novo nos erros temporários. A mensagem do provedor não traz o texto.
-          throw new ErroIA(`${c.etapa}: API respondeu ${e.status ?? "?"}`, uso, "api");
+          throw new ErroIA(
+            `${c.etapa}: API respondeu ${e.status ?? "?"}`,
+            uso,
+            "api",
+          );
         }
         // JSON fora do schema: tenta mais uma vez. O uso desta tentativa não chega até aqui
         // (o SDK lança antes de devolver a mensagem), então o custo registrado fica por baixo.
@@ -156,7 +153,11 @@ export class ClienteAnthropic implements ClienteIA {
       uso.cacheGravado += mensagem.usage.cache_creation_input_tokens ?? 0;
 
       if (mensagem.stop_reason === "refusal") {
-        throw new ErroIA(`${c.etapa}: o modelo recusou a tarefa`, uso, "recusa");
+        throw new ErroIA(
+          `${c.etapa}: o modelo recusou a tarefa`,
+          uso,
+          "recusa",
+        );
       }
       if (mensagem.stop_reason === "max_tokens") {
         ultimoErro = `resposta cortada em ${c.maxTokens} tokens`;

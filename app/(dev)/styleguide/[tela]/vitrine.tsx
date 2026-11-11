@@ -1,6 +1,21 @@
 "use client";
 
+import { AdminProcessamento } from "@/components/telas/admin-processamento";
 import { TelaAdmin } from "@/components/telas/tela-admin";
+import { TelaConfiguracoes } from "@/components/telas/tela-configuracoes";
+import { TelaHistoria } from "@/components/telas/tela-historia";
+import { TelaHistorias } from "@/components/telas/tela-historias";
+import {
+  ACOES_CONFIGURACOES_FALSAS,
+  AO_VIVO_JAIR,
+  AUDIOS_COM_SITUACAO,
+  CUSTOS_FALSOS,
+  ESPERANDO_FALSAS,
+  FALHAS_FALSAS,
+  HISTORIA_PARA_LER,
+  HISTORIAS_JAIR,
+  NOMES_JAIR,
+} from "@/lib/exemplos/prompt6";
 import { TelaAudios } from "@/components/telas/tela-audios";
 import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
 import { TelaGravarConversa } from "@/components/telas/tela-gravar-conversa";
@@ -61,6 +76,69 @@ const nada = async () => {};
 
 export function Vitrine({ tela }: { tela: Tela }) {
   switch (tela) {
+    case "livro-com-historias":
+      return (
+        <TelaLivro
+          livro={{ ...LIVRO_JAIR, iaConfirmada: true }}
+          resumo={{
+            paraPerguntar: 4,
+            causosNovos: 1,
+            enqueteAberta: false,
+            audios: 3,
+          }}
+          historias={HISTORIAS_JAIR.slice(0, 2)}
+          linkFamilia="https://app.ecoa-memorias.com.br/f/v1_exemplo"
+          marcarVista={nada}
+          vitrine={AO_VIVO_JAIR}
+        />
+      );
+    case "historias":
+    case "historias-vazia":
+      return (
+        <TelaHistorias
+          livro={LIVRO_JAIR}
+          historias={tela === "historias" ? HISTORIAS_JAIR : []}
+          marcarVista={nada}
+          vitrine={AO_VIVO_JAIR}
+        />
+      );
+    case "historia":
+      return <TelaHistoria livro={LIVRO_JAIR} historia={HISTORIA_PARA_LER} />;
+    case "configuracoes":
+    case "configuracoes-vazia":
+      return (
+        <TelaConfiguracoes
+          livro={{ ...LIVRO_JAIR, iaConfirmada: tela === "configuracoes" }}
+          nomes={tela === "configuracoes" ? NOMES_JAIR : []}
+          acoes={ACOES_CONFIGURACOES_FALSAS}
+        />
+      );
+    case "audios-situacao":
+      return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_COM_SITUACAO} />;
+    case "admin-processamento":
+      return (
+        <TelaAdmin
+          livros={LIVROS_FALSOS}
+          ativar={acaoFalsa}
+          renovar={acaoFalsa}
+          reenviar={acaoFalsa}
+          processamento={
+            <AdminProcessamento
+              falhas={FALHAS_FALSAS}
+              esperando={ESPERANDO_FALSAS}
+              custos={CUSTOS_FALSOS}
+              tentarDeNovo={async () => ({
+                ok: true,
+                mensagem: "Processando de novo.",
+              })}
+              processar={async () => ({
+                ok: true,
+                mensagem: "Enviado para a fila.",
+              })}
+            />
+          }
+        />
+      );
     case "nova-enquete":
     case "nova-enquete-etapa":
     case "nova-enquete-revisar":

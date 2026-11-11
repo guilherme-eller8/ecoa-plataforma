@@ -7,4 +7,7 @@ import { funcoes } from "@/lib/inngest/funcoes";
 // Teto de cada passo (Hobby: 300 s). Com cacheComponents, só maxDuration (sem runtime/dynamic).
 export const maxDuration = 300;
 
-export const { GET, POST, PUT } = serve({ client: inngest, functions: funcoes });
+export const { GET, POST, PUT } = serve({
+  client: inngest,
+  functions: funcoes,
+});

@@ -78,7 +78,10 @@ export function AdminProcessamento({
     "bg-papel rounded-2xl flex flex-wrap items-center justify-between gap-3 p-4";
   const apoio = "font-ui text-tinta-2 text-[15px]";
   return (
-    <section aria-labelledby="titulo-processamento" className="flex flex-col gap-6">
+    <section
+      aria-labelledby="titulo-processamento"
+      className="flex flex-col gap-6"
+    >
       <h2 id="titulo-processamento" className={titulo}>
         Processamento
       </h2>
@@ -95,12 +98,17 @@ export function AdminProcessamento({
             {falhas.map((f) => (
               <li key={f.id} className={linha}>
                 <div className="flex flex-col">
-                  <span className="font-ui text-tinta text-[16px]">{f.autor}</span>
+                  <span className="font-ui text-tinta text-[16px]">
+                    {f.autor}
+                  </span>
                   <span className={apoio}>
                     {f.etapa ?? "?"} · {f.codigo ?? "?"} · {data(f.quando)}
                   </span>
                 </div>
-                <BotaoAcao rotulo="Tentar de novo" acao={() => tentarDeNovo(f.id)} />
+                <BotaoAcao
+                  rotulo="Tentar de novo"
+                  acao={() => tentarDeNovo(f.id)}
+                />
               </li>
             ))}
           </ul>
@@ -119,11 +127,15 @@ export function AdminProcessamento({
             {esperando.map((g) => (
               <li key={g.id} className={linha}>
                 <div className="flex flex-col">
-                  <span className="font-ui text-tinta text-[16px]">{g.autor}</span>
+                  <span className="font-ui text-tinta text-[16px]">
+                    {g.autor}
+                  </span>
                   <span className={apoio}>
                     {g.origem}
-                    {g.duracaoS ? ` · ${Math.round(g.duracaoS / 60)} min` : ""} ·{" "}
-                    {data(g.quando)}
+                    {g.duracaoS
+                      ? ` · ${Math.round(g.duracaoS / 60)} min`
+                      : ""}{" "}
+                    · {data(g.quando)}
                   </span>
                 </div>
                 <BotaoAcao rotulo="Processar" acao={() => processar(g.id)} />
@@ -143,7 +155,9 @@ export function AdminProcessamento({
           <ul className="flex flex-col gap-2">
             {custos.map((c) => (
               <li key={c.autor} className={linha}>
-                <span className="font-ui text-tinta text-[16px]">{c.autor}</span>
+                <span className="font-ui text-tinta text-[16px]">
+                  {c.autor}
+                </span>
                 <span className={`${apoio} tabular-nums`}>
                   R$ {c.reais.toFixed(2).replace(".", ",")} · {c.historias}{" "}
                   {c.historias === 1 ? "história" : "histórias"} ·{" "}

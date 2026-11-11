@@ -40,9 +40,10 @@ export function codigoDaIA(e: unknown): CodigoPipeline {
 }
 
 /** Lê etapa e código de uma mensagem de erro, só se ela tiver o formato fixo. */
-export function lerErroPipeline(
-  mensagem: string | undefined,
-): { etapa: string; codigo: CodigoPipeline } {
+export function lerErroPipeline(mensagem: string | undefined): {
+  etapa: string;
+  codigo: CodigoPipeline;
+} {
   const m = /^([a-z_]{2,30}):([a-z_]{2,40})$/.exec(mensagem ?? "");
   if (m && (CODIGOS as readonly string[]).includes(m[2]))
     return { etapa: m[1], codigo: m[2] as CodigoPipeline };

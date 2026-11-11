@@ -19,10 +19,16 @@ export function envPipeline() {
  * Com INNGEST_DEV definido, o SDK aceita chamadas sem assinatura. Em produção e prévia isso
  * abriria a rota para qualquer um executar o pipeline com a chave secreta: trava.
  */
-export function travarModoDev(env: NodeJS.ProcessEnv = process.env) {
+type EnvInngest = Partial<
+  Record<"VERCEL_ENV" | "INNGEST_DEV" | "INNGEST_SIGNING_KEY", string>
+>;
+
+export function travarModoDev(env: EnvInngest = process.env as EnvInngest) {
   const nuvem = env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview";
   if (nuvem && env.INNGEST_DEV)
-    throw new Error("INNGEST_DEV não pode estar definido em produção ou prévia");
+    throw new Error(
+      "INNGEST_DEV não pode estar definido em produção ou prévia",
+    );
   if (nuvem && !env.INNGEST_SIGNING_KEY)
     throw new Error("Falta INNGEST_SIGNING_KEY");
 }

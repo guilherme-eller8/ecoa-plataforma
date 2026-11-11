@@ -40,6 +40,14 @@ const TELAS = {
   "nova-enquete": "/styleguide/nova-enquete",
   "nova-enquete-etapa": "/styleguide/nova-enquete-etapa",
   "nova-enquete-revisar": "/styleguide/nova-enquete-revisar",
+  "livro-com-historias": "/styleguide/livro-com-historias",
+  historias: "/styleguide/historias",
+  "historias-vazia": "/styleguide/historias-vazia",
+  historia: "/styleguide/historia",
+  configuracoes: "/styleguide/configuracoes",
+  "configuracoes-vazia": "/styleguide/configuracoes-vazia",
+  "audios-situacao": "/styleguide/audios-situacao",
+  "admin-processamento": "/styleguide/admin-processamento",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no

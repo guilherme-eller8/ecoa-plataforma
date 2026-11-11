@@ -134,7 +134,10 @@ function bancoFalso(inicial: Partial<Estado> = {}) {
   return { s, banco };
 }
 
-function montar(inicial: Partial<Estado> = {}, extra: Partial<Dependencias> = {}) {
+function montar(
+  inicial: Partial<Estado> = {},
+  extra: Partial<Dependencias> = {},
+) {
   const { s, banco } = bancoFalso(inicial);
   const canal: MensagemCanal[] = [];
   const emails: string[] = [];
@@ -195,7 +198,9 @@ describe("processarGravacao", () => {
     ]);
     expect(m.s.estado).toBe("pronta");
     expect(m.s.versao?.paragrafos.length).toBeGreaterThan(0);
-    const etapas = m.canal.filter((c) => c.tipo === "etapa").map((c) => c.etapa);
+    const etapas = m.canal
+      .filter((c) => c.tipo === "etapa")
+      .map((c) => c.etapa);
     expect(etapas).toEqual(["ouvindo", "escrevendo", "revisar"]);
     expect(m.canal.some((c) => c.tipo === "texto")).toBe(true);
     expect(m.emails).toEqual(["r@exemplo.com"]);

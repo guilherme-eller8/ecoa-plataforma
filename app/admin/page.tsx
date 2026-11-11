@@ -73,35 +73,50 @@ async function Admin() {
 async function processamento(autorDe: Map<string, string>) {
   const db = clienteAdmin();
   const desde = new Date(Date.now() - 30 * 24 * 3600_000).toISOString();
-  const [{ data: falhas }, { data: recebidas }, { data: usos }, { data: prontas }] =
-    await Promise.all([
-      db
-        .from("stories")
-        .select("id, book_id, erro_etapa, erro, atualizado_em")
-        .eq("estado", "falhou")
-        .order("atualizado_em", { ascending: false })
-        .limit(50),
-      db
-        .from("recordings")
-        .select("id, book_id, origem, duracao_s, recebido_em")
-        .eq("upload", "recebido")
-        .is("processado_em", null)
-        .gt("recebido_em", desde)
-        .order("recebido_em", { ascending: false })
-        .limit(100),
-      db.from("ai_usage").select("book_id, custo_usd, minutos_audio, etapa").limit(10000),
-      db.from("stories").select("book_id").eq("estado", "pronta").limit(10000),
-    ]);
+  const [
+    { data: falhas },
+    { data: recebidas },
+    { data: usos },
+    { data: prontas },
+  ] = await Promise.all([
+    db
+      .from("stories")
+      .select("id, book_id, erro_etapa, erro, atualizado_em")
+      .eq("estado", "falhou")
+      .order("atualizado_em", { ascending: false })
+      .limit(50),
+    db
+      .from("recordings")
+      .select("id, book_id, origem, duracao_s, recebido_em")
+      .eq("upload", "recebido")
+      .is("processado_em", null)
+      .gt("recebido_em", desde)
+      .order("recebido_em", { ascending: false })
+      .limit(100),
+    db
+      .from("ai_usage")
+      .select("book_id, custo_usd, minutos_audio, etapa")
+      .limit(10000),
+    db.from("stories").select("book_id").eq("estado", "pronta").limit(10000),
+  ]);
   const ids = (recebidas ?? []).map((r) => r.id);
   const { data: comHistoria } = ids.length
-    ? await db.from("story_recordings").select("recording_id").in("recording_id", ids)
+    ? await db
+        .from("story_recordings")
+        .select("recording_id")
+        .in("recording_id", ids)
     : { data: [] };
   const ja = new Set((comHistoria ?? []).map((s) => s.recording_id));
   const autor = (livro: string) => autorDe.get(livro) ?? "(livro)";
 
   const porLivro = new Map<string, CustoDoLivro>();
   for (const u of usos ?? []) {
-    const c = porLivro.get(u.book_id) ?? { autor: autor(u.book_id), reais: 0, historias: 0, minutos: 0 };
+    const c = porLivro.get(u.book_id) ?? {
+      autor: autor(u.book_id),
+      reais: 0,
+      historias: 0,
+      minutos: 0,
+    };
     c.reais += emReais(Number(u.custo_usd));
     if (u.etapa === "transcrever") c.minutos += Number(u.minutos_audio ?? 0);
     porLivro.set(u.book_id, c);

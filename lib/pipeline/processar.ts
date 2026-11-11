@@ -238,7 +238,8 @@ export async function processarGravacao(
 
   await step.run("transcrever", () =>
     seguro("transcrever", async () => {
-      if (await d.banco.temTranscricao(gravacao)) return { reaproveitada: true };
+      if (await d.banco.temTranscricao(gravacao))
+        return { reaproveitada: true };
       const g = await d.banco.gravacaoParaTranscrever(gravacao, historia);
       if (!g) throw new ErroPipeline("transcrever", "audio_ausente");
       const { glossario } = await d.banco.contexto(livro);
@@ -354,7 +355,11 @@ export async function processarGravacao(
       if (!rascunho) throw new ErroPipeline("verificar", "sem_rascunho");
       const segmentos = await d.banco.segmentosDaHistoria(historia);
       const estrutura = (await d.banco.estrutura(historia)) ?? undefined;
-      const locais = checar(rascunho.edicao, segmentos, listasDeChecagem(d.ler));
+      const locais = checar(
+        rascunho.edicao,
+        segmentos,
+        listasDeChecagem(d.ler),
+      );
       const ver = await usoDaIA(
         d,
         { livro, historia, etapa: "verificar", modelo: MODELO_CAPAZ },

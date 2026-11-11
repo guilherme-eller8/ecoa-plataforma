@@ -84,7 +84,9 @@ export async function baixarHistoria(
     .eq("numero", 1)
     .maybeSingle();
   if (!v)
-    throw new ErroUsuario("Essa história ainda não tem a versão da IA (está pronta?).");
+    throw new ErroUsuario(
+      "Essa história ainda não tem a versão da IA (está pronta?).",
+    );
   const { data: srs } = await db
     .from("story_recordings")
     .select("recording_id, ordem")
@@ -92,7 +94,10 @@ export async function baixarHistoria(
     .order("ordem");
   const ids = (srs ?? []).map((s) => s.recording_id as string);
   const [{ data: ts }, { data: recs }] = await Promise.all([
-    db.from("transcripts").select("recording_id, segmentos, provedor, modelo").in("recording_id", ids),
+    db
+      .from("transcripts")
+      .select("recording_id, segmentos, provedor, modelo")
+      .in("recording_id", ids),
     db.from("recordings").select("id, nome_arquivo").in("id", ids),
   ]);
   const porId = new Map((ts ?? []).map((t) => [t.recording_id as string, t]));
@@ -102,13 +107,16 @@ export async function baixarHistoria(
     arquivo: (recs ?? []).map((r) => r.nome_arquivo).join(", ") || historia,
     geradaEm: v.criado_em as string,
     provedor: (porId.get(ids[0])?.provedor as string) ?? "elevenlabs",
-    modeloTranscricao: modelos.transcricao ?? (porId.get(ids[0])?.modelo as string) ?? "",
+    modeloTranscricao:
+      modelos.transcricao ?? (porId.get(ids[0])?.modelo as string) ?? "",
     modelos: { rapido: modelos.rapido ?? "", capaz: modelos.capaz ?? "" },
     hashPrompts: (v.hash_prompts ?? {}) as Record<string, string>,
     tamanho: v.tamanho as string,
     edicao: v.conteudo as Edicao,
     marcacoes: (v.marcacoes ?? []) as Marcacao[],
-    segmentos: ids.flatMap((id) => (porId.get(id)?.segmentos ?? []) as Segmento[]),
+    segmentos: ids.flatMap(
+      (id) => (porId.get(id)?.segmentos ?? []) as Segmento[],
+    ),
   });
   return gravarBaixada(dirSaidas, saida);
 }

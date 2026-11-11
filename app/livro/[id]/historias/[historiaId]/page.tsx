@@ -20,7 +20,13 @@ export default function PaginaHistoria({
   );
 }
 
-async function Historia({ id, historiaId }: { id: string; historiaId: string }) {
+async function Historia({
+  id,
+  historiaId,
+}: {
+  id: string;
+  historiaId: string;
+}) {
   const { livro, podeEscrever } = await livroDaPagina(id);
   const [tela, historia] = await Promise.all([
     livroDaTela(livro, podeEscrever),

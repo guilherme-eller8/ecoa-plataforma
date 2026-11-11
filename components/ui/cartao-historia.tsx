@@ -108,8 +108,7 @@ export function CartaoHistoria({
           {duracaoSeg ? (
             <>
               {" "}
-              · <span className="num">{falarDuracao(duracaoSeg)}</span> de
-              áudio
+              · <span className="num">{falarDuracao(duracaoSeg)}</span> de áudio
             </>
           ) : null}
           {estado === "pronta" && paginas ? (

@@ -20,7 +20,9 @@ function falhar(onde: string, error: { code?: string } | null): never {
   throw new Error(`banco:${onde}:${error?.code ?? "?"}`);
 }
 
-export function bancoPipeline(db: ClienteAdmin = clienteAdmin()): BancoPipeline {
+export function bancoPipeline(
+  db: ClienteAdmin = clienteAdmin(),
+): BancoPipeline {
   return {
     async iniciar(gravacao) {
       const { data, error } = await db.rpc("servico_iniciar_historia", {
@@ -270,7 +272,9 @@ export function bancoPipeline(db: ClienteAdmin = clienteAdmin()): BancoPipeline 
         tokens_cache_lido: l.uso?.cacheLido ?? 0,
         tokens_cache_gravado: l.uso?.cacheGravado ?? 0,
         minutos_audio:
-          l.minutosAudio == null ? null : Math.round(l.minutosAudio * 100) / 100,
+          l.minutosAudio == null
+            ? null
+            : Math.round(l.minutosAudio * 100) / 100,
         custo_usd: Math.round(l.custoUSD * 1e6) / 1e6,
         ms: l.ms == null ? null : Math.round(l.ms),
         ms_primeira_palavra:

@@ -3,7 +3,11 @@ import "server-only";
 // são listadas (stories tem grant por coluna: rascunho e erro ficam de fora).
 import type { Edicao, Marcacao } from "@/lib/ai/schemas";
 import { MAX_HISTORIA_MIN } from "@/lib/config";
-import { MOTIVOS_ESPERA, ehAvulsa, type EstadoHistoria } from "@/lib/pipeline/regras";
+import {
+  MOTIVOS_ESPERA,
+  ehAvulsa,
+  type EstadoHistoria,
+} from "@/lib/pipeline/regras";
 import { assinarLeitura } from "@/lib/storage/assinar";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import type {
@@ -29,7 +33,9 @@ export async function historiasDoLivro(
   const linhas = stories ?? [];
   if (linhas.length === 0) return [];
   const ids = linhas.map((s) => s.id);
-  const perguntas = [...new Set(linhas.flatMap((s) => (s.prompt_id ? [s.prompt_id] : [])))];
+  const perguntas = [
+    ...new Set(linhas.flatMap((s) => (s.prompt_id ? [s.prompt_id] : []))),
+  ];
 
   const [{ data: srs }, { data: versoes }, { data: ps }] = await Promise.all([
     supabase
@@ -54,10 +60,16 @@ export async function historiasDoLivro(
         .in("id", gravacoes)
     : { data: [] };
   const rec = new Map((recs ?? []).map((r) => [r.id, r]));
-  const porHistoria = new Map<string, { duracao: number; origem: string | null }>();
+  const porHistoria = new Map<
+    string,
+    { duracao: number; origem: string | null }
+  >();
   for (const s of srs ?? []) {
     const r = rec.get(s.recording_id);
-    const atual = porHistoria.get(s.story_id) ?? { duracao: 0, origem: r?.origem ?? null };
+    const atual = porHistoria.get(s.story_id) ?? {
+      duracao: 0,
+      origem: r?.origem ?? null,
+    };
     atual.duracao += r?.duracao_s ?? 0;
     porHistoria.set(s.story_id, atual);
   }
@@ -108,7 +120,11 @@ export async function historiaParaLer(
       .eq("story_id", historia)
       .order("ordem"),
     s.prompt_id
-      ? supabase.from("prompts").select("texto").eq("id", s.prompt_id).maybeSingle()
+      ? supabase
+          .from("prompts")
+          .select("texto")
+          .eq("id", s.prompt_id)
+          .maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
   const ids = (srs ?? []).map((r) => r.recording_id);
@@ -135,7 +151,13 @@ export async function historiaParaLer(
     audios: ids.flatMap((id) => {
       const r = (recs ?? []).find((x) => x.id === id);
       return r
-        ? [{ id: r.id, url: urls.get(r.caminho) ?? null, duracaoS: r.duracao_s }]
+        ? [
+            {
+              id: r.id,
+              url: urls.get(r.caminho) ?? null,
+              duracaoS: r.duracao_s,
+            },
+          ]
         : [];
     }),
   };
@@ -170,7 +192,9 @@ export async function situacaoDosAudios(
         .select("story_id, recording_id")
         .in("recording_id", ids)
     : { data: [] };
-  const historiaDe = new Map((srs ?? []).map((s) => [s.recording_id, s.story_id]));
+  const historiaDe = new Map(
+    (srs ?? []).map((s) => [s.recording_id, s.story_id]),
+  );
   const historias = [...new Set(historiaDe.values())];
   const { data: stories } = historias.length
     ? await supabase.from("stories").select("id, estado").in("id", historias)

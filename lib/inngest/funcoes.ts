@@ -160,7 +160,10 @@ export const varreduraFn = inngest.createFunction(
       const ids = (candidatas ?? []).map((g) => g.id);
       if (ids.length === 0) return 0;
       const [{ data: comHistoria }, { data: livros }] = await Promise.all([
-        db.from("story_recordings").select("recording_id").in("recording_id", ids),
+        db
+          .from("story_recordings")
+          .select("recording_id")
+          .in("recording_id", ids),
         db
           .from("books")
           .select("id")

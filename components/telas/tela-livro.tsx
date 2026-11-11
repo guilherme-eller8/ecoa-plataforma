@@ -6,6 +6,7 @@ import { IconePerguntas, IconeSubir } from "@/components/ui/icones";
 import { HistoriasAoVivo } from "@/components/ui/historias-ao-vivo";
 import { Marca } from "@/components/ui/marca";
 import { MarcoPrimeiraHistoria } from "@/components/ui/marco-primeira-historia";
+import type { AoVivo } from "@/components/ui/historias-ao-vivo";
 import type { HistoriaDaTela } from "@/lib/historias/tipos";
 import { pendentes, type Passo } from "@/lib/livro/configuracao";
 import type { LivroDaTela } from "@/lib/livro/tipos";
@@ -29,12 +30,14 @@ export function TelaLivro({
   historias = [],
   linkFamilia = null,
   marcarVista,
+  vitrine,
 }: {
   livro: LivroDaTela;
   resumo: ResumoDoLivro;
   historias?: HistoriaDaTela[];
   linkFamilia?: string | null;
   marcarVista?: (historia: string) => Promise<void>;
+  vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
 }) {
   const falta = livro.podeEscrever ? pendentes(livro.configuracao) : [];
   const base = `/livro/${livro.id}`;
@@ -124,7 +127,9 @@ export function TelaLivro({
           </p>
           <Link
             href={`${base}/configuracoes#ia`}
-            className={classesDoBotao({ variante: "secundario" }) + " self-start"}
+            className={
+              classesDoBotao({ variante: "secundario" }) + " self-start"
+            }
           >
             <span>Confirmar</span>
           </Link>
@@ -146,6 +151,8 @@ export function TelaLivro({
             livroId={livro.id}
             historias={recentes}
             marcarVista={marcarVista}
+            canal={!vitrine}
+            inicial={vitrine}
           />
         </section>
       ) : null}

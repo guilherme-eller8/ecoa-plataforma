@@ -40,6 +40,15 @@ export const TELAS = [
   "nova-enquete",
   "nova-enquete-etapa",
   "nova-enquete-revisar",
+  // Prompt 6
+  "livro-com-historias",
+  "historias",
+  "historias-vazia",
+  "historia",
+  "configuracoes",
+  "configuracoes-vazia",
+  "audios-situacao",
+  "admin-processamento",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

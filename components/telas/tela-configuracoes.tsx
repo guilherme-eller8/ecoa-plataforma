@@ -18,7 +18,10 @@ export type AcoesConfiguracoes = {
     id: string,
     m: { estado?: "aceito" | "recusado"; nome?: string },
   ) => Promise<Resposta>;
-  acrescentar: (n: { tipo: "pessoa" | "lugar"; nome: string }) => Promise<Resposta>;
+  acrescentar: (n: {
+    tipo: "pessoa" | "lugar";
+    nome: string;
+  }) => Promise<Resposta>;
 };
 
 const TIPO = { pessoa: "Pessoa", lugar: "Lugar" } as const;
@@ -92,7 +95,7 @@ function LinhaNome({
 
   if (corrigindo)
     return (
-      <li className="flex flex-col gap-3 py-4">
+      <li className="bg-papel flex flex-col gap-3 rounded-2xl p-4">
         <Campo
           rotulo={`${TIPO[n.tipo]}: grafia certa`}
           value={valor}
@@ -104,7 +107,10 @@ function LinhaNome({
           <Botao
             carregando={pendente}
             onClick={() =>
-              rodar(() => acoes.ajustar(n.id, { nome: valor }), () => setCorrigindo(false))
+              rodar(
+                () => acoes.ajustar(n.id, { nome: valor }),
+                () => setCorrigindo(false),
+              )
             }
           >
             Salvar
@@ -118,7 +124,7 @@ function LinhaNome({
     );
 
   return (
-    <li className="flex flex-col gap-3 py-4">
+    <li className="bg-papel flex flex-col gap-3 rounded-2xl p-4">
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-livro text-livro-20 text-tinta [overflow-wrap:anywhere]">
           {n.nome}
@@ -126,25 +132,35 @@ function LinhaNome({
         <span className="text-ui-13 text-tinta-2 shrink-0">{TIPO[n.tipo]}</span>
       </div>
       {podeEscrever ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           {n.estado === "sugerido" ? (
             <Botao
               carregando={pendente}
-              onClick={() => rodar(() => acoes.ajustar(n.id, { estado: "aceito" }))}
+              onClick={() =>
+                rodar(() => acoes.ajustar(n.id, { estado: "aceito" }))
+              }
             >
               Aceitar
             </Botao>
           ) : null}
-          <Botao variante="secundario" onClick={() => setCorrigindo(true)}>
+          <button
+            type="button"
+            onClick={() => setCorrigindo(true)}
+            className="text-ui-17 text-floresta min-h-alvo rounded-full px-3 font-medium"
+          >
             Corrigir
-          </Botao>
+          </button>
           {n.estado === "sugerido" ? (
-            <Botao
-              variante="secundario"
-              onClick={() => rodar(() => acoes.ajustar(n.id, { estado: "recusado" }))}
+            <button
+              type="button"
+              disabled={pendente}
+              onClick={() =>
+                rodar(() => acoes.ajustar(n.id, { estado: "recusado" }))
+              }
+              className="text-ui-17 text-tinta-2 min-h-alvo rounded-full px-3"
             >
               Não é nome
-            </Botao>
+            </button>
           ) : null}
         </div>
       ) : null}
@@ -167,7 +183,11 @@ function Acrescentar({
   const [pendente, iniciar] = useTransition();
   if (!aberto)
     return (
-      <Botao variante="secundario" onClick={() => setAberto(true)} className="self-start">
+      <Botao
+        variante="secundario"
+        onClick={() => setAberto(true)}
+        className="self-start"
+      >
         Acrescentar nome
       </Botao>
     );
@@ -247,7 +267,9 @@ export function TelaConfiguracoes({
           <EstadoVazio
             frase="Os nomes aparecem aqui depois da primeira história."
             acao={
-              livro.podeEscrever ? <Acrescentar acrescentar={acoes.acrescentar} /> : null
+              livro.podeEscrever ? (
+                <Acrescentar acrescentar={acoes.acrescentar} />
+              ) : null
             }
           />
         ) : (
@@ -257,24 +279,38 @@ export function TelaConfiguracoes({
                 <h3 className="text-ui-15 text-tinta-2 font-medium">
                   Sugeridos pela IA
                 </h3>
-                <ul className="divide-linha divide-y">
+                <ul className="flex flex-col gap-2">
                   {sugeridos.map((n) => (
-                    <LinhaNome key={n.id} n={n} acoes={acoes} podeEscrever={livro.podeEscrever} />
+                    <LinhaNome
+                      key={n.id}
+                      n={n}
+                      acoes={acoes}
+                      podeEscrever={livro.podeEscrever}
+                    />
                   ))}
                 </ul>
               </div>
             ) : null}
             {aceitos.length ? (
               <div className="flex flex-col">
-                <h3 className="text-ui-15 text-tinta-2 font-medium">Confirmados</h3>
-                <ul className="divide-linha divide-y">
+                <h3 className="text-ui-15 text-tinta-2 font-medium">
+                  Confirmados
+                </h3>
+                <ul className="flex flex-col gap-2">
                   {aceitos.map((n) => (
-                    <LinhaNome key={n.id} n={n} acoes={acoes} podeEscrever={livro.podeEscrever} />
+                    <LinhaNome
+                      key={n.id}
+                      n={n}
+                      acoes={acoes}
+                      podeEscrever={livro.podeEscrever}
+                    />
                   ))}
                 </ul>
               </div>
             ) : null}
-            {livro.podeEscrever ? <Acrescentar acrescentar={acoes.acrescentar} /> : null}
+            {livro.podeEscrever ? (
+              <Acrescentar acrescentar={acoes.acrescentar} />
+            ) : null}
           </>
         )}
       </section>

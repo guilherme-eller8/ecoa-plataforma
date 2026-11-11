@@ -15,8 +15,14 @@ import { ORIGENS_AVULSAS } from "@/lib/pipeline/regras";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
 
-const SEM_ACESSO = { ok: false as const, mensagem: "Você não tem acesso a este livro." };
-const FECHADO = { ok: false as const, mensagem: "Este livro não aceita mudanças agora." };
+const SEM_ACESSO = {
+  ok: false as const,
+  mensagem: "Você não tem acesso a este livro.",
+};
+const FECHADO = {
+  ok: false as const,
+  mensagem: "Este livro não aceita mudanças agora.",
+};
 
 async function paraEscrever(livroId: string) {
   const acesso = await livroDaAcao(livroId);
@@ -29,11 +35,16 @@ function atualizar(livroId: string) {
   revalidatePath(`/livro/${livroId}`, "layout");
 }
 
-export async function confirmarProcessamentoIA(livroId: string): Promise<Resposta> {
+export async function confirmarProcessamentoIA(
+  livroId: string,
+): Promise<Resposta> {
   const a = await paraEscrever(livroId);
   if ("ok" in a) return a;
   if (a.livro.papel !== "responsavel")
-    return { ok: false, mensagem: "Só o responsável pelo livro pode confirmar." };
+    return {
+      ok: false,
+      mensagem: "Só o responsável pelo livro pode confirmar.",
+    };
   const supabase = await clienteSessao();
   const { data, error } = await supabase.rpc("consentir_processamento_ia", {
     p_book: livroId,
@@ -59,22 +70,24 @@ export async function confirmarProcessamentoIA(livroId: string): Promise<Respost
       .in("origem", [...ORIGENS_AVULSAS])
       .lte("duracao_s", MAX_HISTORIA_MIN * 60)
       .limit(50);
-    for (const g of esperando ?? []) await dispararGravacao(g.id, "consentimento");
+    for (const g of esperando ?? [])
+      await dispararGravacao(g.id, "consentimento");
   });
   atualizar(livroId);
   return { ok: true };
 }
 
 const nome = z.string().trim().min(1, "Escreva o nome.").max(80);
-const apelidos = z
-  .array(z.string().trim().min(1).max(80))
-  .max(10)
-  .default([]);
+const apelidos = z.array(z.string().trim().min(1).max(80)).max(10).default([]);
 
 export async function ajustarNome(
   livroId: string,
   id: string,
-  mudanca: { estado?: "aceito" | "recusado"; nome?: string; apelidos?: string[] },
+  mudanca: {
+    estado?: "aceito" | "recusado";
+    nome?: string;
+    apelidos?: string[];
+  },
 ): Promise<Resposta> {
   const a = await paraEscrever(livroId);
   if ("ok" in a) return a;
@@ -87,12 +100,18 @@ export async function ajustarNome(
     })
     .safeParse({ id, ...mudanca });
   if (!v.success)
-    return { ok: false, mensagem: v.error.issues[0]?.message ?? "Confira o nome." };
+    return {
+      ok: false,
+      mensagem: v.error.issues[0]?.message ?? "Confira o nome.",
+    };
   const { id: _id, ...campos } = v.data;
   const supabase = await clienteSessao();
   const { error } = await supabase
     .from("glossary_entries")
-    .update({ ...campos, ...(campos.nome ? { estado: "aceito" as const } : {}) })
+    .update({
+      ...campos,
+      ...(campos.nome ? { estado: "aceito" as const } : {}),
+    })
     .eq("id", _id)
     .eq("book_id", livroId);
   if (error) return { ok: false, mensagem: fraseDoErro(error) };
@@ -119,7 +138,10 @@ export async function acrescentarNome(
     .object({ tipo: z.enum(["pessoa", "lugar"]), nome })
     .safeParse(entrada);
   if (!v.success)
-    return { ok: false, mensagem: v.error.issues[0]?.message ?? "Confira o nome." };
+    return {
+      ok: false,
+      mensagem: v.error.issues[0]?.message ?? "Confira o nome.",
+    };
   const supabase = await clienteSessao();
   const { error } = await supabase.from("glossary_entries").insert({
     book_id: livroId,

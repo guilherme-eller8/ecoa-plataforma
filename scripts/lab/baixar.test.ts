@@ -22,7 +22,14 @@ const dados = {
   },
   marcacoes: [],
   segmentos: [
-    { id: 1, arquivo: H, inicio: 0, fim: 1, falante: `${H}:A`, texto: "era longe" },
+    {
+      id: 1,
+      arquivo: H,
+      inicio: 0,
+      fim: 1,
+      falante: `${H}:A`,
+      texto: "era longe",
+    },
   ],
 };
 

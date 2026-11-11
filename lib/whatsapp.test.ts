@@ -54,7 +54,10 @@ describe("mensagens do WhatsApp", () => {
 describe("mensagemPrimeiraHistoria", () => {
   it("traz o autor e o link da família", async () => {
     const { mensagemPrimeiraHistoria } = await import("./whatsapp");
-    const m = mensagemPrimeiraHistoria({ autor: "Vô Jair", link: "https://x/f/abc" });
+    const m = mensagemPrimeiraHistoria({
+      autor: "Vô Jair",
+      link: "https://x/f/abc",
+    });
     expect(m).toContain("Vô Jair");
     expect(m).toContain("https://x/f/abc");
   });

@@ -32,7 +32,8 @@ function trechos(texto: string, marcas: Marcacao[]) {
     const inicio = Math.max(m.inicio, pos);
     const fim = Math.min(m.fim, texto.length);
     if (fim <= inicio) continue;
-    if (inicio > pos) partes.push({ texto: texto.slice(pos, inicio), marca: null });
+    if (inicio > pos)
+      partes.push({ texto: texto.slice(pos, inicio), marca: null });
     partes.push({ texto: texto.slice(inicio, fim), marca: m });
     pos = fim;
   }
@@ -59,11 +60,13 @@ export function TelaHistoria({
       </Link>
 
       <header className="flex flex-col gap-3">
-        <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           {historia.titulo ?? (pronta ? "História sem título" : "Escrevendo…")}
         </h1>
         {historia.pergunta ? (
-          <p className="text-ui-15 text-tinta-2">Responde: {historia.pergunta}</p>
+          <p className="text-ui-15 text-tinta-2">
+            Responde: {historia.pergunta}
+          </p>
         ) : null}
       </header>
 
@@ -105,7 +108,7 @@ export function TelaHistoria({
                       key={j}
                       type="button"
                       onClick={() => setAberta(t.marca)}
-                      className="bg-polen-2 decoration-floresta/60 rounded-sm text-left underline decoration-dotted underline-offset-4"
+                      className="bg-polen-2 decoration-floresta/60 inline rounded-sm box-decoration-clone text-left underline decoration-dotted underline-offset-4"
                     >
                       {t.texto}
                     </button>
@@ -138,10 +141,12 @@ export function TelaHistoria({
       >
         {aberta ? (
           <div className="flex flex-col gap-3">
-            <p className="text-ui-13 text-tinta-2 font-medium uppercase tracking-wide">
+            <p className="text-ui-13 text-tinta-2 font-medium tracking-wide uppercase">
               {TIPO[aberta.tipo] ?? "Confira"}
             </p>
-            <p className="font-livro text-livro-20 text-tinta">“{aberta.trecho}”</p>
+            <p className="font-livro text-livro-20 text-tinta">
+              “{aberta.trecho}”
+            </p>
             <p className="text-ui-17 text-tinta-2">{aberta.motivo}</p>
           </div>
         ) : null}

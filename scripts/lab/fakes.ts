@@ -174,7 +174,9 @@ export class ClienteFalso implements ClienteIA {
       dados = { marcadas };
     } else if (c.etapa === "memoria") {
       const nomes = [
-        ...new Set(c.usuario.match(/\b[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõç]+/g) ?? []),
+        ...new Set(
+          c.usuario.match(/\b[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõç]+/g) ?? [],
+        ),
       ];
       dados = {
         resumo: "Resumo simulado da história.",
