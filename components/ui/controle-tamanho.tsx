@@ -10,6 +10,7 @@ type Props = {
   travados?: number;
   aoMudar?: (posicao: number) => void;
   desabilitado?: boolean;
+  rotuloVisivel?: boolean; // numa folha que já se chama "Tamanho do texto", o rótulo some
 };
 
 export function ControleTamanho({
@@ -17,6 +18,7 @@ export function ControleTamanho({
   travados = 0,
   aoMudar,
   desabilitado,
+  rotuloVisivel = true,
 }: Props) {
   const [posicao, setPosicao] = useState(inicial);
   const id = useId();
@@ -25,7 +27,12 @@ export function ControleTamanho({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between gap-4">
-        <label htmlFor={id} className="text-ui-15 text-tinta font-medium">
+        <label
+          htmlFor={id}
+          className={
+            rotuloVisivel ? "text-ui-15 text-tinta font-medium" : "sr-only"
+          }
+        >
           Tamanho do texto
         </label>
         <output htmlFor={id} className="text-ui-17 text-floresta font-medium">

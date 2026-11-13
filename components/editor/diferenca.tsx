@@ -17,7 +17,8 @@ import type { PropostaDaTela } from "@/lib/editor/tipos";
 import { rotuloDaChave } from "@/lib/ui/tamanho";
 
 export function tituloDaProposta(p: Pick<PropostaDaTela, "tipo" | "tamanho">) {
-  if (p.tipo === "tamanho") return `Versão ${rotuloDaChave(p.tamanho)}`;
+  if (p.tipo === "tamanho")
+    return `Texto ${rotuloDaChave(p.tamanho).toLowerCase()}`;
   if (p.tipo === "audio") return "Áudio novo";
   return "Trecho revisado";
 }

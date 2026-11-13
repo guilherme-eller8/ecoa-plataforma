@@ -609,9 +609,9 @@ export function TelaEditor({
               {p.estado === "gerando"
                 ? p.tipo === "audio"
                   ? "Ouvindo o áudio novo…"
-                  : `Escrevendo a versão ${rotuloDaChave(p.tamanho)}…`
+                  : `Escrevendo o texto ${rotuloDaChave(p.tamanho).toLowerCase()}…`
                 : p.estado === "pronta"
-                  ? `${tituloDaProposta(p)}: pronta para conferir.`
+                  ? `${tituloDaProposta(p)}: pronto para conferir.`
                   : `Não deu certo: ${tituloDaProposta(p).toLowerCase()}.`}
             </p>
             {p.estado === "pronta" ? (
@@ -1031,7 +1031,7 @@ export function TelaEditor({
         onEnded={aoPausar}
         className="hidden"
       />
-      {temAudio ? (
+      {temAudio && !aberta ? (
         <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-6xl justify-center px-5 pb-[max(1rem,env(safe-area-inset-bottom))] lg:justify-start lg:px-8">
           <div className="bg-tinta text-papel shadow-flutuante pointer-events-auto flex min-h-14 w-full max-w-md items-center gap-3 rounded-full py-1.5 pr-5 pl-1.5 lg:max-w-[calc((100%-4rem)*5/12)]">
             <button

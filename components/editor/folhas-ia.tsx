@@ -59,13 +59,11 @@ export function FolhaTamanho({
       titulo="Tamanho do texto"
     >
       <div className="flex flex-col gap-5">
-        <h2 className="font-livro text-livro-24 text-tinta">
-          Tamanho do texto
-        </h2>
         <ControleTamanho
           key={`${atual}-${gerando ?? ""}`}
           inicial={posicaoDaChave(gerando ?? atual)}
           travados={travados}
+          rotuloVisivel={false}
           desabilitado={gerando !== null}
           aoMudar={(posicao) => {
             if (timer.current) clearTimeout(timer.current);
@@ -84,8 +82,8 @@ export function FolhaTamanho({
               aria-hidden="true"
               className="border-floresta size-4 animate-spin rounded-full border-2 border-r-transparent motion-reduce:animate-none"
             />
-            Escrevendo a versão {rotuloDaChave(gerando)}. Pode continuar
-            editando.
+            Escrevendo o texto {rotuloDaChave(gerando).toLowerCase()}. Pode
+            continuar editando.
           </p>
         ) : (
           <DicaPrimeiraVez chave="editor-tamanho">
@@ -130,9 +128,6 @@ export function FolhaRevisar({
       titulo="Revisar o trecho"
     >
       <div className="flex flex-col gap-5">
-        <h2 className="font-livro text-livro-24 text-tinta">
-          Revisar o trecho
-        </h2>
         <blockquote className="font-livro text-livro-20 text-tinta-2 border-linha-forte border-l-2 pl-4">
           {curto}
         </blockquote>
@@ -269,9 +264,6 @@ export function FolhaAcrescentar({
       titulo="Acrescentar áudio"
     >
       <div className="flex flex-col gap-5">
-        <h2 className="font-livro text-livro-24 text-tinta">
-          Acrescentar áudio
-        </h2>
         <p className="text-ui-17 text-tinta-2">
           A IA junta ao texto o que é novo. Você confere antes de entrar.
         </p>
