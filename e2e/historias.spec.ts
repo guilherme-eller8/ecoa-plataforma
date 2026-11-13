@@ -19,9 +19,7 @@ test.describe("Histórias (exemplo)", () => {
     await expect(
       page.getByText("Não deu certo. Já estamos vendo."),
     ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Ler a história" }),
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Revisar" })).toBeVisible();
   });
 
   test("sem histórias: uma frase e um botão", async ({ page }) => {

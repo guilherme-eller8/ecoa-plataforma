@@ -26,6 +26,15 @@ import {
   HISTORIA_COM_SUGESTAO,
   HISTORIAS_COM_DIVISAO,
 } from "@/lib/exemplos/prompt7";
+import { TelaEditor } from "@/components/telas/tela-editor";
+import { TelaVersoes } from "@/components/telas/tela-versoes";
+import {
+  ACOES_VERSOES_FALSAS,
+  acoesEditorFalsas,
+  HISTORIA_PARA_EDITAR,
+  TEXTO_ATUAL_TREM,
+  VERSOES_TREM,
+} from "@/lib/exemplos/prompt8";
 import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
 import { TelaGravarConversa } from "@/components/telas/tela-gravar-conversa";
 import { TelaAutor, TelaAutorInvalido } from "@/components/telas/tela-autor";
@@ -120,6 +129,39 @@ export function Vitrine({ tela }: { tela: Tela }) {
           livro={LIVRO_JAIR}
           historia={HISTORIA_COM_SUGESTAO}
           responderSugestao={async () => ({ ok: true })}
+        />
+      );
+    case "editor":
+    case "editor-trava":
+    case "editor-outra-tela":
+    case "editor-somente-leitura":
+    case "editor-pronta":
+      return (
+        <TelaEditor
+          historia={{
+            ...HISTORIA_PARA_EDITAR,
+            revisada: tela === "editor-pronta",
+          }}
+          podeEscrever={tela !== "editor-somente-leitura"}
+          acoes={acoesEditorFalsas(
+            tela === "editor-trava"
+              ? "outra-pessoa"
+              : tela === "editor-outra-tela"
+                ? "outra-tela"
+                : "livre",
+          )}
+        />
+      );
+    case "versoes":
+      return (
+        <TelaVersoes
+          livroId={HISTORIA_PARA_EDITAR.livroId}
+          historiaId={HISTORIA_PARA_EDITAR.id}
+          titulo={HISTORIA_PARA_EDITAR.texto.titulo}
+          atual={TEXTO_ATUAL_TREM}
+          versoes={VERSOES_TREM}
+          podeEscrever
+          acoes={ACOES_VERSOES_FALSAS}
         />
       );
     case "dividir":
