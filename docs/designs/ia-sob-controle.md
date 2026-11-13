@@ -889,3 +889,19 @@ Relatórios: `ia-sob-controle/critic_report.md` (segurança e banco) e `ia-sob-c
 | K10 | Motivos novos (`longa`, `historia_indisponivel`, `cota_ia_diaria`, `sem_consentimento`) viram "Guardada" | Entram em `MOTIVOS_ESPERA`/`FRASES_ESPERA`; a tela confere os 30 min antes de enviar |
 | K11 | `TAMANHOS_TEXTO` com 5 chaves quebra `config.test.ts` e o `--tamanho todos` do lab; dois tipos `Tamanho` com o mesmo nome | Atualizar os dois; mapa posição (1 a 5) → chave em `lib/ui/tamanho.ts` |
 | K12 | Histórico não lê `tamanho` nem `proposta_id`; `config-banco.test.ts` sem as funções novas; `lib/supabase/tipos.ts` | Ajustar a consulta, a lista do teste e regenerar os tipos |
+
+## 13. O que mudou na implementação
+
+- **Parágrafo novo que só reconta um travado sai da proposta de tamanho.** Se a IA esquece o marcador e reescreve o conteúdo de um parágrafo editado à mão, com as mesmas fontes, ele duplicaria o que a família escreveu. O código descarta esse parágrafo novo e devolve o travado ao lugar (teste do item 5 no pipeline).
+- **Título de quem nunca editou:** o aceite usa o título de `stories` (P46) quando ainda não há texto salvo, e nunca muda `stories.titulo` nem o ano.
+- **O editor confere as propostas a cada 5 s** (enquanto uma está sendo escrita ou um áudio acabou de subir), em vez de assinar o canal. O servidor também publica `proposta` no canal do livro, num evento próprio que a lista de histórias não ouve; o editor pode passar a usá-lo depois, sem mudar o servidor.
+- **Diferença por palavra separa a pontuação:** "escuro." → "escuro," marca só a vírgula.
+- **Uma dica de primeira vez por vez:** a de "Revisar" só aparece depois que a de "Ouvir" foi vista (`depoisDe`).
+- **Vitrine:** `editor-ia`, `editor-proposta`, `editor-diferenca` (a diferença já aberta) e `gravar-mais`.
+
+## 14. Gate
+
+- `npm test`: 557 testes (17 novos de banco em `supabase/tests/propostas.test.ts`, 14 de `lib/editor/propostas.test.ts`, 3 de `lib/pipeline/propostas.test.ts`, incluindo o item 5 nas duas camadas).
+- `npm run test:e2e`: 177 testes, 14 novos em `e2e/ia-sob-controle.spec.ts` (celular e computador).
+- Design: `taste:lint` 0 FAIL; `taste:inspect` 0 FAIL nas 4 telas novas em 390, 768 e 1440 px. Um WARN aceito: "Gravar mais" no computador tem o mesmo vazio do gravador da conversa (coluna estreita de propósito). Corrigidos na rodada: título repetido 3 vezes nas folhas, "Versão Longo" (virou "Texto longo"), player cobrindo o *Aceitar* no celular, rótulo do cadeado na fonte do livro, pontuação trocando a palavra inteira na diferença, duas dicas empilhadas.
+- **Banco (13/11):** migration aplicada no Supabase (`ecoa-plataforma`, São Paulo). As 7 funções principais têm o mesmo hash do banco de teste. Só membro logado executa `pedir_proposta`, `aplicar_proposta` e `descartar_proposta`; só o servidor grava e falha propostas; `anon` e `porta_autor` sem acesso; ninguém logado lê `travados`. O verificador de segurança não apontou nada novo além do padrão já aceito.

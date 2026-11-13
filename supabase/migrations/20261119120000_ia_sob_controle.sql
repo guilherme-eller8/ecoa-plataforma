@@ -295,13 +295,8 @@ begin
   return query select s.id, s.estado, 'acrescentar';
 end $$;
 
--- servico_iniciar_historia: corpo de 20261117120000_divisao.sql, com UMA mudança logo depois
--- de ler a gravação e conferir que ela chegou:
---   if v.para_historia is not null then
---     return query select * from privado.acrescentar_audio(p_recording); return;
---   end if;
--- (O arquivo traz o corpo inteiro; a reversão recria o anterior.)
--- Corpo de 20261117120000_divisao.sql com o desvio do prompt 9 (para_historia).
+-- servico_iniciar_historia: corpo de 20261117120000_divisao.sql com UMA mudança (o desvio por
+-- para_historia, logo depois de conferir que a gravação chegou). A reversão recria o anterior.
 create or replace function public.servico_iniciar_historia(p_recording uuid)
 returns table (historia uuid, estado public.story_estado, motivo text)
 language plpgsql security definer set search_path = '' as $$
