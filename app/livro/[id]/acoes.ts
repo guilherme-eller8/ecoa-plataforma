@@ -19,6 +19,7 @@ import {
 } from "@/lib/audios/formatos";
 import {
   MAX_ARQUIVOS_LOTE,
+  MAX_AUDIO_EXTRA_MIN,
   MAX_HISTORIAS_DIVISAO,
   MAX_FOTOS_POR_ENVIO,
   MAX_ITENS_ENQUETE,
@@ -806,6 +807,9 @@ const esquemaOpcoesAudios = z
         parte: z.number().int().min(1).max(100).optional(),
       })
       .optional(),
+    paraHistoria: z
+      .object({ historiaId: z.uuid(), gravado: z.boolean() })
+      .optional(),
   })
   .optional();
 
@@ -820,8 +824,24 @@ export async function prepararAudios(
 ): Promise<Resposta<AudioPreparado[]>> {
   const v = esquemaAudios.safeParse(arquivos);
   const o = esquemaOpcoesAudios.safeParse(opcoes);
-  if (!o.success || (o.data?.conversa && arquivos.length !== 1))
+  if (
+    !o.success ||
+    (o.data?.conversa && arquivos.length !== 1) ||
+    (o.data?.paraHistoria && (arquivos.length !== 1 || o.data.conversa))
+  )
     return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  // Prompt 9: áudio acrescentado tem até 30 min (o banco confere de novo, P53).
+  const extra = o.data?.paraHistoria;
+  if (extra) {
+    const s = arquivos[0]?.duracaoS;
+    if (!s || s > MAX_AUDIO_EXTRA_MIN * 60)
+      return {
+        ok: false,
+        mensagem: s
+          ? `Use um áudio de até ${MAX_AUDIO_EXTRA_MIN} minutos.`
+          : "Não consegui ler a duração deste áudio. Tente outro arquivo.",
+      };
+  }
   if (!v.success)
     return {
       ok: false,
@@ -860,9 +880,11 @@ export async function prepararAudios(
   }
 
   const conversa = o.data?.conversa;
-  const lote =
-    conversa?.loteId ?? (v.data.length > 1 ? crypto.randomUUID() : null);
-  const origem: OrigemAudio = conversa ? "conversa" : lote ? "lote" : "upload";
+  const lote = extra
+    ? null
+    : (conversa?.loteId ?? (v.data.length > 1 ? crypto.randomUUID() : null));
+  const origem: OrigemAudio =
+    conversa || extra?.gravado ? "conversa" : lote ? "lote" : "upload";
   // Prompt 7: todo lote leva o total e a posição (o banco sabe quando chegaram todos).
   // Conversa de app antigo, sem o total: 1 parte por vez, a parte que vier é a última.
   const parte = conversa?.parte ?? 1;
@@ -884,6 +906,7 @@ export async function prepararAudios(
       content_type: f.contentType,
       tamanho_bytes: a.tamanho,
       duracao_s: a.duracaoS ? Math.max(1, Math.round(a.duracaoS)) : null,
+      para_historia: extra?.historiaId ?? null,
     };
   });
   // Sem .select(): a RLS só mostra áudio já recebido.
@@ -905,7 +928,7 @@ async function audioEnviando(c: Contexto, id: string) {
   const { data } = await clienteAdmin()
     .from("recordings")
     .select(
-      "id, caminho, content_type, tamanho_bytes, prompt_id, upload, origem, lote_id, duracao_s, processado_em",
+      "id, caminho, content_type, tamanho_bytes, prompt_id, upload, origem, lote_id, duracao_s, processado_em, para_historia",
     )
     .eq("id", id)
     .eq("book_id", c.livro.id)

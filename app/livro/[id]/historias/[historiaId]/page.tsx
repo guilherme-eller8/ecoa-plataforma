@@ -4,16 +4,23 @@ import { Suspense } from "react";
 import { TelaEditor } from "@/components/telas/tela-editor";
 import { TelaHistoria } from "@/components/telas/tela-historia";
 import {
+  confirmarAudio,
+  prepararAudios,
   prepararFotos,
+  reassinarAudio,
   registrarFotos,
   responderSugestao,
 } from "@/app/livro/[id]/acoes";
 import * as editor from "@/app/livro/[id]/historias/editor-acoes";
+import * as propostas from "@/app/livro/[id]/historias/propostas-acoes";
 import { historiaParaEditar, historiaParaLer } from "@/lib/historias/dados";
 import { livroDaPagina, nomeDoAutor } from "@/lib/livro/acesso";
 import { livroDaTela } from "@/lib/livro/dados";
 
 export const metadata: Metadata = { title: "História · Ecoa Memórias" };
+
+// Prompt 9: "Revisar" roda na própria ação (2 chamadas do modelo capaz, com novas tentativas).
+export const maxDuration = 120;
 
 export default function PaginaHistoria({
   params,
@@ -58,6 +65,27 @@ async function Historia({
           prepararFotos: prepararFotos.bind(null, id),
           registrarFotos: registrarFotos.bind(null, id),
           responderSugestao: responderSugestao.bind(null, id, historiaId),
+          propostas: {
+            pedirTamanho: propostas.pedirTamanho.bind(null, id, historiaId),
+            revisarTrecho: propostas.revisarTrecho.bind(null, id, historiaId),
+            usarAudio: propostas.usarAudio.bind(null, id, historiaId),
+            pendentes: propostas.pendentes.bind(null, id, historiaId),
+            aplicarProposta: propostas.aplicarProposta.bind(
+              null,
+              id,
+              historiaId,
+            ),
+            descartarProposta: propostas.descartarProposta.bind(
+              null,
+              id,
+              historiaId,
+            ),
+            audios: {
+              prepararAudios: prepararAudios.bind(null, id),
+              reassinarAudio: reassinarAudio.bind(null, id),
+              confirmarAudio: confirmarAudio.bind(null, id),
+            },
+          },
         }}
       />
     );

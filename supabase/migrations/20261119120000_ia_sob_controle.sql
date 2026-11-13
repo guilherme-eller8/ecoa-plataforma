@@ -561,6 +561,11 @@ begin
   -- Título, ano e lacunas são os do texto atual: o aceite só mexe nos parágrafos.
   v_base := coalesce(v.texto, (select x.conteudo from public.story_versions x
                                where x.story_id = p_story order by x.numero desc limit 1));
+  -- Ninguém editou ainda: o título é o de stories (P46: pode ser o confirmado na divisão).
+  if v.texto is null then
+    v_base := v_base - 'ano' || jsonb_build_object('titulo', coalesce(v.titulo, v_base ->> 'titulo', ''))
+              || case when v.ano is null then '{}'::jsonb else jsonb_build_object('ano', v.ano) end;
+  end if;
   v_novos := p_conteudo -> 'paragrafos';
   v_final := (v_base - 'paragrafos') || jsonb_build_object('paragrafos', v_novos);
   if not privado.conteudo_valido(v_final) then raise exception 'dados_invalidos'; end if;

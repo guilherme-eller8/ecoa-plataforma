@@ -361,8 +361,15 @@ export function comporProposta(
     if (postos.has(x.id)) {
       for (const m of p.marcacoes)
         if (m.paragrafo_id === x.id) {
-          const { paragrafo_id: _, ...resto } = m;
-          marcacoes.push({ ...resto, paragrafo: i + 1 });
+          marcacoes.push({
+            paragrafo: i + 1,
+            inicio: m.inicio,
+            fim: m.fim,
+            trecho: m.trecho,
+            tipo: m.tipo,
+            origem: m.origem,
+            motivo: m.motivo,
+          });
         }
       return;
     }

@@ -34,7 +34,9 @@ const TENTAR_DE_NOVO_MS = 30_000;
 const mesmoDestino = (a: DestinoGravacao, b: DestinoGravacao) =>
   a.tipo === "livro" && b.tipo === "livro"
     ? a.livroId === b.livroId
-    : a.tipo === "autor" && b.tipo === "autor" && a.token === b.token;
+    : a.tipo === "historia" && b.tipo === "historia"
+      ? a.historiaId === b.historiaId
+      : a.tipo === "autor" && b.tipo === "autor" && a.token === b.token;
 
 /** Partes da mesma conversa andam juntas. */
 function agrupar(lista: GravacaoLocal[]) {

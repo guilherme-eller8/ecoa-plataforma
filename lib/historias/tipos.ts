@@ -1,4 +1,6 @@
 // O que as telas de histórias recebem do servidor (prompt 6).
+import type { PropostaDaTela } from "@/lib/editor/tipos";
+import type { ChaveTamanho } from "@/lib/ui/tamanho";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { TextoDaHistoria } from "@/lib/editor/conteudo";
 import type { SegmentoDaTela } from "@/lib/editor/ouvir";
@@ -90,6 +92,10 @@ export type HistoriaParaEditar = {
   audios: { id: string; url: string | null }[]; // uma por gravação
   fotos: FotoDaHistoria[];
   versoes: number; // quantas versões guardadas
+  // Prompt 9: IA sob controle.
+  tamanho: ChaveTamanho; // o da última versão (posição inicial do controle)
+  propostas: PropostaDaTela[]; // gerando, pronta ou que falhou há pouco
+  audiosForaDoTexto: number; // áudios acrescentados que ainda não entraram no texto
 };
 
 export type VersaoDaTela = {
@@ -98,6 +104,8 @@ export type VersaoDaTela = {
   minha: boolean;
   criadaEm: string;
   restauradaDe: number | null;
+  proposta: "tamanho" | "trecho" | "audio" | null; // prompt 9: veio de uma proposta aceita
+  tamanho: string;
   titulo: string;
   paragrafos: string[];
 };
