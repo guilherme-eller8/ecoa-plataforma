@@ -51,6 +51,8 @@ describe("lib/config.ts x banco", () => {
     ["max_audio_extra_s", config.MAX_AUDIO_EXTRA_MIN * 60],
     ["max_audios_historia", config.MAX_AUDIOS_HISTORIA],
     ["instrucao_max", config.INSTRUCAO_MAX],
+    ["qr_consultas_por_minuto", config.QR_CONSULTAS_POR_MINUTO],
+    ["qr_audio_espera_s", config.QR_AUDIO_ESPERA_MIN * 60],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);

@@ -209,3 +209,16 @@ export const CONSULTAR_PROPOSTA_S = 5; // reserva do canal: proposta gerando é 
 export const PREVISAO_PROPOSTA_BASE_S = 20; // tamanho: editar + verificar
 export const PREVISAO_PROPOSTA_POR_S = 0.2;
 export const PREVISAO_REVISAR_S = 20;
+
+// ── QR e página de amostra (prompt 10, docs/designs/qr-pagina-amostra.md) ──
+// O código e o domínio vão impressos: depois da 1ª página impressa, nunca mudam.
+export const QR_ALFABETO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // sem 0, 1, I, L, O (CHECK no banco)
+export const QR_TAMANHO_CODIGO = 8;
+export const QR_LADO_MM = 20; // o símbolo, sem a margem de silêncio (PRD: mínimo 2 × 2 cm)
+export const QR_MARGEM_MODULOS = 4; // margem de silêncio, em módulos
+export const QR_CORRECAO = "Q"; // correção de erro (PRD)
+// Os dois abaixo são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const QR_CONSULTAS_POR_MINUTO = 30; // por chave de rede, no player público
+export const QR_AUDIO_ESPERA_MIN = 10; // um recorte pedido e não terminado é pedido de novo depois disso
+export const QR_AUDIO_KBPS = 48; // recorte do QR em .m4a (AAC), voz mono
+export const QR_AUDIO_URL_S = 10 * 60; // validade da URL assinada que o player toca
