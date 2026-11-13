@@ -1,5 +1,6 @@
 // npm run lab -- --baixar <historia_id>: traz a versão da IA de uma história da plataforma
 // para lab/saidas/, no formato que o --comparar já entende (D6 do design do prompt 6).
+// Prompt 8: se a família já corrigiu no editor, traz também o texto atual como editado.md.
 // O texto fica só no computador (lab/ está no .gitignore).
 // Não usa lib/supabase/admin.ts: ele importa "server-only", que não roda fora do Next.
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
@@ -46,11 +47,31 @@ export function montarSaida(d: DadosBaixados): SaidaIA {
   };
 }
 
-/** Grava ia.json e ia.md. Se a família já corrigiu (editado.md), não toca em nada. */
-export function gravarBaixada(dirSaidas: string, saida: SaidaIA): string {
+/** O texto corrigido no editor, no formato do editado.md (título e parágrafos). */
+export function editadoMd(texto: {
+  titulo?: string;
+  paragrafos?: { texto: string }[];
+}): string {
+  const corpo = (texto.paragrafos ?? [])
+    .map((p) => p.texto.trim())
+    .filter(Boolean)
+    .join("\n\n");
+  return `# ${texto.titulo?.trim() || "Sem título"}\n\n${corpo}\n`;
+}
+
+/**
+ * Grava ia.json e ia.md. Se já há um editado.md no computador, não toca em nada. Com o texto
+ * corrigido na plataforma, grava também o editado.md.
+ */
+export function gravarBaixada(
+  dirSaidas: string,
+  saida: SaidaIA,
+  corrigido: string | null = null,
+): string {
   const dir = join(dirSaidas, saida.historia);
   mkdirSync(dir, { recursive: true });
   if (existsSync(join(dir, "editado.md"))) return dir;
+  if (corrigido) writeFileSync(join(dir, "editado.md"), corrigido);
   writeFileSync(join(dir, "ia.json"), JSON.stringify(saida, null, 2));
   writeFileSync(
     join(dir, "ia.md"),
@@ -118,5 +139,14 @@ export async function baixarHistoria(
       (id) => (porId.get(id)?.segmentos ?? []) as Segmento[],
     ),
   });
-  return gravarBaixada(dirSaidas, saida);
+  const { data: s } = await db
+    .from("stories")
+    .select("texto")
+    .eq("id", historia)
+    .maybeSingle();
+  const texto = s?.texto as {
+    titulo?: string;
+    paragrafos?: { texto: string }[];
+  } | null;
+  return gravarBaixada(dirSaidas, saida, texto ? editadoMd(texto) : null);
 }

@@ -284,6 +284,8 @@ describe("quem não é membro", () => {
         "polls",
         "poll_items",
         "poll_votes",
+        "edit_locks",
+        "story_photos",
       ]) {
         expect(await tenta(tx, `select 1 from public.${tabela}`)).toEqual(
           negado,
@@ -367,13 +369,18 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "privado.livro_editavel",
       "public.confirmar_divisao",
       "public.consentir_processamento_ia",
+      "public.editar_historia",
       "public.enquete_abrir",
       "public.enquete_adicionar_item",
       "public.enquete_encerrar",
       "public.enquete_remover_votos",
       "public.enquete_salvar",
+      "public.marcar_historia_pronta",
       "public.marcar_historia_vista",
+      "public.parar_de_editar",
       "public.responder_sugestao",
+      "public.restaurar_versao",
+      "public.salvar_historia",
     ]);
   });
 

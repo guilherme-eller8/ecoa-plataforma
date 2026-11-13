@@ -40,6 +40,10 @@ export const ACOES = [
   "divisao_confirmada", // { story, propostas, confirmadas, juntou, separou, tirou, renomeou }
   "pergunta_sugerida_aceita", // { story }
   "pergunta_sugerida_ignorada", // { story }
+  // Prompt 8: editor. "editou" = uma sessão de edição { story }; restaurou { story, versao }.
+  "historia_revisada", // marcou como pronta { story }
+  "historia_reaberta", // voltou para rascunho { story }
+  "restaurou_versao", // { story, versao }
 ] as const;
 
 export const PAPEIS = [

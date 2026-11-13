@@ -31,6 +31,9 @@ export const FRASES_DOS_CODIGOS = {
   divisao_longa:
     "Uma das histórias passou de 1 hora. Separe em duas para escrever.",
   divisao_limite_dia: "Hoje já foram muitas histórias. Confirme amanhã.",
+  trava_de_outro: "Outra tela está editando esta história agora.",
+  texto_desatualizado: "O texto mudou em outra tela. Atualize para continuar.",
+  cota_fotos_historia: "Cada história tem no máximo 4 fotos.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

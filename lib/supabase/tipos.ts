@@ -793,6 +793,16 @@ export type Database = {
           rascunho: Json | null;
           sugestao_ignorada: boolean;
           titulo: string | null;
+          texto: Json | null;
+          texto_marcacoes: Json;
+          texto_rev: number;
+          versao_rev: number;
+          texto_por: string | null;
+          texto_origem: Database["public"]["Enums"]["versao_origem"] | null;
+          texto_em: string | null;
+          ano: number | null;
+          revisada_em: string | null;
+          revisada_por: string | null;
           vista_em: string | null;
         };
         Insert: {
@@ -812,6 +822,16 @@ export type Database = {
           rascunho?: Json | null;
           sugestao_ignorada?: boolean;
           titulo?: string | null;
+          texto?: Json | null;
+          texto_marcacoes?: Json;
+          texto_rev?: number;
+          versao_rev?: number;
+          texto_por?: string | null;
+          texto_origem?: Database["public"]["Enums"]["versao_origem"] | null;
+          texto_em?: string | null;
+          ano?: number | null;
+          revisada_em?: string | null;
+          revisada_por?: string | null;
           vista_em?: string | null;
         };
         Update: {
@@ -831,7 +851,71 @@ export type Database = {
           rascunho?: Json | null;
           sugestao_ignorada?: boolean;
           titulo?: string | null;
+          texto?: Json | null;
+          texto_marcacoes?: Json;
+          texto_rev?: number;
+          versao_rev?: number;
+          texto_por?: string | null;
+          texto_origem?: Database["public"]["Enums"]["versao_origem"] | null;
+          texto_em?: string | null;
+          ano?: number | null;
+          revisada_em?: string | null;
+          revisada_por?: string | null;
           vista_em?: string | null;
+        };
+        Relationships: [];
+      };
+      edit_locks: {
+        Row: {
+          aba: string;
+          book_id: string;
+          desde: string;
+          expira_em: string;
+          nome: string;
+          story_id: string;
+          user_id: string;
+        };
+        Insert: {
+          aba: string;
+          book_id: string;
+          desde?: string;
+          expira_em: string;
+          nome: string;
+          story_id: string;
+          user_id: string;
+        };
+        Update: {
+          aba?: string;
+          book_id?: string;
+          desde?: string;
+          expira_em?: string;
+          nome?: string;
+          story_id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
+      story_photos: {
+        Row: {
+          book_id: string;
+          criado_em: string;
+          ordem: number;
+          photo_id: string;
+          story_id: string;
+        };
+        Insert: {
+          book_id: string;
+          criado_em?: string;
+          ordem?: number;
+          photo_id: string;
+          story_id: string;
+        };
+        Update: {
+          book_id?: string;
+          criado_em?: string;
+          ordem?: number;
+          photo_id?: string;
+          story_id?: string;
         };
         Relationships: [];
       };
@@ -874,6 +958,7 @@ export type Database = {
           modelos: Json | null;
           numero: number;
           origem: Database["public"]["Enums"]["versao_origem"];
+          restaurada_de: number | null;
           story_id: string;
           tamanho: string;
         };
@@ -888,6 +973,7 @@ export type Database = {
           modelos?: Json | null;
           numero: number;
           origem: Database["public"]["Enums"]["versao_origem"];
+          restaurada_de?: number | null;
           story_id: string;
           tamanho: string;
         };
@@ -902,6 +988,7 @@ export type Database = {
           modelos?: Json | null;
           numero?: number;
           origem?: Database["public"]["Enums"]["versao_origem"];
+          restaurada_de?: number | null;
           story_id?: string;
           tamanho?: string;
         };
@@ -1074,6 +1161,41 @@ export type Database = {
       confirmar_divisao: {
         Args: { p_historias: Json; p_story: string };
         Returns: string[];
+      };
+      editar_historia: {
+        Args: {
+          p_story: string;
+          p_aba: string;
+          p_pegar?: boolean;
+          p_assumir?: boolean;
+        };
+        Returns: {
+          editando: boolean;
+          outra_tela: boolean;
+          nome: string | null;
+        }[];
+      };
+      salvar_historia: {
+        Args: {
+          p_story: string;
+          p_aba: string;
+          p_rev: number;
+          p_conteudo: Json;
+          p_marcacoes: Json;
+        };
+        Returns: number;
+      };
+      parar_de_editar: {
+        Args: { p_story: string; p_aba: string };
+        Returns: undefined;
+      };
+      restaurar_versao: {
+        Args: { p_story: string; p_aba: string; p_numero: number };
+        Returns: number;
+      };
+      marcar_historia_pronta: {
+        Args: { p_story: string; p_pronta: boolean };
+        Returns: boolean;
       };
       marcar_historia_vista: { Args: { p_story: string }; Returns: undefined };
       responder_sugestao: {

@@ -120,6 +120,7 @@ export const HISTORIAS_COM_DIVISAO: HistoriaDaTela[] = [
     gravacoes: 2,
     propostas: 3,
     dividida: false,
+    revisada: false,
   },
   {
     id: id(2),
@@ -134,6 +135,7 @@ export const HISTORIAS_COM_DIVISAO: HistoriaDaTela[] = [
     gravacoes: 8,
     propostas: null,
     dividida: false,
+    revisada: false,
   },
   ...HISTORIAS_JAIR.slice(1, 2),
 ];

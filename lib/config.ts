@@ -182,3 +182,16 @@ export const VARREDURA_JANELA_H = 48;
 export const MIN_PALAVRAS_HISTORIA = 8; // menos que isso do autor: "audio_sem_fala", sem chamar a escrita
 export const PREVISAO_DIVIDIR_BASE_S = 20;
 export const PREVISAO_DIVIDIR_POR_S = 0.02;
+
+// ── Editor de histórias (prompt 8, docs/designs/editor-historias.md) ──────
+// Os cinco primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const TRAVA_EDICAO_MIN = 2; // "Ana está editando" expira depois disso sem atividade
+export const VERSAO_A_CADA_MIN = 10; // edição contínua vira versão nesse intervalo
+export const MAX_FOTOS_HISTORIA = 4;
+export const MAX_PARAGRAFOS = 300; // por história
+export const MAX_LETRAS_PARAGRAFO = 6000;
+export const RENOVAR_TRAVA_S = 30; // atividade renova a trava no máximo a cada isso
+export const CONSULTAR_TRAVA_S = 15; // quem está vendo confere se a trava soltou
+export const SALVAR_APOS_MS = 1500; // salvamento automático depois da última tecla
+export const SALVAR_NO_MAXIMO_MS = 5000; // digitando sem parar, salva pelo menos nesse intervalo
+export const FOTO_LADO_MIN_IMPRESSAO_PX = 1200; // abaixo disso no lado menor: alerta

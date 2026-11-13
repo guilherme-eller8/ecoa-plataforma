@@ -53,6 +53,11 @@ const TELAS = {
   "dividir-confirmada": "/styleguide/dividir-confirmada",
   "livro-conferir": "/styleguide/livro-conferir",
   "historia-sugestao": "/styleguide/historia-sugestao",
+  // Prompt 8
+  editor: "/styleguide/editor",
+  "editor-trava": "/styleguide/editor-trava",
+  "editor-pronta": "/styleguide/editor-pronta",
+  versoes: "/styleguide/versoes",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no

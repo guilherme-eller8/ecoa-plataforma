@@ -157,7 +157,7 @@ export function HistoriasAoVivo({
     <ul className="flex flex-col gap-4">
       {historias.map((h) => {
         const vivo = aoVivo[h.id];
-        const doServidor = estadoDoCartao(h.estado);
+        const doServidor = estadoDoCartao(h.estado, h.revisada);
         // O servidor manda quando já chegou mais longe que o canal (ex.: depois de um refresh).
         // Prompt 7: em "conferir" o servidor também manda; e uma história que já passou pela
         // divisão não volta para "separando"/"conferir" por uma mensagem velha do canal.
@@ -217,12 +217,12 @@ export function HistoriasAoVivo({
                   >
                     Conferir
                   </Link>
-                ) : estado === "revisar" ? (
+                ) : estado === "revisar" || estado === "pronta" ? (
                   <Link
                     href={`/livro/${livroId}/historias/${h.id}`}
                     className="text-ui-17 text-floresta min-h-alvo inline-flex items-center font-medium underline-offset-4 hover:underline"
                   >
-                    Ler a história
+                    {estado === "revisar" ? "Revisar" : "Abrir"}
                   </Link>
                 ) : undefined
               }

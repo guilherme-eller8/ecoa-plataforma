@@ -1,7 +1,7 @@
 import "server-only";
 // Leituras das telas de histórias (prompt 6). Sempre com a sessão: a RLS decide, e as colunas
 // são listadas (stories tem grant por coluna: rascunho e erro ficam de fora).
-import type { Edicao, Marcacao, Segmento } from "@/lib/ai/schemas";
+import type { Edicao, Estrutura, Marcacao, Segmento } from "@/lib/ai/schemas";
 import { ESPERA_LOTE_H, MAX_ARQUIVO_MIN } from "@/lib/config";
 import {
   FRASES_ESPERA,
@@ -11,9 +11,23 @@ import {
 } from "@/lib/pipeline/regras";
 import { assinarLeitura } from "@/lib/storage/assinar";
 import { clienteSessao } from "@/lib/supabase/servidor";
+import { normalizarTexto } from "@/lib/editor/conteudo";
+import {
+  COLUNAS_EDITAR,
+  COLUNAS_LER,
+  COLUNAS_LISTA,
+  COLUNAS_SITUACAO,
+  COLUNAS_VERSOES,
+  deixadaForaDoLivro,
+} from "./colunas";
+import type { SegmentoDaTela } from "@/lib/editor/ouvir";
 import type {
+  FotoDaHistoria,
   HistoriaDaTela,
+  HistoriaParaEditar,
   HistoriaParaLer,
+  TextoAtualDaTela,
+  VersaoDaTela,
   NomeDaTela,
   GuardadaDaTela,
   SituacaoDoAudio,
@@ -65,16 +79,16 @@ export async function historiasDoLivro(
   limite = 100,
 ): Promise<HistoriaDaTela[]> {
   const supabase = await clienteSessao();
-  const { data: stories } = await supabase
+  const { data: stories, error: erroStories } = await supabase
     .from("stories")
-    .select(
-      "id, titulo, estado, prompt_id, criado_em, vista_em, divisao, divisao_de, erro",
-    )
+    .select(COLUNAS_LISTA)
     .eq("book_id", livro)
     .order("criado_em", { ascending: false })
     .limit(limite);
-  // Prompt 7: "Deixar fora do livro" encerra o contêiner; ele não aparece na lista.
-  const linhas = (stories ?? []).filter((s) => s.erro !== "tudo_descartado");
+  // Consulta recusada não pode virar "Nenhuma história ainda" em silêncio.
+  if (erroStories)
+    console.error("[historias] lista recusada", { codigo: erroStories.code });
+  const linhas = (stories ?? []).filter((s) => !deixadaForaDoLivro(s));
   if (linhas.length === 0) return [];
   const ids = linhas.map((s) => s.id);
   const perguntas = [
@@ -133,12 +147,17 @@ export async function historiasDoLivro(
     atual.gravacoes += 1;
     porHistoria.set(s.story_id, atual);
   }
+  // Prompt 8: o texto atual (editado pela família) vale mais que a versão da IA.
   const trechoDe = new Map(
     ((versoes ?? []) as Versao[]).map((v) => [
       v.story_id,
       (v.conteudo as Edicao | null)?.paragrafos?.[0]?.texto ?? null,
     ]),
   );
+  for (const s of linhas) {
+    const atual = (s.texto as Edicao | null)?.paragrafos?.[0]?.texto;
+    if (atual) trechoDe.set(s.id, atual);
+  }
   const perguntaDe = new Map((ps ?? []).map((p) => [p.id, p.texto]));
 
   return linhas.map((s) => {
@@ -159,6 +178,7 @@ export async function historiasDoLivro(
       gravacoes: porHistoria.get(s.id)?.gravacoes ?? 1,
       propostas: divisao?.ia?.historias?.length ?? null,
       dividida: Boolean(s.divisao_de) || Boolean(divisao?.final),
+      revisada: Boolean(s.revisada_em),
     };
   });
 }
@@ -171,7 +191,7 @@ export async function historiaParaLer(
   const supabase = await clienteSessao();
   const { data: s } = await supabase
     .from("stories")
-    .select("id, titulo, estado, prompt_id, pergunta_sugerida")
+    .select(COLUNAS_LER)
     .eq("book_id", livro)
     .eq("id", historia)
     .maybeSingle();
@@ -285,7 +305,7 @@ export async function situacaoDosAudios(
   const { data: stories } = historias.length
     ? await supabase
         .from("stories")
-        .select("id, estado, criado_em")
+        .select(COLUNAS_SITUACAO)
         .in("id", historias)
     : { data: [] };
   const estadoDe = new Map((stories ?? []).map((s) => [s.id, s]));
@@ -382,4 +402,207 @@ export async function gravacoesGuardadas(
       confirmar: s?.tipo === "espera" ? s.confirmar : false,
     };
   });
+}
+
+// ── Editor (prompt 8) ────────────────────────────────────────────────────
+
+const PAPEL_DO_FALANTE = {
+  entrevistador: "Entrevistador",
+  outro: "Outra voz",
+} as const;
+
+/** Fotos ligadas à história, na ordem, com URL assinada. */
+export async function fotosDaHistoria(
+  livro: string,
+  historia: string,
+): Promise<FotoDaHistoria[]> {
+  const supabase = await clienteSessao();
+  const { data: ligadas } = await supabase
+    .from("story_photos")
+    .select("photo_id, ordem, criado_em")
+    .eq("book_id", livro)
+    .eq("story_id", historia)
+    .order("ordem")
+    .order("criado_em");
+  const ids = (ligadas ?? []).map((l) => l.photo_id);
+  if (!ids.length) return [];
+  const { data: fotos } = await supabase
+    .from("photos")
+    .select("id, caminho, largura, altura, legenda")
+    .eq("book_id", livro)
+    .in("id", ids);
+  const urls = await assinarLeitura(
+    "acervo",
+    (fotos ?? []).map((f) => f.caminho),
+  );
+  return ids.flatMap((id) => {
+    const f = (fotos ?? []).find((x) => x.id === id);
+    const url = f ? urls.get(f.caminho) : undefined;
+    return f && url
+      ? [
+          {
+            id: f.id,
+            url,
+            largura: f.largura,
+            altura: f.altura,
+            legenda: f.legenda,
+          },
+        ]
+      : [];
+  });
+}
+
+/**
+ * Tudo que o editor precisa de uma história pronta: o texto atual (ou a última versão), os
+ * grifos, os segmentos da transcrição com quem fala, os áudios e as fotos. null se não for
+ * deste livro ou ainda não estiver pronta.
+ */
+export async function historiaParaEditar(
+  livro: string,
+  historia: string,
+  autor: string,
+): Promise<HistoriaParaEditar | null> {
+  if (!/^[0-9a-f-]{36}$/.test(historia)) return null;
+  const supabase = await clienteSessao();
+  const { data: s } = await supabase
+    .from("stories")
+    .select(COLUNAS_EDITAR)
+    .eq("book_id", livro)
+    .eq("id", historia)
+    .maybeSingle();
+  if (!s || s.estado !== "pronta") return null;
+
+  const [{ data: ultima }, { count }, { data: srs }, ler, fotos] =
+    await Promise.all([
+      supabase
+        .from("story_versions")
+        .select("conteudo, marcacoes")
+        .eq("story_id", historia)
+        .order("numero", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabase
+        .from("story_versions")
+        .select("numero", { count: "exact", head: true })
+        .eq("story_id", historia),
+      supabase
+        .from("story_recordings")
+        .select("recording_id, ordem, segmentos")
+        .eq("story_id", historia)
+        .order("ordem"),
+      historiaParaLer(livro, historia),
+      fotosDaHistoria(livro, historia),
+    ]);
+  if (!ler) return null;
+
+  const conteudo = s.texto ?? ultima?.conteudo ?? null;
+  const texto = normalizarTexto(conteudo);
+  // A história da IA guarda o título em stories.titulo (P46); o ano só existe depois de editar.
+  if (!s.texto) {
+    texto.titulo = s.titulo ?? texto.titulo;
+    texto.ano = s.ano;
+  }
+  const marcacoes = (
+    s.texto ? s.texto_marcacoes : (ultima?.marcacoes ?? [])
+  ) as Marcacao[] | null;
+
+  // Segmentos da história, na ordem das gravações, com quem fala.
+  const gravacoes = (srs ?? []).map((r) => r.recording_id);
+  const { data: ts } = gravacoes.length
+    ? await supabase
+        .from("transcripts")
+        .select("recording_id, segmentos")
+        .in("recording_id", gravacoes)
+    : { data: [] };
+  const papel = new Map(
+    ((s.estrutura as Estrutura | null)?.falantes ?? []).map((f) => [
+      f.falante,
+      f.papel,
+    ]),
+  );
+  const segmentos: SegmentoDaTela[] = (srs ?? []).flatMap((sr) => {
+    const todos =
+      ((ts ?? []).find((t) => t.recording_id === sr.recording_id)?.segmentos as
+        Segmento[] | undefined) ?? [];
+    const meus = sr.segmentos ? new Set(sr.segmentos) : null;
+    return todos
+      .filter((x) => !meus || meus.has(x.id))
+      .map((x) => {
+        const p = papel.get(x.falante);
+        return {
+          id: x.id,
+          gravacao: sr.recording_id,
+          inicio: x.inicio,
+          fim: x.fim,
+          texto: x.texto,
+          falante: !p || p === "autor" ? autor : PAPEL_DO_FALANTE[p],
+        };
+      });
+  });
+
+  return {
+    id: s.id,
+    livroId: livro,
+    autor,
+    pergunta: ler.pergunta,
+    sugestao: ler.sugestao,
+    texto,
+    marcacoes: marcacoes ?? [],
+    rev: s.texto_rev,
+    revisada: Boolean(s.revisada_em),
+    segmentos,
+    audios: ler.audios.map((a) => ({ id: a.id, url: a.url })),
+    fotos,
+    versoes: count ?? 1,
+  };
+}
+
+function resumoDoConteudo(c: unknown) {
+  const t = normalizarTexto(c);
+  return { titulo: t.titulo, paragrafos: t.paragrafos.map((p) => p.texto) };
+}
+
+/** Histórico: versões (mais nova primeiro) e o texto atual ainda não guardado como versão. */
+export async function versoesDaHistoria(
+  livro: string,
+  historia: string,
+  usuario: string,
+): Promise<{
+  titulo: string | null;
+  atual: TextoAtualDaTela;
+  versoes: VersaoDaTela[];
+} | null> {
+  if (!/^[0-9a-f-]{36}$/.test(historia)) return null;
+  const supabase = await clienteSessao();
+  const { data: s } = await supabase
+    .from("stories")
+    .select(COLUNAS_VERSOES)
+    .eq("book_id", livro)
+    .eq("id", historia)
+    .maybeSingle();
+  if (!s || s.estado !== "pronta") return null;
+  const { data } = await supabase
+    .from("story_versions")
+    .select("numero, origem, criado_por, criado_em, restaurada_de, conteudo")
+    .eq("story_id", historia)
+    .order("numero", { ascending: false })
+    .limit(200);
+  const versoes = (data ?? []).map((v): VersaoDaTela => ({
+    numero: v.numero,
+    origem: v.origem,
+    minha: v.criado_por === usuario,
+    criadaEm: v.criado_em,
+    restauradaDe: v.restaurada_de,
+    ...resumoDoConteudo(v.conteudo),
+  }));
+  const atual: TextoAtualDaTela =
+    s.texto && s.texto_rev > s.versao_rev
+      ? {
+          minha: s.texto_por === usuario,
+          origem: s.texto_origem,
+          em: s.texto_em,
+          ...resumoDoConteudo(s.texto),
+        }
+      : null;
+  return { titulo: s.titulo, atual, versoes };
 }

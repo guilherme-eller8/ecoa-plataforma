@@ -2,8 +2,8 @@ import { mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { gravarBaixada, idDaPasta, montarSaida } from "./baixar";
-import { lerSaidaIA } from "./saidas";
+import { editadoMd, gravarBaixada, idDaPasta, montarSaida } from "./baixar";
+import { lerEditado, lerSaidaIA } from "./saidas";
 
 const H = "abcdef12-0000-4000-8000-000000000000";
 const dados = {
@@ -52,5 +52,23 @@ describe("--baixar", () => {
     gravarBaixada(dir, montarSaida(dados));
     expect(readFileSync(join(pasta, "ia.json"), "utf8")).toBe("{}");
     expect(existsSync(join(pasta, "editado.md"))).toBe(true);
+  });
+});
+
+describe("editado.md do texto corrigido no editor (prompt 8)", () => {
+  it("título e parágrafos separados por linha em branco, como o --comparar lê", () => {
+    const md = editadoMd({
+      titulo: "O trem",
+      paragrafos: [
+        { texto: " Primeiro. " },
+        { texto: "" },
+        { texto: "Segundo." },
+      ],
+    });
+    expect(md).toBe("# O trem\n\nPrimeiro.\n\nSegundo.\n");
+    expect(lerEditado(md)).toEqual({
+      titulo: "O trem",
+      paragrafos: ["Primeiro.", "Segundo."],
+    });
   });
 });

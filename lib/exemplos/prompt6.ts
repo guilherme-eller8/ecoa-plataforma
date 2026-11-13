@@ -34,6 +34,7 @@ export const HISTORIAS_JAIR: HistoriaDaTela[] = [
     gravacoes: 1,
     propostas: null,
     dividida: false,
+    revisada: false,
   },
   {
     id: id(2),
@@ -49,6 +50,7 @@ export const HISTORIAS_JAIR: HistoriaDaTela[] = [
     gravacoes: 1,
     propostas: null,
     dividida: false,
+    revisada: false,
   },
   {
     id: id(3),
@@ -63,6 +65,7 @@ export const HISTORIAS_JAIR: HistoriaDaTela[] = [
     gravacoes: 1,
     propostas: null,
     dividida: false,
+    revisada: false,
   },
 ];
 
