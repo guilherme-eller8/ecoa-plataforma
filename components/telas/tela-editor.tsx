@@ -415,22 +415,25 @@ export function TelaEditor({
   const textoDaHistoria = (
     <div ref={colunaTexto} className="relative flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <label htmlFor="titulo" className="sr-only">
-          Título
-        </label>
-        <textarea
-          id="titulo"
-          rows={1}
-          value={titulo}
-          readOnly={somenteLeitura}
-          maxLength={200}
-          placeholder="Título"
-          onChange={(e) => {
-            setTitulo(e.currentTarget.value.replace(/\n/g, " "));
-            mudou();
-          }}
-          className="font-livro text-livro-28 text-tinta placeholder:text-tinta-2 field-sizing-content resize-none bg-transparent leading-tight outline-none"
-        />
+        {/* O título editável é o título da tela. */}
+        <h1 className="flex">
+          <label htmlFor="titulo" className="sr-only">
+            Título
+          </label>
+          <textarea
+            id="titulo"
+            rows={1}
+            value={titulo}
+            readOnly={somenteLeitura}
+            maxLength={200}
+            placeholder="Título"
+            onChange={(e) => {
+              setTitulo(e.currentTarget.value.replace(/\n/g, " "));
+              mudou();
+            }}
+            className="font-livro text-livro-28 text-tinta placeholder:text-tinta-2 field-sizing-content w-full resize-none bg-transparent leading-tight outline-none focus-visible:outline-none"
+          />
+        </h1>
         <div
           className={
             "flex items-center gap-3" +
@@ -447,7 +450,7 @@ export function TelaEditor({
             maxLength={4}
             value={ano}
             readOnly={somenteLeitura}
-            placeholder="1962"
+            placeholder="?"
             onChange={(e) => {
               setAno(e.currentTarget.value.replace(/\D/g, ""));
               mudou();
@@ -507,7 +510,7 @@ export function TelaEditor({
       ) : null}
 
       {historia.texto.lacunas.length ? (
-        <section className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
+        <section className="rounded-cartao bg-papel flex flex-col gap-3 p-5">
           <h2 className="text-ui-17 text-tinta font-medium">
             Para a próxima conversa
           </h2>
@@ -527,7 +530,7 @@ export function TelaEditor({
 
       {podeEscrever ? (
         revisada ? (
-          <div className="border-linha flex flex-wrap items-center justify-between gap-3 border-t pt-6">
+          <div className="bg-floresta-claro rounded-cartao mt-4 flex flex-wrap items-center justify-between gap-3 py-3 pr-3 pl-5">
             <p className="text-ui-17 text-floresta inline-flex items-center gap-2 font-medium">
               <IconeCheck tamanho={20} />
               Pronta para o livro
@@ -541,7 +544,7 @@ export function TelaEditor({
             </Botao>
           </div>
         ) : (
-          <div className="border-linha flex flex-col gap-3 border-t pt-6">
+          <div className="mt-4 flex flex-col gap-3">
             <Botao
               larguraTotal
               carregando={marcando}
@@ -556,8 +559,22 @@ export function TelaEditor({
     </div>
   );
 
+  // Fala da história: do 1º ao último segmento de cada gravação, somado.
+  const faixas = new Map<string, [number, number]>();
+  for (const s of historia.segmentos) {
+    const f = faixas.get(s.gravacao);
+    faixas.set(
+      s.gravacao,
+      f ? [Math.min(f[0], s.inicio), Math.max(f[1], s.fim)] : [s.inicio, s.fim],
+    );
+  }
+  const duracao = [...faixas.values()].reduce((t, [a, b]) => t + b - a, 0);
   const audioDaHistoria = (
     <div className="flex flex-col gap-4">
+      <h2 className="text-ui-15 text-tinta-2 flex gap-2 font-medium">
+        <span>O que foi falado</span>
+        {duracao ? <span className="num">· {minutos(duracao)}</span> : null}
+      </h2>
       <Transcricao
         segmentos={historia.segmentos}
         atual={atual?.id ?? null}
@@ -600,7 +617,7 @@ export function TelaEditor({
         <Aviso ok={aviso.startsWith("Recuperamos")}>{aviso}</Aviso>
       ) : null}
       {copiaVelha && editando ? (
-        <div className="bg-papel border-linha rounded-interno flex flex-wrap items-center justify-between gap-3 border px-4 py-3">
+        <div className="bg-papel rounded-interno flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <p className="text-ui-17 text-tinta">
             Há um texto não salvo neste aparelho.
           </p>
@@ -649,7 +666,7 @@ export function TelaEditor({
             className={
               "text-ui-17 min-h-11 rounded-full px-5 transition-colors duration-[var(--dur-rapida)] " +
               (painel === p
-                ? "bg-papel text-tinta font-medium shadow-sm"
+                ? "bg-papel text-tinta font-medium"
                 : "text-tinta-2")
             }
           >

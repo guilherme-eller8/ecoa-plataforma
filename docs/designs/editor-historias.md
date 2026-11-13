@@ -1,6 +1,6 @@
 # Editor de histórias, parte 1 (prompt 8)
 
-Status: **v1 para aprovação do Guilherme** · 2026-11-13 · PRD: M6, Design e experiência, M11 (dicas) · Decisões: P23, P25, T8, T12, T18, T24, T28, T31, T36
+Status: **aprovado pelo Guilherme em 2026-11-13** (E1, E2 e E3 como recomendado; P48, P49 e T41) · implementado no mesmo dia · 2026-11-13 · PRD: M6, Design e experiência, M11 (dicas) · Decisões: P23, P25, T8, T12, T18, T24, T28, T31, T36
 
 Prompt sem [EGM], mas com banco: plano curto + SQL de subida e reversão para o OK (CLAUDE.md). Sem revisores (T28). A revisão de segurança foi feita por mim na seção 6, e o SQL foi ensaiado num Postgres em memória com as migrations reais (seção 7).
 
@@ -475,3 +475,17 @@ Vira teste automático em `supabase/tests/editor.test.ts`, mais: foto de outro l
 - **Playwright (vitrine com dados falsos):** editar, ver "Salvo", restaurar uma versão, segundo contexto do navegador vê a trava, abas no celular.
 - **Gate de design:** build de produção, `taste:lint`, `taste:inspect` em 390, 768 e 1440 px, até 3 rodadas.
 - **Depois do push:** migration aplicada no Supabase (com o seu OK), deploy de prévia, erros de runtime da Vercel e a rota real conferida.
+
+## 9. O que mudou na implementação
+
+- **Frase → áudio:** ouvido por segmento (5 a 10 s), como planejado. O segmento escolhido é o de mais palavras em comum com a frase.
+- **Tiptap só no navegador:** ele sorteia ids ao criar o editor, o que quebra a pré-renderização do Next 16. Até montar, o mesmo texto aparece parado, com a mesma tipografia.
+- **Bug achado no gate de design:** ao virar editável, o Tiptap avisava "mudou" e a tela salvava sem ninguém editar (um salvamento à toa por abertura). Corrigido: virar editável não conta como mudança.
+- **Saída da tela:** `sendBeacon` para `/livro/[id]/historias/[historiaId]/parar` ao fechar a guia; a navegação dentro do app salva e solta a trava.
+- **Vitrine:** `editor`, `editor-trava`, `editor-outra-tela`, `editor-somente-leitura`, `editor-pronta` e `versoes`, com um áudio de silêncio de 76 s em `public/exemplo/trem.m4a` (5 KB).
+
+## 10. Gate
+
+- `npm test`: 511 testes (16 novos de banco em `supabase/tests/editor.test.ts`, 15 de `lib/editor`).
+- `npm run test:e2e`: 162 testes, 17 novos do editor e do histórico (celular e computador).
+- Design: `taste:lint` 0 FAIL; `taste:inspect` 0 FAIL nas 4 telas novas em 390, 768 e 1440 px, em 2 rodadas. Corrigidos: salvamento à toa ao abrir, linhas divisórias, sombra em aba, placeholder "1962" no Ano (parecia valor já preenchido), fotos grandes demais no celular, player cobrindo as duas colunas no computador, contorno de foco no texto e título da coluna da gravação.

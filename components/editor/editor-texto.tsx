@@ -309,7 +309,8 @@ const EditorVivo = forwardRef<ApiDoTexto, Props>(function EditorVivo(
   });
 
   useEffect(() => {
-    if (editor && editor.isEditable !== editavel) editor.setEditable(editavel);
+    if (editor && editor.isEditable !== editavel)
+      editor.setEditable(editavel, false); // sem aviso de mudança: nada a salvar
   }, [editor, editavel]);
 
   useImperativeHandle(

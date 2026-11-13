@@ -20,6 +20,10 @@ test.describe("Editor (exemplo)", () => {
     await expect(
       page.getByText(/O Tião, meu primo, no outro dia/).last(),
     ).toBeVisible();
+    await texto
+      .locator("p")
+      .nth(2)
+      .click({ position: { x: 30, y: 10 } });
     await page.keyboard.type(" Foi em 1962.");
     await expect(
       page.getByRole("status").filter({ hasText: "Salvo" }),
