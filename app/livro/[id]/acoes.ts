@@ -6,7 +6,7 @@
 // 3. registra o evento depois da resposta.
 // A chave secreta só assina URLs do Storage, depois de conferir o caminho com a regex do banco.
 
-import { dispararSeAvulsa } from "@/lib/pipeline/disparo";
+import { dispararSeRecebida } from "@/lib/pipeline/disparo";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
@@ -922,7 +922,7 @@ export async function confirmarAudio(
   const a = await audioEnviando(c, id);
   if (!a) return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
   if (a.upload === "recebido") {
-    after(() => dispararSeAvulsa(a));
+    after(() => dispararSeRecebida(a));
     return { ok: true };
   }
 
@@ -951,7 +951,7 @@ export async function confirmarAudio(
       recording: a.id,
       com_pergunta: Boolean(a.prompt_id),
     });
-  after(() => dispararSeAvulsa(a));
+  after(() => dispararSeRecebida(a));
   atualizar(livroId);
   return { ok: true };
 }

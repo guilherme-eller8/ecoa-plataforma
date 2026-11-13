@@ -12,6 +12,10 @@ export type HistoriaDaTela = {
   trecho: string | null; // 1º parágrafo da versão da IA, quando pronta
   criadaEm: string;
   vista: boolean;
+  // Prompt 7
+  gravacoes: number; // gravações da história (o contêiner de um lote tem várias)
+  propostas: number | null; // em "separar": quantas histórias a IA propôs
+  dividida: boolean; // já passou por uma divisão confirmada (o canal não volta a "conferir")
 };
 
 export type HistoriaParaLer = {
@@ -22,7 +26,14 @@ export type HistoriaParaLer = {
   paragrafos: string[];
   marcacoes: Marcacao[];
   lacunas: { pergunta: string; motivo: string }[];
-  audios: { id: string; url: string | null; duracaoS: number | null }[];
+  audios: {
+    id: string;
+    url: string | null;
+    duracaoS: number | null;
+    inicioS?: number; // prompt 7: a história usa só um pedaço da gravação
+    fimS?: number;
+  }[];
+  sugestao: { id: string; texto: string } | null; // pergunta pendente que ela parece responder
 };
 
 export type NomeDaTela = {
@@ -37,6 +48,9 @@ export type NomeDaTela = {
 export type SituacaoDoAudio =
   | { tipo: "historia"; historia: string; estado: EstadoHistoria }
   | { tipo: "espera"; rotulo: string; frase: string; confirmar: boolean };
+
+/** Prompt 7: áudios do mesmo envio aparecem juntos em Áudios recebidos. */
+export type EnvioDaTela = { lote: string; total: number; recebidos: number };
 
 /** Gravação guardada que ainda não virou história (home). */
 export type GuardadaDaTela = {

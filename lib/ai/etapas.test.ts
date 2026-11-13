@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { leitorDeDiretorio } from "./carregar-prompt";
 import type { ChamadaIA, ClienteIA, RespostaIA } from "./claude";
-import { estruturar } from "./etapas";
+import { completarFalantes, estruturar } from "./etapas";
 import type { Segmento } from "./schemas";
 
 const ler = leitorDeDiretorio(join(process.cwd(), "lib/ai/prompts"));
@@ -59,11 +59,28 @@ describe("estruturar", () => {
       "g1",
       segmentos,
     );
+    // Prompt 7: quem ficou sem papel entra como "outro" (a edição nunca vê falante sem papel).
     expect(r.dados).toEqual({
-      falantes: [{ falante: "g1:speaker_1", papel: "autor" }],
+      falantes: [
+        { falante: "g1:speaker_0", papel: "outro" },
+        { falante: "g1:speaker_1", papel: "autor" },
+      ],
       vazios: [1],
       mudancasDeAssunto: [],
     });
+  });
+
+  it("com várias gravações, o falante esquecido herda o papel do mesmo speaker", () => {
+    expect(
+      completarFalantes(
+        [{ falante: "g1:speaker_0", papel: "autor" }],
+        ["g1:speaker_0", "g2:speaker_0", "g2:speaker_1"],
+      ),
+    ).toEqual([
+      { falante: "g1:speaker_0", papel: "autor" },
+      { falante: "g2:speaker_0", papel: "autor" },
+      { falante: "g2:speaker_1", papel: "outro" },
+    ]);
   });
 
   it("recusa só quando nenhum falante bate", async () => {

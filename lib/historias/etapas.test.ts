@@ -10,10 +10,18 @@ describe("estado da história → cartão", () => {
     expect(estadoDoCartao("pronta")).toBe("revisar");
     expect(estadoDoCartao("pronta", true)).toBe("pronta");
     expect(estadoDoCartao("falhou")).toBe("falhou");
+    expect(estadoDoCartao("dividindo")).toBe("separando");
+    expect(estadoDoCartao("separar")).toBe("conferir");
   });
 
   it("o canal publica só etapas que o cartão conhece", () => {
-    const ids = new Set<string>([...ETAPAS.map((e) => e.id), "falhou"]);
+    // separando e conferir têm ramo próprio no cartão (fora do passo a passo de 4 etapas).
+    const ids = new Set<string>([
+      ...ETAPAS.map((e) => e.id),
+      "falhou",
+      "separando",
+      "conferir",
+    ]);
     for (const etapa of Object.values(ETAPA_DO_ESTADO))
       expect(ids.has(etapa)).toBe(true);
   });

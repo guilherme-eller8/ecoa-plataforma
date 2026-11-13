@@ -4,28 +4,15 @@
 export const EVENTO_GRAVACAO = "ecoa/gravacao.recebida";
 export const EVENTO_CANAL = "pipeline";
 
-/**
- * Origens que podem virar história direto (P40, P43). O lote de arquivos espera a divisão do
- * prompt 7; a conversa só passa se tiver uma parte só e menos de 29 min (quem decide é o banco).
- */
-export const ORIGENS_AVULSAS = [
-  "autor",
-  "livre",
-  "upload",
-  "conversa",
-] as const;
-export const MAX_CONVERSA_CURTA_S = 29 * 60; // espelha privado.max_historia_s() - 60
+export const EVENTO_HISTORIA_CONFIRMADA = "ecoa/historia.confirmada";
 
-export function ehAvulsa(
-  g: { origem: string; lote_id: string | null; duracao_s?: number | null },
-  partesNoLote = 1,
-) {
-  if (!(ORIGENS_AVULSAS as readonly string[]).includes(g.origem)) return false;
-  if (g.origem !== "conversa") return g.lote_id === null;
-  return (
-    partesNoLote <= 1 &&
-    (g.duracao_s == null || g.duracao_s < MAX_CONVERSA_CURTA_S)
-  );
+/**
+ * Prompt 7: toda gravação recebida vai para o pipeline; quem decide se ela espera (lote
+ * incompleto, mais de 2 h, sem consentimento) é o banco. A chave junta as partes de um lote,
+ * para o Inngest processar uma de cada vez.
+ */
+export function chaveDoEvento(g: { id: string; lote_id: string | null }) {
+  return g.lote_id ?? g.id;
 }
 
 export function topicoDoLivro(livroId: string) {
@@ -38,6 +25,8 @@ export const ETAPA_DO_ESTADO = {
   escrevendo: "escrevendo",
   pronta: "revisar",
   falhou: "falhou",
+  dividindo: "separando", // prompt 7: a IA propõe as histórias
+  separar: "conferir", // prompt 7: espera a pessoa conferir
 } as const;
 
 export type EstadoHistoria = keyof typeof ETAPA_DO_ESTADO;
@@ -56,22 +45,27 @@ export type MensagemCanal =
 
 /** Motivo de uma gravação não ter virado história (servico_iniciar_historia), em selo curto. */
 export const MOTIVOS_ESPERA = {
-  divisao: "Guardada · conversa longa",
-  longa: "Guardada · conversa longa",
+  lote_incompleto: "Esperando os outros áudios",
+  longa: "Passa de 2 horas",
   sem_duracao: "Guardada",
   sem_consentimento: "Confirme o uso da IA",
   cota_diaria: "Vira texto amanhã",
   livro_fechado: "Guardada",
+  descartada: "Fora das histórias",
   nao_recebido: "Guardada",
 } as const;
 
+export type MotivoEspera = keyof typeof MOTIVOS_ESPERA;
+
 /** A mesma espera, numa frase para a home (nada some sem explicação). */
-export const FRASES_ESPERA: Record<keyof typeof MOTIVOS_ESPERA, string> = {
-  divisao: "Guardada. Conversas longas viram histórias em breve.",
-  longa: "Guardada. Conversas longas viram histórias em breve.",
+export const FRASES_ESPERA: Record<MotivoEspera, string> = {
+  lote_incompleto: "Guardada. Esperando os outros áudios do envio.",
+  longa:
+    "Este áudio passa de 2 horas. Divida em partes de até 2 horas e envie de novo.",
   sem_duracao: "Guardada.",
   sem_consentimento: "Guardada. Confirme o uso da IA para virar texto.",
   cota_diaria: "Guardada. Vira texto amanhã.",
   livro_fechado: "Guardada.",
+  descartada: "Ficou fora das histórias. O áudio continua guardado.",
   nao_recebido: "Guardada.",
 };

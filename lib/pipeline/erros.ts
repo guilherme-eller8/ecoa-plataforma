@@ -14,6 +14,10 @@ export const CODIGOS = [
   "audio_ausente",
   "parada",
   "erro_inesperado",
+  // Prompt 7: divisão.
+  "sem_historia",
+  "estado_invalido",
+  "propor_recusado",
 ] as const;
 export type CodigoPipeline = (typeof CODIGOS)[number];
 

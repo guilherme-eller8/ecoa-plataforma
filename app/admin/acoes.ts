@@ -5,7 +5,7 @@ import { z } from "zod";
 import { enviarAcesso, identidadeAceitavel } from "@/lib/acesso";
 import { DURACAO_PLANO_MESES } from "@/lib/config";
 import { registrarEvento } from "@/lib/eventos";
-import { dispararGravacao } from "@/lib/pipeline/disparo";
+import { dispararEscrita, dispararGravacao } from "@/lib/pipeline/disparo";
 import type { Resultado } from "@/lib/resultado";
 import { usuarioAtual } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -177,7 +177,18 @@ export async function tentarDeNovo(historiaId: string): Promise<Resultado> {
   });
   if (!reaberta)
     return { ok: false, mensagem: "Esta história não está mais com falha." };
-  await dispararGravacao(sr.recording_id, `admin:${Date.now()}`);
+  // Prompt 7: história que passou por uma divisão confirmada volta pela escrita; as outras,
+  // pela gravação (o banco devolve "dividida" se mandássemos a gravação).
+  const { data: h } = await db
+    .from("stories")
+    .select("divisao_de, divisao")
+    .eq("id", historiaId)
+    .maybeSingle();
+  const dividida =
+    Boolean(h?.divisao_de) ||
+    Boolean((h?.divisao as { final?: unknown } | null)?.final);
+  if (dividida) await dispararEscrita([historiaId], `admin:${Date.now()}`);
+  else await dispararGravacao(sr.recording_id, `admin:${Date.now()}`);
   await registrarEvento({
     quem: quem.id,
     papel: "admin",

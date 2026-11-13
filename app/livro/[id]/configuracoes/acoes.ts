@@ -5,13 +5,12 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
-import { CONSENTIMENTO_IA_VERSAO, MAX_HISTORIA_MIN } from "@/lib/config";
+import { CONSENTIMENTO_IA_VERSAO, MAX_ARQUIVO_MIN } from "@/lib/config";
 import { fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import { livroDaAcao } from "@/lib/livro/acesso";
 import type { Resposta } from "@/lib/livro/tipos";
 import { dispararGravacao } from "@/lib/pipeline/disparo";
-import { ORIGENS_AVULSAS } from "@/lib/pipeline/regras";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
 
@@ -60,17 +59,18 @@ export async function confirmarProcessamentoIA(
       livro: livroId,
     });
     // As gravações que esperavam só por isso entram na fila agora.
+    // Prompt 7: todas as origens; o banco agrupa lotes e decide o que espera.
     const { data: esperando } = await clienteAdmin()
       .from("recordings")
-      .select("id")
+      .select("id, lote_id")
       .eq("book_id", livroId)
       .eq("upload", "recebido")
       .is("processado_em", null)
-      .in("origem", [...ORIGENS_AVULSAS])
-      .lte("duracao_s", MAX_HISTORIA_MIN * 60)
-      .limit(50);
+      .lte("duracao_s", MAX_ARQUIVO_MIN * 60)
+      .order("recebido_em")
+      .limit(200);
     for (const g of esperando ?? [])
-      await dispararGravacao(g.id, "consentimento");
+      await dispararGravacao(g.id, "consentimento", g.lote_id);
   });
   atualizar(livroId);
   return { ok: true };

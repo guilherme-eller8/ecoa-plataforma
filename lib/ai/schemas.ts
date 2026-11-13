@@ -110,15 +110,29 @@ export const ClassificacaoEdicoes = z.object({
 });
 export type ClassificacaoEdicoes = z.infer<typeof ClassificacaoEdicoes>;
 
-// Memória do livro (prompt 6): resumo da história pronta e nomes citados.
+// Memória do livro (prompt 6): resumo da história pronta e nomes citados. Prompt 7: a pergunta
+// pendente que a história parece responder (número da lista, começa em 1; null = nenhuma).
 export const Memoria = z.object({
   resumo: z.string(),
   temas: z.array(z.string()),
   nomes: z.array(
     z.object({ nome: z.string(), tipo: z.enum(["pessoa", "lugar"]) }),
   ),
+  pergunta: z.number().int().nullable(),
 });
 export type Memoria = z.infer<typeof Memoria>;
+
+// Divisão em histórias (prompt 7): faixas de segmentos por história, entre gravações.
+export const Divisao = z.object({
+  historias: z.array(
+    z.object({
+      titulo: z.string(),
+      trechos: z.array(z.object({ de: z.number().int(), ate: z.number().int() })),
+      pergunta: z.number().int().nullable(), // número da lista (P1 = 1); null = nenhuma
+    }),
+  ),
+});
+export type Divisao = z.infer<typeof Divisao>;
 
 // ── Marcações ("Confira") ────────────────────────────────────────────────
 

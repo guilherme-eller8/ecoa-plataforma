@@ -63,7 +63,7 @@ test.describe("Andamento e gravações guardadas (exemplo)", () => {
     await page.goto("/styleguide/livro-com-historias");
     await expect(page.getByText("Gravações guardadas")).toBeVisible();
     await expect(
-      page.getByText("Guardada. Conversas longas viram histórias em breve."),
+      page.getByText("Guardada. Esperando os outros áudios do envio."),
     ).toBeVisible();
   });
 });
@@ -118,7 +118,7 @@ test.describe("Áudios e admin (exemplo)", () => {
     await expect(
       page.getByRole("link", { name: "Virou história" }),
     ).toBeVisible();
-    await expect(page.getByText("Guardada · conversa longa")).toBeVisible();
+    await expect(page.getByText("Esperando os outros 2")).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Confirme o uso da IA" }),
     ).toHaveAttribute("href", /configuracoes#ia/);

@@ -1,7 +1,7 @@
 import "server-only";
 // Leituras e escritas do pipeline com a chave secreta. Nunca recebe book_id de fora para
 // decidir o livro: ele vem da gravação ou da história (as FKs compostas recusam mistura).
-import { MAX_RESUMOS_CONTEXTO } from "@/lib/config";
+import { MAX_PERGUNTAS_SUGESTAO, MAX_RESUMOS_CONTEXTO } from "@/lib/config";
 import {
   Glossario,
   type Edicao,
@@ -35,12 +35,142 @@ export function bancoPipeline(
         .select("book_id")
         .eq("id", gravacao)
         .maybeSingle();
+      // Prompt 7: as gravações do contêiner, em ordem (o 1º passo de transcrição é a ordem 1).
+      const { data: srs } = r?.historia
+        ? await db
+            .from("story_recordings")
+            .select("recording_id, ordem")
+            .eq("story_id", r.historia)
+            .order("ordem")
+        : { data: [] };
       return {
         historia: r?.historia ?? null,
         estado: (r?.estado ?? null) as EstadoHistoria | null,
         motivo: r?.motivo ?? null,
         livro: g?.book_id ?? null,
+        gravacoes: (srs ?? []).map((x) => x.recording_id),
       };
+    },
+
+    async info(historia) {
+      const { data } = await db
+        .from("stories")
+        .select(
+          "book_id, estado, divisao, divisao_de, prompt_id, pergunta_sugerida, sugestao_ignorada",
+        )
+        .eq("id", historia)
+        .maybeSingle();
+      if (!data) return null;
+      return {
+        livro: data.book_id,
+        estado: data.estado as EstadoHistoria,
+        temDivisao: data.divisao !== null,
+        divisaoDe: data.divisao_de,
+        promptId: data.prompt_id,
+        sugestaoDecidida: Boolean(
+          data.pergunta_sugerida || data.sugestao_ignorada,
+        ),
+      };
+    },
+
+    async fixarSegmentoInicial(historia, gravacao) {
+      const { data: srs, error } = await db
+        .from("story_recordings")
+        .select("recording_id, ordem")
+        .eq("story_id", historia)
+        .order("ordem");
+      if (error) falhar("inicial", error);
+      const lista = srs ?? [];
+      const minha = lista.find((x) => x.recording_id === gravacao);
+      if (!minha) return 1;
+      const antes = lista
+        .filter((x) => x.ordem < minha.ordem)
+        .map((x) => x.recording_id);
+      // Maior id já gravado nas anteriores (transcrição vazia não conta: o seguinte continua).
+      let maior = 0;
+      if (antes.length) {
+        const { data: ts } = await db
+          .from("transcripts")
+          .select("segmentos")
+          .in("recording_id", antes);
+        for (const t of ts ?? [])
+          for (const seg of (t.segmentos as Segmento[]) ?? [])
+            if (seg.id > maior) maior = seg.id;
+      }
+      const inicial = maior + 1;
+      const { error: e2 } = await db
+        .from("story_recordings")
+        .update({ segmento_inicial: inicial })
+        .eq("story_id", historia)
+        .eq("recording_id", gravacao);
+      if (e2) falhar("inicial", e2);
+      // Toca a história: um contêiner grande ainda transcrevendo não é "parado" pela varredura.
+      await db
+        .from("stories")
+        .update({ atualizado_em: new Date().toISOString() })
+        .eq("id", historia)
+        .eq("estado", "ouvindo");
+      return inicial;
+    },
+
+    async gravacoesDaHistoria(historia) {
+      const { data: srs } = await db
+        .from("story_recordings")
+        .select("recording_id, ordem")
+        .eq("story_id", historia)
+        .order("ordem");
+      const ids = (srs ?? []).map((x) => x.recording_id);
+      if (!ids.length) return [];
+      const { data: recs } = await db
+        .from("recordings")
+        .select("id, duracao_s, prompt_id")
+        .in("id", ids);
+      const perguntas = [
+        ...new Set((recs ?? []).flatMap((r) => (r.prompt_id ? [r.prompt_id] : []))),
+      ];
+      const { data: ps } = perguntas.length
+        ? await db.from("prompts").select("id, texto").in("id", perguntas)
+        : { data: [] };
+      const texto = new Map((ps ?? []).map((p) => [p.id, p.texto]));
+      const rec = new Map((recs ?? []).map((r) => [r.id, r]));
+      return (srs ?? []).map((x) => {
+        const r = rec.get(x.recording_id);
+        return {
+          rotulo: `g${x.ordem}`,
+          minutos: (r?.duracao_s ?? 0) / 60,
+          pergunta: r?.prompt_id ? (texto.get(r.prompt_id) ?? null) : null,
+          perguntaId: r?.prompt_id ?? null,
+        };
+      });
+    },
+
+    async perguntasPendentes(livro) {
+      const { data } = await db
+        .from("prompts")
+        .select("id, texto")
+        .eq("book_id", livro)
+        .in("estado", ["para_enviar", "enviada"])
+        .order("criado_em", { ascending: false })
+        .limit(MAX_PERGUNTAS_SUGESTAO);
+      return (data ?? []).map((p) => ({ id: p.id, texto: p.texto }));
+    },
+
+    async proporDivisao(historia, proposta) {
+      const { data, error } = await db.rpc("servico_propor_divisao", {
+        p_story: historia,
+        p_proposta: json(proposta),
+      });
+      if (error) falhar("propor", error);
+      return Boolean(data);
+    },
+
+    async sugerirPergunta(historia, pergunta) {
+      const { data, error } = await db.rpc("servico_sugerir_pergunta", {
+        p_story: historia,
+        p_prompt: pergunta,
+      });
+      if (error) falhar("sugerir", error);
+      return Boolean(data);
     },
 
     async gravacaoParaTranscrever(gravacao, historia) {
@@ -94,20 +224,29 @@ export function bancoPipeline(
     async segmentosDaHistoria(historia) {
       const { data: srs, error } = await db
         .from("story_recordings")
-        .select("recording_id, ordem")
+        .select("recording_id, ordem, segmentos")
         .eq("story_id", historia)
         .order("ordem");
       if (error) falhar("segmentos", error);
-      const ids = (srs ?? []).map((s) => s.recording_id);
-      if (ids.length === 0) return [];
+      const lista = srs ?? [];
+      if (lista.length === 0) return [];
       const { data: ts } = await db
         .from("transcripts")
         .select("recording_id, segmentos")
-        .in("recording_id", ids);
+        .in(
+          "recording_id",
+          lista.map((s) => s.recording_id),
+        );
       const porId = new Map(
         (ts ?? []).map((t) => [t.recording_id, t.segmentos as Segmento[]]),
       );
-      return ids.flatMap((id) => porId.get(id) ?? []);
+      // Prompt 7: a história usa só os segmentos dela (null = a gravação inteira).
+      return lista.flatMap((sr) => {
+        const todos = porId.get(sr.recording_id) ?? [];
+        if (!sr.segmentos) return todos;
+        const meus = new Set(sr.segmentos);
+        return todos.filter((x) => meus.has(x.id));
+      });
     },
 
     async estrutura(historia) {

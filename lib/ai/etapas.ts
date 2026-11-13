@@ -10,6 +10,7 @@ import {
 } from "./checagens";
 import type { ChamadaIA, ClienteIA, RespostaIA } from "./claude";
 import {
+  Divisao,
   Edicao,
   Estrutura,
   Memoria,
@@ -107,11 +108,38 @@ export async function estruturar(
   return {
     ...r,
     dados: {
-      falantes: r.dados.falantes.filter((f) => falantes.has(f.falante)),
+      falantes: completarFalantes(
+        r.dados.falantes.filter((f) => falantes.has(f.falante)),
+        [...falantes],
+      ),
       vazios: r.dados.vazios.filter((id) => ids.has(id)),
       mudancasDeAssunto: r.dados.mudancasDeAssunto.filter((id) => ids.has(id)),
     },
   };
+}
+
+/**
+ * Com várias gravações (prompt 7), o modelo pode esquecer os falantes de uma delas
+ * ("g2:speaker_0"). Quem ficou sem papel herda o do mesmo speaker em outra gravação; sem
+ * nenhum, vira "outro". Assim a edição nunca recebe um falante sem papel.
+ */
+export function completarFalantes(
+  dados: Estrutura["falantes"],
+  todos: string[],
+): Estrutura["falantes"] {
+  const papel = new Map(dados.map((f) => [f.falante, f.papel]));
+  const porSpeaker = new Map<string, Estrutura["falantes"][number]["papel"]>();
+  for (const f of dados) {
+    const speaker = f.falante.split(":").at(-1) ?? f.falante;
+    if (!porSpeaker.has(speaker)) porSpeaker.set(speaker, f.papel);
+  }
+  return todos.map((falante) => ({
+    falante,
+    papel:
+      papel.get(falante) ??
+      porSpeaker.get(falante.split(":").at(-1) ?? falante) ??
+      "outro",
+  }));
 }
 
 // ── Editar ───────────────────────────────────────────────────────────────
@@ -254,8 +282,9 @@ export async function memoria(
   ia: ClienteIA,
   ler: LeitorPrompt,
   edicao: Edicao,
+  perguntas: string[] = [], // pendentes, para sugerir a que a história responde (prompt 7)
 ): Promise<RespostaIA<Memoria>> {
-  return ia.gerar({
+  const r = await ia.gerar({
     etapa: "memoria",
     modelo: MODELO_RAPIDO,
     maxTokens: 2000,
@@ -264,8 +293,80 @@ export async function memoria(
     usuario: montarPrompt(ler, "memoria-entrada", {
       titulo: edicao.titulo,
       texto: textoNumerado(edicao),
+      perguntas: listaDePerguntas(perguntas),
     }),
     schema: Memoria,
+  });
+  // Número fora da lista = nenhuma (não derruba a memória).
+  const n = r.dados.pergunta;
+  const valida = n != null && n >= 1 && n <= perguntas.length;
+  return { ...r, dados: { ...r.dados, pergunta: valida ? n : null } };
+}
+
+export function listaDePerguntas(perguntas: string[]): string {
+  return (
+    perguntas
+      .map((t, i) => `P${i + 1}. ${t.replace(/\s+/g, " ").trim()}`)
+      .join("\n") || "(nenhuma)"
+  );
+}
+
+// ── Divisão em histórias (prompt 7) ──────────────────────────────────────
+
+export type GravacaoDaDivisao = {
+  rotulo: string; // "g1": o mesmo do falante na transcrição
+  minutos: number;
+  pergunta: string | null; // a pergunta escolhida no envio, se houver
+};
+
+/**
+ * Propõe as histórias de um grupo de gravações (lote, conversa em partes ou arquivo longo).
+ * Modelo capaz (D11). A limpeza e as regras de dono de cada segmento ficam em
+ * lib/divisao/limpar.ts: aqui só a chamada.
+ */
+export async function dividir(
+  ia: ClienteIA,
+  ler: LeitorPrompt,
+  p: {
+    autor: string;
+    segmentos: Segmento[];
+    estrutura: Estrutura;
+    gravacoes: GravacaoDaDivisao[];
+    perguntas: string[];
+    minFalaS: number;
+    maxFalaMin: number;
+    modelo?: string;
+  },
+): Promise<RespostaIA<Divisao>> {
+  const ids = new Set(p.segmentos.map((s) => s.id));
+  return ia.gerar({
+    etapa: "dividir",
+    modelo: p.modelo ?? MODELO_CAPAZ,
+    maxTokens: 8000,
+    esforco: "medium",
+    sistemaFixo: montarPrompt(ler, "dividir", {
+      min_fala_s: String(p.minFalaS),
+      max_fala_min: String(p.maxFalaMin),
+    }),
+    usuario: montarPrompt(ler, "dividir-entrada", {
+      autor: p.autor,
+      gravacoes: p.gravacoes
+        .map(
+          (g) =>
+            `- ${g.rotulo} · ${Math.max(1, Math.round(g.minutos))} min${g.pergunta ? ` · pergunta: ${g.pergunta.replace(/\s+/g, " ")}` : ""}`,
+        )
+        .join("\n"),
+      perguntas: listaDePerguntas(p.perguntas),
+      segmentos: formatarSegmentos(p.segmentos, p.estrutura),
+    }),
+    schema: Divisao,
+    validar: (d) => {
+      if (d.historias.length === 0) return "nenhuma história";
+      const algum = d.historias.some((h) =>
+        h.trechos.some((t) => ids.has(t.de) || ids.has(t.ate)),
+      );
+      return algum ? null : "nenhum trecho com segmento conhecido";
+    },
   });
 }
 
