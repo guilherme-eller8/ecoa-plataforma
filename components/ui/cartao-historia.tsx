@@ -137,11 +137,15 @@ export function CartaoHistoria({
     estado === "separando";
   const nome =
     titulo?.trim() ||
-    (estado === "separando" || estado === "conferir"
-      ? "Novas histórias"
-      : processando
-        ? "Nova história"
-        : "História sem título");
+    (estado === "conferir"
+      ? propostas && propostas > 1
+        ? `${propostas} histórias para conferir`
+        : "Histórias para conferir"
+      : estado === "separando"
+        ? "Gravação recebida"
+        : processando
+          ? "Nova história"
+          : "História sem título");
   return (
     <article
       className={
@@ -185,9 +189,7 @@ export function CartaoHistoria({
         </p>
       ) : estado === "conferir" ? (
         <p className="text-ui-17 text-tinta" aria-live="polite">
-          {propostas && propostas > 1
-            ? `Encontramos ${propostas} histórias. Confira antes de escrever.`
-            : "Confira antes de escrever."}
+          Confira antes de escrever.
         </p>
       ) : estado === "revisar" ? (
         <div className="flex flex-col gap-2">

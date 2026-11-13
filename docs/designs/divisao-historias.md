@@ -1,6 +1,6 @@
 # Divisão em histórias: lotes e conversas longas (prompt 7)
 
-Status: **v2, revisada** · Guilherme aprovou D2 a D8 e D10 a D12 em 13/11 (D3 com a regra de status abaixo); D1 e D9 em discussão · 2026-11-13 · PRD: M4 (lotes e conversas longas), M11 (dica de primeira vez), Pipeline de IA (etapa 4) · Decisões: P17, P25, P26, P27, P28, P29, P39, P40, P42, P43, T8, T18, T27, T28, T31, T34, T35, T36, T37, T38
+Status: **v2 aprovada pelo Guilherme em 2026-11-13** (D1 a D12; D3 com a regra de status; D9 mudou, ver seção 14) · implementada no mesmo dia · 2026-11-13 · PRD: M4 (lotes e conversas longas), M11 (dica de primeira vez), Pipeline de IA (etapa 4) · Decisões: P17, P25, P26, P27, P28, P29, P39, P40, P42, P43, T8, T18, T27, T28, T31, T34, T35, T36, T37, T38
 
 Relatórios: `divisao-historias/critic_report.md` (segurança e banco) e `divisao-historias/codebase_details_report.md` (código). A seção 13 mostra o que mudou por causa de cada um.
 
@@ -852,3 +852,11 @@ Nada novo na Vercel nem no Supabase. Depois do deploy, sincronizar o app no Inng
 **Código (`codebase_details_report.md`):** os 20 achados entraram: chave do evento com reserva e os 5 chamadores (1); nome do 1º passo de transcrição mantido e `iniciar` tolerante (2); ordem por posição (3); lista dos testes que mudam (4); ramo próprio do cartão para as etapas novas (5); ordem preservada nas filhas (6); `estruturar` com várias gravações (7); `fixarSegmentoInicial` (8); total do upload no servidor e `totalPartes` no gravador (9); reenvio do evento perdido (10); `dividir` idempotente (11); ações em `app/livro/[id]/acoes.ts` (12); mapa de áudios e duração por segmentos (13); consentimento e varredura sem filtro de origem (14); ordem para regerar os tipos (15); `atualizado_em` (16); etapa, fakes e hashes da divisão (17); motivos trocados de uma vez (18); peças de UI reaproveitadas (19); SQL completo e reversão completa testada (20).
 
 **O que não entrou:** máximo de histórias proporcional aos minutos (`ceil(min/2)`, achado 2 de segurança). Ele quebraria o aceite de 8 áudios curtos sobre 3 assuntos (4 min → no máximo 2); a fala mínima de 30 s já amarra o número de histórias ao áudio.
+
+## 14. O que mudou na aprovação e na implementação
+
+- **D9 (Guilherme):** o arquivo único não fica mais preso a 30 min. Até 2 h ele é processado inteiro, sem cortar o original; a separação é lógica, pelo texto, e uma história pode ter 50 min e outra 10. Acima de 2 h, a frase pede para dividir o arquivo. Uma história confirmada vai até 60 min de fala (`divisao_longa`), para caber numa escrita só. Gravação única acima de 60 min de fala sempre passa pela tela, mesmo com 1 história. Migration: `privado.max_arquivo_s()` (7200) e `privado.max_fala_historia_s()` (3600).
+- **D3 (Guilherme):** todo áudio enviado mostra o status de agora, e os do mesmo envio aparecem juntos (seção 7).
+- **Achado no teste:** a reversão roda duas vezes sem erro (o teste de banco desce, sobe e desce de novo).
+- **Banco:** os tipos de `lib/supabase/tipos.ts` foram atualizados à mão (o conector do Supabase não respondeu nesta sessão). Ao aplicar a migration, regerar e conferir que só mudam as linhas do prompt 7.
+- **Pendências do deploy:** aplicar a migration; sincronizar o Inngest (função nova `escrever-historia`); conferir na prévia a expressão de concorrência `has(event.data.chave) ? … : …`, o tempo de transcrição de um arquivo de 1 h e de `estruturar`/`dividir` num contêiner de 120 min, e o aceite com áudio real.

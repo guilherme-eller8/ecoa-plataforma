@@ -48,6 +48,11 @@ const TELAS = {
   "configuracoes-vazia": "/styleguide/configuracoes-vazia",
   "audios-situacao": "/styleguide/audios-situacao",
   "admin-processamento": "/styleguide/admin-processamento",
+  // Prompt 7
+  dividir: "/styleguide/dividir",
+  "dividir-confirmada": "/styleguide/dividir-confirmada",
+  "livro-conferir": "/styleguide/livro-conferir",
+  "historia-sugestao": "/styleguide/historia-sugestao",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no

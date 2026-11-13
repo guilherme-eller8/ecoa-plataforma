@@ -217,12 +217,15 @@ export function TelaDividir({
     </Link>
   );
   const moldura =
-    "mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-32";
+    "mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12";
 
   if (divisao.situacao === "confirmada")
     return (
       <main className={moldura}>
         {voltar}
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+          Confira as histórias
+        </h1>
         <EstadoVazio
           frase="Estas histórias já foram para a escrita."
           acao={
@@ -322,7 +325,7 @@ export function TelaDividir({
           {lista.map((h, i) => (
             <li
               key={h.chave}
-              className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5"
+              className="rounded-cartao bg-papel flex flex-col gap-4 p-5"
             >
               {editando === i ? (
                 <form
@@ -405,7 +408,7 @@ export function TelaDividir({
                         Separar aqui
                       </button>
                     ) : null}
-                    <div className="border-linha flex items-start gap-3 border-t py-3 first:border-t-0">
+                    <div className="flex items-start gap-3 py-2.5">
                       <button
                         type="button"
                         onClick={() =>
@@ -431,7 +434,7 @@ export function TelaDividir({
                             : ""}
                           {relogio(t.inicio)}
                         </p>
-                        <p className="font-livro text-livro-20 text-tinta leading-snug">
+                        <p className="font-livro text-livro-20 text-tinta line-clamp-2 leading-snug">
                           {inicioDoTexto(t.texto)}
                         </p>
                       </div>
@@ -450,7 +453,7 @@ export function TelaDividir({
                 ))}
               </ul>
 
-              <footer className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <footer className="-ml-2 flex flex-wrap items-center gap-x-4">
                 {separando === i ? (
                   <Botao variante="texto" onClick={() => setSeparando(null)}>
                     Cancelar
@@ -459,7 +462,7 @@ export function TelaDividir({
                   <>
                     {i < n - 1 ? (
                       <Botao
-                        variante="secundario"
+                        variante="texto"
                         onClick={() => mudar(juntar(lista, i), "juntou")}
                       >
                         Juntar com a de baixo
@@ -481,22 +484,20 @@ export function TelaDividir({
       {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
 
       {n > 0 ? (
-        <div className="bg-polen/95 border-linha fixed inset-x-0 bottom-0 border-t px-5 py-4 backdrop-blur">
-          <div className="mx-auto w-full max-w-xl">
-            <Botao
-              larguraTotal
-              carregando={enviando}
-              disabled={!podeEscrever}
-              onClick={() => void confirmar()}
-            >
-              {enviando
-                ? "Enviando…"
-                : n === 1
-                  ? "Escrever 1 história"
-                  : `Escrever ${n} histórias`}
-            </Botao>
-          </div>
-        </div>
+        // No fim da lista, não preso à tela: nada fica por cima das histórias.
+        <Botao
+          larguraTotal
+          carregando={enviando}
+          disabled={!podeEscrever}
+          onClick={() => void confirmar()}
+          className="sm:w-auto sm:self-start"
+        >
+          {enviando
+            ? "Enviando…"
+            : n === 1
+              ? "Escrever 1 história"
+              : `Escrever ${n} histórias`}
+        </Botao>
       ) : null}
     </main>
   );

@@ -148,9 +148,8 @@ test("home: cartão em conferir com o botão, e outro separando", async ({
   page,
 }) => {
   await page.goto("/styleguide/livro-conferir");
-  await expect(
-    page.getByText("Encontramos 3 histórias. Confira antes de escrever."),
-  ).toBeVisible();
+  await expect(page.getByText("3 histórias para conferir")).toBeVisible();
+  await expect(page.getByText("Confira antes de escrever.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Conferir" })).toHaveAttribute(
     "href",
     /\/historias\/.+\/dividir$/,
