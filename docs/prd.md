@@ -140,7 +140,7 @@ Cinco portas que produzem o mesmo objeto: gravações ligadas a uma história. A
 
 - **Resposta do autor:** pelo link pessoal, aberto numa pergunta. Gravador com pausar, retomar, ouvir antes de enviar e regravar, até 30 minutos. Consentimento na primeira gravação.
 - **História livre do autor:** *Contar uma história*, sem pergunta. A IA sugere o título.
-- **Modo conversa:** o mesmo gravador no celular do responsável, com a pergunta no topo como roteiro ou em conversa livre, sem pergunta.
+- **Modo conversa:** o mesmo gravador no celular do responsável, com a pergunta no topo como roteiro ou em conversa livre, sem pergunta. Sem teto de duração: a gravação segue em partes de 30 minutos, sem parar o microfone (P39).
 - **Upload de 1 áudio**, com pergunta opcional.
 - **Lotes e conversas longas:** vários áudios de uma vez (por exemplo, 12 áudios encaminhados pelo autor no WhatsApp) ou uma gravação longa com vários assuntos (por exemplo, 1 hora de conversa na ceia). A IA identifica os assuntos e propõe histórias: junta áudios do mesmo assunto e separa um áudio que tenha dois assuntos. O responsável confirma, junta ou separa com 1 toque antes da edição.
 - **Formatos:** .opus, .ogg, .m4a, .mp3, .wav e .webm, até 50 MB por arquivo (limite do plano grátis do Supabase; 100 MB quando o plano mudar) e 30 arquivos por lote.
@@ -243,13 +243,17 @@ A IA edita como um jornalista que não inventa: cada parágrafo aponta para os t
 
 ### Padrão-ouro e testes
 
-- Antes do primeiro cliente: 5 a 10 histórias reais editadas pela tia Caia a partir da transcrição bruta. Esses pares viram os exemplos do prompt e o conjunto de testes.
-- Toda mudança de prompt roda contra esse conjunto. Um avaliador automático pontua fidelidade, voz preservada e legibilidade de 1 a 5, e a tia Caia avalia uma amostra.
-- **Critério para liberar:** nenhuma invenção de fato no conjunto e nota média de 4 ou mais em voz preservada.
+Sem padrão-ouro editado à mão antes do lançamento (T31). A qualidade melhora com o **uso real do design partner**: André grava o pai, Nelson, e as correções da família sobre o texto da IA viram a base de regras, estilo, glossário e testes (design doc `docs/designs/laboratorio-ia.md`).
+
+- **Desde o dia 1, sem simplificar:** a regra de não inventar, a marcação "Confira" e o consentimento. A versão da IA de cada história fica guardada sem alteração, para comparar com a versão corrigida.
+- **Hipótese do teste:** a família aceita o texto corrigindo no máximo 1 de cada 3 parágrafos, sem nenhuma invenção que passe sem "Confira".
+- **Métricas:** percentual de parágrafos corrigidos, invenções removidas em parágrafos sem "Confira" (escapes), percentual de "Confira" que eram invenção de verdade, custo e tempo por história.
+- **Critério de morte:** 1 escape de invenção que a família perceba, ou mais de 50% do texto reescrito em 3 histórias seguidas. Se acontecer, as telas param e a prioridade volta para regras e verificação.
+- **Voltam por gatilho:** rubrica e juiz de IA com 5 histórias corrigidas pelo André; canários e auditoria formal no 1º escape ou antes do 1º cliente pagante; exemplos no prompt com o 1º par com consentimento de reuso.
 
 ### Provedores
 
-- **Transcrição:** escolhida por teste com áudios reais dos pais dos parceiros de design (monólogo, conversa, ruído de mesa, áudio do WhatsApp). Critérios: acerto de nomes, separação de vozes, sotaque, velocidade e custo. Candidatos: ElevenLabs Scribe, Deepgram, AssemblyAI e OpenAI.
+- **Transcrição:** ElevenLabs Scribe (T32), escolhido por avaliação de mercado (acerto em português, falantes separados, tempo por palavra). AssemblyAI fica pronto atrás da mesma interface. A comparação com áudio real volta se o Scribe errar muitos nomes nas correções do André.
 - **Estruturação, edição e verificação:** Claude via API, com um modelo rápido para estruturar e um mais capaz para editar e verificar. Saídas em JSON validadas por zod.
 - **Custo:** registrado por etapa e por livro e visível no admin.
 
@@ -417,8 +421,9 @@ Tudo abaixo foi cortado de propósito e volta quando um cliente real pedir.
 - [ ] **Cotação da gráfica:** 80 páginas, capa dura, colorido, 21 × 21 cm. Define a margem dos R$ 467, o valor por página e por cópia extra, o modo de cor, a lombada e o múltiplo de páginas.
 - [ ] **Domínio `ecoamemorias.com.br`** registrado e apontado para a Vercel (os subdomínios `app` e `ouvir` dependem dele).
 - [ ] **Banco de 150 perguntas:** rascunho gerado no prompt 4, revisão da tia Caia.
-- [ ] **Padrão-ouro:** 5 a 10 histórias editadas pela tia Caia antes do prompt 1 terminar.
-- [ ] **Áudios de teste:** 5 áudios reais dos pais dos 2 parceiros de design, incluindo conversa, ruído e áudio encaminhado do WhatsApp.
+- [x] ~~**Padrão-ouro:** 5 a 10 histórias editadas pela tia Caia antes do prompt 1 terminar.~~ Substituído pelo uso real do André (T31).
+- [x] ~~**Áudios de teste:** 5 áudios reais dos pais dos 2 parceiros de design.~~ Substituído pelos áudios reais do André (T31).
+- [ ] **Preço atual do ElevenLabs Scribe** conferido no site antes da primeira cobrança real.
 
 ## Sequência de prompts para o Claude Code
 
@@ -539,7 +544,7 @@ Gate de design. Aceite: pelo meu iPhone e por um Android, subo 3 áudios encamin
 ```
 Leia docs/prd.md: M4 (menos a divisão em histórias), M11 (tela de primeira abertura do autor), M7 (só a parte de gravar) e Design e experiência (regras do autor). É o prompt de maior risco técnico no celular. Use o EGM.
 
-1. Tabelas stories e story_recordings, com RLS, e as colunas que faltarem em recordings (criada no prompt 5A: estender, nunca recriar). SQL antes de aplicar.
+1. As colunas que faltarem em recordings (criada no prompt 5A: estender, nunca recriar), com RLS. SQL antes de aplicar. stories e story_recordings foram para o prompt 6 (P36).
 2. Gravador único com MediaRecorder: gravar, pausar, retomar, ouvir, regravar, até 30 minutos, vibração ao iniciar. Pedaços guardados no IndexedDB durante a gravação e upload TUS retomável para o Supabase Storage.
 3. Área do autor em /a/[token]: "Olá, [apelido]", as perguntas para ele (com foto e áudio de quem sugeriu, quando houver) e Contar uma história, livre. Na primeira abertura, uma tela única ("Toque no círculo e conte. Pode pausar quando quiser.") e o consentimento.
 4. Botão principal Nova história no painel do responsável, com Gravar conversa (pergunta no topo como roteiro, ou conversa livre sem pergunta) e Subir áudio.
@@ -556,12 +561,12 @@ Gate de design. Aceite: me entregue um roteiro para eu testar no iPhone (Safari)
 Leia docs/prd.md: M5 e Pipeline de IA. Reaproveite o código e os prompts do laboratório. Use o EGM.
 
 1. Instale o serviço de fila escolhido no prompt 0.
-2. Tabelas transcripts, story_versions, ai_usage, book_context e glossary_entries, com RLS. SQL antes de aplicar.
-3. Ao concluir um upload: transcrição (provedor vencedor do laboratório), estruturação, edição e verificação, com até 3 tentativas por etapa e erro visível no admin.
+2. Tabelas stories, story_recordings, transcripts, story_versions, ai_usage, book_context e glossary_entries, com RLS. SQL antes de aplicar. stories e story_recordings saíram do prompt 5 (P36): quem cria a história é o pipeline, que decide pelo conteúdo (P27). As gravações que já existem em recordings ("aguardando processamento", inclusive as do 5A e as partes de uma conversa, ligadas por lote_id) entram na fila na primeira execução.
+3. Ao concluir um upload: transcrição (ElevenLabs Scribe, T32), estruturação, edição e verificação, com até 3 tentativas por etapa e erro visível no admin.
 4. Etapas ao vivo no cartão da história via Supabase Realtime: Enviando, Ouvindo, Escrevendo, Pronta para revisar. Em Escrevendo, o texto aparece sendo escrito (streaming da edição).
 5. Contexto do livro com cache de prompt. Ao fim de cada história, atualize o resumo dela em book_context e sugira nomes de pessoas e lugares para o glossário, que o responsável ajusta em Configurações.
 6. E-mail só se ninguém do livro estiver com a tela aberta. Na primeira história do livro, mostre o marco do M11 com o botão de compartilhar no grupo.
-7. npm run eval roda o padrão-ouro contra os prompts atuais e falha se houver fato inventado.
+7. A versão da IA de cada história fica guardada sem alteração, e a comparação com a versão corrigida pelo responsável (o `--comparar` do laboratório) mede parágrafos corrigidos, escapes de invenção e acerto do "Confira" (T31). Provedor: ElevenLabs Scribe (T32).
 
 Gate de design. Aceite: gravo 5 minutos pelo link do autor e, com a tela aberta no computador, vejo as primeiras palavras em menos de 60 segundos e o texto completo em menos de 3 minutos.
 ```

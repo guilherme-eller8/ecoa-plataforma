@@ -6,6 +6,7 @@
 // 3. registra o evento depois da resposta.
 // A chave secreta só assina URLs do Storage, depois de conferir o caminho com a regex do banco.
 
+import { dispararSeAvulsa } from "@/lib/pipeline/disparo";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
@@ -27,7 +28,7 @@ import { envLinks } from "@/lib/env-links";
 import { fraseDoErro } from "@/lib/erros-banco";
 import type { Acao } from "@/lib/eventos-acoes";
 import { registrarEvento } from "@/lib/eventos";
-import { hashDoToken, tokenDoLink, urlFamilia } from "@/lib/links";
+import { hashDoToken, tokenDoLink, urlAutor, urlFamilia } from "@/lib/links";
 import {
   livroDaAcao,
   configuracaoDo,
@@ -41,6 +42,8 @@ import {
 } from "@/lib/livro/configuracao";
 import type {
   AudioParaSubir,
+  OpcoesAudios,
+  OrigemAudio,
   AudioPreparado,
   CandidatoDaEnquete,
   FotoPreparada,
@@ -706,6 +709,63 @@ export async function trocarLinkDaFamilia(
   return r;
 }
 
+// ── Link do autor (prompt 5) ────────────────────────────────────────────
+// Mesmo modelo do link da família (T25): o banco guarda só o hash; o servidor recalcula o
+// token do id e da versão para mostrar o link de novo.
+
+async function novoLinkDoAutor(
+  c: Contexto,
+): Promise<Resposta<{ url: string }>> {
+  const env = envLinks();
+  const id = crypto.randomUUID();
+  const token = tokenDoLink("autor", id, env.versaoAtual, env);
+  const { error } = await clienteAdmin().rpc("servico_trocar_link_autor", {
+    p_livro: c.livro.id,
+    p_usuario: c.usuario.id,
+    p_id: id,
+    p_token_hash: hashDoToken(token),
+    p_chave_versao: env.versaoAtual,
+  });
+  if (error) return falhou(error);
+  return { ok: true, dados: { url: urlAutor(token) } };
+}
+
+/** Devolve o link ativo do autor; se ainda não existe, cria. */
+export async function pegarLinkDoAutor(
+  livroId: string,
+): Promise<Resposta<{ url: string }>> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const { data } = await c.supabase
+    .from("author_access")
+    .select("id, chave_versao")
+    .eq("book_id", c.livro.id)
+    .is("revogado_em", null)
+    .maybeSingle();
+  if (data)
+    return {
+      ok: true,
+      dados: {
+        url: urlAutor(tokenDoLink("autor", data.id, data.chave_versao)),
+      },
+    };
+  const r = await novoLinkDoAutor(c);
+  if (r.ok) evento(c, "gerou_link_autor");
+  return r;
+}
+
+/** Troca o link do autor: o antigo para de funcionar na hora. */
+export async function trocarLinkDoAutor(
+  livroId: string,
+): Promise<Resposta<{ url: string }>> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const r = await novoLinkDoAutor(c);
+  if (r.ok) evento(c, "trocou_link_autor");
+  atualizar(livroId);
+  return r;
+}
+
 // ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
 // A linha nasce "enviando" com a sessão (a RLS confere membro e plano); o servidor assina o
 // upload só daquele caminho; ao fim, confere o objeto no Storage e confirma com a chave
@@ -736,11 +796,23 @@ async function assinarUpload(
   return { id, caminho, token: data.token, contentType };
 }
 
+const esquemaOpcoesAudios = z
+  .object({ conversa: z.object({ loteId: z.uuid() }).optional() })
+  .optional();
+
+/**
+ * Sem opções: 1 arquivo é "upload"; 2 ou mais são um "lote" com o mesmo lote_id (prompt 7).
+ * Com `conversa`: exatamente 1 arquivo, uma parte da conversa gravada aqui (P39).
+ */
 export async function prepararAudios(
   livroId: string,
   arquivos: AudioParaSubir[],
+  opcoes?: OpcoesAudios,
 ): Promise<Resposta<AudioPreparado[]>> {
   const v = esquemaAudios.safeParse(arquivos);
+  const o = esquemaOpcoesAudios.safeParse(opcoes);
+  if (!o.success || (o.data?.conversa && arquivos.length !== 1))
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
   if (!v.success)
     return {
       ok: false,
@@ -764,7 +836,13 @@ export async function prepararAudios(
       .select("id")
       .eq("book_id", c.livro.id)
       .in("id", perguntas)
-      .in("estado", ["para_enviar", "enviada"]);
+      // A parte 2 de uma conversa chega depois que a parte 1 já marcou a pergunta.
+      .in(
+        "estado",
+        o.data?.conversa
+          ? ["para_enviar", "enviada", "respondida"]
+          : ["para_enviar", "enviada"],
+      );
     if ((data ?? []).length !== perguntas.length)
       return {
         ok: false,
@@ -772,13 +850,18 @@ export async function prepararAudios(
       };
   }
 
+  const conversa = o.data?.conversa;
+  const lote =
+    conversa?.loteId ?? (v.data.length > 1 ? crypto.randomUUID() : null);
+  const origem: OrigemAudio = conversa ? "conversa" : lote ? "lote" : "upload";
   const linhas = v.data.map((a, i) => {
     const f = formatos[i]!;
     const id = crypto.randomUUID();
     return {
       id,
       book_id: c.livro.id,
-      origem: "upload" as const,
+      origem,
+      lote_id: lote,
       prompt_id: a.promptId,
       titulo: a.titulo || null,
       nome_arquivo: a.nome,
@@ -806,7 +889,9 @@ async function audioEnviando(c: Contexto, id: string) {
   if (!uuid.safeParse(id).success) return null;
   const { data } = await clienteAdmin()
     .from("recordings")
-    .select("id, caminho, content_type, tamanho_bytes, prompt_id, upload")
+    .select(
+      "id, caminho, content_type, tamanho_bytes, prompt_id, upload, origem, lote_id, duracao_s, processado_em",
+    )
     .eq("id", id)
     .eq("book_id", c.livro.id)
     .maybeSingle();
@@ -836,7 +921,10 @@ export async function confirmarAudio(
   if (ehErro(c)) return c;
   const a = await audioEnviando(c, id);
   if (!a) return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
-  if (a.upload === "recebido") return { ok: true };
+  if (a.upload === "recebido") {
+    after(() => dispararSeAvulsa(a));
+    return { ok: true };
+  }
 
   const admin = clienteAdmin();
   const { data: info, error: erroInfo } = await admin.storage
@@ -852,10 +940,18 @@ export async function confirmarAudio(
     p_tamanho_bytes: a.tamanho_bytes,
   });
   if (error || !ok) return falhou(error);
-  evento(c, "subiu_audio", {
-    recording: a.id,
-    com_pergunta: Boolean(a.prompt_id),
-  });
+  if (a.origem === "conversa")
+    evento(c, "gravou", {
+      recording: a.id,
+      origem: a.origem,
+      com_pergunta: Boolean(a.prompt_id),
+    });
+  else
+    evento(c, "subiu_audio", {
+      recording: a.id,
+      com_pergunta: Boolean(a.prompt_id),
+    });
+  after(() => dispararSeAvulsa(a));
   atualizar(livroId);
   return { ok: true };
 }

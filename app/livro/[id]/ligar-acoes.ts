@@ -32,10 +32,13 @@ export function acoesDoLivro(id: string) {
     encerrarEnquete: a.encerrarEnquete.bind(null, id),
     salvarDaEnquete: a.salvarDaEnquete.bind(null, id),
     removerVotos: a.removerVotos.bind(null, id),
+    pegarLinkDoAutor: a.pegarLinkDoAutor.bind(null, id),
   };
   const kit: AcoesKit = {
     pegarLinkDaFamilia: a.pegarLinkDaFamilia.bind(null, id),
     trocarLinkDaFamilia: a.trocarLinkDaFamilia.bind(null, id),
+    pegarLinkDoAutor: a.pegarLinkDoAutor.bind(null, id),
+    trocarLinkDoAutor: a.trocarLinkDoAutor.bind(null, id),
   };
   const audios: AcoesAudios = {
     prepararAudios: a.prepararAudios.bind(null, id),

@@ -110,6 +110,16 @@ export const ClassificacaoEdicoes = z.object({
 });
 export type ClassificacaoEdicoes = z.infer<typeof ClassificacaoEdicoes>;
 
+// Memória do livro (prompt 6): resumo da história pronta e nomes citados.
+export const Memoria = z.object({
+  resumo: z.string(),
+  temas: z.array(z.string()),
+  nomes: z.array(
+    z.object({ nome: z.string(), tipo: z.enum(["pessoa", "lugar"]) }),
+  ),
+});
+export type Memoria = z.infer<typeof Memoria>;
+
 // ── Marcações ("Confira") ────────────────────────────────────────────────
 
 export type Marcacao = {

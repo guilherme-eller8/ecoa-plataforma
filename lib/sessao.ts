@@ -41,6 +41,7 @@ export type LivroDoMembro = {
   configuracao: Json;
   plano_estado: PlanoEstado;
   plano_vence_em: string | null;
+  ia_consentimento_em: string | null;
   papel: PapelMembro;
 };
 
@@ -52,7 +53,7 @@ export async function livrosDoMembro(
   const { data } = await supabase
     .from("book_members")
     .select(
-      "papel, books!inner(id, autor_nome, autor_apelido, autor_celular, autor_parentesco, autor_foto_id, configuracao, plano_estado, plano_vence_em, criado_em)",
+      "papel, books!inner(id, autor_nome, autor_apelido, autor_celular, autor_parentesco, autor_foto_id, configuracao, plano_estado, plano_vence_em, ia_consentimento_em, criado_em)",
     )
     .eq("user_id", usuarioId);
   return (

@@ -17,6 +17,10 @@ test.describe("tela Perguntas (exemplo)", () => {
     const href = await enviar.getAttribute("href");
     expect(href).toMatch(/^https:\/\/wa\.me\/\d*\?text=/);
     expect(decodeURIComponent(href!.split("text=")[1])).toContain("Vô Jair");
+    // O link abre direto a gravação daquela pergunta na área do autor.
+    expect(decodeURIComponent(href!.split("text=")[1])).toMatch(
+      /\/a\/v1_[A-Za-z0-9_-]{22}\/gravar\/[0-9a-f-]{36}/,
+    );
   });
 
   test("enquete: ranking e Salvar as N mais votadas", async ({ page }) => {

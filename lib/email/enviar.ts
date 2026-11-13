@@ -8,16 +8,22 @@ import type { Email } from "./modelos";
 export async function enviarEmail(
   para: string,
   email: Email,
+  opcoes: { idempotencyKey?: string } = {},
 ): Promise<{ ok: boolean }> {
   try {
     const resend = new Resend(envServidor().RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: EMAIL_REMETENTE,
-      to: para,
-      subject: email.assunto,
-      html: email.html,
-      text: email.texto,
-    });
+    const { error } = await resend.emails.send(
+      {
+        from: EMAIL_REMETENTE,
+        to: para,
+        subject: email.assunto,
+        html: email.html,
+        text: email.texto,
+      },
+      opcoes.idempotencyKey
+        ? { idempotencyKey: opcoes.idempotencyKey }
+        : undefined,
+    );
     if (error) throw new Error(error.message);
     return { ok: true };
   } catch (e) {

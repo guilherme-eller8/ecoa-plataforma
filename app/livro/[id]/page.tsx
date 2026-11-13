@@ -2,12 +2,15 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { Suspense } from "react";
 import { TelaLivro } from "@/components/telas/tela-livro";
+import { marcarHistoriaVista } from "./historias/acoes";
 import { registrarEvento } from "@/lib/eventos";
+import { gravacoesGuardadas, historiasDoLivro } from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { precisaConfigurar } from "@/lib/livro/configuracao";
 import {
   causosDoLivro,
   enqueteDoLivro,
+  linkDaFamilia,
   livroDaTela,
   perguntasDoLivro,
   totalDeAudios,
@@ -37,12 +40,16 @@ async function Livro({ id }: { id: string }) {
     ),
   );
 
-  const [perguntas, causos, enquete, audios] = await Promise.all([
-    perguntasDoLivro(id),
-    causosDoLivro(id),
-    enqueteDoLivro(id),
-    totalDeAudios(id),
-  ]);
+  const [perguntas, causos, enquete, audios, historias, familia, guardadas] =
+    await Promise.all([
+      perguntasDoLivro(id),
+      causosDoLivro(id),
+      enqueteDoLivro(id),
+      totalDeAudios(id),
+      historiasDoLivro(id, 20),
+      linkDaFamilia(id),
+      gravacoesGuardadas(id, Boolean(livro.ia_consentimento_em)),
+    ]);
   return (
     <TelaLivro
       livro={tela}
@@ -53,6 +60,10 @@ async function Livro({ id }: { id: string }) {
         enqueteAberta: enquete?.estado === "aberta",
         audios,
       }}
+      historias={historias}
+      linkFamilia={familia}
+      guardadas={guardadas}
+      marcarVista={marcarHistoriaVista.bind(null, id)}
     />
   );
 }

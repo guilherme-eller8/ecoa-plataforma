@@ -29,9 +29,19 @@ function proxyFamilia(request: NextRequest) {
   return resposta;
 }
 
+// Link do autor: sem sessão nem chamada ao Supabase (quem abre não tem login). O token fica
+// fora do Referer e da indexação.
+function proxyAutor(request: NextRequest) {
+  const resposta = NextResponse.next({ request });
+  resposta.headers.set("Referrer-Policy", "no-referrer");
+  resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return resposta;
+}
+
 // Renova a sessão do Supabase a cada requisição e decide redirects e 404 antes de renderizar.
 export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/f/")) return proxyFamilia(request);
+  if (request.nextUrl.pathname.startsWith("/a/")) return proxyAutor(request);
 
   let resposta = NextResponse.next({ request });
   const env = envPublico();
@@ -76,9 +86,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // /f/:path* explícito: um token nunca pode cair na exclusão de arquivos estáticos.
+  // /f/ e /a/ explícitos: um token nunca pode cair na exclusão de arquivos estáticos.
   matcher: [
     "/f/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.[a-z0-9]+$).*)",
+    "/a/:path*",
+    // /api/inngest fica de fora: o Inngest chama a rota a cada passo, sem sessão.
+    "/((?!_next/static|_next/image|api/inngest|favicon.ico|.*\\.[a-z0-9]+$).*)",
   ],
 };

@@ -51,6 +51,7 @@ function inserir(
     tamanho?: number;
     prompt?: string | null;
     origem?: string;
+    lote?: string | null;
   } = {},
 ) {
   const id = campos.id ?? crypto.randomUUID();
@@ -58,8 +59,8 @@ function inserir(
     id,
     r: await tenta(
       tx,
-      `insert into public.recordings (id, book_id, origem, prompt_id, nome_arquivo, caminho, content_type, tamanho_bytes, duracao_s)
-       values ($1, $2, $3::public.recording_origem, $4, 'PTT-0001.opus', $5, 'audio/ogg', $6, 42)`,
+      `insert into public.recordings (id, book_id, origem, prompt_id, nome_arquivo, caminho, content_type, tamanho_bytes, duracao_s, lote_id)
+       values ($1, $2, $3::public.recording_origem, $4, 'PTT-0001.opus', $5, 'audio/ogg', $6, 42, $7)`,
       [
         id,
         livro,
@@ -67,6 +68,7 @@ function inserir(
         campos.prompt ?? null,
         campos.caminho ?? caminho(livro, id),
         campos.tamanho ?? 2 * MB,
+        campos.lote ?? null,
       ],
     ),
   }));
@@ -132,9 +134,27 @@ describe("subir e confirmar", () => {
     expect(e.rows[0].estado).toBe("respondida");
   });
 
-  it("nasce como upload; outra origem é recusada", async () => {
-    const { r } = await inserir(ana, livroA, { origem: "autor" });
-    expect(r.erro).toMatch(/row-level security/);
+  it("o membro cria upload, lote e conversa; autor e livre só pelo link", async () => {
+    const lote = crypto.randomUUID();
+    expect(
+      (await inserir(ana, livroA, { origem: "conversa" })).r.erro,
+    ).toBeUndefined();
+    expect(
+      (await inserir(ana, livroA, { origem: "conversa", lote })).r.erro,
+    ).toBeUndefined();
+    expect(
+      (await inserir(ana, livroA, { origem: "lote", lote })).r.erro,
+    ).toBeUndefined();
+    expect((await inserir(ana, livroA, { origem: "lote" })).r.erro).toMatch(
+      /recordings_lote_tem_id/,
+    );
+    expect(
+      (await inserir(ana, livroA, { origem: "upload", lote })).r.erro,
+    ).toMatch(/recordings_lote_so_em_lote_ou_conversa/);
+    for (const origem of ["autor", "livre"])
+      expect((await inserir(ana, livroA, { origem })).r.erro).toMatch(
+        /row-level security|recordings_autor_tem_link/,
+      );
   });
 });
 
@@ -236,12 +256,23 @@ describe("ninguém logado altera ou apaga", () => {
     expect(r.erro).toMatch(/permission denied/);
   });
 
-  it("anon e porta_autor não alcançam a tabela", async () => {
-    for (const papel of ["anon", "porta_autor"] as const) {
-      const r = await como(db, papel, {}, (tx) =>
-        tenta(tx, `select id from public.recordings`),
-      );
-      expect(r.erro).toMatch(/permission denied/);
-    }
+  it("anon não alcança a tabela", async () => {
+    const r = await como(db, "anon", {}, (tx) =>
+      tenta(tx, `select id from public.recordings`),
+    );
+    expect(r.erro).toMatch(/permission denied/);
+  });
+
+  it("porta_autor não lê título nem áudio que não veio do link do autor", async () => {
+    const titulo = await como(db, "porta_autor", {}, (tx) =>
+      tenta(tx, `select titulo from public.recordings`),
+    );
+    expect(titulo.erro).toMatch(/permission denied/);
+    const linhas = await db.transaction(async (tx) => {
+      await tx.query(`select set_config('ecoa.livro', $1, true)`, [livroA]);
+      await tx.exec(`set local role porta_autor`);
+      return (await tx.query(`select id from public.recordings`)).rows;
+    });
+    expect(linhas).toEqual([]);
   });
 });

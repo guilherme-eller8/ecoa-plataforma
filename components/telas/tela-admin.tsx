@@ -21,6 +21,7 @@ type Props = {
   ativar: AcaoFormulario;
   renovar: AcaoFormulario;
   reenviar: AcaoFormulario;
+  processamento?: React.ReactNode;
 };
 
 const ROTULO_ESTADO: Record<PlanoEstado, string> = {
@@ -38,7 +39,13 @@ const data = (iso: string | null) =>
       }).format(new Date(iso))
     : "—";
 
-export function TelaAdmin({ livros, ativar, renovar, reenviar }: Props) {
+export function TelaAdmin({
+  livros,
+  ativar,
+  renovar,
+  reenviar,
+  processamento,
+}: Props) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col gap-10 px-5 pt-8 pb-16 md:px-10">
       <header className="flex items-baseline justify-between gap-4">
@@ -75,6 +82,8 @@ export function TelaAdmin({ livros, ativar, renovar, reenviar }: Props) {
           </ul>
         )}
       </section>
+
+      {processamento}
     </main>
   );
 }

@@ -8,10 +8,11 @@ import {
   localizarTrecho,
   type ListasChecagem,
 } from "./checagens";
-import type { ClienteIA, RespostaIA } from "./claude";
+import type { ChamadaIA, ClienteIA, RespostaIA } from "./claude";
 import {
   Edicao,
   Estrutura,
+  Memoria,
   Verificacao,
   idSegmento,
   nomesDoGlossario,
@@ -38,7 +39,15 @@ export function formatarSegmentos(
     .join("\n");
 }
 
-export function contextoDoLivro(ler: LeitorPrompt, g: Glossario): string {
+/**
+ * Bloco do livro (com cache de prompt). `historias` = resumos das histórias já prontas
+ * (memória do livro, prompt 6); no lab, nenhuma.
+ */
+export function contextoDoLivro(
+  ler: LeitorPrompt,
+  g: Glossario,
+  historias = "(nenhuma ainda)",
+): string {
   const linhas = [...g.pessoas, ...g.lugares].map((e) => {
     const extra = [
       e.relacao,
@@ -54,6 +63,7 @@ export function contextoDoLivro(ler: LeitorPrompt, g: Glossario): string {
       : g.autor.nome,
     sobre: g.sobre || "(não informado)",
     glossario: linhas.join("\n") || "(vazio)",
+    historias,
   });
 }
 
@@ -76,7 +86,7 @@ export async function estruturar(
 ): Promise<RespostaIA<Estrutura>> {
   const ids = new Set(segmentos.map((s) => s.id));
   const falantes = new Set(segmentos.map((s) => s.falante));
-  return ia.gerar({
+  const r = await ia.gerar({
     etapa: "estruturar",
     modelo: MODELO_RAPIDO,
     maxTokens: 8000,
@@ -87,17 +97,21 @@ export async function estruturar(
       segmentos: formatarSegmentos(segmentos),
     }),
     schema: Estrutura,
-    validar: (e) => {
-      const fora = [...e.vazios, ...e.mudancasDeAssunto].filter(
-        (id) => !ids.has(id),
-      );
-      if (fora.length) return `ids inexistentes: ${fora.join(", ")}`;
-      const desconhecido = e.falantes.find((f) => !falantes.has(f.falante));
-      return desconhecido
-        ? `falante inexistente: ${desconhecido.falante}`
-        : null;
-    },
+    // Só recusa se nenhum falante bate: aí a resposta não serve para nada.
+    validar: (e) =>
+      e.falantes.length > 0 && !e.falantes.some((f) => falantes.has(f.falante))
+        ? `nenhum falante conhecido (${e.falantes.length} citados, ${falantes.size} no áudio)`
+        : null,
   });
+  // A estrutura é dica para a edição: id ou falante inventado é descartado, não derruba a história.
+  return {
+    ...r,
+    dados: {
+      falantes: r.dados.falantes.filter((f) => falantes.has(f.falante)),
+      vazios: r.dados.vazios.filter((id) => ids.has(id)),
+      mudancasDeAssunto: r.dados.mudancasDeAssunto.filter((id) => ids.has(id)),
+    },
+  };
 }
 
 // ── Editar ───────────────────────────────────────────────────────────────
@@ -122,6 +136,9 @@ export async function editar(
     tamanho: Tamanho;
     modelo?: string;
     aoPrimeiraPalavra?: () => void;
+    historias?: string;
+    aoTexto?: ChamadaIA<Edicao>["aoTexto"];
+    intervaloTextoMs?: number;
   },
 ): Promise<RespostaIA<Edicao>> {
   const ids = new Set(p.segmentos.map((s) => s.id));
@@ -135,7 +152,7 @@ export async function editar(
     maxTokens: 32000,
     esforco: "medium",
     sistemaFixo: montarPrompt(ler, "editar"),
-    sistemaLivro: contextoDoLivro(ler, p.glossario),
+    sistemaLivro: contextoDoLivro(ler, p.glossario, p.historias),
     usuario: montarPrompt(ler, "editar-entrada", {
       papeis: papeis || "(não identificados)",
       vazios: p.estrutura.vazios.map(idSegmento).join(", ") || "nenhum",
@@ -147,6 +164,8 @@ export async function editar(
     schema: Edicao,
     campoPrimeiraPalavra: "texto",
     aoPrimeiraPalavra: p.aoPrimeiraPalavra,
+    aoTexto: p.aoTexto,
+    intervaloTextoMs: p.intervaloTextoMs,
     validar: (e) => {
       if (e.paragrafos.length === 0) return "nenhum parágrafo";
       const semFonte = e.paragrafos.findIndex((par) => par.fontes.length === 0);
@@ -226,6 +245,28 @@ export async function verificar(
     });
   }
   return { resposta, marcacoes, naoLocalizadas };
+}
+
+// ── Memória do livro (prompt 6) ──────────────────────────────────────────
+
+/** Resumo, temas e nomes citados, a partir do texto pronto. Modelo rápido. */
+export async function memoria(
+  ia: ClienteIA,
+  ler: LeitorPrompt,
+  edicao: Edicao,
+): Promise<RespostaIA<Memoria>> {
+  return ia.gerar({
+    etapa: "memoria",
+    modelo: MODELO_RAPIDO,
+    maxTokens: 2000,
+    esforco: "low",
+    sistemaFixo: montarPrompt(ler, "memoria"),
+    usuario: montarPrompt(ler, "memoria-entrada", {
+      titulo: edicao.titulo,
+      texto: textoNumerado(edicao),
+    }),
+    schema: Memoria,
+  });
 }
 
 export { nomesDoGlossario };

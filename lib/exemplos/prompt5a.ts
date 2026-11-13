@@ -43,6 +43,13 @@ export const ENVIAR_FALSO: EnviarArquivo = async (_a, _p, aoProgresso) => {
   }
 };
 
+/** Como o ENVIAR_FALSO, mas falha sem internet: o e2e testa a retomada com o modo offline. */
+export const SUBIR_FALSO: EnviarArquivo = async (a, p, aoProgresso, i) => {
+  if (typeof navigator !== "undefined" && !navigator.onLine)
+    throw new Error("sem internet");
+  await ENVIAR_FALSO(a, p, aoProgresso, i);
+};
+
 const arquivo = (nome: string, kb: number) =>
   new File([new Uint8Array(kb * 1024)], nome, { type: "" });
 
@@ -92,6 +99,7 @@ export function itensDeExemplo(): ItemAudio[] {
 export const AUDIOS_JAIR: AudioDaTela[] = [
   {
     id: id(1),
+    origem: "upload",
     titulo: null,
     nomeArquivo: "PTT-20261109-WA0003.opus",
     pergunta: PERGUNTAS_JAIR[0]?.texto ?? null,
@@ -103,6 +111,7 @@ export const AUDIOS_JAIR: AudioDaTela[] = [
   },
   {
     id: id(2),
+    origem: "conversa",
     titulo: "O dia em que a ponte caiu",
     nomeArquivo: "Gravação 12.m4a",
     pergunta: null,
@@ -114,6 +123,7 @@ export const AUDIOS_JAIR: AudioDaTela[] = [
   },
   {
     id: id(3),
+    origem: "lote",
     titulo: null,
     nomeArquivo: "PTT-20261108-WA0011.opus",
     pergunta: null,

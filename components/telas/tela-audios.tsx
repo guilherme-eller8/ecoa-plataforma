@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { classesDoBotao } from "@/components/ui/botao";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
-import { IconeSubir } from "@/components/ui/icones";
+import { IconeMicrofone, IconeSubir } from "@/components/ui/icones";
 import { formatarDuracao } from "@/lib/audios/formatos";
 import type { AudioDaTela, LivroDaTela } from "@/lib/livro/tipos";
 
@@ -16,6 +16,15 @@ const DATA = new Intl.DateTimeFormat("pt-BR", {
   minute: "2-digit",
   timeZone: "America/Sao_Paulo",
 });
+
+// Só o que não é óbvio: subido pelo responsável é o padrão e não ganha rótulo.
+const ORIGEM: Partial<
+  Record<AudioDaTela["origem"], (autor: string) => string>
+> = {
+  conversa: () => "Conversa gravada aqui",
+  autor: (autor) => `Gravado por ${autor}`,
+  livre: (autor) => `Gravado por ${autor}`,
+};
 
 function Player({ url, nome }: { url: string | null; nome: string }) {
   const [falhou, setFalhou] = useState(false);
@@ -41,6 +50,41 @@ function Player({ url, nome }: { url: string | null; nome: string }) {
       onError={() => setFalhou(true)}
       className="w-full"
     />
+  );
+}
+
+const ETAPA: Record<string, string> = {
+  ouvindo: "Ouvindo…",
+  escrevendo: "Escrevendo…",
+  pronta: "Virou história",
+  falhou: "Não deu certo",
+};
+
+function Situacao({ livroId, audio }: { livroId: string; audio: AudioDaTela }) {
+  const s = audio.situacao;
+  const selo = "text-ui-13 rounded-full px-3 py-1";
+  if (!s)
+    return audio.processado ? null : (
+      <span className={`${selo} bg-polen-2 text-tinta-2`}>Aguardando</span>
+    );
+  if (s.tipo === "historia")
+    return (
+      <Link
+        href={`/livro/${livroId}/historias/${s.historia}`}
+        className={`${selo} bg-floresta-claro text-floresta font-medium`}
+      >
+        {ETAPA[s.estado]}
+      </Link>
+    );
+  return s.confirmar ? (
+    <Link
+      href={`/livro/${livroId}/configuracoes#ia`}
+      className={`${selo} bg-polen-2 text-floresta font-medium underline-offset-4 hover:underline`}
+    >
+      {s.rotulo}
+    </Link>
+  ) : (
+    <span className={`${selo} bg-polen-2 text-tinta-2`}>{s.rotulo}</span>
   );
 }
 
@@ -94,12 +138,15 @@ export function TelaAudios({
               const quando = a.recebidoEm
                 ? DATA.format(new Date(a.recebidoEm))
                 : null;
+              const gravadoAqui = a.origem !== "upload" && a.origem !== "lote";
+              const tipo = a.origem === "conversa" ? "Conversa" : "Áudio";
               const nome =
                 a.titulo ??
                 a.pergunta ??
-                (quando ? `Áudio de ${quando.split(",")[0]}` : "Áudio");
+                (quando ? `${tipo} de ${quando.split(",")[0]}` : tipo);
               const apoio = [
-                a.titulo || a.pergunta ? quando : a.nomeArquivo,
+                ORIGEM[a.origem]?.(livro.autor),
+                a.titulo || a.pergunta || gravadoAqui ? quando : a.nomeArquivo,
                 formatarDuracao(a.duracaoS),
               ]
                 .filter(Boolean)
@@ -121,11 +168,7 @@ export function TelaAudios({
                     <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
                       {apoio}
                     </p>
-                    {a.processado ? null : (
-                      <span className="text-ui-13 bg-polen-2 text-tinta-2 rounded-full px-3 py-1">
-                        Aguardando processamento
-                      </span>
-                    )}
+                    <Situacao livroId={livro.id} audio={a} />
                   </div>
                   <Player url={a.url} nome={nome} />
                 </li>
@@ -140,8 +183,8 @@ export function TelaAudios({
                 " sm:w-auto sm:self-start"
               }
             >
-              <IconeSubir tamanho={20} />
-              <span>Subir mais áudios</span>
+              <IconeMicrofone tamanho={20} />
+              <span>Nova história</span>
             </Link>
           ) : null}
         </>

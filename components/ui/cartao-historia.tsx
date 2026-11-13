@@ -1,5 +1,5 @@
 // Cartão de história com as etapas ao vivo (PRD, M5):
-// Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta.
+// Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta. Ou: Não deu certo.
 // Só apresentação: recebe o estado pronto, não busca nada.
 import type { ReactNode } from "react";
 import {
@@ -10,21 +10,54 @@ import {
   type Etapa,
 } from "@/lib/ui/etapas";
 import { falarDuracao } from "@/lib/ui/tempo";
+import type { Andamento } from "@/lib/historias/previsao";
 import { IconeCheck } from "./icones";
 
-export type EstadoCartao = Etapa | "pronta";
+export type EstadoCartao = Etapa | "pronta" | "falhou";
 
 type Props = {
-  titulo: string;
+  titulo: string | null; // null enquanto a IA não deu o título
   estado: EstadoCartao;
   origem: string;
-  duracaoSeg: number;
+  duracaoSeg: number | null;
   trecho?: string;
   paginas?: number;
   selo?: string; // ex.: "Corrigida pelo Jair"
   acao?: ReactNode;
   destaque?: boolean; // o cartão que está acontecendo agora
+  andamento?: Andamento; // tempo previsto: uma barra que enche e uma frase curta
 };
+
+function BarraDeAndamento({ andamento }: { andamento: Andamento }) {
+  const pct = Math.round(andamento.fracao * 100);
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-label="Andamento"
+        className="rounded-controle bg-polen-2 h-1.5 w-full overflow-hidden"
+      >
+        <div
+          className="bg-floresta h-full rounded-[inherit] transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p
+        className="text-ui-15 text-floresta flex items-center gap-2 font-medium"
+        aria-live="polite"
+      >
+        <span
+          aria-hidden="true"
+          className="animate-pulsar bg-floresta size-2 rounded-full"
+        />
+        {andamento.frase}
+      </p>
+    </div>
+  );
+}
 
 function Etapas({ atual }: { atual: Etapa }) {
   const i = indiceDaEtapa(atual);
@@ -87,9 +120,12 @@ export function CartaoHistoria({
   selo,
   acao,
   destaque = false,
+  andamento,
 }: Props) {
   const processando =
     estado === "enviando" || estado === "ouvindo" || estado === "escrevendo";
+  const nome =
+    titulo?.trim() || (processando ? "Nova história" : "História sem título");
   return (
     <article
       className={
@@ -100,10 +136,15 @@ export function CartaoHistoria({
       }
     >
       <header className="flex flex-col gap-1">
-        <h3 className="font-livro text-livro-24 text-tinta">{titulo}</h3>
+        <h3 className="font-livro text-livro-24 text-tinta">{nome}</h3>
         <p className="text-ui-15 text-tinta-2">
-          {origem} · <span className="num">{falarDuracao(duracaoSeg)}</span> de
-          áudio
+          {origem}
+          {duracaoSeg ? (
+            <>
+              {" "}
+              · <span className="num">{falarDuracao(duracaoSeg)}</span> de áudio
+            </>
+          ) : null}
           {estado === "pronta" && paginas ? (
             <>
               {" "}
@@ -113,10 +154,26 @@ export function CartaoHistoria({
         </p>
       </header>
 
-      {estado === "pronta" ? null : <Etapas atual={estado} />}
+      {estado === "pronta" ? null : estado === "falhou" ? (
+        <p className="text-ui-15 text-tinta-2" aria-live="polite">
+          Não deu certo. Já estamos vendo.
+        </p>
+      ) : (estado === "ouvindo" || estado === "escrevendo") && andamento ? (
+        <BarraDeAndamento andamento={andamento} />
+      ) : estado === "revisar" ? (
+        <div className="flex flex-col gap-2">
+          <div className="rounded-controle bg-floresta h-1.5 w-full" />
+          <p className="text-ui-15 text-floresta flex items-center gap-2 font-medium">
+            <IconeCheck tamanho={18} />
+            Pronta para revisar
+          </p>
+        </div>
+      ) : (
+        <Etapas atual={estado} />
+      )}
 
       {estado === "escrevendo" && trecho ? (
-        <p className="font-livro text-livro-20 text-tinta">
+        <p className="font-livro text-livro-20 text-tinta whitespace-pre-line">
           {trecho}
           <span
             aria-hidden="true"

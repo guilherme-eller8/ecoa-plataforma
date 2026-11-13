@@ -57,14 +57,15 @@ describe("complementar: corpo das funções do autor", () => {
   async function funcoesDoAutorQueCitam() {
     const r = await db.query<{ nome: string }>(
       `select n.nspname || '.' || p.proname as nome from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-       where n.nspname in ('public', 'privado') and p.proname like 'autor\\_%'
+       where n.nspname in ('public', 'privado')
+         and (p.proname like 'autor\\_%' or p.proname like '%\\_autor' or p.proowner = 'porta_autor'::regrole)
          and p.prosrc ~* $1`,
       [`\\m(${[...TABELAS_DA_FAMILIA, "family_messages"].join("|")})\\M`],
     );
     return r.rows.map((x) => x.nome);
   }
 
-  it("nenhuma função autor_* cita as tabelas da família", async () => {
+  it("nenhuma função do autor (pelo nome ou pelo dono) cita as tabelas da família", async () => {
     expect(await funcoesDoAutorQueCitam()).toEqual([]);
   });
 
@@ -85,5 +86,89 @@ describe("anon (o token do autor chega como anon)", () => {
       [`public.${t}`],
     );
     expect(r.rows[0].algum).toBe(false);
+  });
+});
+
+describe("dono e privilégios de porta_autor (T29)", () => {
+  it("toda função que recebe o token do autor tem dono porta_autor", async () => {
+    const r = await db.query<{ nome: string; dono: string }>(
+      `select n.nspname || '.' || p.proname as nome, pg_get_userbyid(p.proowner) as dono
+       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname in ('public', 'privado')
+         and (p.proname like 'autor\\_%' or p.proname in ('acesso_do_autor', 'servico_caminho_gravacao_autor'))
+       order by 1`,
+    );
+    expect(r.rows).toEqual([
+      { nome: "privado.acesso_do_autor", dono: "porta_autor" },
+      { nome: "public.autor_consentir", dono: "porta_autor" },
+      { nome: "public.autor_pagina", dono: "porta_autor" },
+      { nome: "public.autor_preparar_gravacao", dono: "porta_autor" },
+      { nome: "public.servico_caminho_gravacao_autor", dono: "porta_autor" },
+    ]);
+  });
+
+  it("porta_autor tem exatamente estes privilégios por coluna", async () => {
+    const r = await db.query<{ p: string }>(
+      `select table_name || '.' || column_name || ':' || privilege_type as p
+       from information_schema.column_privileges
+       where grantee = 'porta_autor' and table_schema = 'public' order by 1`,
+    );
+    expect(r.rows.map((x) => x.p)).toEqual(
+      [
+        ...["id", "book_id", "token_hash", "revogado_em"].map(
+          (c) => `author_access.${c}:SELECT`,
+        ),
+        ...["id", "autor_nome", "autor_apelido", "autor_consentimento_em"].map(
+          (c) => `books.${c}:SELECT`,
+        ),
+        ...["autor_consentimento_em", "autor_consentimento_versao"].map(
+          (c) => `books.${c}:UPDATE`,
+        ),
+        ...["id", "book_id", "caminho"].map((c) => `photos.${c}:SELECT`),
+        ...[
+          "id",
+          "book_id",
+          "tipo",
+          "texto",
+          "estado",
+          "photo_id",
+          "sugestao_nome",
+          "sugestao_audio_caminho",
+          "enviada_em",
+          "ordem",
+        ].map((c) => `prompts.${c}:SELECT`),
+        ...[
+          "id",
+          "book_id",
+          "origem",
+          "prompt_id",
+          "nome_arquivo",
+          "caminho",
+          "content_type",
+          "tamanho_bytes",
+          "duracao_s",
+          "author_access_id",
+          "criado_por",
+        ].map((c) => `recordings.${c}:INSERT`),
+        ...[
+          "id",
+          "book_id",
+          "origem",
+          "upload",
+          "caminho",
+          "tamanho_bytes",
+          "criado_em",
+          "author_access_id",
+        ].map((c) => `recordings.${c}:SELECT`),
+      ].sort(),
+    );
+  });
+
+  it("porta_autor não tem privilégio de tabela inteira", async () => {
+    const r = await db.query(
+      `select table_name, privilege_type from information_schema.role_table_grants
+       where grantee = 'porta_autor' and table_schema = 'public'`,
+    );
+    expect(r.rows).toEqual([]);
   });
 });

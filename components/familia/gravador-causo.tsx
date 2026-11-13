@@ -1,31 +1,18 @@
 "use client";
 
 // Gravador simples do causo: gravar, pausar, concluir, ouvir e regravar, até 3 minutos.
-// Compõe o visual do design system (components/ui/gravador). A resiliência (cache no
-// aparelho, upload em partes) é do gravador do autor, no prompt 5.
+// Usa o núcleo de lib/gravacao com os pedaços em memória. A resiliência (IndexedDB, envio
+// retomável) é do gravador do autor e do modo conversa (components/gravacao/gravar).
 import { useEffect, useRef, useState } from "react";
 import { Botao } from "@/components/ui/botao";
 import { Gravador, type EstadoGravador } from "@/components/ui/gravador";
-import { CAUSO_AUDIO_KBPS, MAX_CAUSO_AUDIO_MIN } from "@/lib/config";
+import { MAX_CAUSO_AUDIO_MIN } from "@/lib/config";
+import { Gravador as Nucleo, pedirMicrofone } from "@/lib/gravacao/gravador";
 import { falarDuracao } from "@/lib/ui/tempo";
 
 export type AudioGravado = { blob: Blob; mime: string; segundos: number };
 
 const LIMITE_S = MAX_CAUSO_AUDIO_MIN * 60;
-
-function tipoSuportado() {
-  for (const t of [
-    "audio/webm;codecs=opus",
-    "audio/mp4",
-    "audio/ogg;codecs=opus",
-  ])
-    if (
-      typeof MediaRecorder !== "undefined" &&
-      MediaRecorder.isTypeSupported(t)
-    )
-      return t;
-  return "";
-}
 
 export function GravadorCauso({
   aoMudar,
@@ -38,7 +25,8 @@ export function GravadorCauso({
     null,
   );
   const [erro, setErro] = useState<string | null>(null);
-  const gravador = useRef<MediaRecorder | null>(null);
+  const gravador = useRef<Nucleo | null>(null);
+  const stream = useRef<MediaStream | null>(null);
   const pedacos = useRef<Blob[]>([]);
   const relogio = useRef<number | null>(null);
   const tempo = useRef(0);
@@ -46,7 +34,7 @@ export function GravadorCauso({
   useEffect(
     () => () => {
       if (relogio.current) window.clearInterval(relogio.current);
-      gravador.current?.stream.getTracks().forEach((t) => t.stop());
+      stream.current?.getTracks().forEach((t) => t.stop());
     },
     [],
   );
@@ -65,25 +53,16 @@ export function GravadorCauso({
   async function comecar() {
     setErro(null);
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = tipoSuportado();
-      const r = new MediaRecorder(stream, {
-        ...(mimeType ? { mimeType } : {}),
-        audioBitsPerSecond: CAUSO_AUDIO_KBPS * 1000,
-      });
+      const s = await pedirMicrofone();
+      stream.current = s;
       pedacos.current = [];
-      r.ondataavailable = (e) => e.data.size && pedacos.current.push(e.data);
-      r.onstop = () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const mime = r.mimeType || mimeType || "audio/webm";
-        const blob = new Blob(pedacos.current, { type: mime });
-        setAudio({ url: URL.createObjectURL(blob), segundos: tempo.current });
-        aoMudar({ blob, mime, segundos: tempo.current });
-      };
-      gravador.current = r;
+      const g = new Nucleo(s, (_seq, p) => {
+        pedacos.current.push(p);
+      });
+      gravador.current = g;
       tempo.current = 0;
       setSegundos(0);
-      r.start(1000);
+      g.iniciar();
       navigator.vibrate?.(40);
       setEstado("gravando");
       contar(true);
@@ -95,15 +74,15 @@ export function GravadorCauso({
   }
 
   function tocar() {
-    const r = gravador.current;
+    const g = gravador.current;
     if (estado === "pronto") return void comecar();
-    if (!r) return;
+    if (!g) return;
     if (estado === "gravando") {
-      r.pause();
+      g.pausar();
       contar(false);
       setEstado("pausado");
     } else {
-      r.resume();
+      g.retomar();
       contar(true);
       setEstado("gravando");
     }
@@ -111,9 +90,15 @@ export function GravadorCauso({
 
   function concluir() {
     contar(false);
-    if (gravador.current && gravador.current.state !== "inactive")
-      gravador.current.stop();
+    const g = gravador.current;
     setEstado("pronto");
+    if (!g) return;
+    void g.parar().then(() => {
+      stream.current?.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(pedacos.current, { type: g.mime });
+      setAudio({ url: URL.createObjectURL(blob), segundos: tempo.current });
+      aoMudar({ blob, mime: g.mime, segundos: tempo.current });
+    });
   }
 
   function regravar() {

@@ -18,7 +18,12 @@ export const FORMATO_LIVRO = "21x21"; // em cm; confirmar com a gráfica
 export const SANGRIA_MM = 3; // em cada lado
 
 // ── Coleta ───────────────────────────────────────────────────────────────
-export const MAX_GRAVACAO_MIN = 30; // por gravação
+export const MAX_GRAVACAO_MIN = 30; // por gravação (espelhado em privado.max_gravacao_s); a conversa segue em partes (P39)
+export const GRAVACAO_KBPS = 48; // voz em Opus/AAC; 30 min ≈ 11 MB
+export const MAX_GRAVACOES_AUTOR_DIA = 30; // espelhado, por livro, pelo link do autor (T29)
+export const MAX_MB_AUTOR_DIA = 300; // espelhado, por livro, pelo link do autor (T29)
+export const MAX_ENVIOS_ABERTOS_AUTOR = 5; // espelhado no SQL de autor_preparar_gravacao
+export const CONSENTIMENTO_AUTOR_VERSAO = 2; // mudou a frase? suba a versão (v2 cita a IA, P41)
 export const MAX_ARQUIVOS_LOTE = 30; // por upload em lote
 
 // ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
@@ -80,7 +85,6 @@ export const MAX_CAUSOS_POR_HORA = 20; // espelhado, por livro
 export const MAX_CAUSOS_POR_DIA = 40; // espelhado, por livro
 export const MAX_CAUSO_AUDIO_MIN = 3;
 export const MAX_CAUSO_AUDIO_MB = 2; // igual ao limite do bucket causos
-export const CAUSO_AUDIO_KBPS = 48; // 3 min ≈ 1,1 MB
 export const CONSENTIMENTO_CAUSO_VERSAO = 1; // mudou a frase? suba a versão
 export const TEXTO_PERGUNTA_MAX = 500; // igual ao CHECK de prompts e poll_items
 
@@ -137,3 +141,23 @@ export const META_CUSTO_LIVRO_BRL = 30;
 export const PREMISSA_HISTORIAS_POR_LIVRO = 25;
 export const PREMISSA_MIN_AUDIO_POR_HISTORIA = 6;
 export const PREMISSA_TROCAS_TAMANHO_POR_HISTORIA = 2;
+
+// ── Pipeline (prompt 6, docs/designs/pipeline-texto-ao-vivo.md) ───────────
+// Os quatro primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const MAX_HISTORIA_MIN = 30; // gravação avulsa mais longa que isso espera a divisão (P40)
+export const MAX_MINUTOS_IA_DIA = 240; // áudio processado por livro em 24 h (T38)
+export const MAX_NOMES_GLOSSARIO = 300; // sugeridos + aceitos por livro
+export const MAX_NOMES_POR_HISTORIA = 10; // sugestões da IA por história
+export const CONSENTIMENTO_IA_VERSAO = 1; // confirmação do responsável (P41); mudou a frase? suba
+export const ESPERA_EMAIL_MIN = 2; // e-mail só se ninguém viu a história pronta nesse tempo (P42)
+export const INTERVALO_TEXTO_MS = 400; // texto ao vivo: no máximo 1 mensagem por intervalo
+export const MAX_RESUMOS_CONTEXTO = 40; // histórias prontas no contexto do livro
+export const TENTATIVAS_POR_PASSO = 3; // Inngest: 1 + 2 novas tentativas
+export const VARREDURA_GRAVACAO_MIN = 5; // gravação recebida sem história há mais que isso: reenvia
+export const VARREDURA_PARADA_MIN = 20;
+// Previsão mostrada no cartão (sem ansiedade): base + segundos por segundo de áudio, por fase.
+// Calibrar com ai_usage.ms quando houver histórias reais.
+export const PREVISAO_OUVIR_BASE_S = 15; // transcrever + estruturar
+export const PREVISAO_OUVIR_POR_S = 0.08;
+export const PREVISAO_ESCREVER_BASE_S = 25; // editar + verificar
+export const PREVISAO_ESCREVER_POR_S = 0.35; // história em andamento há mais que isso: falhou ("parada")

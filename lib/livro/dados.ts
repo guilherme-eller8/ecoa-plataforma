@@ -1,7 +1,7 @@
 import "server-only";
 import { envLinks } from "@/lib/env-links";
-import { tokenDoLink, urlFamilia } from "@/lib/links";
-import { clienteAdmin } from "@/lib/supabase/admin";
+import { tokenDoLink, urlAutor, urlFamilia } from "@/lib/links";
+import { assinarLeitura } from "@/lib/storage/assinar";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import type { LivroDoMembro } from "@/lib/sessao";
 import { configuracaoDo, nomeDoAutor } from "./acesso";
@@ -18,22 +18,7 @@ import type {
 // várias tabelas têm grant por coluna, e select('*') daria permission denied.
 // A chave secreta só assina URLs do Storage, depois que a sessão já leu a linha.
 
-const UMA_HORA = 60 * 60;
-
-async function assinar(
-  bucket: "acervo" | "causos" | "audios",
-  caminhos: string[],
-) {
-  if (caminhos.length === 0) return new Map<string, string>();
-  const { data } = await clienteAdmin()
-    .storage.from(bucket)
-    .createSignedUrls(caminhos, UMA_HORA);
-  return new Map(
-    (data ?? [])
-      .filter((d) => d.signedUrl && d.path)
-      .map((d) => [d.path as string, d.signedUrl]),
-  );
-}
+const assinar = assinarLeitura;
 
 export async function livroDaTela(
   livro: LivroDoMembro,
@@ -62,6 +47,8 @@ export async function livroDaTela(
     fotoAutorUrl,
     configuracao: configuracaoDo(livro),
     podeEscrever,
+    ehResponsavel: livro.papel === "responsavel",
+    iaConfirmada: Boolean(livro.ia_consentimento_em),
   };
 }
 
@@ -193,13 +180,26 @@ export async function linkDaFamilia(livro: string): Promise<string | null> {
   );
 }
 
+/** A base do link do autor (/a/<token>), recalculada do id e da versão. Só lê; gerar é uma ação. */
+export async function linkDoAutor(livro: string): Promise<string | null> {
+  const supabase = await clienteSessao();
+  const { data } = await supabase
+    .from("author_access")
+    .select("id, chave_versao")
+    .eq("book_id", livro)
+    .is("revogado_em", null)
+    .maybeSingle();
+  if (!data) return null;
+  return urlAutor(tokenDoLink("autor", data.id, data.chave_versao, envLinks()));
+}
+
 /** Áudios que já chegaram, do mais novo ao mais antigo, com URL assinada por 1 h. */
 export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
   const supabase = await clienteSessao();
   const { data } = await supabase
     .from("recordings")
     .select(
-      "id, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, prompts(texto)",
+      "id, origem, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, prompts(texto)",
     )
     .eq("book_id", livro)
     .eq("upload", "recebido")
@@ -211,6 +211,7 @@ export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
   );
   return linhas.map((a) => ({
     id: a.id,
+    origem: a.origem,
     titulo: a.titulo,
     nomeArquivo: a.nome_arquivo,
     pergunta: a.prompts?.texto ?? null,

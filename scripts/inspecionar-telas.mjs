@@ -28,10 +28,31 @@ const TELAS = {
   "nova-historia-arquivos": "/styleguide/nova-historia-arquivos",
   audios: "/styleguide/audios",
   "audios-vazia": "/styleguide/audios-vazia",
+  "gravar-conversa": "/styleguide/gravar-conversa",
+  "gravar-conversa-pergunta": "/styleguide/gravar-conversa-pergunta",
+  "autor-primeira": "/styleguide/autor-primeira",
+  "autor-inicio": "/styleguide/autor-inicio",
+  "autor-inicio-vazio": "/styleguide/autor-inicio-vazio",
+  "autor-gravar": "/styleguide/autor-gravar",
+  "autor-invalido": "/styleguide/autor-invalido",
+  compartilhar: "/styleguide/compartilhar",
+  "compartilhar-livros": "/styleguide/compartilhar-livros",
   "nova-enquete": "/styleguide/nova-enquete",
   "nova-enquete-etapa": "/styleguide/nova-enquete-etapa",
   "nova-enquete-revisar": "/styleguide/nova-enquete-revisar",
+  "livro-com-historias": "/styleguide/livro-com-historias",
+  historias: "/styleguide/historias",
+  "historias-vazia": "/styleguide/historias-vazia",
+  historia: "/styleguide/historia",
+  configuracoes: "/styleguide/configuracoes",
+  "configuracoes-vazia": "/styleguide/configuracoes-vazia",
+  "audios-situacao": "/styleguide/audios-situacao",
+  "admin-processamento": "/styleguide/admin-processamento",
 };
+
+// Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no
+// mínimo 28 px, mesmo quando passa de duas linhas. O inspetor trata isso como título longo.
+const PERGUNTA_DO_AUTOR = new Set(["autor-inicio", "autor-gravar"]);
 
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);
 let falhou = false;
@@ -45,7 +66,9 @@ for (const nome of escolhidas.length ? escolhidas : Object.keys(TELAS)) {
       BASE + TELAS[nome],
       "--app",
       "--allow",
-      "palette-cream",
+      PERGUNTA_DO_AUTOR.has(nome)
+        ? "palette-cream,headline-lines"
+        : "palette-cream",
       "--out",
       `.taste-skill/inspect/${nome}`,
     ],

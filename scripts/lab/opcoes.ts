@@ -7,6 +7,7 @@ export type Opcoes = {
   tamanhos: Tamanho[];
   semCache: boolean;
   comparar: string | null;
+  baixar: string | null;
   simulado: boolean;
   concorrencia: number;
   raiz: string;
@@ -24,6 +25,7 @@ export function lerOpcoes(
       tamanhos: { type: "string" },
       "sem-cache": { type: "boolean", default: false },
       comparar: { type: "string" },
+      baixar: { type: "string" },
       ajuda: { type: "boolean", default: false },
     },
   });
@@ -46,6 +48,7 @@ export function lerOpcoes(
     tamanhos,
     semCache: values["sem-cache"] ?? false,
     comparar: values.comparar ?? null,
+    baixar: values.baixar ?? null,
     simulado: env.LAB_FAKE === "1",
     concorrencia: Number(env.LAB_CONCORRENCIA ?? 4),
     raiz,
@@ -57,4 +60,5 @@ npm run lab -- --tamanhos todos  gera resumido, médio e detalhado (padrão: mé
 npm run lab -- --provedor assemblyai
 npm run lab -- --sem-cache       transcreve de novo, mesmo com cache
 npm run lab -- --comparar <id>   compara lab/saidas/<id>/ia.json com editado.md
+npm run lab -- --baixar <id>     traz a versão da IA de uma história da plataforma para lab/saidas/
 LAB_FAKE=1 npm run lab           rodada simulada, sem chaves nem áudio real`;

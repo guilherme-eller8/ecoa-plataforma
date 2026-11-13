@@ -56,3 +56,29 @@ export function emailAcesso({
     texto: `${nome ? `O livro do ${nome} está pronto.` : "Seu livro de memórias está pronto."}\n\n${frase}\n\nAbrir meu livro: ${urlEntrar}\n\nEcoa Memórias`,
   };
 }
+
+/** História pronta (P42): sem título nem trecho, que podem ser sensíveis. */
+export function emailHistoriaPronta({
+  apelido,
+  urlHistoria,
+}: {
+  apelido: string;
+  urlHistoria: string;
+}): Email {
+  const nome = apelido.trim() || "seu livro";
+  const assunto = `Uma história do livro de ${nome} ficou pronta`;
+  const frase =
+    "O texto já está escrito. Leia com calma e confira os trechos grifados com o áudio.";
+  return {
+    assunto,
+    html: moldura(
+      `Uma história do livro de ${escapar(nome)} ficou pronta.`,
+      frase,
+      {
+        rotulo: "Ler a história",
+        url: urlHistoria,
+      },
+    ),
+    texto: `Uma história do livro de ${nome} ficou pronta.\n\n${frase}\n\nLer a história: ${urlHistoria}\n\nEcoa Memórias`,
+  };
+}

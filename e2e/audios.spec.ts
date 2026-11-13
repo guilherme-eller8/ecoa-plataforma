@@ -79,7 +79,8 @@ test.describe("Áudios recebidos (exemplo)", () => {
     await page.goto("/styleguide/audios");
     await expect(page.getByText("3 áudios guardados")).toBeVisible();
     await expect(page.locator("audio")).toHaveCount(3);
-    await expect(page.getByText("Aguardando processamento")).toHaveCount(3);
+    // Sem a situação do pipeline (prompt 6), cada áudio mostra só "Aguardando".
+    await expect(page.getByText("Aguardando", { exact: true })).toHaveCount(3);
     await expect(page.getByText("O dia em que a ponte caiu")).toBeVisible();
     // sem título nem pergunta, o nome do arquivo não vira título
     await expect(page.getByText("Áudio de 8 de nov.")).toBeVisible();

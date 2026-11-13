@@ -1,11 +1,12 @@
 // npm run lab — ver lab/README.md e docs/designs/laboratorio-ia.md.
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
-import { extname, join } from "node:path";
+import { basename, extname, join } from "node:path";
 import { MODELOS_TRANSCRICAO } from "@/lib/config";
 import { leitorDeDiretorio } from "@/lib/ai/carregar-prompt";
 import { ClienteAnthropic } from "@/lib/ai/claude";
 import { TRANSCRITORES } from "@/lib/ai/transcricao";
 import { EXTENSOES_AUDIO, normalizarAudio } from "./audio";
+import { baixarHistoria } from "./baixar";
 import { executarComparacao } from "./comparar";
 import { AMOSTRAS, ClienteFalso, transcreverFalso } from "./fakes";
 import { ErroUsuario, carregarGlossario } from "./glossario";
@@ -19,6 +20,13 @@ async function main() {
   const o = lerOpcoes(process.argv.slice(2), process.env, raiz);
   const dirLab = join(raiz, "lab");
   const ler = leitorDeDiretorio(join(raiz, "lib/ai/prompts"));
+  if (o.baixar) {
+    const dir = await baixarHistoria(o.baixar, join(dirLab, "saidas"));
+    console.log(
+      `Pronto: ${dir}/ia.md. Corrija, salve como editado.md e rode npm run lab -- --comparar ${basename(dir)}`,
+    );
+    return;
+  }
   const ia = o.simulado ? new ClienteFalso() : new ClienteAnthropic();
 
   if (!o.simulado && !process.env.ANTHROPIC_API_KEY) {

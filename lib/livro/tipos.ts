@@ -1,5 +1,6 @@
 // Tipos que o servidor monta e as telas recebem. Sem nada de servidor aqui: as telas do
 // styleguide usam os mesmos tipos com dados falsos.
+import type { SituacaoDoAudio } from "@/lib/historias/tipos";
 import type {
   CausoEstado,
   EnqueteEstado,
@@ -25,6 +26,8 @@ export type LivroDaTela = {
   fotoAutorUrl: string | null;
   configuracao: Configuracao;
   podeEscrever: boolean;
+  ehResponsavel: boolean;
+  iaConfirmada: boolean; // o responsável já confirmou o processamento com IA (P41)
 };
 
 export type PerguntaDaTela = {
@@ -101,7 +104,7 @@ export type AcoesFotos = {
   ) => Promise<Resposta<{ ids: string[] }>>;
 };
 
-export type AcoesPerguntas = {
+export type AcoesPerguntas = AcoesLinkDoAutor & {
   adicionarDoBanco: (
     bancoIds: string[],
   ) => Promise<Resposta<{ salvas: number }>>;
@@ -125,8 +128,11 @@ export type AcoesPerguntas = {
 };
 
 // ── Áudios recebidos (prompt 5A) ─────────────────────────────────────────
+export type OrigemAudio = "autor" | "livre" | "conversa" | "upload" | "lote";
+
 export type AudioDaTela = {
   id: string;
+  origem: OrigemAudio;
   titulo: string | null;
   nomeArquivo: string;
   pergunta: string | null; // texto da pergunta ligada
@@ -135,6 +141,7 @@ export type AudioDaTela = {
   recebidoEm: string;
   url: string | null; // assinada por 1 h
   processado: boolean;
+  situacao?: SituacaoDoAudio; // prompt 6: virou história ou por que espera
 };
 
 export type AudioParaSubir = {
@@ -153,15 +160,23 @@ export type AudioPreparado = {
   contentType: string;
 };
 
+export type OpcoesAudios = { conversa?: { loteId: string } };
+
 export type AcoesAudios = {
   prepararAudios: (
     arquivos: AudioParaSubir[],
+    opcoes?: OpcoesAudios,
   ) => Promise<Resposta<AudioPreparado[]>>;
   reassinarAudio: (id: string) => Promise<Resposta<AudioPreparado>>;
   confirmarAudio: (id: string) => Promise<Resposta>;
 };
 
-export type AcoesKit = {
+export type AcoesLinkDoAutor = {
+  pegarLinkDoAutor: () => Promise<Resposta<{ url: string }>>;
+};
+
+export type AcoesKit = AcoesLinkDoAutor & {
+  trocarLinkDoAutor: () => Promise<Resposta<{ url: string }>>;
   pegarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
   trocarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
 };

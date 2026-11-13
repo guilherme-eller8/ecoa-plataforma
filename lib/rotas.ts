@@ -1,6 +1,11 @@
 // Quem pode abrir o quê. Usado pelo proxy.ts, antes de qualquer renderização,
 // para que redirect e 404 saiam com o status certo (dentro de <Suspense> sairiam 200).
-const PROTEGIDAS = [/^\/$/, /^\/livro(\/|$)/, /^\/admin(\/|$)/];
+const PROTEGIDAS = [
+  /^\/$/,
+  /^\/livro(\/|$)/,
+  /^\/admin(\/|$)/,
+  /^\/compartilhar$/, // a página; o POST do share_target (/compartilhar/receber) não pede login
+];
 const SO_ADMIN = /^\/admin(\/|$)/;
 
 export type Sessao = { temSessao: boolean; ehAdmin: boolean };

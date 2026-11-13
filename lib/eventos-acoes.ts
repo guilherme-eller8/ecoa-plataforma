@@ -25,6 +25,16 @@ export const ACOES = [
   "votou", // família; detalhes: { votante }
   // Prompt 5A: áudios gravados fora da plataforma.
   "subiu_audio", // detalhes: { recording, com_pergunta }
+  // Prompt 5: gravador e link do autor. A gravação usa "gravou" com { recording, origem }.
+  "autor_consentiu",
+  "gerou_link_autor",
+  "trocou_link_autor",
+  // Prompt 6: pipeline. detalhes: { story } ou { recording }.
+  "historia_pronta", // sistema; o e-mail saiu (ninguém viu a história na tela)
+  "memoria_falhou", // sistema; a história ficou pronta, mas sem resumo e nomes
+  "consentiu_ia", // responsável confirmou o processamento com IA (P41)
+  "processamento_refeito", // admin: Tentar de novo ou Processar
+  "nome_ajustado", // aceitou, corrigiu, recusou ou acrescentou um nome do glossário
 ] as const;
 
 export const PAPEIS = [

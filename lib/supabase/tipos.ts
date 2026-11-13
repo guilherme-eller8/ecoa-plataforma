@@ -4,6 +4,9 @@
 // - familia_enviar_causo: p_texto e p_audio_tipo (um ou outro).
 // - servico_caminho_audio_causo: devolve null quando o causo não aceita upload.
 // - familia_pagina, familia_votar, familia_enviar_causo: retorno tipado em lib/familia/tipos.ts.
+// - autor_preparar_gravacao: p_prompt (história livre); servico_caminho_gravacao_autor devolve null.
+// - autor_pagina, autor_preparar_gravacao: retorno tipado em lib/autor/tipos.ts.
+// - servico_iniciar_historia: historia, estado e motivo (um ou outro é null).
 
 export type Json =
   | string
@@ -21,8 +24,75 @@ export type Database = {
   };
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          book_id: string;
+          criado_em: string;
+          custo_usd: number;
+          etapa: string;
+          id: number;
+          id_requisicao: string | null;
+          minutos_audio: number | null;
+          modelo: string;
+          ms: number | null;
+          ms_primeira_palavra: number | null;
+          ok: boolean;
+          provedor: string;
+          recording_id: string | null;
+          story_id: string | null;
+          tentativa: number;
+          tokens_cache_gravado: number;
+          tokens_cache_lido: number;
+          tokens_entrada: number;
+          tokens_saida: number;
+        };
+        Insert: {
+          book_id: string;
+          criado_em?: string;
+          custo_usd: number;
+          etapa: string;
+          id?: number;
+          id_requisicao?: string | null;
+          minutos_audio?: number | null;
+          modelo: string;
+          ms?: number | null;
+          ms_primeira_palavra?: number | null;
+          ok: boolean;
+          provedor: string;
+          recording_id?: string | null;
+          story_id?: string | null;
+          tentativa?: number;
+          tokens_cache_gravado?: number;
+          tokens_cache_lido?: number;
+          tokens_entrada?: number;
+          tokens_saida?: number;
+        };
+        Update: {
+          book_id?: string;
+          criado_em?: string;
+          custo_usd?: number;
+          etapa?: string;
+          id?: number;
+          id_requisicao?: string | null;
+          minutos_audio?: number | null;
+          modelo?: string;
+          ms?: number | null;
+          ms_primeira_palavra?: number | null;
+          ok?: boolean;
+          provedor?: string;
+          recording_id?: string | null;
+          story_id?: string | null;
+          tentativa?: number;
+          tokens_cache_gravado?: number;
+          tokens_cache_lido?: number;
+          tokens_entrada?: number;
+          tokens_saida?: number;
+        };
+        Relationships: [];
+      };
       author_access: {
         Row: {
+          chave_versao: number;
           book_id: string;
           criado_em: string;
           criado_por: string | null;
@@ -31,6 +101,7 @@ export type Database = {
           token_hash: string;
         };
         Insert: {
+          chave_versao?: number;
           book_id: string;
           criado_em?: string;
           criado_por?: string | null;
@@ -39,6 +110,7 @@ export type Database = {
           token_hash: string;
         };
         Update: {
+          chave_versao?: number;
           book_id?: string;
           criado_em?: string;
           criado_por?: string | null;
@@ -55,6 +127,30 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      book_context: {
+        Row: {
+          atualizado_em: string;
+          book_id: string;
+          resumo: string;
+          story_id: string;
+          temas: string[];
+        };
+        Insert: {
+          atualizado_em?: string;
+          book_id: string;
+          resumo: string;
+          story_id: string;
+          temas?: string[];
+        };
+        Update: {
+          atualizado_em?: string;
+          book_id?: string;
+          resumo?: string;
+          story_id?: string;
+          temas?: string[];
+        };
+        Relationships: [];
       };
       book_members: {
         Row: {
@@ -90,6 +186,11 @@ export type Database = {
       };
       books: {
         Row: {
+          autor_consentimento_em: string | null;
+          autor_consentimento_versao: number | null;
+          ia_consentimento_em: string | null;
+          ia_consentimento_por: string | null;
+          ia_consentimento_versao: number | null;
           atualizado_em: string;
           autor_apelido: string | null;
           autor_celular: string | null;
@@ -104,6 +205,11 @@ export type Database = {
           plano_vence_em: string | null;
         };
         Insert: {
+          autor_consentimento_em?: string | null;
+          autor_consentimento_versao?: number | null;
+          ia_consentimento_em?: string | null;
+          ia_consentimento_por?: string | null;
+          ia_consentimento_versao?: number | null;
           atualizado_em?: string;
           autor_apelido?: string | null;
           autor_celular?: string | null;
@@ -118,6 +224,11 @@ export type Database = {
           plano_vence_em?: string | null;
         };
         Update: {
+          autor_consentimento_em?: string | null;
+          autor_consentimento_versao?: number | null;
+          ia_consentimento_em?: string | null;
+          ia_consentimento_por?: string | null;
+          ia_consentimento_versao?: number | null;
           atualizado_em?: string;
           autor_apelido?: string | null;
           autor_celular?: string | null;
@@ -269,6 +380,48 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      glossary_entries: {
+        Row: {
+          apelidos: string[];
+          atualizado_em: string;
+          book_id: string;
+          chave: string | null;
+          criado_em: string;
+          estado: Database["public"]["Enums"]["glossario_estado"];
+          id: string;
+          nome: string;
+          observacao: string | null;
+          origem_story_id: string | null;
+          tipo: Database["public"]["Enums"]["glossario_tipo"];
+        };
+        Insert: {
+          apelidos?: string[];
+          atualizado_em?: string;
+          book_id: string;
+          chave?: string | null;
+          criado_em?: string;
+          estado?: Database["public"]["Enums"]["glossario_estado"];
+          id?: string;
+          nome: string;
+          observacao?: string | null;
+          origem_story_id?: string | null;
+          tipo: Database["public"]["Enums"]["glossario_tipo"];
+        };
+        Update: {
+          apelidos?: string[];
+          atualizado_em?: string;
+          book_id?: string;
+          chave?: string | null;
+          criado_em?: string;
+          estado?: Database["public"]["Enums"]["glossario_estado"];
+          id?: string;
+          nome?: string;
+          observacao?: string | null;
+          origem_story_id?: string | null;
+          tipo?: Database["public"]["Enums"]["glossario_tipo"];
+        };
+        Relationships: [];
       };
       photos: {
         Row: {
@@ -457,6 +610,8 @@ export type Database = {
       };
       prompts: {
         Row: {
+          sugestao_audio_caminho: string | null;
+          sugestao_nome: string | null;
           atualizado_em: string;
           banco_id: string | null;
           book_id: string;
@@ -473,6 +628,8 @@ export type Database = {
           tipo: Database["public"]["Enums"]["prompt_tipo"];
         };
         Insert: {
+          sugestao_audio_caminho?: string | null;
+          sugestao_nome?: string | null;
           atualizado_em?: string;
           banco_id?: string | null;
           book_id: string;
@@ -489,6 +646,8 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["prompt_tipo"];
         };
         Update: {
+          sugestao_audio_caminho?: string | null;
+          sugestao_nome?: string | null;
           atualizado_em?: string;
           banco_id?: string | null;
           book_id?: string;
@@ -530,6 +689,8 @@ export type Database = {
       };
       recordings: {
         Row: {
+          author_access_id: string | null;
+          lote_id: string | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -547,6 +708,8 @@ export type Database = {
           upload: Database["public"]["Enums"]["recording_upload"];
         };
         Insert: {
+          author_access_id?: string | null;
+          lote_id?: string | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -564,6 +727,8 @@ export type Database = {
           upload?: Database["public"]["Enums"]["recording_upload"];
         };
         Update: {
+          author_access_id?: string | null;
+          lote_id?: string | null;
           book_id?: string;
           caminho?: string;
           content_type?: string;
@@ -582,6 +747,13 @@ export type Database = {
         };
         Relationships: [
           {
+            foreignKeyName: "recordings_author_access_id_fkey";
+            columns: ["author_access_id"];
+            isOneToOne: false;
+            referencedRelation: "author_access";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "recordings_book_id_fkey";
             columns: ["book_id"];
             isOneToOne: false;
@@ -596,6 +768,156 @@ export type Database = {
             referencedColumns: ["book_id", "id"];
           },
         ];
+      };
+      stories: {
+        Row: {
+          atualizado_em: string;
+          book_id: string;
+          criado_em: string;
+          erro: string | null;
+          erro_etapa: string | null;
+          estado: Database["public"]["Enums"]["story_estado"];
+          estrutura: Json | null;
+          id: string;
+          prompt_id: string | null;
+          pronta_em: string | null;
+          rascunho: Json | null;
+          titulo: string | null;
+          vista_em: string | null;
+        };
+        Insert: {
+          atualizado_em?: string;
+          book_id: string;
+          criado_em?: string;
+          erro?: string | null;
+          erro_etapa?: string | null;
+          estado?: Database["public"]["Enums"]["story_estado"];
+          estrutura?: Json | null;
+          id?: string;
+          prompt_id?: string | null;
+          pronta_em?: string | null;
+          rascunho?: Json | null;
+          titulo?: string | null;
+          vista_em?: string | null;
+        };
+        Update: {
+          atualizado_em?: string;
+          book_id?: string;
+          criado_em?: string;
+          erro?: string | null;
+          erro_etapa?: string | null;
+          estado?: Database["public"]["Enums"]["story_estado"];
+          estrutura?: Json | null;
+          id?: string;
+          prompt_id?: string | null;
+          pronta_em?: string | null;
+          rascunho?: Json | null;
+          titulo?: string | null;
+          vista_em?: string | null;
+        };
+        Relationships: [];
+      };
+      story_recordings: {
+        Row: {
+          book_id: string;
+          ordem: number;
+          recording_id: string;
+          segmento_inicial: number;
+          story_id: string;
+        };
+        Insert: {
+          book_id: string;
+          ordem: number;
+          recording_id: string;
+          segmento_inicial?: number;
+          story_id: string;
+        };
+        Update: {
+          book_id?: string;
+          ordem?: number;
+          recording_id?: string;
+          segmento_inicial?: number;
+          story_id?: string;
+        };
+        Relationships: [];
+      };
+      story_versions: {
+        Row: {
+          book_id: string;
+          conteudo: Json;
+          criado_em: string;
+          criado_por: string | null;
+          hash_prompts: Json | null;
+          id: string;
+          marcacoes: Json;
+          modelos: Json | null;
+          numero: number;
+          origem: Database["public"]["Enums"]["versao_origem"];
+          story_id: string;
+          tamanho: string;
+        };
+        Insert: {
+          book_id: string;
+          conteudo: Json;
+          criado_em?: string;
+          criado_por?: string | null;
+          hash_prompts?: Json | null;
+          id?: string;
+          marcacoes?: Json;
+          modelos?: Json | null;
+          numero: number;
+          origem: Database["public"]["Enums"]["versao_origem"];
+          story_id: string;
+          tamanho: string;
+        };
+        Update: {
+          book_id?: string;
+          conteudo?: Json;
+          criado_em?: string;
+          criado_por?: string | null;
+          hash_prompts?: Json | null;
+          id?: string;
+          marcacoes?: Json;
+          modelos?: Json | null;
+          numero?: number;
+          origem?: Database["public"]["Enums"]["versao_origem"];
+          story_id?: string;
+          tamanho?: string;
+        };
+        Relationships: [];
+      };
+      transcripts: {
+        Row: {
+          book_id: string;
+          criado_em: string;
+          minutos: number;
+          modelo: string;
+          palavras: Json;
+          provedor: string;
+          recording_id: string;
+          segmentos: Json;
+        };
+        Insert: {
+          book_id: string;
+          criado_em?: string;
+          minutos: number;
+          modelo: string;
+          palavras: Json;
+          provedor: string;
+          recording_id: string;
+          segmentos: Json;
+        };
+        Update: {
+          book_id?: string;
+          criado_em?: string;
+          minutos?: number;
+          modelo?: string;
+          palavras?: Json;
+          provedor?: string;
+          recording_id?: string;
+          segmentos?: Json;
+        };
+        Relationships: [];
       };
     };
     Views: {
@@ -626,6 +948,22 @@ export type Database = {
         Returns: undefined;
       };
       admin_usuario_por_email: { Args: { p_email: string }; Returns: string };
+      autor_consentir: {
+        Args: { p_token: string; p_versao: number };
+        Returns: boolean;
+      };
+      autor_pagina: { Args: { p_token: string }; Returns: Json };
+      autor_preparar_gravacao: {
+        Args: {
+          p_duracao_s: number;
+          p_ext: string;
+          p_id: string;
+          p_prompt: string | null;
+          p_tamanho_bytes: number;
+          p_token: string;
+        };
+        Returns: Json;
+      };
       enquete_abrir: {
         Args: { p_itens: Json; p_livro: string };
         Returns: string;
@@ -676,9 +1014,27 @@ export type Database = {
         Args: { p_id: string; p_tamanho_bytes: number };
         Returns: boolean;
       };
+      servico_caminho_gravacao_autor: {
+        Args: { p_id: string; p_token: string };
+        Returns: string | null;
+      };
       servico_confirmar_audio_causo: {
         Args: { p_causo: string; p_duracao_s: number; p_token: string };
         Returns: boolean;
+      };
+      servico_confirmar_gravacao_autor: {
+        Args: { p_id: string; p_tamanho_bytes: number; p_token: string };
+        Returns: boolean;
+      };
+      servico_trocar_link_autor: {
+        Args: {
+          p_chave_versao: number;
+          p_id: string;
+          p_livro: string;
+          p_token_hash: string;
+          p_usuario: string;
+        };
+        Returns: undefined;
       };
       servico_trocar_link_familia: {
         Args: {
@@ -690,8 +1046,47 @@ export type Database = {
         };
         Returns: undefined;
       };
+      consentir_processamento_ia: {
+        Args: { p_book: string; p_versao: number };
+        Returns: boolean;
+      };
+      marcar_historia_vista: { Args: { p_story: string }; Returns: undefined };
+      servico_concluir_historia: {
+        Args: {
+          p_hash: Json;
+          p_modelos: Json;
+          p_story: string;
+          p_tamanho: string;
+        };
+        Returns: boolean;
+      };
+      servico_iniciar_historia: {
+        Args: { p_recording: string };
+        Returns: {
+          estado: Database["public"]["Enums"]["story_estado"] | null;
+          historia: string | null;
+          motivo: string | null;
+        }[];
+      };
+      servico_mudar_etapa: {
+        Args: {
+          p_erro?: string;
+          p_erro_etapa?: string;
+          p_para: Database["public"]["Enums"]["story_estado"];
+          p_story: string;
+        };
+        Returns: boolean;
+      };
+      servico_sugerir_nomes: {
+        Args: { p_nomes: Json; p_story: string };
+        Returns: number;
+      };
     };
     Enums: {
+      glossario_estado: "sugerido" | "aceito" | "recusado";
+      glossario_tipo: "pessoa" | "lugar";
+      story_estado: "ouvindo" | "escrevendo" | "pronta" | "falhou";
+      versao_origem: "ia" | "responsavel" | "cofacilitador" | "autor";
       ator_tipo:
         | "responsavel"
         | "cofacilitador"

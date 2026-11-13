@@ -148,6 +148,7 @@ export class ClienteFalso implements ClienteIA {
         ],
       };
       c.aoPrimeiraPalavra?.();
+      await c.aoTexto?.(JSON.stringify(dados), 1);
     } else if (c.etapa === "verificar") {
       const transcricao = new Set(
         palavrasSignificativas(segs.map((s) => s.texto).join(" ")),
@@ -171,6 +172,20 @@ export class ClienteFalso implements ClienteIA {
         }
       }
       dados = { marcadas };
+    } else if (c.etapa === "memoria") {
+      const nomes = [
+        ...new Set(
+          c.usuario.match(/\b[A-ZÁÉÍÓÚÂÊÔÃÕ][a-záéíóúâêôãõç]+/g) ?? [],
+        ),
+      ];
+      dados = {
+        resumo: "Resumo simulado da história.",
+        temas: ["simulado"],
+        nomes: nomes
+          .filter((n) => !["Título", "Texto"].includes(n))
+          .slice(0, 3)
+          .map((nome) => ({ nome, tipo: "pessoa" })),
+      };
     } else {
       // classificar: emoção removida vira invenção; o resto, estilo
       const pares = [
