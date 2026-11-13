@@ -214,7 +214,7 @@ function montar(
     chaveTranscricao: "",
     baixarAudio: async () => new Uint8Array([1]),
     publicar: async (_l, m) => {
-      canal.push(m);
+      if (m.tipo !== "proposta") canal.push(m);
     },
     avisarPorEmail: async (para) => {
       emails.push(para);

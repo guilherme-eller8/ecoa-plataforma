@@ -48,7 +48,8 @@ import {
   type Proposta,
 } from "@/lib/divisao/limpar";
 import { codigoDaIA, ErroPipeline, logarSemTexto } from "./erros";
-import type { EstadoHistoria, MensagemCanal } from "./regras";
+import { proporAudio, type DependenciasPropostas } from "./propostas";
+import type { EstadoHistoria, MensagemCanal, MensagemProposta } from "./regras";
 
 export const PROMPTS_DO_PIPELINE = [
   "_regras",
@@ -198,7 +199,7 @@ export type Dependencias = {
   modeloTranscricao: string;
   chaveTranscricao: string;
   baixarAudio(caminho: string): Promise<Uint8Array>;
-  publicar(livro: string, m: MensagemCanal): Promise<void>;
+  publicar(livro: string, m: MensagemCanal | MensagemProposta): Promise<void>;
   avisarPorEmail(
     para: string,
     apelido: string,
@@ -226,6 +227,7 @@ export type Passos = {
 
 export type Resultado =
   | { fim: "esperando"; motivo: string }
+  | { fim: "proposta"; proposta: string }
   | { fim: "ja_estava"; estado: EstadoHistoria }
   | { fim: "pronta"; historia: string; emailEnviado: boolean }
   | {
@@ -236,7 +238,10 @@ export type Resultado =
     };
 
 /** Roda `fn` e converte qualquer erro num ErroPipeline com código fixo. */
-async function seguro<T>(etapa: string, fn: () => Promise<T>): Promise<T> {
+export async function seguro<T>(
+  etapa: string,
+  fn: () => Promise<T>,
+): Promise<T> {
   try {
     return await fn();
   } catch (e) {
@@ -246,7 +251,7 @@ async function seguro<T>(etapa: string, fn: () => Promise<T>): Promise<T> {
   }
 }
 
-async function usoDaIA<T>(
+export async function usoDaIA<T>(
   d: Dependencias,
   base: Omit<LinhaUso, "ok" | "custoUSD" | "provedor">,
   chamada: () => Promise<RespostaIA<T>>,
@@ -278,7 +283,7 @@ async function usoDaIA<T>(
 }
 
 /** Transcreve uma gravação do contêiner, com os ids continuando os da anterior (prompt 7). */
-async function transcreverUma(
+export async function transcreverUma(
   d: Dependencias,
   gravacao: string,
   historia: string,
@@ -371,6 +376,18 @@ export async function processarGravacao(
   );
   if (!ini.historia || !ini.livro)
     return { fim: "esperando", motivo: ini.motivo ?? "nao_recebido" };
+  // Prompt 9: áudio acrescentado a uma história pronta vira proposta, nunca história nova.
+  if (ini.motivo === "acrescentar") {
+    const dp = d as DependenciasPropostas;
+    if (!dp.propostas) throw new ErroPipeline("iniciar", "erro_inesperado");
+    const historiaPronta = ini.historia;
+    const id = await step.run("proposta-audio", () =>
+      seguro("iniciar", () => dp.propostas.propostaDeAudio(historiaPronta)),
+    );
+    if (!id) return { fim: "ja_estava", estado: "pronta" };
+    const r = await proporAudio(id, dp, step);
+    return { fim: "proposta", proposta: r.proposta };
+  }
   if (
     ini.motivo === "dividida" ||
     ini.estado === "pronta" ||

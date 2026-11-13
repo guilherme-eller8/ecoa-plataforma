@@ -19,6 +19,9 @@ export const CODIGOS = [
   "estado_invalido",
   "propor_recusado",
   "audio_sem_fala", // nada do autor para escrever (ex.: áudio de teste de 4 s)
+  // Prompt 9: propostas.
+  "longa", // áudio acrescentado passou do teto (pela duração real)
+  "proposta_vencida",
 ] as const;
 export type CodigoPipeline = (typeof CODIGOS)[number];
 

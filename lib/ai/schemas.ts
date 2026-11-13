@@ -182,3 +182,37 @@ export function nomesDoGlossario(g: Glossario): string[] {
 export function idSegmento(id: number): string {
   return `S${String(id).padStart(3, "0")}`;
 }
+
+// ── IA sob controle (prompt 9) ───────────────────────────────────────────
+
+// Tamanho: o texto inteiro, com `travado` = id de um parágrafo travado no lugar dele.
+export const EdicaoComTravados = z.object({
+  titulo: z.string(),
+  paragrafos: z.array(
+    z.object({
+      travado: z.string().nullable(),
+      texto: z.string(),
+      fontes: z.array(z.number().int()),
+    }),
+  ),
+  lacunas: z.array(z.object({ pergunta: z.string(), motivo: z.string() })),
+});
+export type EdicaoComTravados = z.infer<typeof EdicaoComTravados>;
+
+// Acrescentar áudio: só inserções e trocas sobre o capítulo atual.
+export const Integracao = z.object({
+  operacoes: z.array(
+    z.object({
+      tipo: z.enum(["inserir", "substituir"]),
+      alvo: z.string().nullable(),
+      paragrafos: z.array(
+        z.object({ texto: z.string(), fontes: z.array(z.number().int()) }),
+      ),
+    }),
+  ),
+});
+export type Integracao = z.infer<typeof Integracao>;
+
+// Revisar trecho: só o substituto do trecho escolhido.
+export const Revisao = z.object({ substituto: z.string() });
+export type Revisao = z.infer<typeof Revisao>;
