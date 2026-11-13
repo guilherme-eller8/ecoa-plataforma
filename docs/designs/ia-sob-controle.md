@@ -1,8 +1,8 @@
 # Editor de histórias, parte 2: IA sob controle (prompt 9)
 
-Status: **v1 para revisão** · 2026-11-13 · PRD: M6 (tamanho, revisar trecho, acrescentar áudio, aceite do M6), Pipeline de IA (Fluxos especiais), M11 (dica de primeira vez) · Decisões: P19, P25, P49, T8, T10, T11, T12, T18, T28, T31, T34, T36, T37, T38, T40, T41
+Status: **v2 para aprovação** (revisão feita por mim, seção 11) · 2026-11-13 · PRD: M6 (tamanho, revisar trecho, acrescentar áudio, aceite do M6), Pipeline de IA (Fluxos especiais), M11 (dica de primeira vez) · Decisões: P19, P25, P49, T8, T10, T11, T12, T18, T28, T31, T34, T36, T37, T38, T40, T41
 
-Prompt com [EGM] e banco: design doc + SQL de subida e reversão para o OK. Revisores (T28): `egm:egm-design` (segurança) e `egm:egm-codebase-details` (código), em Sonnet, uma rodada.
+Prompt com [EGM] e banco: design doc + SQL de subida e reversão para o OK. Revisores (T28): `egm:egm-design` e `egm:egm-codebase-details`, em Sonnet. **Os dois caíram por limite de uso**; pela regra do T28, a revisão foi feita por mim (seção 11), sem rodar de novo.
 
 ## 1. Problema, hipótese e risco
 
@@ -407,6 +407,7 @@ begin
   if v_min + v_reservado + v.duracao_s / 60.0 > privado.max_minutos_ia_por_dia() then
     return query select null::uuid, null::public.story_estado, 'cota_diaria'; return;
   end if;
+  perform pg_advisory_xact_lock(hashtextextended('propostas:' || v.book_id::text, 0));
   if privado.propostas_hoje(v.book_id) >= privado.max_propostas_dia() then
     return query select null::uuid, null::public.story_estado, 'cota_ia_diaria'; return;
   end if;
@@ -447,7 +448,8 @@ begin
   select e.editando into v_ok from public.editar_historia(p_story, p_aba, true, false) e;
   if not v_ok then raise exception 'trava_de_outro'; end if;  -- editar_historia já confere membro, pronta e plano
   select s.book_id into v_livro from public.stories s where s.id = p_story;
-  perform pg_advisory_xact_lock(hashtextextended('livro:' || v_livro::text, 0));
+  -- Sempre história antes de 'propostas:' (a mesma ordem de acrescentar_audio): sem deadlock.
+  perform pg_advisory_xact_lock(hashtextextended('propostas:' || v_livro::text, 0));
   if privado.propostas_hoje(v_livro) >= privado.max_propostas_dia() then raise exception 'cota_ia_diaria'; end if;
   v_tam := coalesce(p_tamanho, privado.tamanho_atual(p_story));
   if v_tam not in ('resumido', 'curto', 'medio', 'longo', 'detalhado') or p_pedido is null
@@ -461,8 +463,11 @@ begin
   elsif p_tipo = 'trecho' then
     if (p_pedido - array['paragrafo', 'inicio', 'fim', 'instrucao', 'texto']) <> '{}'::jsonb
        or coalesce(p_pedido ->> 'instrucao', '') not in ('curto', 'fiel', 'corrigir', 'livre')
-       or jsonb_typeof(p_pedido -> 'inicio') <> 'number' or jsonb_typeof(p_pedido -> 'fim') <> 'number'
-       or ((p_pedido ->> 'instrucao') = 'livre') <> (jsonb_typeof(p_pedido -> 'texto') = 'string')
+       or coalesce(jsonb_typeof(p_pedido -> 'paragrafo'), '') <> 'string'
+       or coalesce(p_pedido ->> 'inicio', '') !~ '^[0-9]{1,5}$'
+       or coalesce(p_pedido ->> 'fim', '') !~ '^[0-9]{1,5}$'
+       or ((p_pedido ->> 'instrucao') = 'livre')
+          <> coalesce(jsonb_typeof(p_pedido -> 'texto') = 'string', false)
        or char_length(btrim(coalesce(p_pedido ->> 'texto', 'x'))) not between 1 and privado.instrucao_max() then
       raise exception 'dados_invalidos';
     end if;
@@ -698,7 +703,9 @@ drop function if exists privado.max_propostas_dia();
 
 ## 8. Ensaio do SQL (PGlite, migrations reais)
 
-A fazer depois do seu OK no desenho e antes do código de tela, como no prompt 8. Casos: pedir sem a trava → `trava_de_outro`; trecho fora do parágrafo → `dados_invalidos`; 41º pedido do dia → `cota_ia_diaria`; dois pedidos de tamanho seguidos (o 1º pronto é descartado; o 1º gerando recusa); áudio para história de outro livro (a chave recusa); áudio para história que não está pronta; áudio de 31 min; aplicar com rev velha; aplicar mudança vencida; aplicar conteúdo que muda o parágrafo travado → `travado_alterado`; conteúdo com parágrafo inventado → `dados_invalidos`; aceite parcial; versão nova com origem `ia` e `proposta_id`; proposta aplicada não muda; `anon` e `porta_autor` sem acesso; membro de outro livro não lê; reversão e nova subida sem erro.
+**Feito (v2):** subida, reversão e nova subida sem erro. Cenário do aceite pelas funções do banco: editar o 2º parágrafo → áudio acrescentado (`servico_iniciar_historia` devolve `acrescentar` e cria a proposta) → aplicar → pedir *Longo* → aplicar; o 2º parágrafo sai idêntico; um texto final que reescreve o 2º parágrafo é recusado com `travado_alterado`; versões 3 e 4 com origem `ia` e `proposta_id`; proposta aplicada não muda (`versao_imutavel`).
+
+Viram teste automático em `supabase/tests/propostas.test.ts`, com os demais casos: pedir sem a trava → `trava_de_outro`; trecho fora do parágrafo → `dados_invalidos`; 41º pedido do dia → `cota_ia_diaria`; dois pedidos de tamanho seguidos (o 1º pronto é descartado; o 1º gerando recusa); áudio para história de outro livro (a chave recusa); áudio para história que não está pronta; áudio de 31 min; aplicar com rev velha; aplicar mudança vencida; aplicar conteúdo que muda o parágrafo travado → `travado_alterado`; conteúdo com parágrafo inventado → `dados_invalidos`; aceite parcial; versão nova com origem `ia` e `proposta_id`; proposta aplicada não muda; `anon` e `porta_autor` sem acesso; membro de outro livro não lê; reversão e nova subida sem erro.
 
 ## 9. Testes e gate
 
@@ -715,3 +722,32 @@ A fazer depois do seu OK no desenho e antes do código de tela, como no prompt 8
 - **Tamanho** de uma história de 5 min: edição + verificação dos parágrafos novos ≈ US$ 0,10 e 60 a 90 s. A premissa de custo do lab já conta 2 trocas por história (`PREMISSA_TROCAS_TAMANHO_POR_HISTORIA`); com 25 histórias, ≈ R$ 28 só em trocas. **Isso estoura a meta de R$ 30 por livro se todas as histórias tiverem 2 trocas.** Recomendo medir o uso real do André antes de mexer no modelo (Sonnet é a alavanca registrada, `MODELO_ALTERNATIVO`).
 - **Revisar trecho:** ≈ US$ 0,01 a 0,02 e 10 a 20 s.
 - **Acrescentar 5 min de áudio:** transcrição US$ 0,03 + integração e verificação ≈ US$ 0,08; ≈ 2 min.
+
+## 11. Revisão (feita por mim; os revisores caíram por limite de uso)
+
+**Segurança e banco**
+
+| # | Sev. | Achado | O que mudou |
+| --- | --- | --- | --- |
+| R1 | Alto | **Deadlock possível:** `pedir_proposta` travava a história (por `editar_historia`) e depois o livro (`livro:`); `acrescentar_audio` faz o contrário (livro, depois história) | `pedir_proposta` usa outra chave, `propostas:`, e `acrescentar_audio` a pega depois da história. Ordem única: livro → história → propostas |
+| R2 | Alto | **Instrução livre sem texto passava:** `true <> null` dá null, e o `if` não dispara | `coalesce(... = 'string', false)` |
+| R3 | Médio | `inicio`/`fim` com casa decimal derrubavam a função com erro genérico; `paragrafo` sem tipo conferido | Regex de inteiro e tipo `string` conferidos antes do cast |
+| R4 | Médio | Parágrafo editado e depois desfeito (texto igual ao da hora do pedido, mas `editado: true`) passa no `tira` e é barrado como `travado_alterado`, derrubando o aceite inteiro | O banco fica como está (conservador). A função pura da tela marca essa mudança como vencida antes do aceite, para o erro nunca chegar à pessoa |
+| R5 | Baixo | Áudio acrescentado a uma história que deixou de estar pronta fica "historia_indisponivel" e a varredura o reenvia por 48 h | Aceito: cada reenvio é uma consulta barata. O status em *Áudios recebidos* mostra "Guardado" |
+| R6 | Baixo | Proposta de áudio que falha deixa a gravação sem `processado_em` | Aceito: o editor mostra *Tentar de novo*; `processado_em` só quando a proposta fica pronta |
+
+Conferido e sem mudança: a garantia do travado está no banco (todo parágrafo fora das mudanças aceitas precisa sair idêntico, com id, texto, fontes e `editado`); ids repetidos no texto final são recusados; `para_historia` só aponta para história do mesmo livro (chave composta) e precisa estar `pronta`; nenhum grant para `anon` ou `porta_autor`; `story_proposals` sem escrita direta de ninguém logado; CHECKs compatíveis com os descartes feitos pelo servidor; reversão testada.
+
+**Código**
+
+| # | Sev. | Achado | O que muda na implementação |
+| --- | --- | --- | --- |
+| C1 | Alto | `processarGravacao` devolve `ja_estava` quando o estado é `pronta`: o áudio acrescentado (história pronta) pararia ali | Conferir `motivo === "acrescentar"` antes das saídas antecipadas (`lib/pipeline/processar.ts`) |
+| C2 | Alto | O passo `estruturar` é pulado quando `stories.estrutura` já existe | Passo próprio `estruturar-audio`, só com os segmentos novos, que junta falantes e vazios à estrutura da história |
+| C3 | Médio | A chave de concorrência (`chaveDoEvento`) e a varredura não conhecem `para_historia` | `chaveDoEvento` usa `lote_id ?? para_historia ?? id`; `dispararSeRecebida` e a varredura passam a ler a coluna |
+| C4 | Médio | Aceitar com um salvamento automático em voo daria `texto_desatualizado` | A diferença pausa o salvamento; o aceite espera o salvamento em voo terminar e usa o `rev` dele |
+| C5 | Médio | Códigos novos sem frase em `lib/erros-banco.ts` | `travado_alterado`, `proposta_vencida`, `proposta_indisponivel`, `proposta_em_andamento`, `cota_ia_diaria` ganham frase |
+| C6 | Baixo | `Etapa` (`lib/ai/claude.ts`) e `TAMANHOS_TEXTO` mudam de forma | `Etapa` ganha `tamanho`, `integrar` e `revisar`; `TAMANHOS_TEXTO` ganha `curto` (0,45) e `longo` (0,75); `TAMANHO_PADRAO` continua `medio`. Lista `PROMPTS_DAS_PROPOSTAS` para o hash, sem mexer em `PROMPTS_DO_PIPELINE` |
+| C7 | Baixo | Rota `/historias/[historiaId]/gravar` ao lado de `/historias/gravar` | Sem colisão: o segmento fixo `gravar` vence o dinâmico em `/historias/gravar` |
+
+Conferido: a versão 1 (IA) não tem id nos parágrafos e `normalizarTexto` dá `p1..pN`, igual a `privado.paragrafos_atuais`; `fixarSegmentoInicial` continua os ids certo também em história nascida de divisão (pega o maior id das transcrições inteiras das gravações anteriores dela); o rótulo `g{ordem}` da gravação nova não colide dentro da história.
