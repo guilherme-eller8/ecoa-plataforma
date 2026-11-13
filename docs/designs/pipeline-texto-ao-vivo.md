@@ -748,3 +748,13 @@ O shim de teste ganha: `create schema realtime`, `realtime.messages (topic text,
 **Código (`codebase_details_report.md`):** os 15 achados entraram: original direto ao Scribe e `minutos` pela duração (1, 15); `Segmento[]` como o código devolve (2); `hash_prompts` e `modelos` em jsonb, `lacunas` na versão (3); `historias` opcional sem quebrar o lab (4); mapa de estados do cartão e estado `falhou` (5); testes de lista atualizados (6); shim do Realtime especificado (7); disparo em `after()` com reenvio (8); custo das tentativas que falham, acúmulo do stream e `recomecar` (9); `--baixar` sem `server-only` (10); nome certo do leitor de prompts e chave do tracing (11); proxy, rota e variáveis validadas (12); evento, e-mail e helpers existentes (13); `download()` em vez de URL assinada (14); nomes de arquivos e componentes corrigidos (15).
 
 **O que não entrou:** mover a reversão para outro schema em vez de apagar (achado 10 de segurança). A trava com exportação obrigatória cobre o risco com menos código.
+
+## 13. O que mudou no teste real (11–13/11)
+
+- **Inngest na prévia:** a Proteção de Deploy da Vercel bloqueia o Inngest. Solução: *Protection Bypass for Automation* na Vercel e sync manual no **ambiente de branch** do Inngest (a prévia assina com a chave do ambiente de branch; sync no Production dá "assinatura inválida").
+- **Estruturação falhava com áudio real:** o modelo precisava repetir o falante com o uuid da gravação (36 caracteres) e errava. Agora o rótulo é curto (`g1:speaker_0`), e falante ou id inventado é descartado em vez de derrubar a história. O motivo da recusa (escrito pelo nosso código) vai para o log.
+- **P43 (substitui em parte P40):** conversa de uma parte só e com menos de 29 min vira história direto (migration `20261116120000_conversa_curta`). Conversa longa e lote continuam esperando o prompt 7.
+- **Cartão sem ansiedade:** uma barra que enche pelo tempo previsto (para em 95%) e uma frase curta; gravações guardadas aparecem na home com o motivo.
+- **Primeira história real:** conversa de 2 min 35 s → pronta em 39 s depois de começar (primeiras palavras ~27 s), R$ 0,47. O cache de prompt não pegou (0 tokens lidos): medir de novo com as histórias do André antes de mexer.
+
+**Pendências do aceite:** teste ao vivo de 5 min com a tela aberta; leitura de fidelidade pelo André (`--baixar` + `--comparar`); roteiro do prompt 5 no iPhone e no Android; event key, Redirect URL e sync do Inngest de **produção** ao juntar no `main`.
