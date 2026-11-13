@@ -46,7 +46,7 @@ export function bancoPipeline(
     async gravacaoParaTranscrever(gravacao, historia) {
       const { data: sr } = await db
         .from("story_recordings")
-        .select("segmento_inicial")
+        .select("segmento_inicial, ordem")
         .eq("story_id", historia)
         .eq("recording_id", gravacao)
         .maybeSingle();
@@ -63,6 +63,7 @@ export function bancoPipeline(
         nomeArquivo: g.nome_arquivo,
         duracaoS: g.duracao_s,
         segmentoInicial: sr.segmento_inicial,
+        rotulo: `g${sr.ordem}`,
       };
     },
 

@@ -51,6 +51,8 @@ export class ErroIA extends Error {
     readonly uso: Uso = { entrada: 0, saida: 0, cacheLido: 0, cacheGravado: 0 },
     readonly codigo:
       "recusa" | "api" | "json_invalido" | "cortada" = "json_invalido",
+    /** Motivo escrito pelo nosso código (validação, corte). Nunca texto da fala nem do zod. */
+    readonly motivo: string | null = null,
   ) {
     super(mensagem);
     this.name = "ErroIA";
@@ -76,6 +78,7 @@ export class ClienteAnthropic implements ClienteIA {
     const uso: Uso = { entrada: 0, saida: 0, cacheLido: 0, cacheGravado: 0 };
     let ultimoErro = "";
     let ultimoCodigo: ErroIA["codigo"] = "json_invalido";
+    let ultimoMotivo: string | null = null;
     const pendentes: Promise<void>[] = [];
     const esperarTexto = () => Promise.allSettled(pendentes.splice(0));
     for (let tentativa = 1; tentativa <= 2; tentativa++) {
@@ -143,6 +146,7 @@ export class ClienteAnthropic implements ClienteIA {
         // (o SDK lança antes de devolver a mensagem), então o custo registrado fica por baixo.
         ultimoErro = e instanceof Error ? e.message : String(e);
         ultimoCodigo = "json_invalido";
+        ultimoMotivo = "JSON fora do schema";
         continue;
       }
       await esperarTexto();
@@ -162,18 +166,21 @@ export class ClienteAnthropic implements ClienteIA {
       if (mensagem.stop_reason === "max_tokens") {
         ultimoErro = `resposta cortada em ${c.maxTokens} tokens`;
         ultimoCodigo = "cortada";
+        ultimoMotivo = ultimoErro;
         continue;
       }
       const dados = mensagem.parsed_output as T | null | undefined;
       if (dados == null) {
         ultimoErro = "resposta sem JSON";
         ultimoCodigo = "json_invalido";
+        ultimoMotivo = ultimoErro;
         continue;
       }
       const invalido = c.validar?.(dados) ?? null;
       if (invalido) {
         ultimoErro = invalido;
         ultimoCodigo = "json_invalido";
+        ultimoMotivo = invalido.slice(0, 200);
         continue;
       }
       return {
@@ -189,6 +196,7 @@ export class ClienteAnthropic implements ClienteIA {
       `${c.etapa}: falhou 2 vezes (${ultimoErro})`,
       uso,
       ultimoCodigo,
+      ultimoMotivo,
     );
   }
 }

@@ -65,6 +65,8 @@ export type GravacaoParaTranscrever = {
   nomeArquivo: string;
   duracaoS: number | null;
   segmentoInicial: number;
+  /** Rótulo curto da gravação na história ("g1"): o modelo repete o falante ("g1:speaker_0"). */
+  rotulo: string;
 };
 
 export type LinhaUso = {
@@ -269,7 +271,8 @@ export async function processarGravacao(
       }
       const ultimo = bruta.palavras.at(-1)?.fim ?? 0;
       const minutos = (g.duracaoS ?? ultimo) / 60;
-      const segmentos = segmentar(gravacao, bruta.palavras, g.segmentoInicial);
+      // Rótulo curto, não o uuid: o modelo precisa repetir o falante exatamente (estruturar).
+      const segmentos = segmentar(g.rotulo, bruta.palavras, g.segmentoInicial);
       await d.banco.gravarTranscricao({
         gravacao,
         livro,
@@ -304,7 +307,7 @@ export async function processarGravacao(
       const r = await usoDaIA(
         d,
         { livro, historia, etapa: "estruturar", modelo: MODELO_RAPIDO },
-        () => estruturar(d.ia, d.ler, gravacao, segmentos),
+        () => estruturar(d.ia, d.ler, segmentos[0].arquivo, segmentos),
       );
       await d.banco.gravarEstrutura(historia, r.dados);
       return { falantes: r.dados.falantes.length };

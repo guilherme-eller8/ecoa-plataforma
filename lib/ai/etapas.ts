@@ -86,7 +86,7 @@ export async function estruturar(
 ): Promise<RespostaIA<Estrutura>> {
   const ids = new Set(segmentos.map((s) => s.id));
   const falantes = new Set(segmentos.map((s) => s.falante));
-  return ia.gerar({
+  const r = await ia.gerar({
     etapa: "estruturar",
     modelo: MODELO_RAPIDO,
     maxTokens: 8000,
@@ -97,17 +97,21 @@ export async function estruturar(
       segmentos: formatarSegmentos(segmentos),
     }),
     schema: Estrutura,
-    validar: (e) => {
-      const fora = [...e.vazios, ...e.mudancasDeAssunto].filter(
-        (id) => !ids.has(id),
-      );
-      if (fora.length) return `ids inexistentes: ${fora.join(", ")}`;
-      const desconhecido = e.falantes.find((f) => !falantes.has(f.falante));
-      return desconhecido
-        ? `falante inexistente: ${desconhecido.falante}`
-        : null;
-    },
+    // Só recusa se nenhum falante bate: aí a resposta não serve para nada.
+    validar: (e) =>
+      e.falantes.length > 0 && !e.falantes.some((f) => falantes.has(f.falante))
+        ? `nenhum falante conhecido (${e.falantes.length} citados, ${falantes.size} no áudio)`
+        : null,
   });
+  // A estrutura é dica para a edição: id ou falante inventado é descartado, não derruba a história.
+  return {
+    ...r,
+    dados: {
+      falantes: r.dados.falantes.filter((f) => falantes.has(f.falante)),
+      vazios: r.dados.vazios.filter((id) => ids.has(id)),
+      mudancasDeAssunto: r.dados.mudancasDeAssunto.filter((id) => ids.has(id)),
+    },
+  };
 }
 
 // ── Editar ───────────────────────────────────────────────────────────────

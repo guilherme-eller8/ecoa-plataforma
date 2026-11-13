@@ -66,6 +66,7 @@ function bancoFalso(inicial: Partial<Estado> = {}) {
         nomeArquivo: "amostra-trem.ogg",
         duracaoS: 60,
         segmentoInicial: 1,
+        rotulo: "g1",
       };
     },
     async temTranscricao() {
@@ -296,5 +297,16 @@ describe("processarGravacao", () => {
     expect(r).toMatchObject({ fim: "pronta", emailEnviado: false });
     expect(m.s.estado).toBe("pronta");
     expect(m.eventos).toEqual(["memoria_falhou"]);
+  });
+});
+
+describe("rótulo curto da gravação", () => {
+  it("o falante que o modelo repete é g1:…, não o uuid da gravação", async () => {
+    const m = montar();
+    await processarGravacao(G, m.d, m.step);
+    expect(m.s.transcricao?.every((s) => s.falante.startsWith("g1:"))).toBe(
+      true,
+    );
+    expect(m.s.transcricao?.every((s) => s.arquivo === "g1")).toBe(true);
   });
 });

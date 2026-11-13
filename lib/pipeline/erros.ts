@@ -55,7 +55,13 @@ export function logarSemTexto(onde: string, e: unknown) {
   const erro = e instanceof Error ? e : new Error("desconhecido");
   console.error(`[pipeline] ${onde}`, {
     tipo: erro.name,
-    codigo: erro instanceof ErroPipeline ? erro.codigo : undefined,
+    codigo:
+      erro instanceof ErroPipeline
+        ? erro.codigo
+        : erro instanceof ErroIA
+          ? erro.codigo
+          : undefined,
+    motivo: erro instanceof ErroIA ? erro.motivo : undefined,
     pilha: erro.stack?.split("\n").slice(1, 4).join(" | "),
   });
 }
