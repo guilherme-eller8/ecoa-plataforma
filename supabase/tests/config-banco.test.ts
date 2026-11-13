@@ -35,6 +35,13 @@ describe("lib/config.ts x banco", () => {
     ["max_nomes_glossario", config.MAX_NOMES_GLOSSARIO],
     ["max_nomes_por_historia", config.MAX_NOMES_POR_HISTORIA],
     ["consentimento_ia_versao", config.CONSENTIMENTO_IA_VERSAO],
+    ["max_historias_divisao", config.MAX_HISTORIAS_DIVISAO],
+    ["espera_lote_h", config.ESPERA_LOTE_H],
+    ["max_min_conteiner", config.MAX_MIN_CONTEINER],
+    ["min_fala_historia_s", config.MIN_FALA_HISTORIA_S],
+    ["max_historias_dia", config.MAX_HISTORIAS_DIA],
+    ["max_arquivo_s", config.MAX_ARQUIVO_MIN * 60],
+    ["max_fala_historia_s", config.MAX_HISTORIA_ESCRITA_MIN * 60],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);

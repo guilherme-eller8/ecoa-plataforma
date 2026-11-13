@@ -365,6 +365,7 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "privado.apelidos_validos",
       "privado.eh_membro",
       "privado.livro_editavel",
+      "public.confirmar_divisao",
       "public.consentir_processamento_ia",
       "public.enquete_abrir",
       "public.enquete_adicionar_item",
@@ -372,6 +373,7 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "public.enquete_remover_votos",
       "public.enquete_salvar",
       "public.marcar_historia_vista",
+      "public.responder_sugestao",
     ]);
   });
 

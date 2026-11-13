@@ -20,6 +20,7 @@ export type Esperando = {
   origem: string;
   duracaoS: number | null;
   quando: string;
+  motivo?: string; // prompt 7
 };
 export type CustoDoLivro = {
   autor: string;
@@ -136,6 +137,7 @@ export function AdminProcessamento({
                       ? ` · ${Math.round(g.duracaoS / 60)} min`
                       : ""}{" "}
                     · {data(g.quando)}
+                    {g.motivo ? ` · ${g.motivo}` : ""}
                   </span>
                 </div>
                 <BotaoAcao rotulo="Processar" acao={() => processar(g.id)} />

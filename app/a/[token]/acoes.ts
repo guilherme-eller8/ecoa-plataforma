@@ -4,7 +4,7 @@
 // de novo (funções autor_* com dono porta_autor, T29). A chave secreta só assina o upload de
 // uma gravação que a porta do autor acabou de criar e confirma que o arquivo chegou inteiro.
 
-import { dispararSeAvulsa } from "@/lib/pipeline/disparo";
+import { dispararSeRecebida } from "@/lib/pipeline/disparo";
 import { after } from "next/server";
 import { z } from "zod";
 import {
@@ -201,7 +201,7 @@ export async function confirmarGravacao(
   const r = await gravacaoDoToken(token, id);
   if (!r) return LINK_INVALIDO;
   if (r.upload === "recebido") {
-    after(() => dispararSeAvulsa(r));
+    after(() => dispararSeRecebida(r));
     return { ok: true };
   }
 
@@ -234,6 +234,6 @@ export async function confirmarGravacao(
       },
     }),
   );
-  after(() => dispararSeAvulsa(r));
+  after(() => dispararSeRecebida(r));
   return { ok: true };
 }

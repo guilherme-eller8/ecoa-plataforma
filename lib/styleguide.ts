@@ -49,6 +49,11 @@ export const TELAS = [
   "configuracoes-vazia",
   "audios-situacao",
   "admin-processamento",
+  // Prompt 7
+  "dividir",
+  "dividir-confirmada",
+  "livro-conferir",
+  "historia-sugestao",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

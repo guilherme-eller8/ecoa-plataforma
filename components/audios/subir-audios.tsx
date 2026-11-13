@@ -289,14 +289,20 @@ export function SubirAudios({
           <Aviso ok>
             Pronto.{" "}
             {prontos === 1 ? "1 áudio guardado" : `${prontos} áudios guardados`}
-            .
+            . As histórias aparecem no início.
           </Aviso>
           <Link
-            href={`/livro/${livroId}/audios`}
+            href={`/livro/${livroId}`}
             className={
               classesDoBotao({ larguraTotal: true }) +
               " sm:w-auto sm:self-start"
             }
+          >
+            Acompanhar
+          </Link>
+          <Link
+            href={`/livro/${livroId}/audios`}
+            className="text-ui-17 text-floresta min-h-alvo inline-flex items-center self-start font-medium underline-offset-4 hover:underline"
           >
             Ver áudios recebidos
           </Link>

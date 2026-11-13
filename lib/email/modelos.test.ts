@@ -48,3 +48,18 @@ describe("emailHistoriaPronta", () => {
     expect(e.texto).toContain("Ler a história");
   });
 });
+
+describe("emailDivisaoPronta", () => {
+  it("sem título, só o apelido e o link (D8)", async () => {
+    const { emailDivisaoPronta } = await import("./modelos");
+    const e = emailDivisaoPronta({
+      apelido: "Nelson",
+      urlDivisao: "https://app.exemplo/livro/1/historias/2/dividir",
+    });
+    expect(e.assunto).toBe(
+      "As histórias da conversa de Nelson estão prontas para conferir",
+    );
+    expect(e.html).toContain("/historias/2/dividir");
+    expect(e.texto).toContain("Conferir as histórias");
+  });
+});

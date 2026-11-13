@@ -82,3 +82,29 @@ export function emailHistoriaPronta({
     texto: `Uma história do livro de ${nome} ficou pronta.\n\n${frase}\n\nLer a história: ${urlHistoria}\n\nEcoa Memórias`,
   };
 }
+
+/**
+ * Divisão esperando confirmação há 10 min (prompt 7, D8). Como em historiaPronta (P42), sem
+ * título nem trecho: o título sai da fala e pode ser sensível.
+ */
+export function emailDivisaoPronta({
+  apelido,
+  urlDivisao,
+}: {
+  apelido: string;
+  urlDivisao: string;
+}): Email {
+  const nome = apelido.trim() || "seu livro";
+  const assunto = `As histórias da conversa de ${nome} estão prontas para conferir`;
+  const frase =
+    "Separamos a gravação em histórias. Confira, junte ou separe o que precisar, e elas vão para a escrita.";
+  return {
+    assunto,
+    html: moldura(
+      `As histórias da conversa de ${escapar(nome)} estão prontas para conferir.`,
+      frase,
+      { rotulo: "Conferir as histórias", url: urlDivisao },
+    ),
+    texto: `As histórias da conversa de ${nome} estão prontas para conferir.\n\n${frase}\n\nConferir as histórias: ${urlDivisao}\n\nEcoa Memórias`,
+  };
+}

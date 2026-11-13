@@ -33,7 +33,13 @@ export function adaptadorDoLivro(acoes: AcoesAudios): AdaptadorEnvio {
             titulo: null,
           },
         ],
-        { conversa: { loteId: g.loteId ?? g.id } },
+        {
+          conversa: {
+            loteId: g.loteId ?? g.id,
+            parte: g.parte,
+            totalPartes: g.totalPartes ?? g.parte,
+          },
+        },
       );
       if (!r.ok) return r;
       const p = r.dados[0];

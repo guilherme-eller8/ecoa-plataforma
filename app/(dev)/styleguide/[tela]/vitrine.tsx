@@ -18,6 +18,14 @@ import {
   NOMES_JAIR,
 } from "@/lib/exemplos/prompt6";
 import { TelaAudios } from "@/components/telas/tela-audios";
+import { TelaDividir } from "@/components/telas/tela-dividir";
+import {
+  ACOES_DIVISAO_FALSAS,
+  DIVISAO_CEIA,
+  DIVISAO_CONFIRMADA,
+  HISTORIA_COM_SUGESTAO,
+  HISTORIAS_COM_DIVISAO,
+} from "@/lib/exemplos/prompt7";
 import { TelaNovaEnquete } from "@/components/telas/tela-nova-enquete";
 import { TelaGravarConversa } from "@/components/telas/tela-gravar-conversa";
 import { TelaAutor, TelaAutorInvalido } from "@/components/telas/tela-autor";
@@ -106,6 +114,40 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "historia":
       return <TelaHistoria livro={LIVRO_JAIR} historia={HISTORIA_PARA_LER} />;
+    case "historia-sugestao":
+      return (
+        <TelaHistoria
+          livro={LIVRO_JAIR}
+          historia={HISTORIA_COM_SUGESTAO}
+          responderSugestao={async () => ({ ok: true })}
+        />
+      );
+    case "dividir":
+    case "dividir-confirmada":
+      return (
+        <TelaDividir
+          livro={LIVRO_JAIR}
+          divisao={tela === "dividir" ? DIVISAO_CEIA : DIVISAO_CONFIRMADA}
+          acoes={ACOES_DIVISAO_FALSAS}
+        />
+      );
+    case "livro-conferir":
+      return (
+        <TelaLivro
+          livro={{ ...LIVRO_JAIR, iaConfirmada: true }}
+          resumo={{
+            paraPerguntar: 4,
+            causosNovos: 0,
+            enqueteAberta: false,
+            audios: 10,
+          }}
+          historias={HISTORIAS_COM_DIVISAO}
+          linkFamilia="https://app.ecoa-memorias.com.br/f/v1_exemplo"
+          guardadas={[]}
+          marcarVista={nada}
+          vitrine={{}}
+        />
+      );
     case "configuracoes":
     case "configuracoes-vazia":
       return (

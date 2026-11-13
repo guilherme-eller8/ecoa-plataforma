@@ -51,7 +51,7 @@ test.describe("Nova história: subir áudios (exemplo)", () => {
     await page.getByLabel("Título (opcional)").fill("Na roça");
 
     await page.getByRole("button", { name: "Enviar 3 áudios" }).click();
-    await expect(page.getByText("Pronto. 3 áudios guardados.")).toBeVisible({
+    await expect(page.getByText(/Pronto. 3 áudios guardados./)).toBeVisible({
       timeout: 10_000,
     });
     await expect(page.getByText("Guardado", { exact: true })).toHaveCount(3);

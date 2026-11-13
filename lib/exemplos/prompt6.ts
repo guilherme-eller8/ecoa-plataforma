@@ -31,6 +31,9 @@ export const HISTORIAS_JAIR: HistoriaDaTela[] = [
     trecho: null,
     criadaEm: "2026-11-11T14:02:00Z",
     vista: false,
+    gravacoes: 1,
+    propostas: null,
+    dividida: false,
   },
   {
     id: id(2),
@@ -43,6 +46,9 @@ export const HISTORIAS_JAIR: HistoriaDaTela[] = [
       "Eu tinha dezoito anos quando peguei o trem de ferro em Cachoeiro, ainda escuro, com uma mala de papelão e um pão com mortadela que a mãe fez.",
     criadaEm: "2026-11-10T19:20:00Z",
     vista: true,
+    gravacoes: 1,
+    propostas: null,
+    dividida: false,
   },
   {
     id: id(3),
@@ -54,6 +60,9 @@ export const HISTORIAS_JAIR: HistoriaDaTela[] = [
     trecho: null,
     criadaEm: "2026-11-10T18:00:00Z",
     vista: false,
+    gravacoes: 1,
+    propostas: null,
+    dividida: false,
   },
 ];
 
@@ -97,6 +106,7 @@ export const HISTORIA_PARA_LER: HistoriaParaLer = {
     },
   ],
   audios: [{ id: id(9), url: "/exemplo/audio-1.opus", duracaoS: 185 }],
+  sugestao: null,
 };
 
 export const NOMES_JAIR: NomeDaTela[] = [
@@ -131,8 +141,8 @@ export const AUDIOS_COM_SITUACAO: AudioDaTela[] = AUDIOS_JAIR.map((a, i) => ({
       : i === 1
         ? {
             tipo: "espera",
-            rotulo: "Guardada · conversa longa",
-            frase: "Guardada. Conversas longas viram histórias em breve.",
+            rotulo: "Esperando os outros 2",
+            frase: "Guardada. Esperando os outros áudios do envio.",
             confirmar: false,
           }
         : {
@@ -179,7 +189,7 @@ export const GUARDADAS_JAIR: GuardadaDaTela[] = [
     titulo: null,
     duracaoS: 2400,
     recebidaEm: "2026-11-11T22:10:00Z",
-    frase: "Guardada. Conversas longas viram histórias em breve.",
+    frase: "Guardada. Esperando os outros áudios do envio.",
     confirmar: false,
   },
 ];

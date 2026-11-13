@@ -35,6 +35,11 @@ export const ACOES = [
   "consentiu_ia", // responsável confirmou o processamento com IA (P41)
   "processamento_refeito", // admin: Tentar de novo ou Processar
   "nome_ajustado", // aceitou, corrigiu, recusou ou acrescentou um nome do glossário
+  // Prompt 7: divisão em histórias. Detalhes só com contagens (medida da hipótese).
+  "divisao_proposta", // sistema; { story, historias, gravacoes, minutos }
+  "divisao_confirmada", // { story, propostas, confirmadas, juntou, separou, tirou, renomeou }
+  "pergunta_sugerida_aceita", // { story }
+  "pergunta_sugerida_ignorada", // { story }
 ] as const;
 
 export const PAPEIS = [

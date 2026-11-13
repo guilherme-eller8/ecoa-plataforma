@@ -691,6 +691,8 @@ export type Database = {
         Row: {
           author_access_id: string | null;
           lote_id: string | null;
+          lote_ordem: number | null;
+          lote_total: number | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -710,6 +712,8 @@ export type Database = {
         Insert: {
           author_access_id?: string | null;
           lote_id?: string | null;
+          lote_ordem?: number | null;
+          lote_total?: number | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -729,6 +733,8 @@ export type Database = {
         Update: {
           author_access_id?: string | null;
           lote_id?: string | null;
+          lote_ordem?: number | null;
+          lote_total?: number | null;
           book_id?: string;
           caminho?: string;
           content_type?: string;
@@ -774,14 +780,18 @@ export type Database = {
           atualizado_em: string;
           book_id: string;
           criado_em: string;
+          divisao: Json | null;
+          divisao_de: string | null;
           erro: string | null;
           erro_etapa: string | null;
           estado: Database["public"]["Enums"]["story_estado"];
           estrutura: Json | null;
           id: string;
           prompt_id: string | null;
+          pergunta_sugerida: string | null;
           pronta_em: string | null;
           rascunho: Json | null;
+          sugestao_ignorada: boolean;
           titulo: string | null;
           vista_em: string | null;
         };
@@ -789,14 +799,18 @@ export type Database = {
           atualizado_em?: string;
           book_id: string;
           criado_em?: string;
+          divisao?: Json | null;
+          divisao_de?: string | null;
           erro?: string | null;
           erro_etapa?: string | null;
           estado?: Database["public"]["Enums"]["story_estado"];
           estrutura?: Json | null;
           id?: string;
           prompt_id?: string | null;
+          pergunta_sugerida?: string | null;
           pronta_em?: string | null;
           rascunho?: Json | null;
+          sugestao_ignorada?: boolean;
           titulo?: string | null;
           vista_em?: string | null;
         };
@@ -804,14 +818,18 @@ export type Database = {
           atualizado_em?: string;
           book_id?: string;
           criado_em?: string;
+          divisao?: Json | null;
+          divisao_de?: string | null;
           erro?: string | null;
           erro_etapa?: string | null;
           estado?: Database["public"]["Enums"]["story_estado"];
           estrutura?: Json | null;
           id?: string;
           prompt_id?: string | null;
+          pergunta_sugerida?: string | null;
           pronta_em?: string | null;
           rascunho?: Json | null;
+          sugestao_ignorada?: boolean;
           titulo?: string | null;
           vista_em?: string | null;
         };
@@ -823,6 +841,7 @@ export type Database = {
           ordem: number;
           recording_id: string;
           segmento_inicial: number;
+          segmentos: number[] | null;
           story_id: string;
         };
         Insert: {
@@ -830,6 +849,7 @@ export type Database = {
           ordem: number;
           recording_id: string;
           segmento_inicial?: number;
+          segmentos?: number[] | null;
           story_id: string;
         };
         Update: {
@@ -837,6 +857,7 @@ export type Database = {
           ordem?: number;
           recording_id?: string;
           segmento_inicial?: number;
+          segmentos?: number[] | null;
           story_id?: string;
         };
         Relationships: [];
@@ -1050,7 +1071,15 @@ export type Database = {
         Args: { p_book: string; p_versao: number };
         Returns: boolean;
       };
+      confirmar_divisao: {
+        Args: { p_historias: Json; p_story: string };
+        Returns: string[];
+      };
       marcar_historia_vista: { Args: { p_story: string }; Returns: undefined };
+      responder_sugestao: {
+        Args: { p_aceitar: boolean; p_story: string };
+        Returns: boolean;
+      };
       servico_concluir_historia: {
         Args: {
           p_hash: Json;
@@ -1077,15 +1106,29 @@ export type Database = {
         };
         Returns: boolean;
       };
+      servico_propor_divisao: {
+        Args: { p_proposta: Json; p_story: string };
+        Returns: boolean;
+      };
       servico_sugerir_nomes: {
         Args: { p_nomes: Json; p_story: string };
         Returns: number;
+      };
+      servico_sugerir_pergunta: {
+        Args: { p_prompt: string; p_story: string };
+        Returns: boolean;
       };
     };
     Enums: {
       glossario_estado: "sugerido" | "aceito" | "recusado";
       glossario_tipo: "pessoa" | "lugar";
-      story_estado: "ouvindo" | "escrevendo" | "pronta" | "falhou";
+      story_estado:
+        | "ouvindo"
+        | "escrevendo"
+        | "pronta"
+        | "falhou"
+        | "dividindo"
+        | "separar";
       versao_origem: "ia" | "responsavel" | "cofacilitador" | "autor";
       ator_tipo:
         | "responsavel"

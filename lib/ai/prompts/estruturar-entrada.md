@@ -1,4 +1,4 @@
-Arquivo: {{arquivo}}
+Gravações: {{arquivo}}
 
 Segmentos:
 {{segmentos}}

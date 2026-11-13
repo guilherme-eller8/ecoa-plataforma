@@ -182,9 +182,25 @@ export class ClienteFalso implements ClienteIA {
         resumo: "Resumo simulado da história.",
         temas: ["simulado"],
         nomes: nomes
-          .filter((n) => !["Título", "Texto"].includes(n))
+          .filter((n) => !["Título", "Texto", "Perguntas"].includes(n))
           .slice(0, 3)
           .map((nome) => ({ nome, tipo: "pessoa" })),
+        // Sugere a 1ª pergunta pendente, se houver lista.
+        pergunta: /^P1\. /m.test(c.usuario) ? 1 : null,
+      };
+    } else if (c.etapa === "dividir") {
+      // Metade dos segmentos em cada história (com 4 ou mais); senão, uma só.
+      const ids = segs.map((s) => s.id);
+      const meio = ids.length >= 4 ? Math.ceil(ids.length / 2) : ids.length;
+      const faixas = [ids.slice(0, meio), ids.slice(meio)].filter(
+        (f) => f.length > 0,
+      );
+      dados = {
+        historias: faixas.map((f, i) => ({
+          titulo: `História simulada ${i + 1}`,
+          trechos: [{ de: f[0], ate: f.at(-1)! }],
+          pergunta: null,
+        })),
       };
     } else {
       // classificar: emoção removida vira invenção; o resto, estilo

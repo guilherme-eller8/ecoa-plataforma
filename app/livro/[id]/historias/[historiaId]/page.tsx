@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { TelaHistoria } from "@/components/telas/tela-historia";
+import { responderSugestao } from "@/app/livro/[id]/acoes";
 import { historiaParaLer } from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { livroDaTela } from "@/lib/livro/dados";
@@ -33,5 +34,11 @@ async function Historia({
     historiaParaLer(id, historiaId),
   ]);
   if (!historia) notFound();
-  return <TelaHistoria livro={tela} historia={historia} />;
+  return (
+    <TelaHistoria
+      livro={tela}
+      historia={historia}
+      responderSugestao={responderSugestao.bind(null, id, historiaId)}
+    />
+  );
 }

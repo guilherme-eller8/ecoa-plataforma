@@ -6,7 +6,7 @@
 // 3. registra o evento depois da resposta.
 // A chave secreta só assina URLs do Storage, depois de conferir o caminho com a regex do banco.
 
-import { dispararSeAvulsa } from "@/lib/pipeline/disparo";
+import { dispararEscrita, dispararSeRecebida } from "@/lib/pipeline/disparo";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/audios/formatos";
 import {
   MAX_ARQUIVOS_LOTE,
+  MAX_HISTORIAS_DIVISAO,
   MAX_FOTOS_POR_ENVIO,
   MAX_ITENS_ENQUETE,
   MAX_FOTOS_POR_LIVRO,
@@ -797,7 +798,15 @@ async function assinarUpload(
 }
 
 const esquemaOpcoesAudios = z
-  .object({ conversa: z.object({ loteId: z.uuid() }).optional() })
+  .object({
+    conversa: z
+      .object({
+        loteId: z.uuid(),
+        totalPartes: z.number().int().min(1).max(100).optional(),
+        parte: z.number().int().min(1).max(100).optional(),
+      })
+      .optional(),
+  })
   .optional();
 
 /**
@@ -854,6 +863,10 @@ export async function prepararAudios(
   const lote =
     conversa?.loteId ?? (v.data.length > 1 ? crypto.randomUUID() : null);
   const origem: OrigemAudio = conversa ? "conversa" : lote ? "lote" : "upload";
+  // Prompt 7: todo lote leva o total e a posição (o banco sabe quando chegaram todos).
+  // Conversa de app antigo, sem o total: 1 parte por vez, a parte que vier é a última.
+  const parte = conversa?.parte ?? 1;
+  const totalConversa = Math.max(conversa?.totalPartes ?? parte, parte);
   const linhas = v.data.map((a, i) => {
     const f = formatos[i]!;
     const id = crypto.randomUUID();
@@ -862,6 +875,8 @@ export async function prepararAudios(
       book_id: c.livro.id,
       origem,
       lote_id: lote,
+      lote_total: lote ? (conversa ? totalConversa : v.data.length) : null,
+      lote_ordem: lote ? (conversa ? parte : i + 1) : null,
       prompt_id: a.promptId,
       titulo: a.titulo || null,
       nome_arquivo: a.nome,
@@ -922,7 +937,7 @@ export async function confirmarAudio(
   const a = await audioEnviando(c, id);
   if (!a) return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
   if (a.upload === "recebido") {
-    after(() => dispararSeAvulsa(a));
+    after(() => dispararSeRecebida(a));
     return { ok: true };
   }
 
@@ -951,7 +966,108 @@ export async function confirmarAudio(
       recording: a.id,
       com_pergunta: Boolean(a.prompt_id),
     });
-  after(() => dispararSeAvulsa(a));
+  after(() => dispararSeRecebida(a));
+  atualizar(livroId);
+  return { ok: true };
+}
+
+// ── Divisão em histórias (prompt 7) ──────────────────────────────────────
+
+const esquemaDivisao = z
+  .array(
+    z.object({
+      titulo: z.string().trim().max(200).nullable(),
+      segmentos: z.array(z.number().int().min(1)).min(1).max(20000),
+      prompt_id: z.uuid().nullable(),
+      sugerida: z.uuid().nullable(),
+      ignorada: z.boolean(),
+    }),
+  )
+  .max(MAX_HISTORIAS_DIVISAO);
+
+const esquemaAjustes = z.object({
+  juntou: z.number().int().min(0).max(1000),
+  separou: z.number().int().min(0).max(1000),
+  tirou: z.number().int().min(0).max(1000),
+  renomeou: z.number().int().min(0).max(1000),
+});
+
+/**
+ * Confirma a divisão de uma conversa ou lote: o banco confere cada segmento (é do contêiner,
+ * nenhum em duas histórias) e cria as histórias; cada uma vai para a escrita. Lista vazia =
+ * "Deixar fora do livro".
+ */
+export async function confirmarDivisao(
+  livroId: string,
+  historiaId: string,
+  historias: unknown,
+  ajustes: unknown,
+): Promise<Resposta<{ historias: string[] }>> {
+  const v = esquemaDivisao.safeParse(historias);
+  const a = esquemaAjustes.safeParse(ajustes);
+  if (!uuid.safeParse(historiaId).success || !v.success || !a.success)
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  // Filtro explícito pelo livro além da RLS: a história precisa ser deste livro.
+  const { data: h } = await c.supabase
+    .from("stories")
+    .select("id, divisao")
+    .eq("book_id", c.livro.id)
+    .eq("id", historiaId)
+    .maybeSingle();
+  if (!h) return SEM_ACESSO;
+  const { data, error } = await c.supabase.rpc("confirmar_divisao", {
+    p_story: historiaId,
+    p_historias: v.data as unknown as Json,
+  });
+  if (error) return falhou(error);
+  const ids = (data ?? []) as string[];
+  const propostas =
+    (h.divisao as { ia?: { historias?: unknown[] } } | null)?.ia?.historias
+      ?.length ?? 0;
+  evento(c, "divisao_confirmada", {
+    story: historiaId,
+    propostas,
+    confirmadas: ids.length,
+    ...a.data,
+  });
+  for (const x of v.data)
+    if (x.ignorada)
+      evento(c, "pergunta_sugerida_ignorada", { story: historiaId });
+  after(() => dispararEscrita(ids));
+  atualizar(livroId);
+  return { ok: true, dados: { historias: ids } };
+}
+
+/** Marcar como respondida (a pergunta passa para Respondidas) ou Ignorar (não volta). */
+export async function responderSugestao(
+  livroId: string,
+  historiaId: string,
+  aceitar: boolean,
+): Promise<Resposta> {
+  if (!uuid.safeParse(historiaId).success || typeof aceitar !== "boolean")
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const { data: h } = await c.supabase
+    .from("stories")
+    .select("id")
+    .eq("book_id", c.livro.id)
+    .eq("id", historiaId)
+    .maybeSingle();
+  if (!h) return SEM_ACESSO;
+  const { data, error } = await c.supabase.rpc("responder_sugestao", {
+    p_story: historiaId,
+    p_aceitar: aceitar,
+  });
+  if (error) return falhou(error);
+  if (data)
+    evento(
+      c,
+      aceitar ? "pergunta_sugerida_aceita" : "pergunta_sugerida_ignorada",
+      { story: historiaId },
+    );
   atualizar(livroId);
   return { ok: true };
 }

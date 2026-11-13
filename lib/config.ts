@@ -161,3 +161,24 @@ export const PREVISAO_OUVIR_BASE_S = 15; // transcrever + estruturar
 export const PREVISAO_OUVIR_POR_S = 0.08;
 export const PREVISAO_ESCREVER_BASE_S = 25; // editar + verificar
 export const PREVISAO_ESCREVER_POR_S = 0.35; // história em andamento há mais que isso: falhou ("parada")
+
+// ── Divisão em histórias (prompt 7, docs/designs/divisao-historias.md) ────
+// Os sete primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const MAX_HISTORIAS_DIVISAO = 30; // histórias por divisão
+export const ESPERA_LOTE_H = 6; // lote incompleto: depois disso, divide o que chegou
+export const MAX_MIN_CONTEINER = 120; // minutos de áudio numa divisão; o resto do lote segue sozinho
+export const MIN_FALA_HISTORIA_S = 30; // fala mínima de uma história confirmada
+export const MAX_HISTORIAS_DIA = 60; // histórias criadas por livro em 24 h
+export const MAX_ARQUIVO_MIN = 120; // arquivo único processado inteiro, sem cortar o original (D9)
+export const MAX_HISTORIA_ESCRITA_MIN = 60; // fala de uma história: cabe numa escrita só
+export const ESPERA_EMAIL_DIVISAO_MIN = 10; // divisão esperando confirmação: e-mail depois disso
+export const TRECHO_ALVO_S = 60; // tamanho de um trecho na tela de divisão
+export const EDICOES_SIMULTANEAS = 4; // escrever-historia: no máximo isso ao mesmo tempo
+export const MAX_PERGUNTAS_SUGESTAO = 100; // perguntas pendentes mostradas à IA
+export const VARREDURA_CONFIRMADA_MIN = 5; // filha parada em "ouvindo" há mais que isso: reenvia
+// A varredura só olha o que chegou nessas horas: cobre a cota diária adiada (24 h) e nunca
+// reprocessa áudios de teste antigos (D3 do prompt 6).
+export const VARREDURA_JANELA_H = 48;
+export const MIN_PALAVRAS_HISTORIA = 8; // menos que isso do autor: "audio_sem_fala", sem chamar a escrita
+export const PREVISAO_DIVIDIR_BASE_S = 20;
+export const PREVISAO_DIVIDIR_POR_S = 0.02;
