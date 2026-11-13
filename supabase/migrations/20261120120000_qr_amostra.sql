@@ -343,7 +343,30 @@ begin
   return true;
 end $$;
 
--- ── 12. Limpeza dos contadores (cron do Inngest, varredura) ────────────────
+-- ── 12. O que o recorte usa (só o servidor, no job): a fonte e as gravações, na ordem ──
+-- segmentos nulo = a gravação inteira. Nenhum texto sai daqui (T36); os tempos vêm de transcripts.
+create function public.servico_qr_trechos(p_codigo text)
+returns jsonb
+language plpgsql stable security definer set search_path = '' as $$
+declare
+  q record;
+begin
+  select * into q from public.qr_codes x where x.codigo = p_codigo;
+  if q.codigo is null then raise exception 'qr_nao_encontrado'; end if;
+  return jsonb_build_object(
+    'book_id', q.book_id,
+    'fonte', privado.fonte_audio_da_historia(q.story_id),
+    'desativado', q.desativado_em is not null,
+    'gravacoes', coalesce((
+      select jsonb_agg(jsonb_build_object('recording_id', r.id, 'caminho', r.caminho,
+               'content_type', r.content_type, 'duracao_s', r.duracao_s, 'segmentos', sr.segmentos)
+             order by sr.ordem)
+      from public.story_recordings sr join public.recordings r on r.id = sr.recording_id
+      where sr.story_id = q.story_id
+        and not (sr.recording_id = any (privado.audios_fora_do_texto(q.story_id)))), '[]'::jsonb));
+end $$;
+
+-- ── 13. Limpeza dos contadores (cron do Inngest, varredura) ────────────────
 create function public.servico_qr_limpar_consultas() returns integer
 language sql volatile security definer set search_path = '' as $$
   with apagadas as (delete from public.qr_consultas where janela < now() - interval '2 hours' returning 1)
@@ -352,12 +375,13 @@ $$;
 
 revoke all on function public.criar_qr(uuid), public.desativar_qr(text, boolean),
   public.servico_qr_audio_pronto(text, text, text, numeric), public.servico_ouvir_qr(text, text),
-  public.servico_qr_tocou(text, text), public.servico_qr_limpar_consultas()
+  public.servico_qr_tocou(text, text), public.servico_qr_limpar_consultas(),
+  public.servico_qr_trechos(text)
   from public, anon, authenticated, porta_autor, service_role;
 grant execute on function public.criar_qr(uuid), public.desativar_qr(text, boolean) to authenticated;
 grant execute on function public.servico_qr_audio_pronto(text, text, text, numeric),
   public.servico_ouvir_qr(text, text), public.servico_qr_tocou(text, text),
-  public.servico_qr_limpar_consultas() to service_role;
+  public.servico_qr_limpar_consultas(), public.servico_qr_trechos(text) to service_role;
 revoke all on function privado.qr_erros_por_chave(), privado.qr_erros_global(),
   privado.qr_acertos_por_minuto(), privado.qr_audio_espera_s(), privado.qr_folga_recorte_s(),
   privado.qr_imutavel(), privado.qr_sem_truncate(), privado.qr_contar(text, text, timestamptz),

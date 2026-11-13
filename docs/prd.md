@@ -292,7 +292,7 @@ O resultado são dois PDFs, o miolo e a capa aberta, que a Ecoa envia à gráfic
 
 ### QR codes permanentes
 
-- O QR aponta para `ouvir.ecoamemorias.com.br/{código}`, com código de 8 caracteres sem letras ambíguas. Esse subdomínio redireciona para o player, onde quer que o áudio esteja.
+- O QR aponta para `ouvir.ecoa-memorias.com.br/{código}` (com hífen, `docs/decisoes/dominio.md`), com código de 8 caracteres sem letras ambíguas. Esse subdomínio redireciona para o player, onde quer que o áudio esteja.
 - Correção de erro nível Q, mínimo de 2 × 2 cm, preto sobre o papel, com margem de silêncio.
 - O player abre sem login, toca o áudio original e mostra o título. Funciona com o passe vencido.
 - **Teste automático:** cada QR do PDF é decodificado por software antes de liberar o download.
@@ -335,7 +335,7 @@ A stack repete a da landing e acrescenta só o que o produto exige: tempo real n
 | Pagamento (onda 2) | Link de pagamento do Mercado Pago com notificação automática | Pix e cartão em 12x, sem dado de cartão na Ecoa |
 | E-mail | Resend | Já usado na landing |
 | App instalável | PWA com atalho de compartilhamento no Android | Sem loja de apps |
-| Domínios | `app.ecoamemorias.com.br` e `ouvir.ecoamemorias.com.br` (QR) | O destino do QR pode mudar sem reimprimir livros |
+| Domínios | `app.ecoa-memorias.com.br` e `ouvir.ecoa-memorias.com.br` (QR; substitui a grafia sem hífen, ver `docs/decisoes/dominio.md`) | O destino do QR pode mudar sem reimprimir livros |
 
 ### Tabelas
 

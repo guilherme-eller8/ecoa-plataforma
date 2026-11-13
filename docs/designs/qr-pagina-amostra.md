@@ -1,6 +1,6 @@
 # QR permanente, player e página de amostra (prompt 10, sem as telas do autor)
 
-Status: **v2 para aprovação**, revisada por 2 revisores (T28) · 2026-11-13 · PRD: M7 (aceite de `family_messages`), M9 (página de amostra), Livro pronto para a gráfica (QR permanentes, motor de PDF), Segurança, LGPD · Decisões: P4, P8, P24, P36, T5, T6, T19, T21, T22, T23, T25, T28, T29, T34, T36, T40
+Status: **v2 aprovada pelo Guilherme em 2026-11-13** (Q1 a Q15 como recomendado; P55 a P58 e T43 a T46), revisada por 2 revisores (T28) · 2026-11-13 · PRD: M7 (aceite de `family_messages`), M9 (página de amostra), Livro pronto para a gráfica (QR permanentes, motor de PDF), Segurança, LGPD · Decisões: P4, P8, P24, P36, T5, T6, T19, T21, T22, T23, T25, T28, T29, T34, T36, T40
 
 Relatórios: `qr-pagina-amostra/critic_report.md` (segurança) e `qr-pagina-amostra/codebase_details_report.md` (código). A seção 12 mostra o que mudou por causa de cada um.
 

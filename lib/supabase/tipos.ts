@@ -7,6 +7,8 @@
 // - autor_preparar_gravacao: p_prompt (história livre); servico_caminho_gravacao_autor devolve null.
 // - autor_pagina, autor_preparar_gravacao: retorno tipado em lib/autor/tipos.ts.
 // - servico_iniciar_historia: historia, estado e motivo (um ou outro é null).
+// - servico_qr_audio_pronto: anterior é null quando não havia recorte; servico_ouvir_qr e
+//   servico_qr_trechos: retorno tipado em lib/qr/tipos.ts.
 
 export type Json =
   | string
@@ -381,6 +383,32 @@ export type Database = {
           },
         ];
       };
+      family_messages: {
+        Row: {
+          book_id: string;
+          criado_em: string;
+          id: string;
+        };
+        Insert: {
+          book_id: string;
+          criado_em?: string;
+          id?: string;
+        };
+        Update: {
+          book_id?: string;
+          criado_em?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "family_messages_book_id_fkey";
+            columns: ["book_id"];
+            isOneToOne: false;
+            referencedRelation: "books";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       glossary_entries: {
         Row: {
           apelidos: string[];
@@ -686,6 +714,87 @@ export type Database = {
             referencedColumns: ["book_id", "id"];
           },
         ];
+      };
+      qr_codes: {
+        Row: {
+          audio_caminho: string | null;
+          audio_duracao_s: number | null;
+          audio_fonte: string | null;
+          audio_pedido_em: string | null;
+          audio_pronto_em: string | null;
+          book_id: string;
+          codigo: string;
+          criado_em: string;
+          criado_por: string | null;
+          desativado_em: string | null;
+          desativado_por: string | null;
+          story_id: string;
+        };
+        Insert: {
+          audio_caminho?: string | null;
+          audio_duracao_s?: number | null;
+          audio_fonte?: string | null;
+          audio_pedido_em?: string | null;
+          audio_pronto_em?: string | null;
+          book_id: string;
+          codigo: string;
+          criado_em?: string;
+          criado_por?: string | null;
+          desativado_em?: string | null;
+          desativado_por?: string | null;
+          story_id: string;
+        };
+        Update: {
+          audio_caminho?: string | null;
+          audio_duracao_s?: number | null;
+          audio_fonte?: string | null;
+          audio_pedido_em?: string | null;
+          audio_pronto_em?: string | null;
+          book_id?: string;
+          codigo?: string;
+          criado_em?: string;
+          criado_por?: string | null;
+          desativado_em?: string | null;
+          desativado_por?: string | null;
+          story_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "qr_codes_book_id_fkey";
+            columns: ["book_id"];
+            isOneToOne: false;
+            referencedRelation: "books";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "qr_codes_book_id_story_id_fkey";
+            columns: ["book_id", "story_id"];
+            isOneToOne: false;
+            referencedRelation: "stories";
+            referencedColumns: ["book_id", "id"];
+          },
+        ];
+      };
+      qr_consultas: {
+        Row: {
+          chave: string;
+          janela: string;
+          n: number;
+          tipo: string;
+        };
+        Insert: {
+          chave: string;
+          janela: string;
+          n?: number;
+          tipo: string;
+        };
+        Update: {
+          chave?: string;
+          janela?: string;
+          n?: number;
+          tipo?: string;
+        };
+        Relationships: [];
       };
       recordings: {
         Row: {
@@ -1362,6 +1471,46 @@ export type Database = {
       servico_sugerir_pergunta: {
         Args: { p_prompt: string; p_story: string };
         Returns: boolean;
+      };
+      criar_qr: {
+        Args: { p_story: string };
+        Returns: {
+          audio_pronto: boolean;
+          codigo: string;
+          pedir_audio: boolean;
+        }[];
+      };
+      desativar_qr: {
+        Args: { p_codigo: string; p_desligar: boolean };
+        Returns: boolean;
+      };
+      servico_ouvir_qr: {
+        Args: { p_chave: string; p_codigo: string };
+        Returns: Json;
+      };
+      servico_qr_audio_pronto: {
+        Args: {
+          p_caminho: string;
+          p_codigo: string;
+          p_duracao_s: number;
+          p_fonte: string;
+        };
+        Returns: {
+          anterior: string | null;
+          gravado: boolean;
+        }[];
+      };
+      servico_qr_tocou: {
+        Args: { p_chave: string; p_codigo: string };
+        Returns: boolean;
+      };
+      servico_qr_trechos: {
+        Args: { p_codigo: string };
+        Returns: Json;
+      };
+      servico_qr_limpar_consultas: {
+        Args: never;
+        Returns: number;
       };
     };
     Enums: {

@@ -354,6 +354,31 @@ describe("recorte de áudio", () => {
   });
 });
 
+describe("servico_qr_trechos (o job)", () => {
+  it("devolve a fonte e as gravações na ordem, sem texto; só a chave secreta", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    const r = await servico(`select public.servico_qr_trechos($1) as t`, [c]);
+    const t = r.linhas?.[0]?.t as {
+      fonte: string;
+      gravacoes: Record<string, unknown>[];
+    };
+    expect(t.fonte).toBe(await fonte(s));
+    expect(t.gravacoes).toHaveLength(1);
+    expect(Object.keys(t.gravacoes[0]).sort()).toEqual([
+      "caminho",
+      "content_type",
+      "duracao_s",
+      "recording_id",
+      "segmentos",
+    ]);
+    const m = await comoMembro(ana, `select public.servico_qr_trechos($1)`, [
+      c,
+    ]);
+    expect(m.erro).toMatch(/permission denied/);
+  });
+});
+
 describe("nunca apagado; desligar", () => {
   it("nem a chave secreta apaga, troca o código ou a história", async () => {
     const s = await historia(livroA);

@@ -12,6 +12,7 @@ begin
   end if;
 end $$;
 
+drop function if exists public.servico_qr_trechos(text);
 drop function if exists public.servico_qr_limpar_consultas();
 drop function if exists public.servico_qr_tocou(text, text);
 drop function if exists public.servico_ouvir_qr(text, text);
