@@ -127,7 +127,9 @@ export const Divisao = z.object({
   historias: z.array(
     z.object({
       titulo: z.string(),
-      trechos: z.array(z.object({ de: z.number().int(), ate: z.number().int() })),
+      trechos: z.array(
+        z.object({ de: z.number().int(), ate: z.number().int() }),
+      ),
       pergunta: z.number().int().nullable(), // número da lista (P1 = 1); null = nenhuma
     }),
   ),

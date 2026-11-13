@@ -142,6 +142,7 @@ export type AudioDaTela = {
   url: string | null; // assinada por 1 h
   processado: boolean;
   situacao?: SituacaoDoAudio; // prompt 6: virou história ou por que espera
+  envio?: { id: string; total: number; ordem: number } | null; // prompt 7: do mesmo lote
 };
 
 export type AudioParaSubir = {
@@ -160,7 +161,10 @@ export type AudioPreparado = {
   contentType: string;
 };
 
-export type OpcoesAudios = { conversa?: { loteId: string } };
+// Prompt 7: a conversa informa quantas partes tem e qual é esta (o lote fica completo no banco).
+export type OpcoesAudios = {
+  conversa?: { loteId: string; totalPartes?: number; parte?: number };
+};
 
 export type AcoesAudios = {
   prepararAudios: (

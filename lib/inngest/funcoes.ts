@@ -18,10 +18,7 @@ import {
   VARREDURA_GRAVACAO_MIN,
   VARREDURA_PARADA_MIN,
 } from "@/lib/config";
-import {
-  emailDivisaoPronta,
-  emailHistoriaPronta,
-} from "@/lib/email/modelos";
+import { emailDivisaoPronta, emailHistoriaPronta } from "@/lib/email/modelos";
 import { enviarEmail } from "@/lib/email/enviar";
 import { urlDoApp } from "@/lib/env-servidor";
 import { registrarEvento } from "@/lib/eventos";
@@ -195,7 +192,8 @@ export const escreverHistoriaFn = inngest.createFunction(
         .select("book_id")
         .eq("id", original.data.historiaId)
         .maybeSingle();
-      if (s) await marcarFalha(original.data.historiaId, s.book_id, error?.message);
+      if (s)
+        await marcarFalha(original.data.historiaId, s.book_id, error?.message);
     },
   },
   async ({ event, step }) => {

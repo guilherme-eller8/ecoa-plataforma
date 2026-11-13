@@ -1,5 +1,6 @@
 // Cartão de história com as etapas ao vivo (PRD, M5):
 // Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta. Ou: Não deu certo.
+// Prompt 7: uma conversa longa ou um lote passa por Separando → Conferir antes de escrever.
 // Só apresentação: recebe o estado pronto, não busca nada.
 import type { ReactNode } from "react";
 import {
@@ -13,7 +14,12 @@ import { falarDuracao } from "@/lib/ui/tempo";
 import type { Andamento } from "@/lib/historias/previsao";
 import { IconeCheck } from "./icones";
 
-export type EstadoCartao = Etapa | "pronta" | "falhou";
+export type EstadoCartao =
+  | Etapa
+  | "pronta"
+  | "falhou"
+  | "separando" // a IA está dividindo a gravação em histórias
+  | "conferir"; // as histórias propostas esperam a pessoa
 
 type Props = {
   titulo: string | null; // null enquanto a IA não deu o título
@@ -26,6 +32,7 @@ type Props = {
   acao?: ReactNode;
   destaque?: boolean; // o cartão que está acontecendo agora
   andamento?: Andamento; // tempo previsto: uma barra que enche e uma frase curta
+  propostas?: number | null; // conferir: quantas histórias a IA encontrou
 };
 
 function BarraDeAndamento({ andamento }: { andamento: Andamento }) {
@@ -121,11 +128,20 @@ export function CartaoHistoria({
   acao,
   destaque = false,
   andamento,
+  propostas,
 }: Props) {
   const processando =
-    estado === "enviando" || estado === "ouvindo" || estado === "escrevendo";
+    estado === "enviando" ||
+    estado === "ouvindo" ||
+    estado === "escrevendo" ||
+    estado === "separando";
   const nome =
-    titulo?.trim() || (processando ? "Nova história" : "História sem título");
+    titulo?.trim() ||
+    (estado === "separando" || estado === "conferir"
+      ? "Novas histórias"
+      : processando
+        ? "Nova história"
+        : "História sem título");
   return (
     <article
       className={
@@ -158,8 +174,21 @@ export function CartaoHistoria({
         <p className="text-ui-15 text-tinta-2" aria-live="polite">
           Não deu certo. Já estamos vendo.
         </p>
-      ) : (estado === "ouvindo" || estado === "escrevendo") && andamento ? (
+      ) : (estado === "ouvindo" ||
+          estado === "escrevendo" ||
+          estado === "separando") &&
+        andamento ? (
         <BarraDeAndamento andamento={andamento} />
+      ) : estado === "separando" ? (
+        <p className="text-ui-15 text-floresta font-medium" aria-live="polite">
+          Separando as histórias
+        </p>
+      ) : estado === "conferir" ? (
+        <p className="text-ui-17 text-tinta" aria-live="polite">
+          {propostas && propostas > 1
+            ? `Encontramos ${propostas} histórias. Confira antes de escrever.`
+            : "Confira antes de escrever."}
+        </p>
       ) : estado === "revisar" ? (
         <div className="flex flex-col gap-2">
           <div className="rounded-controle bg-floresta h-1.5 w-full" />

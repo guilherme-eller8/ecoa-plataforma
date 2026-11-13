@@ -380,10 +380,14 @@ export function Gravar({
     setFase("enviando");
     setProgresso(0);
     setAviso(null);
+    // Prompt 7: toda parte guarda quantas partes a conversa tem, antes de a 1ª subir. Depois de
+    // reiniciar, as partes que já subiram não estão mais aqui para contar.
     for (const g of grupo) {
       const atual = await armazem.ler(g.id);
-      if (atual && atual.estado !== "enviando") {
+      if (atual && (atual.estado !== "enviando" || !atual.totalPartes)) {
         atual.estado = "enviando";
+        atual.totalPartes = atual.totalPartes ?? grupo.length;
+        g.totalPartes = atual.totalPartes;
         await armazem.salvar(atual);
       }
     }

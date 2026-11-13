@@ -41,25 +41,24 @@ describe("faixas", () => {
       [5, 5],
       [7, 8],
     ]);
-    expect(expandir([[1, 3], [7, 8]])).toEqual([1, 2, 3, 7, 8]);
+    expect(
+      expandir([
+        [1, 3],
+        [7, 8],
+      ]),
+    ).toEqual([1, 2, 3, 7, 8]);
   });
 });
 
 describe("limparDivisao", () => {
   it("cada segmento com um dono; o 1º que pede fica", () => {
     const r = limpar({ historias: [h("A", [[1, 6]]), h("B", [[5, 12]])] });
-    expect(r.historias.map((x) => x.segmentos)).toEqual([
-      [[1, 6]],
-      [[7, 12]],
-    ]);
+    expect(r.historias.map((x) => x.segmentos)).toEqual([[[1, 6]], [[7, 12]]]);
   });
 
   it("buraco vai para a história anterior; no começo, para a seguinte", () => {
     const r = limpar({ historias: [h("A", [[3, 5]]), h("B", [[9, 12]])] });
-    expect(r.historias.map((x) => x.segmentos)).toEqual([
-      [[1, 8]],
-      [[9, 12]],
-    ]);
+    expect(r.historias.map((x) => x.segmentos)).toEqual([[[1, 8]], [[9, 12]]]);
   });
 
   it("faixa inventada é ignorada; sem nenhuma, tudo vira uma história", () => {
@@ -103,10 +102,7 @@ describe("limparDivisao", () => {
       },
       { maxHistorias: 2 },
     );
-    expect(r.historias.map((x) => x.segmentos)).toEqual([
-      [[1, 4]],
-      [[5, 12]],
-    ]);
+    expect(r.historias.map((x) => x.segmentos)).toEqual([[[1, 4]], [[5, 12]]]);
   });
 
   it("título vazio vira null e é cortado em 200", () => {
@@ -127,8 +123,8 @@ describe("limparDivisao", () => {
     );
     expect(r.historias.map((x) => x.sugeridaId)).toEqual(["p1", null]);
     expect(
-      limpar({ historias: [h("A", [[1, 12]], 7)] }, { perguntas })
-        .historias[0].sugeridaId,
+      limpar({ historias: [h("A", [[1, 12]], 7)] }, { perguntas }).historias[0]
+        .sugeridaId,
     ).toBeNull();
   });
 

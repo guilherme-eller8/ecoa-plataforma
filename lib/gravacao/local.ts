@@ -15,6 +15,7 @@ export type GravacaoLocal = {
   promptId: string | null;
   loteId: string | null; // partes da mesma conversa (P39)
   parte: number; // 1, 2, …
+  totalPartes?: number; // prompt 7: partes da conversa; gravado ao tocar Enviar (antigas: sem)
   mime: string;
   ext: ExtGravacao;
   segundos: number;

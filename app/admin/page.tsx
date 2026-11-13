@@ -9,6 +9,7 @@ import {
 } from "@/components/telas/admin-processamento";
 import { TelaAdmin, type LinhaAdmin } from "@/components/telas/tela-admin";
 import { emReais } from "@/lib/ai/custo";
+import { MAX_ARQUIVO_MIN } from "@/lib/config";
 import { estadoEfetivo } from "@/lib/plano";
 import { usuarioAtual } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -87,7 +88,7 @@ async function processamento(autorDe: Map<string, string>) {
       .limit(50),
     db
       .from("recordings")
-      .select("id, book_id, origem, duracao_s, recebido_em")
+      .select("id, book_id, origem, duracao_s, recebido_em, lote_id")
       .eq("upload", "recebido")
       .is("processado_em", null)
       .gt("recebido_em", desde)
@@ -141,6 +142,15 @@ async function processamento(autorDe: Map<string, string>) {
         autor: autor(r.book_id),
         origem: r.origem,
         duracaoS: r.duracao_s,
+        // Prompt 7: o motivo provável (o banco decide de verdade ao processar).
+        motivo:
+          r.duracao_s == null
+            ? "sem duração"
+            : r.duracao_s > MAX_ARQUIVO_MIN * 60
+              ? "passa de 2 h"
+              : r.lote_id
+                ? "lote: espera os outros (até 6 h)"
+                : "na fila",
         quando: r.recebido_em ?? new Date().toISOString(),
       })),
     custos: [...porLivro.values()].sort((a, b) => b.reais - a.reais),

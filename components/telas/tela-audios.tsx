@@ -53,8 +53,11 @@ function Player({ url, nome }: { url: string | null; nome: string }) {
   );
 }
 
+// Todo áudio tem um selo com o estado de agora (D3 do prompt 7): nada fica sem status.
 const ETAPA: Record<string, string> = {
   ouvindo: "Ouvindo…",
+  dividindo: "Separando as histórias…",
+  separar: "Confira as histórias",
   escrevendo: "Escrevendo…",
   pronta: "Virou história",
   falhou: "Não deu certo",
@@ -70,10 +73,14 @@ function Situacao({ livroId, audio }: { livroId: string; audio: AudioDaTela }) {
   if (s.tipo === "historia")
     return (
       <Link
-        href={`/livro/${livroId}/historias/${s.historia}`}
+        href={
+          s.estado === "separar"
+            ? `/livro/${livroId}/historias/${s.historia}/dividir`
+            : `/livro/${livroId}/historias/${s.historia}`
+        }
         className={`${selo} bg-floresta-claro text-floresta font-medium`}
       >
-        {ETAPA[s.estado]}
+        {ETAPA[s.estado] ?? "Ver a história"}
       </Link>
     );
   return s.confirmar ? (
@@ -132,7 +139,13 @@ export function TelaAudios({
       ) : (
         <>
           <ul className="flex flex-col gap-4">
-            {audios.map((a) => {
+            {audios.map((a, i) => {
+              // Prompt 7: o 1º arquivo de um envio abre o grupo ("8 áudios · 13 de nov.").
+              const abreEnvio =
+                a.envio && audios[i - 1]?.envio?.id !== a.envio.id;
+              const doEnvio = a.envio
+                ? audios.filter((x) => x.envio?.id === a.envio!.id).length
+                : 0;
               // Nome de arquivo ("PTT-2026…opus") não é título de livro: sem título nem
               // pergunta, o cartão mostra a data, e o arquivo vai para a linha de apoio.
               const quando = a.recebidoEm
@@ -152,25 +165,32 @@ export function TelaAudios({
                 .filter(Boolean)
                 .join(" · ");
               return (
-                <li
-                  key={a.id}
-                  className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5"
-                >
-                  <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
-                    {nome}
-                  </p>
-                  {a.titulo && a.pergunta ? (
-                    <p className="text-ui-15 text-tinta-2">
-                      Responde: {a.pergunta}
+                <li key={a.id} className="flex flex-col gap-3">
+                  {abreEnvio ? (
+                    <p className="text-ui-15 text-tinta-2 pt-2 font-medium">
+                      {a.envio!.total === doEnvio
+                        ? `${doEnvio} áudios enviados juntos`
+                        : `${doEnvio} de ${a.envio!.total} áudios enviados juntos`}
+                      {quando ? ` · ${quando.split(",")[0]}` : ""}
                     </p>
                   ) : null}
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
-                      {apoio}
+                  <div className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
+                    <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
+                      {nome}
                     </p>
-                    <Situacao livroId={livro.id} audio={a} />
+                    {a.titulo && a.pergunta ? (
+                      <p className="text-ui-15 text-tinta-2">
+                        Responde: {a.pergunta}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                      <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                        {apoio}
+                      </p>
+                      <Situacao livroId={livro.id} audio={a} />
+                    </div>
+                    <Player url={a.url} nome={nome} />
                   </div>
-                  <Player url={a.url} nome={nome} />
                 </li>
               );
             })}

@@ -30,7 +30,8 @@ export async function dispararGravacao(
       lote = data?.lote_id ?? null;
     }
     const chave = chaveDoEvento({ id: recordingId, lote_id: lote });
-    const base = chave === recordingId ? recordingId : `${chave}:${recordingId}`;
+    const base =
+      chave === recordingId ? recordingId : `${chave}:${recordingId}`;
     await inngest.send({
       name: EVENTO_GRAVACAO,
       id: sufixo ? `${base}:${sufixo}` : base,
@@ -58,7 +59,9 @@ export async function dispararEscrita(historias: string[], sufixo?: string) {
     await inngest.send(
       historias.map((historiaId) => ({
         name: EVENTO_HISTORIA_CONFIRMADA,
-        id: sufixo ? `historia:${historiaId}:${sufixo}` : `historia:${historiaId}`,
+        id: sufixo
+          ? `historia:${historiaId}:${sufixo}`
+          : `historia:${historiaId}`,
         data: { historiaId },
       })),
     );

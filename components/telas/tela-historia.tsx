@@ -4,11 +4,14 @@
 // áudio original. Tocar num grifo mostra o motivo. Quem edita é o prompt 8.
 import Link from "next/link";
 import { Fragment, useState } from "react";
+import { Aviso } from "@/components/ui/aviso";
+import { classesDoBotao } from "@/components/ui/botao";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
+import { SugestaoDePergunta } from "@/components/ui/sugestao-pergunta";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { HistoriaParaLer } from "@/lib/historias/tipos";
-import type { LivroDaTela } from "@/lib/livro/tipos";
+import type { LivroDaTela, Resposta } from "@/lib/livro/tipos";
 
 const TIPO: Record<string, string> = {
   fato: "Fato",
@@ -44,12 +47,31 @@ function trechos(texto: string, marcas: Marcacao[]) {
 export function TelaHistoria({
   livro,
   historia,
+  responderSugestao,
 }: {
   livro: LivroDaTela;
   historia: HistoriaParaLer;
+  /** Prompt 7: Marcar como respondida ou Ignorar a pergunta sugerida. */
+  responderSugestao?: (aceitar: boolean) => Promise<Resposta>;
 }) {
   const [aberta, setAberta] = useState<Marcacao | null>(null);
+  const [sugestao, setSugestao] = useState(historia.sugestao);
+  const [respondida, setRespondida] = useState<string | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const pronta = historia.estado === "pronta";
+  const conferir = historia.estado === "separar";
+
+  async function responder(aceitar: boolean) {
+    if (!responderSugestao || !sugestao) return;
+    setOcupado(true);
+    setErro(null);
+    const r = await responderSugestao(aceitar);
+    setOcupado(false);
+    if (!r.ok) return setErro(r.mensagem);
+    if (aceitar) setRespondida(sugestao.texto);
+    setSugestao(null);
+  }
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-16">
       <Link
@@ -63,12 +85,22 @@ export function TelaHistoria({
         <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           {historia.titulo ?? (pronta ? "História sem título" : "Escrevendo…")}
         </h1>
-        {historia.pergunta ? (
+        {historia.pergunta || respondida ? (
           <p className="text-ui-15 text-tinta-2">
-            Responde: {historia.pergunta}
+            Responde: {historia.pergunta ?? respondida}
           </p>
         ) : null}
       </header>
+
+      {sugestao && responderSugestao && livro.podeEscrever ? (
+        <SugestaoDePergunta
+          pergunta={sugestao.texto}
+          ocupado={ocupado}
+          aoAceitar={() => void responder(true)}
+          aoIgnorar={() => void responder(false)}
+        />
+      ) : null}
+      {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
 
       {historia.audios.map((a) =>
         a.url ? (
@@ -76,14 +108,34 @@ export function TelaHistoria({
             key={a.id}
             controls
             preload="none"
-            src={a.url}
+            // Prompt 7: a história usa só um pedaço da gravação original.
+            src={
+              a.inicioS != null && a.fimS != null
+                ? `${a.url}#t=${Math.floor(a.inicioS)},${Math.ceil(a.fimS)}`
+                : a.url
+            }
             aria-label="Ouvir o áudio original"
             className="w-full"
           />
         ) : null,
       )}
 
-      {!pronta ? (
+      {conferir ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-ui-17 text-tinta-2">
+            Esta gravação virou mais de uma história. Confira antes de escrever.
+          </p>
+          <Link
+            href={`/livro/${livro.id}/historias/${historia.id}/dividir`}
+            className={
+              classesDoBotao({ larguraTotal: true }) +
+              " sm:w-auto sm:self-start"
+            }
+          >
+            Conferir as histórias
+          </Link>
+        </div>
+      ) : !pronta ? (
         <p className="text-ui-17 text-tinta-2">
           {historia.estado === "falhou"
             ? "Não deu certo. Já estamos vendo."

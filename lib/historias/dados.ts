@@ -103,7 +103,13 @@ export async function historiasDoLivro(
           .from("recordings")
           .select("id, duracao_s, origem")
           .in("id", gravacoes)
-      : Promise.resolve({ data: [] as { id: string; duracao_s: number | null; origem: string }[] }),
+      : Promise.resolve({
+          data: [] as {
+            id: string;
+            duracao_s: number | null;
+            origem: string;
+          }[],
+        }),
     temposDosSegmentos(supabase, [
       ...new Set(
         (srs ?? []).filter((s) => s.segmentos).map((s) => s.recording_id),
@@ -289,7 +295,8 @@ export async function situacaoDosAudios(
     const atual = historiaDe.get(sr.recording_id);
     const a = atual ? estadoDe.get(atual)?.criado_em : null;
     const b = estadoDe.get(sr.story_id)?.criado_em;
-    if (!atual || (a && b && b < a)) historiaDe.set(sr.recording_id, sr.story_id);
+    if (!atual || (a && b && b < a))
+      historiaDe.set(sr.recording_id, sr.story_id);
   }
   const recebidasNoLote = new Map<string, number>();
   for (const r of recs ?? [])

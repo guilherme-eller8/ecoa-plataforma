@@ -16,6 +16,7 @@ import {
   type MensagemCanal,
 } from "@/lib/pipeline/regras";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { classesDoBotao } from "./botao";
 import { CartaoHistoria } from "./cartao-historia";
 
 export type AoVivo = {
@@ -87,7 +88,10 @@ export function HistoriasAoVivo({
   // Relógio só no navegador (o servidor não sabe a hora da tela) e só com algo em andamento.
   const [agora, setAgora] = useState<number | null>(null);
   const emAndamento = historias.some(
-    (h) => h.estado === "ouvindo" || h.estado === "escrevendo",
+    (h) =>
+      h.estado === "ouvindo" ||
+      h.estado === "escrevendo" ||
+      h.estado === "dividindo",
   );
   useEffect(() => {
     if (!emAndamento) return;
@@ -136,7 +140,9 @@ export function HistoriasAoVivo({
       });
       if (
         m.tipo === "etapa" &&
-        (m.etapa === "revisar" || m.etapa === "falhou")
+        (m.etapa === "revisar" ||
+          m.etapa === "falhou" ||
+          m.etapa === "conferir")
       ) {
         if (m.etapa === "revisar") ver(m.historia);
         router.refresh();
@@ -153,10 +159,19 @@ export function HistoriasAoVivo({
         const vivo = aoVivo[h.id];
         const doServidor = estadoDoCartao(h.estado);
         // O servidor manda quando já chegou mais longe que o canal (ex.: depois de um refresh).
+        // Prompt 7: em "conferir" o servidor também manda; e uma história que já passou pela
+        // divisão não volta para "separando"/"conferir" por uma mensagem velha do canal.
+        const velha =
+          h.dividida &&
+          (vivo?.etapa === "separando" || vivo?.etapa === "conferir");
         const estado =
-          h.estado === "pronta" || h.estado === "falhou"
+          h.estado === "pronta" ||
+          h.estado === "falhou" ||
+          h.estado === "separar"
             ? doServidor
-            : (vivo?.etapa ?? doServidor);
+            : velha
+              ? doServidor
+              : (vivo?.etapa ?? doServidor);
         const escrevendo = estado === "escrevendo";
         const trecho = escrevendo
           ? vivo?.paragrafos.slice(-2).join("\n\n") || undefined
@@ -169,12 +184,17 @@ export function HistoriasAoVivo({
               origem={
                 h.pergunta
                   ? `Responde: ${h.pergunta}`
-                  : (ORIGEM[h.origem ?? ""] ?? "Áudio")
+                  : h.gravacoes > 1 && h.origem === "lote"
+                    ? `${h.gravacoes} áudios`
+                    : (ORIGEM[h.origem ?? ""] ?? "Áudio")
               }
               duracaoSeg={h.duracaoS}
+              propostas={h.propostas}
               andamento={
                 agora !== null &&
-                (estado === "ouvindo" || estado === "escrevendo")
+                (estado === "ouvindo" ||
+                  estado === "escrevendo" ||
+                  estado === "separando")
                   ? andamentoPrevisto(
                       estado,
                       h.duracaoS,
@@ -183,9 +203,21 @@ export function HistoriasAoVivo({
                   : undefined
               }
               trecho={trecho}
-              destaque={estado === "ouvindo" || escrevendo}
+              destaque={
+                estado === "ouvindo" ||
+                escrevendo ||
+                estado === "separando" ||
+                estado === "conferir"
+              }
               acao={
-                estado === "revisar" ? (
+                estado === "conferir" ? (
+                  <Link
+                    href={`/livro/${livroId}/historias/${h.id}/dividir`}
+                    className={classesDoBotao()}
+                  >
+                    Conferir
+                  </Link>
+                ) : estado === "revisar" ? (
                   <Link
                     href={`/livro/${livroId}/historias/${h.id}`}
                     className="text-ui-17 text-floresta min-h-alvo inline-flex items-center font-medium underline-offset-4 hover:underline"

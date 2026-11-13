@@ -133,7 +133,10 @@ export interface BancoPipeline {
     })[]
   >;
   perguntasPendentes(livro: string): Promise<PerguntaPendente[]>;
-  proporDivisao(historia: string, proposta: Proposta & { hash_prompts: Record<string, string> }): Promise<boolean>;
+  proporDivisao(
+    historia: string,
+    proposta: Proposta & { hash_prompts: Record<string, string> },
+  ): Promise<boolean>;
   sugerirPergunta(historia: string, pergunta: string): Promise<boolean>;
   gravacaoParaTranscrever(
     gravacao: string,
@@ -206,7 +209,11 @@ export type Dependencias = {
     detalhes?: Record<string, number>,
   ): Promise<void>;
   /** E-mail da divisão esperando confirmação (D8), sem título. */
-  avisarDivisao?(para: string, apelido: string, historia: string): Promise<boolean>;
+  avisarDivisao?(
+    para: string,
+    apelido: string,
+    historia: string,
+  ): Promise<boolean>;
 };
 
 /** O que o pipeline usa do `step` do Inngest. Nos testes, uma versão que só executa. */
@@ -219,7 +226,12 @@ export type Resultado =
   | { fim: "esperando"; motivo: string }
   | { fim: "ja_estava"; estado: EstadoHistoria }
   | { fim: "pronta"; historia: string; emailEnviado: boolean }
-  | { fim: "separar"; historia: string; historias: number; emailEnviado: boolean };
+  | {
+      fim: "separar";
+      historia: string;
+      historias: number;
+      emailEnviado: boolean;
+    };
 
 /** Roda `fn` e converte qualquer erro num ErroPipeline com código fixo. */
 async function seguro<T>(etapa: string, fn: () => Promise<T>): Promise<T> {
@@ -271,7 +283,10 @@ async function transcreverUma(
   livro: string,
 ) {
   if (await d.banco.temTranscricao(gravacao)) return { reaproveitada: true };
-  const segmentoInicial = await d.banco.fixarSegmentoInicial(historia, gravacao);
+  const segmentoInicial = await d.banco.fixarSegmentoInicial(
+    historia,
+    gravacao,
+  );
   const g = await d.banco.gravacaoParaTranscrever(gravacao, historia);
   if (!g) throw new ErroPipeline("transcrever", "audio_ausente");
   const { glossario } = await d.banco.contexto(livro);
@@ -395,7 +410,8 @@ export async function processarGravacao(
       if (!info || info.temDivisao || info.divisaoDe) return "parar" as const;
       if (info.estado === "escrevendo") return "escrever" as const;
       const estrutura = await d.banco.estrutura(historia);
-      return gravacoes.length > 1 || (estrutura?.mudancasDeAssunto.length ?? 0) > 0
+      return gravacoes.length > 1 ||
+        (estrutura?.mudancasDeAssunto.length ?? 0) > 0
         ? ("dividir" as const)
         : ("escrever" as const);
     }),
@@ -407,7 +423,9 @@ export async function processarGravacao(
 
   if (caminho === "dividir") {
     const div = await step.run("dividir", () =>
-      seguro("dividir", () => dividirHistoria(d, historia, livro, gravacoes.length)),
+      seguro("dividir", () =>
+        dividirHistoria(d, historia, livro, gravacoes.length),
+      ),
     );
     if (div.seguir) return escreverHistoria(historia, livro, d, step);
     await step.sleep("esperar-divisao", `${ESPERA_EMAIL_DIVISAO_MIN}m`);
@@ -464,7 +482,10 @@ async function dividirHistoria(
   const ligadas = new Map<string, string[]>();
   for (const g of gravs)
     if (g.perguntaId)
-      ligadas.set(g.perguntaId, [...(ligadas.get(g.perguntaId) ?? []), g.rotulo]);
+      ligadas.set(g.perguntaId, [
+        ...(ligadas.get(g.perguntaId) ?? []),
+        g.rotulo,
+      ]);
   const candidatas: (PerguntaCandidata & { texto: string })[] = [
     ...pendentes
       .filter((p) => !ligadas.has(p.id))

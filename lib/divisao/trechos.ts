@@ -64,7 +64,8 @@ export function cortarTrechos(segs: SegmentoTela[], alvoS: number): Trecho[] {
     atual.push(s);
     const dur = s.fim - atual[0].inicio;
     const prox = ordenados[i + 1];
-    const pausa = prox && prox.gravacao === s.gravacao ? prox.inicio - s.fim : 0;
+    const pausa =
+      prox && prox.gravacao === s.gravacao ? prox.inicio - s.fim : 0;
     if (dur >= alvoS || (dur >= alvoS * 0.6 && pausa >= PAUSA_BOA_S)) fechar();
   });
   fechar();
@@ -111,11 +112,10 @@ export function juntar(lista: HistoriaTela[], i: number): HistoriaTela[] {
   const junta: HistoriaTela = {
     chave: a.chave,
     titulo: a.titulo ?? b.titulo,
-    trechos: [...a.trechos, ...b.trechos].sort(
-      (x, y) => x.ids[0] - y.ids[0],
-    ),
+    trechos: [...a.trechos, ...b.trechos].sort((x, y) => x.ids[0] - y.ids[0]),
     promptId: a.promptId ?? b.promptId,
-    sugeridaId: a.promptId || b.promptId ? null : (a.sugeridaId ?? b.sugeridaId),
+    sugeridaId:
+      a.promptId || b.promptId ? null : (a.sugeridaId ?? b.sugeridaId),
     ignorada: a.ignorada && b.ignorada,
   };
   return [...lista.slice(0, i), junta, ...lista.slice(i + 2)];
@@ -202,7 +202,9 @@ export function cargaDoConfirmar(lista: HistoriaTela[]) {
 /** Primeiras palavras de um trecho, para a lista. */
 export function inicioDoTexto(texto: string, palavras = 14): string {
   const p = texto.split(/\s+/).filter(Boolean);
-  return p.length > palavras ? `${p.slice(0, palavras).join(" ")}…` : p.join(" ");
+  return p.length > palavras
+    ? `${p.slice(0, palavras).join(" ")}…`
+    : p.join(" ");
 }
 
 /** "12:30" a partir de segundos. */

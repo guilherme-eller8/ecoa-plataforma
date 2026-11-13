@@ -397,11 +397,9 @@ describe("divisão em histórias (prompt 7)", () => {
       new Set(["g1", "g2", "g3"]),
     );
     expect(m.s.estado).toBe("separar");
-    expect(m.canal.filter((c) => c.tipo === "etapa").map((c) => c.etapa)).toEqual([
-      "ouvindo",
-      "separando",
-      "conferir",
-    ]);
+    expect(
+      m.canal.filter((c) => c.tipo === "etapa").map((c) => c.etapa),
+    ).toEqual(["ouvindo", "separando", "conferir"]);
     expect(m.eventos).toEqual(["divisao_proposta"]);
     expect(m.s.usos.map((u) => u.etapa)).toContain("dividir");
     // Nada de texto da fala nos resultados dos passos (T36).
@@ -430,7 +428,10 @@ describe("divisão em histórias (prompt 7)", () => {
         if (c.etapa === "estruturar") {
           const r = await falso.gerar(c);
           const e = r.dados as unknown as Estrutura;
-          return { ...r, dados: { ...e, mudancasDeAssunto: [2] } as typeof r.dados };
+          return {
+            ...r,
+            dados: { ...e, mudancasDeAssunto: [2] } as typeof r.dados,
+          };
         }
         if (c.etapa !== "dividir") return falso.gerar(c);
         const dados = c.schema.parse({

@@ -126,7 +126,9 @@ export function bancoPipeline(
         .select("id, duracao_s, prompt_id")
         .in("id", ids);
       const perguntas = [
-        ...new Set((recs ?? []).flatMap((r) => (r.prompt_id ? [r.prompt_id] : []))),
+        ...new Set(
+          (recs ?? []).flatMap((r) => (r.prompt_id ? [r.prompt_id] : [])),
+        ),
       ];
       const { data: ps } = perguntas.length
         ? await db.from("prompts").select("id, texto").in("id", perguntas)
