@@ -1,6 +1,6 @@
 # Editor de histórias, parte 2: IA sob controle (prompt 9)
 
-Status: **v3 para aprovação** (revisão minha na seção 11; revisores na seção 12) · 2026-11-13 · PRD: M6 (tamanho, revisar trecho, acrescentar áudio, aceite do M6), Pipeline de IA (Fluxos especiais), M11 (dica de primeira vez) · Decisões: P19, P25, P49, T8, T10, T11, T12, T18, T28, T31, T34, T36, T37, T38, T40, T41
+Status: **v3 aprovada pelo Guilherme em 2026-11-13** (I0 a I8 como recomendado; P50 a P54 e T42) · revisão minha na seção 11; revisores na seção 12 · 2026-11-13 · PRD: M6 (tamanho, revisar trecho, acrescentar áudio, aceite do M6), Pipeline de IA (Fluxos especiais), M11 (dica de primeira vez) · Decisões: P19, P25, P49, T8, T10, T11, T12, T18, T28, T31, T34, T36, T37, T38, T40, T41
 
 Prompt com [EGM] e banco: design doc + SQL de subida e reversão para o OK. Revisores (T28): `egm:egm-design` e `egm:egm-codebase-details`, em Sonnet. Os dois caíram por limite de uso na 1ª tentativa; fiz a revisão (seção 11) e, a pedido do Guilherme, eles foram retomados depois do limite e revisaram a v2 (seção 12; relatórios em `ia-sob-controle/`).
 

@@ -34,6 +34,12 @@ export const FRASES_DOS_CODIGOS = {
   trava_de_outro: "Outra tela está editando esta história agora.",
   texto_desatualizado: "O texto mudou em outra tela. Atualize para continuar.",
   cota_fotos_historia: "Cada história tem no máximo 4 fotos.",
+  travado_alterado:
+    "Um parágrafo que você editou mudou. Atualize a tela e peça de novo.",
+  proposta_vencida: "O texto mudou depois do pedido. Peça de novo.",
+  proposta_indisponivel: "Esta proposta já foi decidida. Atualize a tela.",
+  proposta_em_andamento: "Espere a proposta que já está sendo escrita.",
+  cota_ia_diaria: "A IA já ajudou muito hoje neste livro. Tente amanhã.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

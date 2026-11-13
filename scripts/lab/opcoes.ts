@@ -40,7 +40,7 @@ export function lerOpcoes(
   for (const t of tamanhos) {
     if (!(t in TAMANHOS_TEXTO))
       throw new Error(
-        `Tamanho desconhecido: ${t}. Use resumido, medio, detalhado ou todos.`,
+        `Tamanho desconhecido: ${t}. Use ${Object.keys(TAMANHOS_TEXTO).join(", ")} ou todos.`,
       );
   }
   return {
