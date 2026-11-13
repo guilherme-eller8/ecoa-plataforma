@@ -5,6 +5,7 @@ import "server-only";
 import type { Segmento } from "@/lib/ai/schemas";
 import { assinarLeitura } from "@/lib/storage/assinar";
 import { clienteSessao } from "@/lib/supabase/servidor";
+import { COLUNAS_DIVISAO } from "@/lib/historias/colunas";
 import type { HistoriaProposta } from "./limpar";
 import type { DivisaoDaTela } from "./tipos";
 
@@ -21,7 +22,7 @@ export async function divisaoParaConferir(
   const supabase = await clienteSessao();
   const { data: s } = await supabase
     .from("stories")
-    .select("id, estado, divisao")
+    .select(COLUNAS_DIVISAO)
     .eq("book_id", livro)
     .eq("id", historia)
     .maybeSingle();

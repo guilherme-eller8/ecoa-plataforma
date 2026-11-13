@@ -12,6 +12,14 @@ import {
 import { assinarLeitura } from "@/lib/storage/assinar";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import { normalizarTexto } from "@/lib/editor/conteudo";
+import {
+  COLUNAS_EDITAR,
+  COLUNAS_LER,
+  COLUNAS_LISTA,
+  COLUNAS_SITUACAO,
+  COLUNAS_VERSOES,
+  deixadaForaDoLivro,
+} from "./colunas";
 import type { SegmentoDaTela } from "@/lib/editor/ouvir";
 import type {
   FotoDaHistoria,
@@ -71,16 +79,16 @@ export async function historiasDoLivro(
   limite = 100,
 ): Promise<HistoriaDaTela[]> {
   const supabase = await clienteSessao();
-  const { data: stories } = await supabase
+  const { data: stories, error: erroStories } = await supabase
     .from("stories")
-    .select(
-      "id, titulo, estado, prompt_id, criado_em, vista_em, divisao, divisao_de, erro, texto, revisada_em",
-    )
+    .select(COLUNAS_LISTA)
     .eq("book_id", livro)
     .order("criado_em", { ascending: false })
     .limit(limite);
-  // Prompt 7: "Deixar fora do livro" encerra o contêiner; ele não aparece na lista.
-  const linhas = (stories ?? []).filter((s) => s.erro !== "tudo_descartado");
+  // Consulta recusada não pode virar "Nenhuma história ainda" em silêncio.
+  if (erroStories)
+    console.error("[historias] lista recusada", { codigo: erroStories.code });
+  const linhas = (stories ?? []).filter((s) => !deixadaForaDoLivro(s));
   if (linhas.length === 0) return [];
   const ids = linhas.map((s) => s.id);
   const perguntas = [
@@ -183,7 +191,7 @@ export async function historiaParaLer(
   const supabase = await clienteSessao();
   const { data: s } = await supabase
     .from("stories")
-    .select("id, titulo, estado, prompt_id, pergunta_sugerida")
+    .select(COLUNAS_LER)
     .eq("book_id", livro)
     .eq("id", historia)
     .maybeSingle();
@@ -297,7 +305,7 @@ export async function situacaoDosAudios(
   const { data: stories } = historias.length
     ? await supabase
         .from("stories")
-        .select("id, estado, criado_em")
+        .select(COLUNAS_SITUACAO)
         .in("id", historias)
     : { data: [] };
   const estadoDe = new Map((stories ?? []).map((s) => [s.id, s]));
@@ -458,9 +466,7 @@ export async function historiaParaEditar(
   const supabase = await clienteSessao();
   const { data: s } = await supabase
     .from("stories")
-    .select(
-      "id, estado, prompt_id, pergunta_sugerida, texto, texto_marcacoes, texto_rev, revisada_em, estrutura, ano, titulo",
-    )
+    .select(COLUNAS_EDITAR)
     .eq("book_id", livro)
     .eq("id", historia)
     .maybeSingle();
@@ -570,9 +576,7 @@ export async function versoesDaHistoria(
   const supabase = await clienteSessao();
   const { data: s } = await supabase
     .from("stories")
-    .select(
-      "id, estado, titulo, texto, texto_rev, versao_rev, texto_por, texto_origem, texto_em",
-    )
+    .select(COLUNAS_VERSOES)
     .eq("book_id", livro)
     .eq("id", historia)
     .maybeSingle();
