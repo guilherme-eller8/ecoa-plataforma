@@ -43,8 +43,12 @@ export const FRASES_DOS_CODIGOS = {
   // Prompt 10: QR e página de amostra.
   historia_nao_pronta: "Marque a história como pronta para gerar a página.",
   historia_sem_audio: "Esta história não tem áudio para o QR.",
-  qr_codigo_invalido: "Não deu certo agora. Tente de novo.",
+  historia_audio_compartilhado:
+    "Esta história divide o áudio com outra. Fale com a Ecoa.",
   qr_colisao: "Não deu certo agora. Tente de novo.",
+  qr_desativado:
+    "O QR desta história está desligado. Ligue de novo para gerar a página.",
+  qr_recorte_longo: "Não deu certo agora. Tente de novo.",
   qr_imutavel: "Este QR não pode mudar.",
   qr_nao_encontrado: "Não achamos este QR.",
   chave_invalida: "Não deu certo agora. Tente de novo.",

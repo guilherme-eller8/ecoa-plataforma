@@ -217,8 +217,12 @@ export const QR_TAMANHO_CODIGO = 8;
 export const QR_LADO_MM = 20; // o símbolo, sem a margem de silêncio (PRD: mínimo 2 × 2 cm)
 export const QR_MARGEM_MODULOS = 4; // margem de silêncio, em módulos
 export const QR_CORRECAO = "Q"; // correção de erro (PRD)
-// Os dois abaixo são espelhados no banco (supabase/tests/config-banco.test.ts confere).
-export const QR_CONSULTAS_POR_MINUTO = 30; // por chave de rede, no player público
+// Os cinco abaixo são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+// Player público: erros e acertos em baldes separados (quem lê o QR certo quase nunca erra).
+export const QR_ERROS_POR_CHAVE = 10; // códigos inexistentes por rede em 10 min
+export const QR_ERROS_GLOBAL = 3000; // códigos inexistentes de todas as redes em 10 min
+export const QR_ACERTOS_POR_MINUTO = 60; // aberturas de códigos válidos por rede por minuto
 export const QR_AUDIO_ESPERA_MIN = 10; // um recorte pedido e não terminado é pedido de novo depois disso
+export const QR_FOLGA_RECORTE_S = 30; // o recorte pode passar da fala da história só nisso
 export const QR_AUDIO_KBPS = 48; // recorte do QR em .m4a (AAC), voz mono
 export const QR_AUDIO_URL_S = 10 * 60; // validade da URL assinada que o player toca

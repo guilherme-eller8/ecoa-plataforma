@@ -1,5 +1,5 @@
 // QR permanente, player público e family_messages vazia (prompt 10).
-// Design: docs/designs/qr-pagina-amostra.md.
+// Design: docs/designs/qr-pagina-amostra.md (v2).
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { PGlite } from "@electric-sql/pglite";
@@ -22,8 +22,8 @@ let beto: string; // responsável do livro B
 let livroA: string;
 let livroB: string;
 
-const CHAVE = "a".repeat(64);
-const chave = (n: number) => n.toString(16).padStart(64, "0");
+const chave = (n: number) => n.toString(16).padStart(64, "f");
+const ALFABETO = /^[2-9A-HJKMNP-Z]{8}$/;
 
 async function sql<T = Record<string, unknown>>(q: string, p: unknown[] = []) {
   return (await db.query<T>(q, p)).rows;
@@ -33,70 +33,66 @@ type Resposta =
   | { linhas: Record<string, unknown>[]; erro?: undefined }
   | { erro: string; linhas?: undefined };
 
-async function comoMembro(
-  usuario: string,
+async function comoPapel(
+  papel: "authenticated" | "service_role",
+  usuario: string | null,
   q: string,
   p: unknown[] = [],
 ): Promise<Resposta> {
-  return como(db, "authenticated", { sub: usuario }, async (tx) => {
-    await tx.exec("savepoint membro");
-    try {
-      const linhas = (await tx.query<Record<string, unknown>>(q, p)).rows;
-      await tx.exec("release savepoint membro");
-      return { linhas };
-    } catch (e) {
-      await tx.exec("rollback to savepoint membro");
-      return { erro: (e as Error).message };
-    }
-  });
-}
-
-async function servico<T = Record<string, unknown>>(
-  q: string,
-  p: unknown[] = [],
-) {
-  return como(db, "service_role", {}, async (tx) => {
+  return como(db, papel, usuario ? { sub: usuario } : {}, async (tx) => {
     await tx.exec("savepoint s");
     try {
-      const linhas = (await tx.query<T>(q, p)).rows;
+      const linhas = (await tx.query<Record<string, unknown>>(q, p)).rows;
       await tx.exec("release savepoint s");
       return { linhas };
     } catch (e) {
       await tx.exec("rollback to savepoint s");
-      return { erro: (e as Error).message, linhas: [] as T[] };
+      return { erro: (e as Error).message };
     }
   });
 }
+const comoMembro = (u: string, q: string, p: unknown[] = []) =>
+  comoPapel("authenticated", u, q, p);
+const servico = (q: string, p: unknown[] = []) =>
+  comoPapel("service_role", null, q, p);
 
-/** História pronta (IA terminou), com 1 gravação usada por inteiro. */
+async function gravacao(livro: string, story: string, ordem: number) {
+  const g = crypto.randomUUID();
+  await sql(
+    `insert into public.recordings (id, book_id, origem, nome_arquivo, caminho, content_type, tamanho_bytes,
+      duracao_s, upload, recebido_em)
+     values ($1, $2, 'upload', 'a.m4a', $3, 'audio/mp4', 100, 120, 'recebido', now())`,
+    [g, livro, `livros/${livro}/audios/${g}.m4a`],
+  );
+  await sql(
+    `insert into public.story_recordings (story_id, recording_id, book_id, ordem) values ($1, $2, $3, $4)`,
+    [story, g, livro, ordem],
+  );
+  return g;
+}
+
+/** História pronta (IA terminou), com 1 gravação de 120 s usada por inteiro. */
 async function historia(livro: string, revisada = true, comAudio = true) {
   const [{ id }] = await sql<{ id: string }>(
     `insert into public.stories (book_id, estado, pronta_em, titulo, ano, revisada_em)
      values ($1, 'pronta', now(), 'O trem', 1962, $2) returning id`,
     [livro, revisada ? new Date().toISOString() : null],
   );
-  if (comAudio) {
-    const g = crypto.randomUUID();
-    await sql(
-      `insert into public.recordings (id, book_id, origem, nome_arquivo, caminho, content_type, tamanho_bytes,
-        duracao_s, upload, recebido_em)
-       values ($1, $2, 'upload', 'a.m4a', $3, 'audio/mp4', 100, 120, 'recebido', now())`,
-      [g, livro, `livros/${livro}/audios/${g}.m4a`],
-    );
-    await sql(
-      `insert into public.story_recordings (story_id, recording_id, book_id, ordem) values ($1, $2, $3, 1)`,
-      [id, g, livro],
-    );
-  }
+  if (comAudio) await gravacao(livro, id, 1);
   return id;
 }
 
-async function criarQr(usuario: string, story: string, codigo: string) {
+async function criarQr(usuario: string, story: string) {
   return comoMembro(
     usuario,
-    `select codigo, precisa_audio from public.criar_qr($1, $2)`,
-    [story, codigo],
+    `select codigo, audio_pronto, pedir_audio from public.criar_qr($1)`,
+    [story],
   );
+}
+
+async function qrDe(usuario: string, story: string) {
+  const r = await criarQr(usuario, story);
+  return String(r.linhas?.[0]?.codigo);
 }
 
 async function fonte(story: string) {
@@ -107,12 +103,29 @@ async function fonte(story: string) {
   return r.f;
 }
 
-async function ouvir(codigo: string, k = CHAVE) {
-  const r = await servico<{ r: Record<string, unknown> }>(
-    `select public.servico_ouvir_qr($1, $2) as r`,
-    [codigo, k],
+async function recortar(
+  codigo: string,
+  livro: string,
+  story: string,
+  dur = 100,
+) {
+  return servico(
+    `select gravado, anterior from public.servico_qr_audio_pronto($1, $2, $3, $4)`,
+    [
+      codigo,
+      `livros/${livro}/${codigo}-${crypto.randomUUID().replaceAll("-", "").slice(0, 12)}.m4a`,
+      await fonte(story),
+      dur,
+    ],
   );
-  return r.linhas[0]?.r ?? { erro: (r as { erro?: string }).erro };
+}
+
+async function ouvir(codigo: string, k: string) {
+  const r = await servico(`select public.servico_ouvir_qr($1, $2) as r`, [
+    codigo,
+    k,
+  ]);
+  return (r.linhas?.[0]?.r as Record<string, unknown>) ?? { erro: r.erro };
 }
 
 beforeAll(async () => {
@@ -129,25 +142,32 @@ afterAll(async () => {
 
 describe("family_messages nasce fechada", () => {
   it.each(["anon", "authenticated", "porta_autor"])(
-    "%s não tem nenhum privilégio",
+    "%s não tem privilégio de tabela nem de coluna",
     async (papel) => {
-      const r = await sql<{ algum: boolean }>(
-        `select has_table_privilege($1, 'public.family_messages', 'select, insert, update, delete') as algum`,
+      const [r] = await sql<{ tabela: boolean; coluna: boolean }>(
+        `select has_table_privilege($1, 'public.family_messages', 'select, insert, update, delete') as tabela,
+                has_any_column_privilege($1, 'public.family_messages', 'select, insert, update') as coluna`,
         [papel],
       );
-      expect(r[0].algum).toBe(false);
+      expect(r).toEqual({ tabela: false, coluna: false });
     },
   );
 
-  it("RLS ligada e nenhuma política", async () => {
+  it("RLS ligada; a única política nega anon e porta_autor (restritiva)", async () => {
     const [t] = await sql<{ rls: boolean }>(
       `select relrowsecurity as rls from pg_class where oid = 'public.family_messages'::regclass`,
     );
     expect(t.rls).toBe(true);
-    const p = await sql(
-      `select 1 from pg_policies where tablename = 'family_messages'`,
+    const p = await sql<{ permissive: string; roles: string[]; qual: string }>(
+      `select permissive, roles, qual from pg_policies where tablename = 'family_messages'`,
     );
-    expect(p).toEqual([]);
+    expect(p).toEqual([
+      {
+        permissive: "RESTRICTIVE",
+        roles: ["anon", "porta_autor"],
+        qual: "false",
+      },
+    ]);
   });
 
   it("um membro logado não lê nem com uma mensagem guardada", async () => {
@@ -158,48 +178,87 @@ describe("family_messages nasce fechada", () => {
     expect(r.erro).toMatch(/permission denied/);
     await sql(`delete from public.family_messages`);
   });
+
+  it.each(["qr_codes", "qr_consultas"])(
+    "anon e porta_autor sem nada em %s",
+    async (t) => {
+      for (const papel of ["anon", "porta_autor"]) {
+        const [r] = await sql<{ algum: boolean }>(
+          `select has_table_privilege($1, $2, 'select, insert, update, delete')
+               or has_any_column_privilege($1, $2, 'select, insert, update') as algum`,
+          [papel, `public.${t}`],
+        );
+        expect(r.algum).toBe(false);
+      }
+    },
+  );
+});
+
+describe("sorteio do código", () => {
+  it("sempre 8 símbolos do alfabeto, sem repetir em 2000 sorteios", async () => {
+    const r = await sql<{ c: string }>(
+      `select privado.qr_sortear_codigo() as c from generate_series(1, 2000)`,
+    );
+    expect(r.every((x) => ALFABETO.test(x.c))).toBe(true);
+    expect(new Set(r.map((x) => x.c)).size).toBe(2000);
+    // os 31 símbolos aparecem (rejeição sem viés grosseiro)
+    expect(new Set(r.map((x) => x.c).join("")).size).toBe(31);
+  });
+
+  it("nenhum cliente escolhe o código: criar_qr não recebe código", async () => {
+    const s = await historia(livroA);
+    const r = await comoMembro(ana, `select public.criar_qr($1, 'AAAAAAAA')`, [
+      s,
+    ]);
+    expect(r.erro).toMatch(/does not exist/);
+  });
 });
 
 describe("criar_qr", () => {
-  it("só membro do livro, com plano ativo", async () => {
+  it("só membro do livro, com plano ativo; anon não chama", async () => {
     const s = await historia(livroA);
-    expect(await criarQr(beto, s, "AAAA2222")).toEqual({
-      erro: "sem_permissao",
-    });
+    expect(await criarQr(beto, s)).toEqual({ erro: "sem_permissao" });
     const anon = await como(db, "anon", {}, (tx) =>
-      tenta(tx, `select public.criar_qr($1, 'AAAA2222')`, [s]),
+      tenta(tx, `select public.criar_qr($1)`, [s]),
     );
     expect(anon.erro).toMatch(/permission denied/);
   });
 
   it("história não marcada como pronta ou sem áudio: recusa", async () => {
-    const s = await historia(livroA, false);
-    expect(await criarQr(ana, s, "BBBB2222")).toEqual({
+    expect(await criarQr(ana, await historia(livroA, false))).toEqual({
       erro: "historia_nao_pronta",
     });
-    const semAudio = await historia(livroA, true, false);
-    expect(await criarQr(ana, semAudio, "BBBB2223")).toEqual({
+    expect(await criarQr(ana, await historia(livroA, true, false))).toEqual({
       erro: "historia_sem_audio",
     });
   });
 
-  it("código fora do alfabeto (0, 1, I, L, O, minúscula) é recusado", async () => {
-    const s = await historia(livroA);
-    for (const c of ["ABCD0123", "ABCDEFGI", "abcd2345", "ABC2345"])
-      expect(await criarQr(ana, s, c)).toEqual({ erro: "qr_codigo_invalido" });
+  it("gravação inteira que também alimenta outra história: recusa", async () => {
+    const s = await historia(livroA, true, false);
+    const g = await gravacao(livroA, s, 1);
+    const outra = await historia(livroA, true, false);
+    await sql(
+      `insert into public.story_recordings (story_id, recording_id, book_id, ordem, segmentos) values ($1, $2, $3, 1, '{1,2}')`,
+      [outra, g, livroA],
+    );
+    expect(await criarQr(ana, s)).toEqual({
+      erro: "historia_audio_compartilhado",
+    });
   });
 
-  it("cria uma vez; o segundo pedido devolve o mesmo código e não pede áudio de novo", async () => {
+  it("cria uma vez, pede o recorte; o segundo pedido devolve o mesmo e não pede de novo", async () => {
     const s = await historia(livroA);
-    const r1 = await criarQr(ana, s, "CCCC2222");
-    expect(r1.linhas).toEqual([{ codigo: "CCCC2222", precisa_audio: true }]);
-    const r2 = await criarQr(ana, s, "DDDD2222");
-    expect(r2.linhas).toEqual([{ codigo: "CCCC2222", precisa_audio: false }]);
-  });
-
-  it("código já usado por outra história: qr_colisao (o servidor sorteia outro)", async () => {
-    const s = await historia(livroA);
-    expect(await criarQr(ana, s, "CCCC2222")).toEqual({ erro: "qr_colisao" });
+    const r1 = await criarQr(ana, s);
+    const c = String(r1.linhas?.[0]?.codigo);
+    expect(c).toMatch(ALFABETO);
+    expect(r1.linhas?.[0]).toMatchObject({
+      audio_pronto: false,
+      pedir_audio: true,
+    });
+    const r2 = await criarQr(ana, s);
+    expect(r2.linhas).toEqual([
+      { codigo: c, audio_pronto: false, pedir_audio: false },
+    ]);
   });
 
   it("plano vencido: não cria", async () => {
@@ -210,102 +269,116 @@ describe("criar_qr", () => {
       `update public.books set plano_ativado_em = now() - interval '13 months', plano_vence_em = now() - interval '1 day' where id = $1`,
       [livro],
     );
-    expect(await criarQr(carla, s, "EEEE2222")).toEqual({
-      erro: "sem_permissao",
-    });
+    expect(await criarQr(carla, s)).toEqual({ erro: "sem_permissao" });
   });
 });
 
 describe("recorte de áudio", () => {
-  it("só grava o recorte da fonte atual; recorte velho não sobrescreve", async () => {
+  it("grava o recorte da fonte atual e avisa que o PDF pode sair", async () => {
     const s = await historia(livroA);
-    await criarQr(ana, s, "FFFF2222");
+    const c = await qrDe(ana, s);
+    expect((await recortar(c, livroA, s)).linhas).toEqual([
+      { gravado: true, anterior: null },
+    ]);
+    expect((await criarQr(ana, s)).linhas?.[0]).toMatchObject({
+      audio_pronto: true,
+      pedir_audio: false,
+    });
+  });
+
+  it("fonte velha (a história ganhou áudio no meio do corte) não grava", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
     const velha = await fonte(s);
-    // a história ganha mais um áudio depois do pedido
+    await gravacao(livroA, s, 2);
+    const r = await servico(
+      `select gravado from public.servico_qr_audio_pronto($1, $2, $3, 100)`,
+      [c, `livros/${livroA}/${c}-${"a".repeat(12)}.m4a`, velha],
+    );
+    expect(r.linhas).toEqual([{ gravado: false }]);
+  });
+
+  it("recorte mais longo que a fala da história + folga é recusado", async () => {
+    const s = await historia(livroA); // 120 s de fala
+    const c = await qrDe(ana, s);
+    expect(await recortar(c, livroA, s, 151)).toEqual({
+      erro: "qr_recorte_longo",
+    });
+    expect((await recortar(c, livroA, s, 150)).linhas?.[0]).toMatchObject({
+      gravado: true,
+    });
+  });
+
+  it("recorte novo devolve o caminho do anterior, para apagar o arquivo velho", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    await recortar(c, livroA, s);
+    const [{ antes }] = await sql<{ antes: string }>(
+      `select audio_caminho as antes from public.qr_codes where codigo = $1`,
+      [c],
+    );
+    await sql(
+      `update public.story_recordings set segmentos = '{1,2}' where story_id = $1`,
+      [s],
+    );
+    expect((await recortar(c, livroA, s)).linhas).toEqual([
+      { gravado: true, anterior: antes },
+    ]);
+  });
+
+  it("caminho de outro livro é recusado pelo CHECK", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    const r = await servico(
+      `select public.servico_qr_audio_pronto($1, $2, $3, 100)`,
+      [c, `livros/${livroB}/${c}-${"b".repeat(12)}.m4a`, await fonte(s)],
+    );
+    expect(r.erro).toMatch(/qr_codes_audio_do_livro/);
+  });
+
+  it("áudio acrescentado ainda fora do texto não entra na fonte", async () => {
+    const s = await historia(livroA);
+    const antes = await fonte(s);
     const g = crypto.randomUUID();
     await sql(
       `insert into public.recordings (id, book_id, origem, nome_arquivo, caminho, content_type, tamanho_bytes,
-        duracao_s, upload, recebido_em)
-       values ($1, $2, 'upload', 'b.m4a', $3, 'audio/mp4', 100, 60, 'recebido', now())`,
-      [g, livroA, `livros/${livroA}/audios/${g}.m4a`],
+        duracao_s, upload, recebido_em, para_historia)
+       values ($1, $2, 'upload', 'b.m4a', $3, 'audio/mp4', 100, 60, 'recebido', now(), $4)`,
+      [g, livroA, `livros/${livroA}/audios/${g}.m4a`, s],
     );
     await sql(
       `insert into public.story_recordings (story_id, recording_id, book_id, ordem) values ($1, $2, $3, 2)`,
       [s, g, livroA],
     );
-    const caminho = `livros/${livroA}/qr/FFFF2222-${"a".repeat(12)}.m4a`;
-    const r1 = await servico(
-      `select public.servico_qr_audio_pronto($1, $2, $3) as ok`,
-      ["FFFF2222", caminho, velha],
-    );
-    expect(r1.linhas).toEqual([{ ok: false }]);
-    const r2 = await servico(
-      `select public.servico_qr_audio_pronto($1, $2, $3) as ok`,
-      ["FFFF2222", caminho, await fonte(s)],
-    );
-    expect(r2.linhas).toEqual([{ ok: true }]);
-  });
-
-  it("recorte de outro livro é recusado pelo CHECK", async () => {
-    const s = await historia(livroA);
-    await criarQr(ana, s, "GGGG2222");
-    const r = await servico(
-      `select public.servico_qr_audio_pronto($1, $2, $3)`,
-      [
-        "GGGG2222",
-        `livros/${livroB}/qr/GGGG2222-${"b".repeat(12)}.m4a`,
-        await fonte(s),
-      ],
-    );
-    expect(r.erro).toMatch(/qr_codes_audio_do_livro/);
-  });
-
-  it("a história mudou: o próximo criar_qr pede o recorte de novo", async () => {
-    const s = await historia(livroA);
-    await criarQr(ana, s, "HHHH2222");
-    await servico(`select public.servico_qr_audio_pronto($1, $2, $3)`, [
-      "HHHH2222",
-      `livros/${livroA}/qr/HHHH2222-${"c".repeat(12)}.m4a`,
-      await fonte(s),
-    ]);
-    expect((await criarQr(ana, s, "ZZZZ2222")).linhas).toEqual([
-      { codigo: "HHHH2222", precisa_audio: false },
-    ]);
-    await sql(
-      `update public.story_recordings set segmentos = '{1,2}' where story_id = $1`,
-      [s],
-    );
-    expect((await criarQr(ana, s, "ZZZZ2222")).linhas).toEqual([
-      { codigo: "HHHH2222", precisa_audio: true },
-    ]);
+    expect(await fonte(s)).toBe(antes);
   });
 });
 
-describe("nunca apagado", () => {
-  it("nem a chave secreta apaga, troca o código ou o destino", async () => {
+describe("nunca apagado; desligar", () => {
+  it("nem a chave secreta apaga, troca o código ou a história", async () => {
     const s = await historia(livroA);
-    await criarQr(ana, s, "JJJJ2222");
+    const c = await qrDe(ana, s);
     const outra = await historia(livroA);
     for (const q of [
-      `delete from public.qr_codes where codigo = 'JJJJ2222'`,
-      `update public.qr_codes set codigo = 'JJJJ3333' where codigo = 'JJJJ2222'`,
-      `update public.qr_codes set story_id = '${outra}' where codigo = 'JJJJ2222'`,
+      `delete from public.qr_codes where codigo = '${c}'`,
+      `update public.qr_codes set codigo = 'JJJJ3333' where codigo = '${c}'`,
+      `update public.qr_codes set story_id = '${outra}' where codigo = '${c}'`,
       `truncate public.qr_codes`,
     ]) {
       const r = await servico(q);
       expect(r.erro).toMatch(/qr_imutavel|permission denied/);
     }
-    const ok = await servico(
-      `update public.qr_codes set desativado_em = now() where codigo = 'JJJJ2222'`,
-    );
-    expect(ok.erro).toBeUndefined();
   });
 
-  it("o membro lê só os QR do próprio livro e não escreve direto", async () => {
-    const s = await historia(livroB);
-    await criarQr(beto, s, "KKKK2222");
+  it("o membro lê só o próprio livro, sem o caminho do recorte, e não escreve direto", async () => {
+    const c = await qrDe(beto, await historia(livroB));
     const r = await comoMembro(ana, `select codigo from public.qr_codes`);
-    expect(r.linhas?.map((x) => x.codigo)).not.toContain("KKKK2222");
+    expect(r.linhas?.map((x) => x.codigo)).not.toContain(c);
+    const caminho = await comoMembro(
+      ana,
+      `select audio_caminho from public.qr_codes`,
+    );
+    expect(caminho.erro).toMatch(/permission denied/);
     const w = await comoMembro(
       ana,
       `insert into public.qr_codes (codigo, book_id, story_id) values ('MMMM2222', $1, $2)`,
@@ -313,19 +386,41 @@ describe("nunca apagado", () => {
     );
     expect(w.erro).toMatch(/permission denied/);
   });
+
+  it("só o responsável desliga e religa; desligado não gera página nem toca", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    await recortar(c, livroA, s);
+    expect(
+      await comoMembro(beto, `select public.desativar_qr($1, true)`, [c]),
+    ).toEqual({ erro: "sem_permissao" });
+    const cofa = await criarUsuario(db, "cofa@exemplo.com");
+    await sql(
+      `insert into public.book_members (book_id, user_id, papel) values ($1, $2, 'cofacilitador')`,
+      [livroA, cofa],
+    );
+    expect(
+      await comoMembro(cofa, `select public.desativar_qr($1, true)`, [c]),
+    ).toEqual({ erro: "sem_permissao" });
+    await comoMembro(ana, `select public.desativar_qr($1, true)`, [c]);
+    expect(await criarQr(ana, s)).toEqual({ erro: "qr_desativado" });
+    expect(await ouvir(c, chave(7))).toEqual({ estado: "desativado" });
+    await comoMembro(ana, `select public.desativar_qr($1, false)`, [c]);
+    expect((await ouvir(c, chave(7))).estado).toBe("ok");
+  });
 });
 
 describe("servico_ouvir_qr (o player)", () => {
   it("anon e authenticated não chamam", async () => {
     for (const papel of ["anon", "authenticated"] as const) {
       const r = await como(db, papel, { sub: ana }, (tx) =>
-        tenta(tx, `select public.servico_ouvir_qr('CCCC2222', $1)`, [CHAVE]),
+        tenta(tx, `select public.servico_ouvir_qr('CCCC2222', $1)`, [chave(1)]),
       );
       expect(r.erro).toMatch(/permission denied/);
     }
   });
 
-  it("estados: não encontrado, preparando, ok (com título e ano), desativado", async () => {
+  it("estados: não encontrado, preparando, ok com título e ano", async () => {
     expect(await ouvir("NNNN2222", chave(1))).toEqual({
       estado: "nao_encontrado",
     });
@@ -333,64 +428,114 @@ describe("servico_ouvir_qr (o player)", () => {
       estado: "nao_encontrado",
     });
     const s = await historia(livroA);
-    await criarQr(ana, s, "PPPP2222");
-    expect(await ouvir("PPPP2222", chave(1))).toEqual({
+    const c = await qrDe(ana, s); // criar_qr já reservou o pedido
+    expect(await ouvir(c, chave(1))).toEqual({
       estado: "preparando",
+      pedir_audio: false,
     });
-    const caminho = `livros/${livroA}/qr/PPPP2222-${"d".repeat(12)}.m4a`;
-    await servico(`select public.servico_qr_audio_pronto($1, $2, $3)`, [
-      "PPPP2222",
-      caminho,
-      await fonte(s),
-    ]);
-    expect(await ouvir("PPPP2222", chave(1))).toEqual({
-      estado: "ok",
-      titulo: "O trem",
-      ano: 1962,
-      audio_caminho: caminho,
-    });
-    await sql(
-      `update public.qr_codes set desativado_em = now() where codigo = 'PPPP2222'`,
+    await recortar(c, livroA, s);
+    const ok = await ouvir(c, chave(1));
+    expect(ok).toMatchObject({ estado: "ok", titulo: "O trem", ano: 1962 });
+    expect(String(ok.audio_caminho)).toMatch(
+      new RegExp(`^livros/${livroA}/${c}-`),
     );
-    expect(await ouvir("PPPP2222", chave(1))).toEqual({ estado: "desativado" });
+  });
+
+  it("história mudou depois do recorte: preparando (nunca o áudio velho) e pede o novo", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    await recortar(c, livroA, s);
+    await sql(
+      `update public.story_recordings set segmentos = '{3}' where story_id = $1`,
+      [s],
+    );
+    expect(await ouvir(c, chave(2))).toEqual({
+      estado: "preparando",
+      pedir_audio: true,
+    });
+    expect(await ouvir(c, chave(2))).toEqual({
+      estado: "preparando",
+      pedir_audio: false,
+    });
   });
 
   it("funciona com o plano vencido", async () => {
     const s = await historia(livroB);
-    await criarQr(beto, s, "QQQQ2222");
-    await servico(`select public.servico_qr_audio_pronto($1, $2, $3)`, [
-      "QQQQ2222",
-      `livros/${livroB}/qr/QQQQ2222-${"e".repeat(12)}.m4a`,
-      await fonte(s),
-    ]);
+    const c = await qrDe(beto, s);
+    await recortar(c, livroB, s);
     await sql(
       `update public.books set plano_ativado_em = now() - interval '13 months', plano_vence_em = now() - interval '1 day' where id = $1`,
       [livroB],
     );
-    expect((await ouvir("QQQQ2222", chave(2))).estado).toBe("ok");
+    expect((await ouvir(c, chave(3))).estado).toBe("ok");
   });
 
-  it("registra a abertura no events, só com ids", async () => {
-    const [e] = await sql<{ detalhes: Record<string, string> }>(
-      `select detalhes from public.events where acao = 'qr_aberto' order by id desc limit 1`,
-    );
-    expect(Object.keys(e.detalhes)).toEqual(["story_id"]);
-  });
-
-  it("mais de 30 consultas no mesmo minuto pela mesma chave: limite; outra chave segue", async () => {
+  it("10 erros por rede em 10 min: limite até para código válido; outra rede segue", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    await recortar(c, livroA, s);
     const k = chave(99);
-    const estados: string[] = [];
-    for (let i = 0; i < 31; i++)
-      estados.push(String((await ouvir("RRRR2222", k)).estado));
-    expect(estados.slice(0, 30).every((e) => e === "nao_encontrado")).toBe(
-      true,
-    );
-    expect(estados[30]).toBe("limite");
-    expect((await ouvir("RRRR2222", chave(100))).estado).toBe("nao_encontrado");
+    for (let i = 0; i < 10; i++)
+      expect((await ouvir("RRRR2222", k)).estado).toBe("nao_encontrado");
+    expect((await ouvir(c, k)).estado).toBe("limite");
+    expect((await ouvir(c, chave(100))).estado).toBe("ok");
   });
 
-  it("chave que não é hash: recusa", async () => {
+  it("acertos têm teto próprio (60 por minuto por rede)", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    await recortar(c, livroA, s);
+    const k = chave(200);
+    const estados: string[] = [];
+    for (let i = 0; i < 61; i++)
+      estados.push(String((await ouvir(c, k)).estado));
+    expect(estados.slice(0, 60).every((e) => e === "ok")).toBe(true);
+    expect(estados[60]).toBe("limite");
+  });
+
+  it("teto global de erros fecha os erros de todas as redes", async () => {
+    await sql(
+      `insert into public.qr_consultas (chave, tipo, janela, n)
+       values (repeat('0', 64), 'erro', date_bin('10 minutes', now(), timestamptz '2026-01-01'), 3000)
+       on conflict (chave, tipo, janela) do update set n = 3000`,
+    );
+    expect((await ouvir("SSSS2222", chave(300))).estado).toBe("limite");
+    await sql(`delete from public.qr_consultas where chave = repeat('0', 64)`);
+  });
+
+  it("chave que não é hash ou é a do balde global: recusa", async () => {
     expect((await ouvir("CCCC2222", "1.2.3.4")).erro).toMatch(/chave_invalida/);
+    expect((await ouvir("CCCC2222", "0".repeat(64))).erro).toMatch(
+      /chave_invalida/,
+    );
+  });
+});
+
+describe("servico_qr_tocou (a métrica)", () => {
+  it("1 evento por código, rede e hora, só com ids", async () => {
+    const s = await historia(livroA);
+    const c = await qrDe(ana, s);
+    const tocar = async (k: string) =>
+      (await servico(`select public.servico_qr_tocou($1, $2) as r`, [c, k]))
+        .linhas?.[0]?.r;
+    expect(await tocar(chave(400))).toBe(true);
+    expect(await tocar(chave(400))).toBe(false);
+    expect(await tocar(chave(401))).toBe(true);
+    const ev = await sql<{ detalhes: Record<string, string> }>(
+      `select detalhes from public.events where acao = 'qr_tocou' and detalhes ->> 'story_id' = $1`,
+      [s],
+    );
+    expect(ev).toHaveLength(2);
+    expect(Object.keys(ev[0].detalhes)).toEqual(["story_id"]);
+  });
+
+  it("limpeza apaga contadores com mais de 2 h", async () => {
+    await sql(
+      `insert into public.qr_consultas (chave, tipo, janela) values ($1, 'erro', now() - interval '3 hours')`,
+      [chave(500)],
+    );
+    const r = await servico(`select public.servico_qr_limpar_consultas() as n`);
+    expect(Number(r.linhas?.[0]?.n)).toBeGreaterThanOrEqual(1);
   });
 });
 

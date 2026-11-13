@@ -370,6 +370,8 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "public.aplicar_proposta",
       "public.confirmar_divisao",
       "public.consentir_processamento_ia",
+      "public.criar_qr",
+      "public.desativar_qr",
       "public.descartar_proposta",
       "public.editar_historia",
       "public.enquete_abrir",

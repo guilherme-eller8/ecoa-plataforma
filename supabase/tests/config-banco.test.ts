@@ -51,7 +51,10 @@ describe("lib/config.ts x banco", () => {
     ["max_audio_extra_s", config.MAX_AUDIO_EXTRA_MIN * 60],
     ["max_audios_historia", config.MAX_AUDIOS_HISTORIA],
     ["instrucao_max", config.INSTRUCAO_MAX],
-    ["qr_consultas_por_minuto", config.QR_CONSULTAS_POR_MINUTO],
+    ["qr_erros_por_chave", config.QR_ERROS_POR_CHAVE],
+    ["qr_erros_global", config.QR_ERROS_GLOBAL],
+    ["qr_acertos_por_minuto", config.QR_ACERTOS_POR_MINUTO],
+    ["qr_folga_recorte_s", config.QR_FOLGA_RECORTE_S],
     ["qr_audio_espera_s", config.QR_AUDIO_ESPERA_MIN * 60],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
