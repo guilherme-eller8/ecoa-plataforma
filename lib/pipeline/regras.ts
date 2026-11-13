@@ -11,9 +11,26 @@ export const EVENTO_HISTORIA_CONFIRMADA = "ecoa/historia.confirmada";
  * incompleto, mais de 2 h, sem consentimento) é o banco. A chave junta as partes de um lote,
  * para o Inngest processar uma de cada vez.
  */
-export function chaveDoEvento(g: { id: string; lote_id: string | null }) {
-  return g.lote_id ?? g.id;
+export function chaveDoEvento(g: {
+  id: string;
+  lote_id: string | null;
+  para_historia?: string | null;
+}) {
+  // Prompt 9: áudios acrescentados à mesma história passam um de cada vez.
+  return g.lote_id ?? g.para_historia ?? g.id;
 }
+
+/** Prompt 9: proposta de tamanho (ou "usar este áudio no texto") pedida pela pessoa. */
+export const EVENTO_PROPOSTA = "ecoa/proposta.pedida";
+
+/** Prompt 9: o canal do livro também avisa quando uma proposta muda de estado (sem texto). */
+export const EVENTO_CANAL_PROPOSTA = "proposta";
+export type MensagemProposta = {
+  tipo: "proposta";
+  historia: string;
+  proposta: string;
+  estado: "gerando" | "pronta" | "falhou";
+};
 
 export function topicoDoLivro(livroId: string) {
   return `livro:${livroId}`;

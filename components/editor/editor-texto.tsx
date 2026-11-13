@@ -36,9 +36,23 @@ export type FraseTocada = {
 
 export type ApiDoTexto = {
   tirarGrifo: (id: string) => void;
-  definir: (doc: DocTiptap) => void;
+  /** emitir = false: troca o texto sem avisar mudança (ex.: depois de aceitar uma proposta). */
+  definir: (doc: DocTiptap, opcoes?: { emitir?: boolean }) => void;
   documento: () => DocTiptap | null;
 };
+
+/** Prompt 9: trecho selecionado (para "Revisar"). Posições em UTF-16 dentro do parágrafo. */
+export type Selecao =
+  | {
+      dentro: true;
+      paragrafo: string;
+      inicio: number;
+      fim: number;
+      trecho: string;
+      base: number;
+      esquerda: number;
+    }
+  | { dentro: false; base: number; esquerda: number };
 
 const unir = (a: unknown, b: unknown) =>
   [...new Set([...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])])]
@@ -180,6 +194,7 @@ type Props = {
   aoTocarFrase: (f: FraseTocada | null) => void;
   aoTocarGrifo: (g: AtributosConfira) => void;
   aoMudarParagrafo: (fontes: number[]) => void;
+  aoSelecionar?: (s: Selecao | null) => void;
 };
 
 const CLASSES_DO_TEXTO =
@@ -226,6 +241,7 @@ const EditorVivo = forwardRef<ApiDoTexto, Props>(function EditorVivo(
     aoTocarFrase,
     aoTocarGrifo,
     aoMudarParagrafo,
+    aoSelecionar,
   },
   ref,
 ) {
@@ -236,6 +252,7 @@ const EditorVivo = forwardRef<ApiDoTexto, Props>(function EditorVivo(
     aoTocarFrase,
     aoTocarGrifo,
     aoMudarParagrafo,
+    aoSelecionar,
   });
   useEffect(() => {
     avisos.current = {
@@ -244,6 +261,7 @@ const EditorVivo = forwardRef<ApiDoTexto, Props>(function EditorVivo(
       aoTocarFrase,
       aoTocarGrifo,
       aoMudarParagrafo,
+      aoSelecionar,
     };
   });
 
@@ -300,11 +318,39 @@ const EditorVivo = forwardRef<ApiDoTexto, Props>(function EditorVivo(
       avisos.current.aoMudar();
     },
     onSelectionUpdate({ editor: e }) {
-      const { $from } = e.state.selection;
+      const { $from, $to, empty, from, to } = e.state.selection;
       const p = $from.depth >= 1 ? $from.node(1) : null;
       avisos.current.aoMudarParagrafo(
         (p?.attrs.fontes as number[] | undefined) ?? [],
       );
+      if (!avisos.current.aoSelecionar) return;
+      if (empty || !p) return avisos.current.aoSelecionar(null);
+      const fim = e.view.coordsAtPos(to);
+      const comeco = e.view.coordsAtPos(from);
+      const esquerda = Math.min(comeco.left, fim.left);
+      // Dentro de um parágrafo só: o texto do parágrafo é só texto, então a posição dentro
+      // dele é a mesma contagem do JavaScript (UTF-16).
+      if (
+        $from.depth !== 1 ||
+        $to.depth !== 1 ||
+        $from.before(1) !== $to.before(1)
+      )
+        return avisos.current.aoSelecionar({
+          dentro: false,
+          base: fim.bottom,
+          esquerda,
+        });
+      const trecho = p.textContent.slice($from.parentOffset, $to.parentOffset);
+      if (!trecho.trim()) return avisos.current.aoSelecionar(null);
+      avisos.current.aoSelecionar({
+        dentro: true,
+        paragrafo: (p.attrs.pid as string) ?? "",
+        inicio: $from.parentOffset,
+        fim: $to.parentOffset,
+        trecho,
+        base: fim.bottom,
+        esquerda,
+      });
     },
   });
 
@@ -329,8 +375,10 @@ const EditorVivo = forwardRef<ApiDoTexto, Props>(function EditorVivo(
         });
         editor.view.dispatch(tr);
       },
-      definir(doc) {
-        editor?.commands.setContent(doc, { emitUpdate: true });
+      definir(doc, opcoes) {
+        editor?.commands.setContent(doc, {
+          emitUpdate: opcoes?.emitir ?? true,
+        });
       },
       documento() {
         return editor ? (editor.getJSON() as DocTiptap) : null;

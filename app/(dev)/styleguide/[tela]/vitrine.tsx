@@ -27,6 +27,12 @@ import {
   HISTORIAS_COM_DIVISAO,
 } from "@/lib/exemplos/prompt7";
 import { TelaEditor } from "@/components/telas/tela-editor";
+import { TelaGravarMais } from "@/components/telas/tela-gravar-mais";
+import {
+  HISTORIA_COM_PROPOSTA,
+  HISTORIA_EDITADA,
+  acoesEditorComIA,
+} from "@/lib/exemplos/prompt9";
 import { TelaVersoes } from "@/components/telas/tela-versoes";
 import {
   ACOES_VERSOES_FALSAS,
@@ -150,6 +156,36 @@ export function Vitrine({ tela }: { tela: Tela }) {
                 ? "outra-tela"
                 : "livre",
           )}
+        />
+      );
+    case "editor-ia":
+    case "editor-proposta":
+    case "editor-diferenca":
+      return (
+        <TelaEditor
+          historia={
+            tela === "editor-ia" ? HISTORIA_EDITADA : HISTORIA_COM_PROPOSTA
+          }
+          podeEscrever
+          acoes={acoesEditorComIA()}
+          propostaInicial={
+            tela === "editor-diferenca"
+              ? HISTORIA_COM_PROPOSTA.propostas[0].id
+              : undefined
+          }
+        />
+      );
+    case "gravar-mais":
+      return (
+        <TelaGravarMais
+          livroId={LIVRO_JAIR.id}
+          historia={{
+            id: HISTORIA_EDITADA.id,
+            titulo: HISTORIA_EDITADA.texto.titulo,
+          }}
+          podeEscrever
+          acoes={ACOES_AUDIOS_FALSAS}
+          subir={SUBIR_FALSO}
         />
       );
     case "versoes":

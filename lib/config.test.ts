@@ -62,7 +62,9 @@ describe("lib/config — IA", () => {
     const c = await import("./config");
     expect(c.TAMANHOS_TEXTO).toEqual({
       resumido: 0.3,
+      curto: 0.45,
       medio: 0.6,
+      longo: 0.75,
       detalhado: 0.9,
     });
     expect(c.META_PRIMEIRAS_PALAVRAS_S).toBe(60);

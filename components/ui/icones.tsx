@@ -112,3 +112,20 @@ export function IconePerguntas(p: Props) {
     </Base>
   );
 }
+
+export function IconeCadeado(p: Props) {
+  return (
+    <Base {...p}>
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </Base>
+  );
+}
+
+export function IconeVarinha(p: Props) {
+  return (
+    <Base {...p}>
+      <path d="M5 19L15 9M14 4v2M19 9h2M17.5 6.5l1.5-1.5M10 5l.5 1.5M18 13.5l1.5.5" />
+    </Base>
+  );
+}

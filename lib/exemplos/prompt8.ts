@@ -146,6 +146,9 @@ export const HISTORIA_PARA_EDITAR: HistoriaParaEditar = {
     },
   ],
   versoes: 3,
+  tamanho: "medio",
+  propostas: [],
+  audiosForaDoTexto: 0,
 };
 
 const ACERVO: FotoDaTela[] = [22, 23, 24].map((n, i) => ({
@@ -230,6 +233,8 @@ export const VERSOES_TREM: VersaoDaTela[] = [
     minha: false,
     criadaEm: "2026-11-13T17:40:00Z",
     restauradaDe: null,
+    proposta: null,
+    tamanho: "medio",
     titulo: "O trem de Cachoeiro",
     paragrafos: [
       "Eu tinha dezoito anos quando peguei o trem em Cachoeiro, ainda escuro.",
@@ -242,6 +247,8 @@ export const VERSOES_TREM: VersaoDaTela[] = [
     minha: true,
     criadaEm: "2026-11-13T15:02:00Z",
     restauradaDe: null,
+    proposta: null,
+    tamanho: "medio",
     titulo: "O trem",
     paragrafos: [
       "Eu tinha dezoito anos quando peguei o trem de ferro em Cachoeiro.",
@@ -253,6 +260,8 @@ export const VERSOES_TREM: VersaoDaTela[] = [
     minha: false,
     criadaEm: "2026-11-13T14:10:00Z",
     restauradaDe: null,
+    proposta: null,
+    tamanho: "medio",
     titulo: "O trem de Cachoeiro",
     paragrafos: HISTORIA_PARA_EDITAR.texto.paragrafos.map((p) => p.texto),
   },

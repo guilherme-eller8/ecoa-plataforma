@@ -693,6 +693,7 @@ export type Database = {
           lote_id: string | null;
           lote_ordem: number | null;
           lote_total: number | null;
+          para_historia: string | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -714,6 +715,7 @@ export type Database = {
           lote_id?: string | null;
           lote_ordem?: number | null;
           lote_total?: number | null;
+          para_historia?: string | null;
           book_id: string;
           caminho: string;
           content_type: string;
@@ -735,6 +737,7 @@ export type Database = {
           lote_id?: string | null;
           lote_ordem?: number | null;
           lote_total?: number | null;
+          para_historia?: string | null;
           book_id?: string;
           caminho?: string;
           content_type?: string;
@@ -919,6 +922,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      story_proposals: {
+        Row: {
+          id: string;
+          story_id: string;
+          book_id: string;
+          tipo: Database["public"]["Enums"]["proposta_tipo"];
+          estado: Database["public"]["Enums"]["proposta_estado"];
+          tamanho: string;
+          pedido: Json;
+          gravacoes: string[];
+          travados: Json;
+          mudancas: Json | null;
+          ordem: string[] | null;
+          marcacoes: Json;
+          erro: string | null;
+          modelos: Json | null;
+          hash_prompts: Json | null;
+          aplicadas: string[] | null;
+          versao: number | null;
+          pedida_por: string | null;
+          pedida_em: string;
+          pronta_em: string | null;
+          decidida_por: string | null;
+          decidida_em: string | null;
+        };
+        Insert: {
+          id?: string;
+          story_id: string;
+          book_id: string;
+          tipo: Database["public"]["Enums"]["proposta_tipo"];
+          estado?: Database["public"]["Enums"]["proposta_estado"];
+          tamanho: string;
+          pedido?: Json;
+          gravacoes?: string[];
+          travados?: Json;
+          mudancas?: Json | null;
+          ordem?: string[] | null;
+          marcacoes?: Json;
+          erro?: string | null;
+          modelos?: Json | null;
+          hash_prompts?: Json | null;
+          aplicadas?: string[] | null;
+          versao?: number | null;
+          pedida_por?: string | null;
+          pedida_em?: string;
+          pronta_em?: string | null;
+          decidida_por?: string | null;
+          decidida_em?: string | null;
+        };
+        Update: {
+          id?: string;
+          story_id?: string;
+          book_id?: string;
+          tipo?: Database["public"]["Enums"]["proposta_tipo"];
+          estado?: Database["public"]["Enums"]["proposta_estado"];
+          tamanho?: string;
+          pedido?: Json;
+          gravacoes?: string[];
+          travados?: Json;
+          mudancas?: Json | null;
+          ordem?: string[] | null;
+          marcacoes?: Json;
+          erro?: string | null;
+          modelos?: Json | null;
+          hash_prompts?: Json | null;
+          aplicadas?: string[] | null;
+          versao?: number | null;
+          pedida_por?: string | null;
+          pedida_em?: string;
+          pronta_em?: string | null;
+          decidida_por?: string | null;
+          decidida_em?: string | null;
+        };
+        Relationships: [];
+      };
       story_recordings: {
         Row: {
           book_id: string;
@@ -958,6 +1036,7 @@ export type Database = {
           modelos: Json | null;
           numero: number;
           origem: Database["public"]["Enums"]["versao_origem"];
+          proposta_id: string | null;
           restaurada_de: number | null;
           story_id: string;
           tamanho: string;
@@ -973,6 +1052,7 @@ export type Database = {
           modelos?: Json | null;
           numero: number;
           origem: Database["public"]["Enums"]["versao_origem"];
+          proposta_id?: string | null;
           restaurada_de?: number | null;
           story_id: string;
           tamanho: string;
@@ -988,6 +1068,7 @@ export type Database = {
           modelos?: Json | null;
           numero?: number;
           origem?: Database["public"]["Enums"]["versao_origem"];
+          proposta_id?: string | null;
           restaurada_de?: number | null;
           story_id?: string;
           tamanho?: string;
@@ -1189,6 +1270,48 @@ export type Database = {
         Args: { p_story: string; p_aba: string };
         Returns: undefined;
       };
+      pedir_proposta: {
+        Args: {
+          p_story: string;
+          p_aba: string;
+          p_tipo: Database["public"]["Enums"]["proposta_tipo"];
+          p_tamanho?: string | null;
+          p_pedido?: Json;
+        };
+        Returns: string;
+      };
+      aplicar_proposta: {
+        Args: {
+          p_story: string;
+          p_aba: string;
+          p_rev: number;
+          p_proposta: string;
+          p_aplicadas: string[];
+          p_conteudo: Json;
+          p_marcacoes: Json;
+        };
+        Returns: number;
+      };
+      descartar_proposta: {
+        Args: { p_story: string; p_aba: string; p_proposta: string };
+        Returns: boolean;
+      };
+      servico_gravar_proposta: {
+        Args: {
+          p_proposta: string;
+          p_mudancas: Json;
+          p_ordem: string[] | null;
+          p_marcacoes: Json;
+          p_pronta: boolean;
+          p_modelos?: Json | null;
+          p_hash?: Json | null;
+        };
+        Returns: boolean;
+      };
+      servico_falhar_proposta: {
+        Args: { p_proposta: string; p_erro: string };
+        Returns: boolean;
+      };
       restaurar_versao: {
         Args: { p_story: string; p_aba: string; p_numero: number };
         Returns: number;
@@ -1252,6 +1375,9 @@ export type Database = {
         | "dividindo"
         | "separar";
       versao_origem: "ia" | "responsavel" | "cofacilitador" | "autor";
+      proposta_tipo: "tamanho" | "trecho" | "audio";
+      proposta_estado:
+        "gerando" | "pronta" | "aplicada" | "descartada" | "falhou";
       ator_tipo:
         | "responsavel"
         | "cofacilitador"

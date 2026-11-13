@@ -12,6 +12,8 @@ import {
 import { assinarLeitura } from "@/lib/storage/assinar";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import { normalizarTexto } from "@/lib/editor/conteudo";
+import type { PropostaDaTela } from "@/lib/editor/tipos";
+import { CHAVES_TAMANHO, type ChaveTamanho } from "@/lib/ui/tamanho";
 import {
   COLUNAS_EDITAR,
   COLUNAS_LER,
@@ -540,7 +542,9 @@ export async function historiaParaEditar(
       });
   });
 
+  const ia = await propostasDoEditor(supabase, livro, historia);
   return {
+    ...ia,
     id: s.id,
     livroId: livro,
     autor,
@@ -554,6 +558,89 @@ export async function historiaParaEditar(
     audios: ler.audios.map((a) => ({ id: a.id, url: a.url })),
     fotos,
     versoes: count ?? 1,
+  };
+}
+
+/**
+ * Prompt 9: o tamanho atual (da última versão), as propostas que a tela precisa mostrar
+ * (gerando, pronta e a última que falhou na última hora, por tipo) e quantos áudios
+ * acrescentados ainda não entraram no texto (a mesma conta de privado.audios_fora_do_texto).
+ */
+export async function propostasDoEditor(
+  supabase: Awaited<ReturnType<typeof clienteSessao>>,
+  livro: string,
+  historia: string,
+): Promise<
+  Pick<HistoriaParaEditar, "tamanho" | "propostas" | "audiosForaDoTexto">
+> {
+  const umaHora = new Date(Date.now() - 3600_000).toISOString();
+  const [{ data: v }, { data: ps }, { data: extras }] = await Promise.all([
+    supabase
+      .from("story_versions")
+      .select("tamanho")
+      .eq("story_id", historia)
+      .order("numero", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("story_proposals")
+      .select(
+        "id, tipo, estado, tamanho, pedido, mudancas, ordem, marcacoes, erro, pedida_em, gravacoes, aplicadas",
+      )
+      .eq("book_id", livro)
+      .eq("story_id", historia)
+      .order("pedida_em", { ascending: false })
+      .limit(100),
+    supabase
+      .from("recordings")
+      .select("id")
+      .eq("book_id", livro)
+      .eq("para_historia", historia),
+  ]);
+  const lista = ps ?? [];
+  const vistos = new Set<string>();
+  const propostas: PropostaDaTela[] = [];
+  for (const p of lista) {
+    const pendente = p.estado === "gerando" || p.estado === "pronta";
+    const falhaRecente = p.estado === "falhou" && p.pedida_em > umaHora;
+    if (vistos.has(p.tipo) || !(pendente || falhaRecente)) {
+      if (p.estado !== "falhou") vistos.add(p.tipo);
+      continue;
+    }
+    vistos.add(p.tipo);
+    propostas.push({
+      id: p.id,
+      tipo: p.tipo,
+      estado: p.estado,
+      tamanho: (CHAVES_TAMANHO as readonly string[]).includes(p.tamanho)
+        ? (p.tamanho as ChaveTamanho)
+        : "medio",
+      pedido: (p.pedido ?? {}) as PropostaDaTela["pedido"],
+      mudancas: (p.mudancas ?? []) as unknown as PropostaDaTela["mudancas"],
+      ordem: p.ordem,
+      marcacoes: (p.marcacoes ?? []) as unknown as PropostaDaTela["marcacoes"],
+      erro: p.erro,
+      pedidaEm: p.pedida_em,
+    });
+  }
+  const cobertas = new Set(
+    lista
+      .filter(
+        (p) =>
+          p.estado === "aplicada" &&
+          (p.tipo === "audio" ||
+            (p.aplicadas?.length ?? 0) ===
+              ((p.mudancas as unknown[] | null)?.length ?? -1)),
+      )
+      .flatMap((p) => p.gravacoes ?? []),
+  );
+  const tamanho = v?.tamanho ?? "medio";
+  return {
+    tamanho: (CHAVES_TAMANHO as readonly string[]).includes(tamanho)
+      ? (tamanho as ChaveTamanho)
+      : "medio",
+    propostas: propostas.reverse(),
+    audiosForaDoTexto: (extras ?? []).filter((g) => !cobertas.has(g.id)).length,
   };
 }
 
@@ -583,16 +670,27 @@ export async function versoesDaHistoria(
   if (!s || s.estado !== "pronta") return null;
   const { data } = await supabase
     .from("story_versions")
-    .select("numero, origem, criado_por, criado_em, restaurada_de, conteudo")
+    .select(
+      "numero, origem, criado_por, criado_em, restaurada_de, conteudo, tamanho, proposta_id",
+    )
     .eq("story_id", historia)
     .order("numero", { ascending: false })
     .limit(200);
+  const ids = (data ?? []).flatMap((v) =>
+    v.proposta_id ? [v.proposta_id] : [],
+  );
+  const { data: props } = ids.length
+    ? await supabase.from("story_proposals").select("id, tipo").in("id", ids)
+    : { data: [] };
+  const tipo = new Map((props ?? []).map((p) => [p.id, p.tipo]));
   const versoes = (data ?? []).map((v): VersaoDaTela => ({
     numero: v.numero,
     origem: v.origem,
     minha: v.criado_por === usuario,
     criadaEm: v.criado_em,
     restauradaDe: v.restaurada_de,
+    proposta: v.proposta_id ? (tipo.get(v.proposta_id) ?? null) : null,
+    tamanho: v.tamanho,
     ...resumoDoConteudo(v.conteudo),
   }));
   const atual: TextoAtualDaTela =
@@ -605,4 +703,21 @@ export async function versoesDaHistoria(
         }
       : null;
   return { titulo: s.titulo, atual, versoes };
+}
+
+/** Prompt 9: "Gravar mais sobre isso" só para história pronta; devolve o título dela. */
+export async function historiaParaGravarMais(
+  livro: string,
+  historia: string,
+): Promise<{ id: string; titulo: string } | null> {
+  if (!/^[0-9a-f-]{36}$/.test(historia)) return null;
+  const supabase = await clienteSessao();
+  const { data } = await supabase
+    .from("stories")
+    .select("id, titulo, estado")
+    .eq("book_id", livro)
+    .eq("id", historia)
+    .maybeSingle();
+  if (!data || data.estado !== "pronta") return null;
+  return { id: data.id, titulo: data.titulo ?? "Sem título" };
 }

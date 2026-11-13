@@ -44,6 +44,10 @@ export const ACOES = [
   "historia_revisada", // marcou como pronta { story }
   "historia_reaberta", // voltou para rascunho { story }
   "restaurou_versao", // { story, versao }
+  // Prompt 9: propostas da IA. { story, tipo } e, no aceite, { aceitas, total }.
+  "pediu_proposta",
+  "aplicou_proposta",
+  "descartou_proposta",
 ] as const;
 
 export const PAPEIS = [

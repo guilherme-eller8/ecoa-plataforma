@@ -124,7 +124,9 @@ export const COTACAO_USD_BRL = 5.5; // premissa; atualizar quando decidir preço
 // Tamanho do texto: fração das palavras com conteúdo da transcrição.
 export const TAMANHOS_TEXTO = {
   resumido: 0.3,
+  curto: 0.45,
   medio: 0.6,
+  longo: 0.75,
   detalhado: 0.9,
 } as const;
 export const TAMANHO_PADRAO = "medio";
@@ -195,3 +197,15 @@ export const CONSULTAR_TRAVA_S = 15; // quem está vendo confere se a trava solt
 export const SALVAR_APOS_MS = 1500; // salvamento automático depois da última tecla
 export const SALVAR_NO_MAXIMO_MS = 5000; // digitando sem parar, salva pelo menos nesse intervalo
 export const FOTO_LADO_MIN_IMPRESSAO_PX = 1200; // abaixo disso no lado menor: alerta
+
+// ── IA sob controle (prompt 9, docs/designs/ia-sob-controle.md) ───────────
+// Os quatro primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const MAX_PROPOSTAS_DIA = 40; // pedidos de IA (tamanho, revisar, áudio) por livro em 24 h
+export const MAX_AUDIO_EXTRA_MIN = 30; // áudio acrescentado a uma história (também no CHECK do banco)
+export const MAX_AUDIOS_HISTORIA = 10; // gravações por história
+export const INSTRUCAO_MAX = 300; // letras da instrução escrita em "Revisar"
+export const ESPERA_TAMANHO_MS = 1500; // controle parado nessa posição pede a proposta
+export const CONSULTAR_PROPOSTA_S = 5; // reserva do canal: proposta gerando é conferida nesse intervalo
+export const PREVISAO_PROPOSTA_BASE_S = 20; // tamanho: editar + verificar
+export const PREVISAO_PROPOSTA_POR_S = 0.2;
+export const PREVISAO_REVISAR_S = 20;

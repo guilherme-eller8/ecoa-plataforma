@@ -11,6 +11,7 @@ import { Botao } from "@/components/ui/botao";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { abaDestaGuia, type AcoesVersoes } from "@/lib/editor/tipos";
+import { rotuloDaChave } from "@/lib/ui/tamanho";
 import type { TextoAtualDaTela, VersaoDaTela } from "@/lib/historias/tipos";
 
 const QUANDO = new Intl.DateTimeFormat("pt-BR", {
@@ -23,7 +24,22 @@ const QUANDO = new Intl.DateTimeFormat("pt-BR", {
 
 const quando = (iso: string) => QUANDO.format(new Date(iso)).replace(",", " ·");
 
-function quem(v: { origem: VersaoDaTela["origem"] | null; minha: boolean }) {
+const PROPOSTA: Record<string, string> = {
+  audio: "IA · áudio novo",
+  trecho: "IA · trecho revisado",
+};
+
+function quem(v: {
+  origem: VersaoDaTela["origem"] | null;
+  minha: boolean;
+  proposta?: VersaoDaTela["proposta"];
+  tamanho?: string;
+}) {
+  // Prompt 9: proposta aceita (I8): "IA · Longo", "IA · áudio novo", "IA · trecho revisado".
+  if (v.origem === "ia" && v.proposta)
+    return v.proposta === "tamanho"
+      ? `IA · ${rotuloDaChave(v.tamanho ?? "medio")}`
+      : PROPOSTA[v.proposta];
   if (v.origem === "ia") return "Escrita pela IA";
   if (v.minha) return "Editada por você";
   if (v.origem === "autor") return "Corrigida pelo autor";

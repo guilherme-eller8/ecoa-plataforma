@@ -164,6 +164,8 @@ export type AudioPreparado = {
 // Prompt 7: a conversa informa quantas partes tem e qual é esta (o lote fica completo no banco).
 export type OpcoesAudios = {
   conversa?: { loteId: string; totalPartes?: number; parte?: number };
+  // Prompt 9: áudio acrescentado a uma história pronta (1 arquivo, sem lote). gravado = do gravador.
+  paraHistoria?: { historiaId: string; gravado: boolean };
 };
 
 export type AcoesAudios = {

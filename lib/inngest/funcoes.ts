@@ -27,15 +27,21 @@ import { bancoPipeline } from "@/lib/pipeline/banco";
 import { publicarNoLivro } from "@/lib/pipeline/canal";
 import { envPipeline } from "@/lib/pipeline/env";
 import { lerErroPipeline, logarSemTexto } from "@/lib/pipeline/erros";
+import { bancoPropostas } from "@/lib/pipeline/banco-propostas";
 import {
   escreverHistoria,
   processarGravacao,
-  type Dependencias,
   type Passos,
 } from "@/lib/pipeline/processar";
 import {
+  proporAudio,
+  proporTamanho,
+  type DependenciasPropostas,
+} from "@/lib/pipeline/propostas";
+import {
   EVENTO_GRAVACAO,
   EVENTO_HISTORIA_CONFIRMADA,
+  EVENTO_PROPOSTA,
   chaveDoEvento,
 } from "@/lib/pipeline/regras";
 import { clienteAdmin } from "@/lib/supabase/admin";
@@ -47,13 +53,39 @@ const dadosDoEvento = z.object({
   chave: z.uuid().optional(),
 });
 const dadosDaEscrita = z.object({ historiaId: z.uuid() });
+const dadosDaProposta = z.object({
+  propostaId: z.uuid(),
+  historiaId: z.uuid(),
+});
 
-function dependencias(): Dependencias {
+/** Prompt 9: proposta que falhou (nada desfaz o texto; a pessoa vê "Tentar de novo"). */
+async function falharProposta(proposta: string, erro?: string) {
+  const { codigo } = lerErroPipeline(erro);
+  const db = clienteAdmin();
+  const mudou = await bancoPropostas(db).falhar(proposta, codigo);
+  if (!mudou) return;
+  const { data } = await db
+    .from("story_proposals")
+    .select("story_id, book_id")
+    .eq("id", proposta)
+    .maybeSingle();
+  if (data)
+    await publicarNoLivro(data.book_id, {
+      tipo: "proposta",
+      historia: data.story_id,
+      proposta,
+      estado: "falhou",
+    }).catch((e) => logarSemTexto("publicar proposta", e));
+}
+
+/** Dependências reais do pipeline (também usadas pela ação de "Revisar", prompt 9). */
+export function dependencias(): DependenciasPropostas {
   const env = envPipeline();
   const db = clienteAdmin();
   const banco = bancoPipeline(db);
   return {
     banco,
+    propostas: bancoPropostas(db),
     ia: new ClienteAnthropic(),
     ler: leitorDeDiretorio(join(process.cwd(), "lib/ai/prompts")),
     transcrever: TRANSCRITORES[PROVEDOR_PADRAO].transcrever,
@@ -152,6 +184,23 @@ export const processarGravacaoFn = inngest.createFunction(
         .eq("recording_id", original.data.recordingId);
       const ids = (srs ?? []).map((x) => x.story_id);
       if (!ids.length) return;
+      // Prompt 9: áudio acrescentado: quem falhou foi a proposta, não a história (já pronta).
+      const { data: g } = await db
+        .from("recordings")
+        .select("para_historia")
+        .eq("id", original.data.recordingId)
+        .maybeSingle();
+      if (g?.para_historia) {
+        const { data: p } = await db
+          .from("story_proposals")
+          .select("id")
+          .eq("story_id", g.para_historia)
+          .eq("tipo", "audio")
+          .eq("estado", "gerando")
+          .maybeSingle();
+        if (p) await falharProposta(p.id, error?.message);
+        return;
+      }
       const { data: s } = await db
         .from("stories")
         .select("id, book_id")
@@ -220,6 +269,40 @@ export const escreverHistoriaFn = inngest.createFunction(
   },
 );
 
+/** Prompt 9: tamanho ou "usar este áudio no texto", pedidos no editor. */
+export const proporFn = inngest.createFunction(
+  {
+    id: "propor",
+    name: "Proposta da IA",
+    triggers: [{ event: EVENTO_PROPOSTA }],
+    retries: (TENTATIVAS_POR_PASSO - 1) as 2,
+    concurrency: [
+      { limit: 1, key: "event.data.historiaId" },
+      { limit: EDICOES_SIMULTANEAS },
+    ],
+    checkpointing: false,
+    onFailure: async ({ event, error }) => {
+      const original = dadosDaProposta.safeParse(event.data?.event?.data);
+      if (original.success)
+        await falharProposta(original.data.propostaId, error?.message);
+    },
+  },
+  async ({ event, step }) => {
+    const dados = dadosDaProposta.safeParse(event.data);
+    if (!dados.success) throw new NonRetriableError("evento:dados_invalidos");
+    const d = dependencias();
+    const passos = step as unknown as Passos;
+    const tipo = await passos.run("tipo", async () => {
+      const p = await d.propostas.proposta(dados.data.propostaId);
+      return p && p.historia === dados.data.historiaId ? p.tipo : null;
+    });
+    if (tipo === "tamanho")
+      return proporTamanho(dados.data.propostaId, d, passos);
+    if (tipo === "audio") return proporAudio(dados.data.propostaId, d, passos);
+    return { fim: "ja_estava" as const, proposta: dados.data.propostaId };
+  },
+);
+
 /**
  * A cada 15 min: reenvia gravações recebidas que ficaram sem história (evento perdido) e
  * marca como "parada" a história em andamento há tempo demais. Nada fica preso em "Ouvindo…".
@@ -239,7 +322,7 @@ export const varreduraFn = inngest.createFunction(
       // Prompt 7: toda origem; 48 h (cobre a cota diária adiada; áudio de teste antigo não volta).
       const { data: candidatas } = await db
         .from("recordings")
-        .select("id, book_id, lote_id, lote_total, recebido_em")
+        .select("id, book_id, lote_id, lote_total, recebido_em, para_historia")
         .eq("upload", "recebido")
         .is("processado_em", null)
         .lte("duracao_s", MAX_ARQUIVO_MIN * 60)
@@ -381,8 +464,29 @@ export const varreduraFn = inngest.createFunction(
       return n;
     });
 
-    return { reenviadas, retomadas, paradas };
+    // Prompt 9: proposta gerando há tempo demais vira "falhou" (com "Tentar de novo").
+    const propostas = await step.run("propostas-paradas", async () => {
+      const { data } = await clienteAdmin()
+        .from("story_proposals")
+        .select("id")
+        .eq("estado", "gerando")
+        .lt(
+          "pedida_em",
+          new Date(Date.now() - VARREDURA_PARADA_MIN * 60_000).toISOString(),
+        )
+        .limit(50);
+      for (const p of data ?? [])
+        await falharProposta(p.id, "varredura:parada");
+      return (data ?? []).length;
+    });
+
+    return { reenviadas, retomadas, paradas, propostas };
   },
 );
 
-export const funcoes = [processarGravacaoFn, escreverHistoriaFn, varreduraFn];
+export const funcoes = [
+  processarGravacaoFn,
+  escreverHistoriaFn,
+  proporFn,
+  varreduraFn,
+];

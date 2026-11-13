@@ -6,7 +6,15 @@ import type { z } from "zod";
 import type { Uso } from "./custo";
 
 export type Etapa =
-  "estruturar" | "editar" | "verificar" | "classificar" | "memoria" | "dividir";
+  | "estruturar"
+  | "editar"
+  | "verificar"
+  | "classificar"
+  | "memoria"
+  | "dividir"
+  | "tamanho"
+  | "integrar"
+  | "revisar";
 
 export type ChamadaIA<T> = {
   etapa: Etapa;

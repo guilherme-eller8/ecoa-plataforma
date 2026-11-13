@@ -61,6 +61,11 @@ export const TELAS = [
   "editor-somente-leitura",
   "editor-pronta",
   "versoes",
+  // Prompt 9
+  "editor-ia",
+  "editor-proposta",
+  "editor-diferenca",
+  "gravar-mais",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

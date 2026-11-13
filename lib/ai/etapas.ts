@@ -12,8 +12,11 @@ import type { ChamadaIA, ClienteIA, RespostaIA } from "./claude";
 import {
   Divisao,
   Edicao,
+  EdicaoComTravados,
   Estrutura,
+  Integracao,
   Memoria,
+  Revisao,
   Verificacao,
   idSegmento,
   nomesDoGlossario,
@@ -367,6 +370,180 @@ export async function dividir(
       );
       return algum ? null : "nenhum trecho com segmento conhecido";
     },
+  });
+}
+
+// ── IA sob controle (prompt 9) ───────────────────────────────────────────
+
+/** Parágrafo como as etapas do prompt 9 o veem (o do editor, sem depender dele). */
+export type ParagrafoAtual = {
+  id: string;
+  texto: string;
+  fontes: number[];
+  editado: boolean;
+};
+
+function listaDeFontes(fontes: number[]): string {
+  return fontes.map(idSegmento).join(", ") || "nenhuma";
+}
+
+function papeisDe(estrutura: Estrutura): string {
+  return (
+    estrutura.falantes.map((f) => `- ${f.falante}: ${f.papel}`).join("\n") ||
+    "(não identificados)"
+  );
+}
+
+/**
+ * Tamanho (prompt 9): a mesma edição, a partir da base estruturada (T11), com os parágrafos
+ * travados no lugar como marcadores. O texto travado nunca vem da IA.
+ */
+export async function editarComTravados(
+  ia: ClienteIA,
+  ler: LeitorPrompt,
+  p: {
+    segmentos: Segmento[];
+    estrutura: Estrutura;
+    glossario: Glossario;
+    tamanho: Tamanho;
+    travados: ParagrafoAtual[];
+    historias?: string;
+    modelo?: string;
+  },
+): Promise<RespostaIA<EdicaoComTravados>> {
+  const ids = new Set(p.segmentos.map((s) => s.id));
+  const total = palavrasComConteudo(p.segmentos, p.estrutura);
+  const travados =
+    p.travados
+      .map(
+        (t) =>
+          `[TRAVADO ${t.id}] (fontes ${listaDeFontes(t.fontes)}) ${t.texto}`,
+      )
+      .join("\n\n") || "(nenhum)";
+  return ia.gerar({
+    etapa: "tamanho",
+    modelo: p.modelo ?? MODELO_CAPAZ,
+    maxTokens: 32000,
+    esforco: "medium",
+    sistemaFixo: montarPrompt(ler, "editar"),
+    sistemaLivro: contextoDoLivro(ler, p.glossario, p.historias),
+    usuario: montarPrompt(ler, "tamanho-entrada", {
+      papeis: papeisDe(p.estrutura),
+      vazios: p.estrutura.vazios.map(idSegmento).join(", ") || "nenhum",
+      tamanho: p.tamanho,
+      palavras_alvo: String(Math.round(total * TAMANHOS_TEXTO[p.tamanho])),
+      palavras_transcricao: String(total),
+      travados,
+      segmentos: formatarSegmentos(p.segmentos, p.estrutura),
+    }),
+    schema: EdicaoComTravados,
+    validar: (e) => {
+      const novos = e.paragrafos.filter((x) => !x.travado);
+      const semFonte = novos.findIndex(
+        (x) => x.texto.trim() && x.fontes.length === 0,
+      );
+      if (semFonte >= 0) return `parágrafo novo ${semFonte + 1} sem fonte`;
+      const fora = novos.flatMap((x) => x.fontes).filter((id) => !ids.has(id));
+      return fora.length ? `fontes inexistentes: ${fora.join(", ")}` : null;
+    },
+  });
+}
+
+/** Acrescentar áudio (prompt 9): só inserções e trocas sobre o capítulo atual. */
+export async function integrar(
+  ia: ClienteIA,
+  ler: LeitorPrompt,
+  p: {
+    capitulo: ParagrafoAtual[];
+    segmentosNovos: Segmento[];
+    segmentosAntigos: Segmento[];
+    estrutura: Estrutura;
+    glossario: Glossario;
+    historias?: string;
+    modelo?: string;
+  },
+): Promise<RespostaIA<Integracao>> {
+  const ids = new Set(
+    [...p.segmentosNovos, ...p.segmentosAntigos].map((s) => s.id),
+  );
+  const capitulo = p.capitulo
+    .map(
+      (x) =>
+        `[${x.id}${x.editado ? " TRAVADO" : ""}] (fontes ${listaDeFontes(x.fontes)}) ${x.texto}`,
+    )
+    .join("\n\n");
+  return ia.gerar({
+    etapa: "integrar",
+    modelo: p.modelo ?? MODELO_CAPAZ,
+    maxTokens: 16000,
+    esforco: "medium",
+    sistemaFixo: montarPrompt(ler, "integrar"),
+    sistemaLivro: contextoDoLivro(ler, p.glossario, p.historias),
+    usuario: montarPrompt(ler, "integrar-entrada", {
+      papeis: papeisDe(p.estrutura),
+      capitulo,
+      segmentos_novos: formatarSegmentos(p.segmentosNovos, p.estrutura),
+      segmentos_antigos:
+        formatarSegmentos(p.segmentosAntigos, p.estrutura) || "(nenhuma)",
+    }),
+    schema: Integracao,
+    validar: (r) => {
+      const pars = r.operacoes.flatMap((o) => o.paragrafos);
+      if (pars.some((x) => x.texto.trim() && x.fontes.length === 0))
+        return "parágrafo sem fonte";
+      const fora = pars.flatMap((x) => x.fontes).filter((id) => !ids.has(id));
+      return fora.length ? `fontes inexistentes: ${fora.join(", ")}` : null;
+    },
+  });
+}
+
+export const INSTRUCOES_REVISAR = {
+  curto: "curto (mais curto)",
+  fiel: "fiel (mais fiel à fala)",
+  corrigir: "corrigir",
+  livre: "livre (o pedido escrito abaixo)",
+} as const;
+export type InstrucaoRevisar = keyof typeof INSTRUCOES_REVISAR;
+
+/** Revisar trecho (prompt 9): um único substituto para o trecho escolhido. */
+export async function revisar(
+  ia: ClienteIA,
+  ler: LeitorPrompt,
+  p: {
+    paragrafo: string;
+    trecho: string;
+    antes: string | null;
+    depois: string | null;
+    instrucao: InstrucaoRevisar;
+    textoLivre: string | null;
+    segmentos: Segmento[];
+    estrutura?: Estrutura;
+    glossario: Glossario;
+    modelo?: string;
+  },
+): Promise<RespostaIA<Revisao>> {
+  // O pedido escrito vai delimitado, sem os marcadores (não fecha o bloco antes da hora).
+  const livre = p.textoLivre
+    ? `<pedido>${p.textoLivre.replace(/<\/?pedido>/gi, "").trim()}</pedido>`
+    : "";
+  return ia.gerar({
+    etapa: "revisar",
+    modelo: p.modelo ?? MODELO_CAPAZ,
+    maxTokens: 4000,
+    esforco: "low",
+    sistemaFixo: montarPrompt(ler, "revisar"),
+    sistemaLivro: contextoDoLivro(ler, p.glossario),
+    usuario: montarPrompt(ler, "revisar-entrada", {
+      antes: p.antes ?? "(nenhum)",
+      paragrafo: p.paragrafo,
+      trecho: p.trecho,
+      depois: p.depois ?? "(nenhum)",
+      instrucao: INSTRUCOES_REVISAR[p.instrucao],
+      pedido_livre: livre,
+      segmentos: formatarSegmentos(p.segmentos, p.estrutura),
+    }),
+    schema: Revisao,
+    validar: (r) => (r.substituto.trim() ? null : "substituto vazio"),
   });
 }
 

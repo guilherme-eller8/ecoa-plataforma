@@ -6,7 +6,11 @@ export type EstadoGravacao =
   "gravando" | "pronta" | "enviando" | "enviada" | "parada";
 
 export type DestinoGravacao =
-  { tipo: "livro"; livroId: string } | { tipo: "autor"; token: string };
+  | { tipo: "livro"; livroId: string }
+  | { tipo: "autor"; token: string }
+  // Prompt 9: "Gravar mais sobre isso". A gravação guardada leva a história: recuperada depois,
+  // ela volta para a mesma história, nunca vira uma nova.
+  | { tipo: "historia"; livroId: string; historiaId: string };
 
 export type GravacaoLocal = {
   id: string; // uuid local (chave dos pedaços)

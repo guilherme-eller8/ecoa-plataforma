@@ -7,6 +7,7 @@ import { logarSemTexto } from "./erros";
 import {
   EVENTO_GRAVACAO,
   EVENTO_HISTORIA_CONFIRMADA,
+  EVENTO_PROPOSTA,
   chaveDoEvento,
 } from "./regras";
 
@@ -18,18 +19,25 @@ export async function dispararGravacao(
   recordingId: string,
   sufixo?: string,
   loteId?: string | null,
+  historiaId?: string | null,
 ): Promise<void> {
   try {
     let lote = loteId;
-    if (lote === undefined) {
+    let paraHistoria = historiaId;
+    if (lote === undefined || paraHistoria === undefined) {
       const { data } = await clienteAdmin()
         .from("recordings")
-        .select("lote_id")
+        .select("lote_id, para_historia")
         .eq("id", recordingId)
         .maybeSingle();
       lote = data?.lote_id ?? null;
+      paraHistoria = data?.para_historia ?? null;
     }
-    const chave = chaveDoEvento({ id: recordingId, lote_id: lote });
+    const chave = chaveDoEvento({
+      id: recordingId,
+      lote_id: lote,
+      para_historia: paraHistoria,
+    });
     const base =
       chave === recordingId ? recordingId : `${chave}:${recordingId}`;
     await inngest.send({
@@ -46,10 +54,24 @@ export async function dispararGravacao(
 export async function dispararSeRecebida(g: {
   id: string;
   lote_id: string | null;
+  para_historia?: string | null;
   processado_em?: string | null;
 }) {
   if (g.processado_em) return;
-  await dispararGravacao(g.id, undefined, g.lote_id);
+  await dispararGravacao(g.id, undefined, g.lote_id, g.para_historia);
+}
+
+/** Prompt 9: tamanho ou "usar este áudio no texto" (o trecho roda na própria ação). */
+export async function dispararProposta(propostaId: string, historiaId: string) {
+  try {
+    await inngest.send({
+      name: EVENTO_PROPOSTA,
+      id: `proposta:${propostaId}`,
+      data: { propostaId, historiaId },
+    });
+  } catch (e) {
+    logarSemTexto("disparo proposta", e);
+  }
 }
 
 /** Depois de confirmar uma divisão: cada história vai para a escrita (prompt 7). */
