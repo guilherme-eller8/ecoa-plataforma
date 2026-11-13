@@ -1,6 +1,6 @@
 # Divisão em histórias: lotes e conversas longas (prompt 7)
 
-Status: **v2, revisada, aguardando aprovação do Guilherme** · 2026-11-13 · PRD: M4 (lotes e conversas longas), M11 (dica de primeira vez), Pipeline de IA (etapa 4) · Decisões: P17, P25, P26, P27, P28, P29, P39, P40, P42, P43, T8, T18, T27, T28, T31, T34, T35, T36, T37, T38
+Status: **v2, revisada** · Guilherme aprovou D2 a D8 e D10 a D12 em 13/11 (D3 com a regra de status abaixo); D1 e D9 em discussão · 2026-11-13 · PRD: M4 (lotes e conversas longas), M11 (dica de primeira vez), Pipeline de IA (etapa 4) · Decisões: P17, P25, P26, P27, P28, P29, P39, P40, P42, P43, T8, T18, T27, T28, T31, T34, T35, T36, T37, T38
 
 Relatórios: `divisao-historias/critic_report.md` (segurança e banco) e `divisao-historias/codebase_details_report.md` (código). A seção 13 mostra o que mudou por causa de cada um.
 
@@ -749,6 +749,7 @@ Celular primeiro; uma ação principal por tela; títulos e trechos em `font-liv
   - Um player só por tela: ▶ toca o trecho do áudio original e para no fim dele.
   - **Vazio:** se tudo for tirado, "Nenhum trecho sobrou." + *Recomeçar* (volta à proposta da IA) e, em texto, *Deixar fora do livro* (confirma a lista vazia). Se a divisão já foi confirmada (outra aba, outro irmão): "Estas histórias já foram para a escrita." + *Ver histórias*.
 - **Ler a história:** a sugestão de pergunta no topo, com os mesmos dois botões. Áudio e duração só dos segmentos da história.
+- **Status de todo áudio enviado, sempre visível (pedido do Guilherme na aprovação de D3).** Em *Áudios recebidos*, os arquivos de um mesmo envio aparecem juntos ("8 áudios · 13/11, 20:14"), e cada um tem um selo com o estado de agora: *Enviando 40%*, *Esperando os outros 2*, *Ouvindo*, *Separando as histórias*, *Confira as histórias* (com o botão), *Escrevendo*, *Virou história* (com o link), *Fora das histórias* ou o motivo de espera. Nenhum áudio fica sem selo.
 - **Áudios recebidos e home:** a gravação aponta para o contêiner (a história mais antiga), não para a última filha. Motivos novos, derivados sem coluna nova: lote com total anunciado maior que os recebidos e menos de 6 h → "Guardada. Esperando os outros áudios."; `processado_em` preenchido e sem história → "Fora das histórias."; gravação num contêiner em `separar` → "Confira as histórias". Sai a frase "Conversas longas viram histórias em breve" e o motivo `divisao`.
 - **Subir áudios:** ao terminar, "Pronto. 8 áudios guardados. As histórias aparecem no início." + *Acompanhar* (home); *Ver áudios recebidos* vira link de texto.
 - **Histórias:** o contêiner encerrado com `tudo_descartado` não aparece.
