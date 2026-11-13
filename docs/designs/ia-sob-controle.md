@@ -1,8 +1,8 @@
 # Editor de histórias, parte 2: IA sob controle (prompt 9)
 
-Status: **v2 para aprovação** (revisão feita por mim, seção 11) · 2026-11-13 · PRD: M6 (tamanho, revisar trecho, acrescentar áudio, aceite do M6), Pipeline de IA (Fluxos especiais), M11 (dica de primeira vez) · Decisões: P19, P25, P49, T8, T10, T11, T12, T18, T28, T31, T34, T36, T37, T38, T40, T41
+Status: **v3 para aprovação** (revisão minha na seção 11; revisores na seção 12) · 2026-11-13 · PRD: M6 (tamanho, revisar trecho, acrescentar áudio, aceite do M6), Pipeline de IA (Fluxos especiais), M11 (dica de primeira vez) · Decisões: P19, P25, P49, T8, T10, T11, T12, T18, T28, T31, T34, T36, T37, T38, T40, T41
 
-Prompt com [EGM] e banco: design doc + SQL de subida e reversão para o OK. Revisores (T28): `egm:egm-design` e `egm:egm-codebase-details`, em Sonnet. **Os dois caíram por limite de uso**; pela regra do T28, a revisão foi feita por mim (seção 11), sem rodar de novo.
+Prompt com [EGM] e banco: design doc + SQL de subida e reversão para o OK. Revisores (T28): `egm:egm-design` e `egm:egm-codebase-details`, em Sonnet. Os dois caíram por limite de uso na 1ª tentativa; fiz a revisão (seção 11) e, a pedido do Guilherme, eles foram retomados depois do limite e revisaram a v2 (seção 12; relatórios em `ia-sob-controle/`).
 
 ## 1. Problema, hipótese e risco
 
@@ -75,14 +75,18 @@ Cada ferramenta monta as mudanças assim:
 - Cada mudança tem *Não quero esta* (e volta com *Quero esta*). A ação principal é *Aceitar tudo*, que vira *Aceitar 3 de 5* quando há recusas. *Descartar* é secundária.
 - Ao aceitar: o texto não salvo é salvo antes; o servidor monta o texto final com a mesma função pura que a tela usa para a prévia (`lib/editor/propostas.ts`) e chama `aplicar_proposta`, que confere tudo no banco, guarda o texto anterior como versão (nada se perde) e grava a nova versão com origem "IA" (I8). Uma versão por aceite (I2).
 - Escolha parcial: as mudanças aceitas entram no lugar do 1º parágrafo que tiram; inserção entra depois da âncora (`depois_de`) ou, se a âncora não entrou, depois do parágrafo anterior que ficou. *Aceitar tudo* numa proposta de tamanho usa a `ordem` da IA.
-- Grifos *Confira*: os parágrafos que ficam mantêm os seus (posição recalculada); os novos trazem os da verificação da proposta.
+- Grifos *Confira*: os parágrafos que ficam mantêm os seus (posição recalculada); os novos trazem os da verificação da proposta, guardados por id de parágrafo (`paragrafo_id`), não por posição.
+- Título, ano e lacunas não mudam num aceite: o banco usa os do texto atual e não mexe em `stories.titulo` (P46).
+- Depois do aceite, o editor recarrega o texto aplicado sem disparar salvamento: os parágrafos novos passam a ser os "originais" (senão o próximo salvamento os marcaria como editados à mão) e o `rev` é o devolvido pelo banco.
 
 ### 4.3 Tamanho
 
 - Botão *Tamanho · Médio* acima do texto abre uma folha com o controle de 5 posições (o `ControleTamanho` do prompt 2), o aviso "2 parágrafos editados à mão ficam como estão" e a dica de primeira vez. A posição inicial é o tamanho da última versão.
 - Soltar numa posição nova (1,5 s parado) pede a proposta (I7). A folha mostra "Escrevendo a versão Longa · falta cerca de 1 min" com a barra de previsão. Pode fechar e continuar editando (I4); quando fica pronta, aparece *Ver a versão Longa* no topo do texto.
 - A IA recebe toda a transcrição da história (inclusive áudios acrescentados) e a estrutura, nunca a versão anterior (T11). Frações: Resumido 30%, Curto 45%, Médio 60%, Longo 75%, Detalhado 90% das palavras com conteúdo (`TAMANHOS_TEXTO`).
-- Passos (Inngest, `propor`): `editar` (modelo capaz, com os travados) → `verificar` (só os parágrafos novos) → `gravar`. Texto só no banco (T36).
+- Passos (Inngest, `propor`): `editar` (modelo capaz, com os travados) → `verificar` (só os parágrafos novos) → `gravar`. Entre os passos, a saída da IA fica na própria proposta (`servico_gravar_proposta` com `p_pronta = false`); os passos devolvem só ids (T36).
+- Parágrafo criado depois do pedido (Enter, colar) não está na proposta: ele fica no texto, no lugar dele, em qualquer aceite.
+- Enquanto um áudio novo está sendo ouvido, *Tamanho* espera ("Espere o áudio novo"): a estrutura ainda não tem os falantes dele.
 
 ### 4.4 Revisar um trecho
 
@@ -94,9 +98,9 @@ Cada ferramenta monta as mudanças assim:
 ### 4.5 Acrescentar áudio
 
 - Na coluna (ou aba) *Áudio*: *Acrescentar áudio* abre a folha com *Gravar mais sobre isso* e *Subir mais um áudio*.
-- *Gravar* abre `/livro/[id]/historias/[historiaId]/gravar`: o gravador do modo conversa com o título da história no topo ("Mais sobre: O trem de 1962"), uma parte só, parando em 30 min. *Subir* escolhe 1 arquivo e mostra o progresso na própria folha. Os dois criam a gravação com `para_historia` = a história (I5).
-- No servidor, `servico_iniciar_historia` vê `para_historia`: em vez de criar uma história, confere os tetos, liga a gravação à história (`story_recordings`, próxima ordem, ids de segmento continuando) e cria a proposta de áudio "gerando". O cartão no editor diz "Ouvindo o áudio novo · falta cerca de 2 min".
-- Passos (mesma função `processar-gravacao`, com a concorrência pela história): `transcrever` → `estruturar` (só os segmentos novos; falantes e vazios entram na estrutura da história) → `integrar` (modelo capaz) → `verificar` (só os parágrafos novos) → `gravar`.
+- *Gravar* abre `/livro/[id]/historias/[historiaId]/gravar`: o gravador com o título da história no topo ("Mais sobre: O trem de 1962"), uma parte só (`emPartes={false}`, para em 30 min), com adaptador próprio, sem lote de conversa. A gravação guardada no aparelho leva o id da história: se a página recarregar, o *Enviar* recuperado volta para a mesma história, nunca cria uma nova. *Subir* escolhe 1 arquivo e mostra o progresso na própria folha. Os dois criam a gravação com `para_historia` = a história (I5).
+- No servidor, `servico_iniciar_historia` vê `para_historia`: em vez de criar uma história, confere os tetos, liga a gravação à história (`story_recordings`, próxima ordem; os ids de segmento continuam pelo `fixarSegmentoInicial`, no código) e cria a proposta de áudio "gerando". O cartão no editor diz "Ouvindo o áudio novo · falta cerca de 2 min".
+- Passos (mesma função `processar-gravacao`, com a concorrência pela história): `transcrever` (só a gravação nova) → confere a duração real (passou dos tetos: falha com `longa`) → `estruturar-audio` (só os segmentos novos; falantes e vazios entram na estrutura da história por um método novo do banco, porque `gravarEstrutura` só grava em história `ouvindo`) → `integrar` (modelo capaz) → `verificar` (só os parágrafos novos) → `gravar`. Se a função falhar, o `onFailure` marca a proposta como falhou (hoje ele só mexe em história em andamento).
 - Descartar a proposta não tira o áudio da história: ele continua na transcrição, *Usar este áudio no texto* pede de novo, e uma troca de tamanho já o inclui.
 
 ### 4.6 Uma proposta por vez, por tipo
@@ -190,15 +194,25 @@ alter table public.recordings
   add column para_historia uuid,
   add constraint recordings_para_historia_fk foreign key (book_id, para_historia)
     references public.stories (book_id, id) on delete restrict,
-  add constraint recordings_para_historia_avulsa check (para_historia is null or lote_id is null);
+  add constraint recordings_para_historia_avulsa check (para_historia is null or lote_id is null),
+  -- Literal: um CHECK roda com o usuário corrente, que não executa funções de privado (= 30 min).
+  add constraint recordings_para_historia_duracao check (para_historia is null or duracao_s between 1 and 1800);
 create index recordings_para_historia on public.recordings (para_historia) where para_historia is not null;
 grant select (para_historia), insert (para_historia) on public.recordings to authenticated;
+-- Restritiva (soma às políticas de insert que já existem): só para história pronta do mesmo livro.
+create policy "acrescenta só em história pronta" on public.recordings as restrictive
+  for insert to authenticated
+  with check (para_historia is null or exists (
+    select 1 from public.stories s
+    where s.id = recordings.para_historia and s.book_id = recordings.book_id and s.estado = 'pronta'));
 
 -- ── 3. story_proposals ─────────────────────────────────────────────────────
 -- mudancas: [{id, tira: [{id, texto}], poe: [{id, texto, fontes, editado}], depois_de}].
 -- ordem: o texto inteiro proposto (ids), só no tamanho ("Aceitar tudo" = texto da IA).
 -- travados: [{id, texto}] dos parágrafos editados à mão na hora do pedido.
 -- gravacoes: as gravações que a proposta cobre (áudio: as novas; tamanho: todas).
+-- marcacoes: grifos dos parágrafos novos, por id de parágrafo ({paragrafo_id, inicio, fim, ...}).
+-- Entre passos do Inngest, a saída da IA fica aqui (servico_gravar_proposta com p_pronta = false).
 create table public.story_proposals (
   id uuid primary key default gen_random_uuid(),
   story_id uuid not null,
@@ -215,6 +229,8 @@ create table public.story_proposals (
   ordem text[] check (ordem is null or cardinality(ordem) <= 300),
   marcacoes jsonb not null default '[]'::jsonb check (jsonb_typeof(marcacoes) = 'array'),
   erro text check (erro is null or erro ~ '^[a-z_]{2,40}$'),
+  modelos jsonb check (modelos is null or jsonb_typeof(modelos) = 'object'),           -- T31
+  hash_prompts jsonb check (hash_prompts is null or jsonb_typeof(hash_prompts) = 'object'),
   aplicadas text[] check (aplicadas is null or cardinality(aplicadas) <= 400),
   versao integer check (versao is null or versao >= 1),
   pedida_por uuid references auth.users (id) on delete set null,
@@ -329,16 +345,24 @@ language sql stable security definer set search_path = '' as $$
   where sr.story_id = p_story and r.para_historia = p_story
     and not exists (select 1 from public.story_proposals p
                     where p.story_id = p_story and p.estado = 'aplicada'
-                      and sr.recording_id = any (p.gravacoes))
+                      and sr.recording_id = any (p.gravacoes)
+                      -- Tamanho aceito só em parte pode ter deixado o áudio de fora.
+                      and (p.tipo = 'audio' or cardinality(p.aplicadas) = jsonb_array_length(p.mudancas)))
 $$;
 
 -- Formato das mudanças (o servidor monta; o banco confere antes de mostrar).
-create function privado.mudancas_validas(p jsonb, p_tipo public.proposta_tipo) returns boolean
+create function privado.mudancas_validas(p jsonb, p_tipo public.proposta_tipo, p_pedido jsonb) returns boolean
 language plpgsql immutable set search_path = '' as $$
 declare m jsonb; x jsonb; v_ids text[] := '{}'; v_poe text[] := '{}';
 begin
   if p is null or jsonb_typeof(p) <> 'array' or jsonb_array_length(p) > 400
      or octet_length(p::text) > 2000000 then return false; end if;
+  -- Revisar trecho: 1 mudança, que tira só o parágrafo pedido e põe 1 parágrafo.
+  if p_tipo = 'trecho' and (jsonb_array_length(p) <> 1
+       or jsonb_array_length(p -> 0 -> 'tira') <> 1 or jsonb_array_length(p -> 0 -> 'poe') <> 1
+       or (p -> 0 -> 'tira' -> 0 ->> 'id') is distinct from (p_pedido ->> 'paragrafo')) then
+    return false;
+  end if;
   for m in select value from jsonb_array_elements(p) loop
     if jsonb_typeof(m) <> 'object' or (m - array['id', 'tira', 'poe', 'depois_de']) <> '{}'::jsonb
        or coalesce(m ->> 'id', '') !~ '^m[0-9]{1,4}$' or (m ->> 'id') = any (v_ids)
@@ -387,6 +411,10 @@ begin
   end if;
   if not privado.livro_editavel(v.book_id) then
     return query select null::uuid, null::public.story_estado, 'livro_fechado'; return;
+  end if;
+  if not exists (select 1 from public.books b where b.id = v.book_id
+                   and b.ia_consentimento_versao >= privado.consentimento_ia_versao()) then
+    return query select null::uuid, null::public.story_estado, 'sem_consentimento'; return;
   end if;
   if v.duracao_s is null then
     return query select null::uuid, null::public.story_estado, 'sem_duracao'; return;
@@ -442,12 +470,16 @@ create function public.pedir_proposta(p_story uuid, p_aba uuid, p_tipo public.pr
   p_tamanho text default null, p_pedido jsonb default '{}'::jsonb)
 returns uuid
 language plpgsql security definer set search_path = '' as $$
-declare v_ok boolean; v_livro uuid; v_tam text; v_alvo jsonb; v_grav uuid[] := '{}';
+declare v_ok boolean; v_livro uuid; v_tam text; v_atual jsonb; v_alvo jsonb; v_grav uuid[] := '{}';
   v_pend public.story_proposals; v_id uuid; v_ini integer; v_fim integer;
 begin
   select e.editando into v_ok from public.editar_historia(p_story, p_aba, true, false) e;
   if not v_ok then raise exception 'trava_de_outro'; end if;  -- editar_historia já confere membro, pronta e plano
   select s.book_id into v_livro from public.stories s where s.id = p_story;
+  if not exists (select 1 from public.books b where b.id = v_livro
+                   and b.ia_consentimento_versao >= privado.consentimento_ia_versao()) then
+    raise exception 'sem_consentimento';
+  end if;
   -- Sempre história antes de 'propostas:' (a mesma ordem de acrescentar_audio): sem deadlock.
   perform pg_advisory_xact_lock(hashtextextended('propostas:' || v_livro::text, 0));
   if privado.propostas_hoje(v_livro) >= privado.max_propostas_dia() then raise exception 'cota_ia_diaria'; end if;
@@ -456,28 +488,42 @@ begin
      or jsonb_typeof(p_pedido) <> 'object' then
     raise exception 'dados_invalidos';
   end if;
+  v_atual := privado.paragrafos_atuais(p_story);
+  if (select count(*) <> count(distinct a ->> 'id') from jsonb_array_elements(v_atual) a) then
+    raise exception 'dados_invalidos';  -- ids repetidos: o editor salva de novo (normalizarTexto) antes
+  end if;
   if p_tipo = 'tamanho' then
     if p_pedido <> '{}'::jsonb then raise exception 'dados_invalidos'; end if;
+    -- Áudio ainda sendo ouvido: a estrutura não tem os falantes dele.
+    if exists (select 1 from public.story_proposals p where p.story_id = p_story
+               and p.tipo = 'audio' and p.estado = 'gerando') then
+      raise exception 'proposta_em_andamento';
+    end if;
     select coalesce(array_agg(sr.recording_id order by sr.ordem), '{}') into v_grav
       from public.story_recordings sr where sr.story_id = p_story;
   elsif p_tipo = 'trecho' then
     if (p_pedido - array['paragrafo', 'inicio', 'fim', 'instrucao', 'texto']) <> '{}'::jsonb
        or coalesce(p_pedido ->> 'instrucao', '') not in ('curto', 'fiel', 'corrigir', 'livre')
        or coalesce(jsonb_typeof(p_pedido -> 'paragrafo'), '') <> 'string'
-       or coalesce(p_pedido ->> 'inicio', '') !~ '^[0-9]{1,5}$'
-       or coalesce(p_pedido ->> 'fim', '') !~ '^[0-9]{1,5}$'
+       or coalesce(jsonb_typeof(p_pedido -> 'inicio'), '') <> 'number'
+       or coalesce(jsonb_typeof(p_pedido -> 'fim'), '') <> 'number'
+       or (p_pedido ->> 'inicio') !~ '^[0-9]{1,5}$' or (p_pedido ->> 'fim') !~ '^[0-9]{1,5}$'
        or ((p_pedido ->> 'instrucao') = 'livre')
           <> coalesce(jsonb_typeof(p_pedido -> 'texto') = 'string', false)
        or char_length(btrim(coalesce(p_pedido ->> 'texto', 'x'))) not between 1 and privado.instrucao_max() then
       raise exception 'dados_invalidos';
     end if;
-    select a into v_alvo from jsonb_array_elements(privado.paragrafos_atuais(p_story)) a
-      where a ->> 'id' = p_pedido ->> 'paragrafo';
+    -- Posições em pontos de código (char_length); o servidor converte do UTF-16 da tela.
+    select a into v_alvo from jsonb_array_elements(v_atual) a where a ->> 'id' = p_pedido ->> 'paragrafo';
     v_ini := (p_pedido ->> 'inicio')::integer;
     v_fim := (p_pedido ->> 'fim')::integer;
-    if v_alvo is null or v_ini < 0 or v_fim <= v_ini or v_fim > char_length(v_alvo ->> 'texto') then
+    if v_alvo is null or v_fim <= v_ini or v_fim > char_length(v_alvo ->> 'texto') then
       raise exception 'dados_invalidos';
     end if;
+    -- A revisão roda na ação do servidor: se ela morreu, a pendente de 3 min não bloqueia.
+    update public.story_proposals set estado = 'falhou', erro = 'parada'
+      where story_id = p_story and tipo = 'trecho' and estado = 'gerando'
+        and pedida_em < now() - interval '3 minutes';
   else  -- audio: usar no texto os áudios acrescentados que ficaram de fora
     if p_pedido <> '{}'::jsonb then raise exception 'dados_invalidos'; end if;
     v_grav := privado.audios_fora_do_texto(p_story);
@@ -499,23 +545,27 @@ end $$;
 
 -- O pipeline grava as mudanças (p_pronta = false entre passos; true no fim).
 create function public.servico_gravar_proposta(p_proposta uuid, p_mudancas jsonb, p_ordem text[],
-  p_marcacoes jsonb, p_pronta boolean)
+  p_marcacoes jsonb, p_pronta boolean, p_modelos jsonb default null, p_hash jsonb default null)
 returns boolean
 language plpgsql security definer set search_path = '' as $$
 declare pr public.story_proposals;
 begin
   select * into pr from public.story_proposals p where p.id = p_proposta for update;
   if not found or pr.estado <> 'gerando' then return false; end if;
-  if not privado.mudancas_validas(p_mudancas, pr.tipo)
+  if not privado.mudancas_validas(p_mudancas, pr.tipo, pr.pedido)
      or not privado.marcacoes_validas(coalesce(p_marcacoes, '[]'::jsonb))
      or (p_ordem is not null and pr.tipo <> 'tamanho') then
     raise exception 'dados_invalidos';
   end if;
-  update public.story_proposals set mudancas = p_mudancas, ordem = p_ordem,
-    marcacoes = coalesce(p_marcacoes, '[]'::jsonb),
-    estado = case when p_pronta then 'pronta'::public.proposta_estado else 'gerando'::public.proposta_estado end,
-    pronta_em = case when p_pronta then now() end
-  where id = p_proposta;
+  begin
+    update public.story_proposals set mudancas = p_mudancas, ordem = p_ordem,
+      marcacoes = coalesce(p_marcacoes, '[]'::jsonb), modelos = p_modelos, hash_prompts = p_hash,
+      estado = case when p_pronta then 'pronta'::public.proposta_estado else 'gerando'::public.proposta_estado end,
+      pronta_em = case when p_pronta then now() end
+    where id = p_proposta;
+  exception when check_violation then
+    raise exception 'dados_invalidos';  -- nunca a linha com o texto na mensagem (T36)
+  end;
   if p_pronta then
     update public.recordings r set processado_em = now()
       where r.id = any (pr.gravacoes) and r.para_historia = pr.story_id and r.processado_em is null;
@@ -526,8 +576,9 @@ end $$;
 create function public.servico_falhar_proposta(p_proposta uuid, p_erro text) returns boolean
 language plpgsql security definer set search_path = '' as $$
 begin
-  update public.story_proposals set estado = 'falhou', erro = coalesce(p_erro, 'erro_inesperado')
-    where id = p_proposta and estado = 'gerando';
+  update public.story_proposals set estado = 'falhou',
+    erro = case when p_erro ~ '^[a-z_]{2,40}$' then p_erro else 'erro_inesperado' end
+  where id = p_proposta and estado = 'gerando';
   return found;
 end $$;
 
@@ -550,7 +601,8 @@ create function public.aplicar_proposta(p_story uuid, p_aba uuid, p_rev integer,
 returns integer
 language plpgsql security definer set search_path = '' as $$
 declare v_ok boolean; v public.stories; pr public.story_proposals; v_eu uuid := (select auth.uid());
-  v_atual jsonb; v_ms jsonb; v_novos jsonb; v_tira text[]; v_num integer; v_tam text;
+  v_base jsonb; v_atual jsonb; v_ms jsonb; v_novos jsonb; v_tira text[]; v_poe text[]; v_num integer;
+  v_tam text; v_final jsonb;
 begin
   select e.editando into v_ok from public.editar_historia(p_story, p_aba, true, false) e;
   if not v_ok then raise exception 'trava_de_outro'; end if;
@@ -559,11 +611,19 @@ begin
   select * into pr from public.story_proposals p where p.id = p_proposta and p.story_id = p_story for update;
   if not found or pr.estado <> 'pronta' then raise exception 'proposta_indisponivel'; end if;
   if p_aplicadas is null or cardinality(p_aplicadas) = 0
-     or not privado.conteudo_valido(p_conteudo) or not privado.marcacoes_validas(p_marcacoes) then
+     or p_conteudo is null or jsonb_typeof(p_conteudo -> 'paragrafos') <> 'array'
+     or not privado.marcacoes_validas(p_marcacoes) then
     raise exception 'dados_invalidos';
   end if;
+  -- Título, ano e lacunas são os do texto atual: o aceite só mexe nos parágrafos.
+  v_base := coalesce(v.texto, (select x.conteudo from public.story_versions x
+                               where x.story_id = p_story order by x.numero desc limit 1));
   v_novos := p_conteudo -> 'paragrafos';
-  if (select count(*) <> count(distinct n ->> 'id') from jsonb_array_elements(v_novos) n) then
+  v_final := (v_base - 'paragrafos') || jsonb_build_object('paragrafos', v_novos);
+  if not privado.conteudo_valido(v_final) then raise exception 'dados_invalidos'; end if;
+  v_atual := privado.paragrafos_atuais(p_story);
+  if (select count(*) <> count(distinct n ->> 'id') from jsonb_array_elements(v_novos) n)
+     or (select count(*) <> count(distinct a ->> 'id') from jsonb_array_elements(v_atual) a) then
     raise exception 'dados_invalidos';
   end if;
   select coalesce(jsonb_agg(m), '[]'::jsonb) into v_ms
@@ -571,9 +631,10 @@ begin
   if jsonb_array_length(v_ms) <> (select count(distinct x) from unnest(p_aplicadas) x) then
     raise exception 'dados_invalidos';
   end if;
-  v_atual := privado.paragrafos_atuais(p_story);
   select coalesce(array_agg(t ->> 'id'), '{}') into v_tira
     from jsonb_array_elements(v_ms) m, jsonb_array_elements(m -> 'tira') t;
+  select coalesce(array_agg(q ->> 'id'), '{}') into v_poe
+    from jsonb_array_elements(v_ms) m, jsonb_array_elements(m -> 'poe') q;
 
   -- O que as mudanças tiram ainda está igual ao da hora do pedido...
   if exists (select 1 from jsonb_array_elements(v_ms) m, jsonb_array_elements(m -> 'tira') t
@@ -587,43 +648,62 @@ begin
                and not (pr.tipo = 'trecho' and a ->> 'id' = pr.pedido ->> 'paragrafo')) then
     raise exception 'travado_alterado';
   end if;
+  -- Id novo não pode repetir o de um parágrafo que fica.
+  if exists (select 1 from jsonb_array_elements(v_atual) a
+             where a ->> 'id' = any (v_poe) and not (a ->> 'id' = any (v_tira))) then
+    raise exception 'dados_invalidos';
+  end if;
   -- Todo parágrafo atual fora das mudanças continua idêntico (é aqui que o editado à mão é garantido).
+  if exists (select 1 from jsonb_array_elements(v_atual) a
+             where not (a ->> 'id' = any (v_tira)) and (a ->> 'editado')::boolean
+               and not exists (select 1 from jsonb_array_elements(v_novos) n
+                               where n ->> 'id' = a ->> 'id' and n ->> 'texto' = a ->> 'texto'
+                                 and n -> 'fontes' = a -> 'fontes'
+                                 and coalesce((n ->> 'editado')::boolean, false))) then
+    raise exception 'travado_alterado';
+  end if;
   if exists (select 1 from jsonb_array_elements(v_atual) a
              where not (a ->> 'id' = any (v_tira))
                and not exists (select 1 from jsonb_array_elements(v_novos) n
                                where n ->> 'id' = a ->> 'id' and n ->> 'texto' = a ->> 'texto'
                                  and n -> 'fontes' = a -> 'fontes'
                                  and coalesce((n ->> 'editado')::boolean, false) = (a ->> 'editado')::boolean)) then
-    raise exception 'travado_alterado';
+    raise exception 'proposta_vencida';
   end if;
-  -- Todo parágrafo do texto final vem do atual (fora das mudanças) ou do que as mudanças põem.
-  if exists (select 1 from jsonb_array_elements(v_novos) n
-             where not exists (select 1 from jsonb_array_elements(v_atual) a
-                               where not (a ->> 'id' = any (v_tira)) and a ->> 'id' = n ->> 'id'
-                                 and a ->> 'texto' = n ->> 'texto' and a -> 'fontes' = n -> 'fontes')
-               and not exists (select 1 from jsonb_array_elements(v_ms) m, jsonb_array_elements(m -> 'poe') q
-                               where q ->> 'id' = n ->> 'id' and q ->> 'texto' = n ->> 'texto'
-                                 and q -> 'fontes' = n -> 'fontes'
-                                 and coalesce((q ->> 'editado')::boolean, false)
-                                     = coalesce((n ->> 'editado')::boolean, false))) then
+  -- Todo parágrafo posto está lá, idêntico ao da proposta.
+  if exists (select 1 from jsonb_array_elements(v_ms) m, jsonb_array_elements(m -> 'poe') q
+             where not exists (select 1 from jsonb_array_elements(v_novos) n
+                               where n ->> 'id' = q ->> 'id' and n ->> 'texto' = q ->> 'texto'
+                                 and n -> 'fontes' = q -> 'fontes'
+                                 and coalesce((n ->> 'editado')::boolean, false)
+                                     = coalesce((q ->> 'editado')::boolean, false))) then
     raise exception 'dados_invalidos';
   end if;
-  -- E tudo o que as mudanças põem está lá.
-  if exists (select 1 from jsonb_array_elements(v_ms) m, jsonb_array_elements(m -> 'poe') q
-             where not exists (select 1 from jsonb_array_elements(v_novos) n where n ->> 'id' = q ->> 'id')) then
+  -- E nada além: atuais que ficam + postos (com os dois checks acima, nada estranho entra).
+  if jsonb_array_length(v_novos)
+     <> (select count(*) from jsonb_array_elements(v_atual) a where not (a ->> 'id' = any (v_tira)))
+        + cardinality(v_poe) then
+    raise exception 'dados_invalidos';
+  end if;
+  -- Os que ficam mantêm a ordem entre si.
+  if (select coalesce(array_agg(a ->> 'id' order by i), '{}') from jsonb_array_elements(v_atual)
+        with ordinality t(a, i) where not (a ->> 'id' = any (v_tira)))
+     <> (select coalesce(array_agg(n ->> 'id' order by i), '{}') from jsonb_array_elements(v_novos)
+        with ordinality t(n, i) where not (n ->> 'id' = any (v_poe))) then
     raise exception 'dados_invalidos';
   end if;
 
   perform privado.guardar_versao(p_story);  -- o texto pendente vira versão antes (nada se perde)
   v_tam := case when pr.tipo = 'tamanho' then pr.tamanho else privado.tamanho_atual(p_story) end;
   select coalesce(max(x.numero), 0) + 1 into v_num from public.story_versions x where x.story_id = p_story;
-  insert into public.story_versions (story_id, book_id, numero, origem, tamanho, conteudo, marcacoes, proposta_id)
-    values (p_story, v.book_id, v_num, 'ia', v_tam, p_conteudo, p_marcacoes, p_proposta);
+  insert into public.story_versions (story_id, book_id, numero, origem, tamanho, conteudo, marcacoes,
+    modelos, hash_prompts, proposta_id)
+    values (p_story, v.book_id, v_num, 'ia', v_tam, v_final, p_marcacoes, pr.modelos, pr.hash_prompts,
+            p_proposta);
+  -- Título e ano da história não mudam (P46: o título pode ser o confirmado na divisão).
   update public.stories set
-    texto = p_conteudo, texto_marcacoes = p_marcacoes, texto_rev = texto_rev + 1,
-    versao_rev = texto_rev + 1, texto_por = v_eu, texto_origem = 'ia', texto_em = now(),
-    titulo = nullif(left(btrim(coalesce(p_conteudo ->> 'titulo', '')), 200), ''),
-    ano = case when jsonb_typeof(p_conteudo -> 'ano') = 'number' then (p_conteudo ->> 'ano')::smallint end
+    texto = v_final, texto_marcacoes = p_marcacoes, texto_rev = texto_rev + 1,
+    versao_rev = texto_rev + 1, texto_por = v_eu, texto_origem = 'ia', texto_em = now()
   where id = p_story;
   update public.story_proposals set estado = 'aplicada', aplicadas = p_aplicadas, versao = v_num,
     decidida_por = v_eu, decidida_em = now()
@@ -634,21 +714,21 @@ end $$;
 revoke all on function public.pedir_proposta(uuid, uuid, public.proposta_tipo, text, jsonb),
   public.aplicar_proposta(uuid, uuid, integer, uuid, text[], jsonb, jsonb),
   public.descartar_proposta(uuid, uuid, uuid),
-  public.servico_gravar_proposta(uuid, jsonb, text[], jsonb, boolean),
+  public.servico_gravar_proposta(uuid, jsonb, text[], jsonb, boolean, jsonb, jsonb),
   public.servico_falhar_proposta(uuid, text)
   from public, anon, authenticated, porta_autor, service_role;
 grant execute on function public.pedir_proposta(uuid, uuid, public.proposta_tipo, text, jsonb),
   public.aplicar_proposta(uuid, uuid, integer, uuid, text[], jsonb, jsonb),
   public.descartar_proposta(uuid, uuid, uuid)
   to authenticated;
-grant execute on function public.servico_gravar_proposta(uuid, jsonb, text[], jsonb, boolean),
+grant execute on function public.servico_gravar_proposta(uuid, jsonb, text[], jsonb, boolean, jsonb, jsonb),
   public.servico_falhar_proposta(uuid, text)
   to service_role;
 revoke all on function privado.max_propostas_dia(), privado.max_audio_extra_s(),
   privado.max_audios_historia(), privado.instrucao_max(), privado.proposta_imutavel(),
   privado.paragrafos_atuais(uuid), privado.travados_atuais(uuid), privado.tamanho_atual(uuid),
   privado.propostas_hoje(uuid), privado.fala_da_historia_s(uuid), privado.audios_fora_do_texto(uuid),
-  privado.mudancas_validas(jsonb, public.proposta_tipo), privado.acrescentar_audio(uuid)
+  privado.mudancas_validas(jsonb, public.proposta_tipo, jsonb), privado.acrescentar_audio(uuid)
   from public;
 ```
 
@@ -662,16 +742,27 @@ revoke all on function privado.max_propostas_dia(), privado.max_audio_extra_s(),
 -- O CHECK de 5 tamanhos fica: voltar para 3 quebraria guardar_versao nas histórias que já têm
 -- versão Curto ou Longo.
 
+-- Trava (como a da divisão): com proposta já pedida, só roda com `set ecoa.reversao_destrutiva = 'sim'`.
+-- Forçada: proposta gerando ou pronta se perde; a de áudio deixa o áudio ligado e fora do texto.
+do $$
+begin
+  if to_regclass('public.story_proposals') is not null
+     and exists (select 1 from public.story_proposals)
+     and coalesce(current_setting('ecoa.reversao_destrutiva', true), '') <> 'sim' then
+    raise exception 'reversao_com_propostas: rode com ecoa.reversao_destrutiva = sim';
+  end if;
+end $$;
+
 -- servico_iniciar_historia volta ao corpo de 20261117120000_divisao.sql (copiado sem mudança).
 create or replace function public.servico_iniciar_historia(p_recording uuid) ...;
 
 drop function if exists public.aplicar_proposta(uuid, uuid, integer, uuid, text[], jsonb, jsonb);
 drop function if exists public.descartar_proposta(uuid, uuid, uuid);
 drop function if exists public.servico_falhar_proposta(uuid, text);
-drop function if exists public.servico_gravar_proposta(uuid, jsonb, text[], jsonb, boolean);
+drop function if exists public.servico_gravar_proposta(uuid, jsonb, text[], jsonb, boolean, jsonb, jsonb);
 drop function if exists public.pedir_proposta(uuid, uuid, public.proposta_tipo, text, jsonb);
 drop function if exists privado.acrescentar_audio(uuid);
-drop function if exists privado.mudancas_validas(jsonb, public.proposta_tipo);
+drop function if exists privado.mudancas_validas(jsonb, public.proposta_tipo, jsonb);
 drop function if exists privado.audios_fora_do_texto(uuid);
 drop function if exists privado.fala_da_historia_s(uuid);
 drop function if exists privado.propostas_hoje(uuid);
@@ -686,9 +777,11 @@ alter table public.story_versions
 drop table if exists public.story_proposals;
 drop function if exists privado.proposta_imutavel();
 
+drop policy if exists "acrescenta só em história pronta" on public.recordings;
 revoke select (para_historia), insert (para_historia) on public.recordings from authenticated;
 drop index if exists public.recordings_para_historia;
 alter table public.recordings
+  drop constraint if exists recordings_para_historia_duracao,
   drop constraint if exists recordings_para_historia_avulsa,
   drop constraint if exists recordings_para_historia_fk,
   drop column if exists para_historia;
@@ -751,3 +844,43 @@ Conferido e sem mudança: a garantia do travado está no banco (todo parágrafo 
 | C7 | Baixo | Rota `/historias/[historiaId]/gravar` ao lado de `/historias/gravar` | Sem colisão: o segmento fixo `gravar` vence o dinâmico em `/historias/gravar` |
 
 Conferido: a versão 1 (IA) não tem id nos parágrafos e `normalizarTexto` dá `p1..pN`, igual a `privado.paragrafos_atuais`; `fixarSegmentoInicial` continua os ids certo também em história nascida de divisão (pega o maior id das transcrições inteiras das gravações anteriores dela); o rótulo `g{ordem}` da gravação nova não colide dentro da história.
+
+## 12. Revisores (rodada única sobre a v2)
+
+Relatórios: `ia-sob-controle/critic_report.md` (segurança e banco) e `ia-sob-controle/codebase_details_report.md` (código). Os dois confirmaram R1 a R6 e C1 a C7, com complementos. O que mudou:
+
+**No SQL (ensaiado de novo em PGlite: sobe, reverte, sobe; cenário do aceite passa)**
+
+| # | Achado | Mudança |
+| --- | --- | --- |
+| S1 | Aceite podia apagar o ano e trocar o título e as lacunas | O banco monta o texto final com título, ano e lacunas do texto atual e só troca os parágrafos; `stories.titulo` e `ano` não mudam |
+| S2 | Ids repetidos no texto atual faziam um travado sumir em silêncio | `pedir_proposta` e `aplicar_proposta` recusam ids repetidos; o texto final precisa ter exatamente "os que ficam + os postos" |
+| S3 | A ordem dos parágrafos que ficam não era conferida | Conferida (ensaiado: reordenar um travado é recusado) |
+| S4 | Id novo igual ao de um parágrafo que fica descartava o novo em silêncio | Recusado; os postos são comparados por inteiro |
+| S5 | Revisar trecho aceitava várias mudanças | Exatamente 1 mudança, que tira o parágrafo pedido e põe 1 (ensaiado) |
+| S6 | Consentimento de IA não conferido em `acrescentar_audio` e `pedir_proposta` | Conferido (`sem_consentimento`) |
+| S7 | Tetos com a duração declarada pelo navegador | CHECK de 1 a 1800 s em áudio acrescentado; política restritiva de insert exige história `pronta` do mesmo livro; o pipeline reconfere a duração real depois da transcrição |
+| S8 | Erro de CHECK com o texto na mensagem podia subir ao Inngest (T36) | `servico_falhar_proposta` limpa o código (ensaiado); `servico_gravar_proposta` troca violação de CHECK por `dados_invalidos` |
+| S9 | Tamanho aceito em parte contava o áudio novo como já no texto | Só conta se a proposta de tamanho foi aceita inteira |
+| S10 | `inicio`/`fim` como texto passavam | Exigido tipo número |
+| S11 | Versão aceita sem `modelos` e `hash_prompts` (T31) | A proposta guarda os dois e a versão os copia |
+| S12 | Tamanho pedido com áudio ainda sendo ouvido | Recusado até o áudio virar proposta |
+| S13 | Revisão de trecho que morre na ação do servidor bloqueava novos pedidos por 20 min | Pendente de trecho com mais de 3 min vira falhou no próximo pedido |
+| S14 | Reversão apagava propostas sem aviso | Trava como a da divisão: só roda com `ecoa.reversao_destrutiva = 'sim'` se houver proposta |
+
+**No código (entram na implementação)**
+
+| # | Achado | O que fazer |
+| --- | --- | --- |
+| K1 | Depois do aceite, o próximo salvamento marcaria os parágrafos da IA como editados à mão, salvaria de novo e trocaria a origem | Recarregar o texto sem emitir mudança (`definir` com `emitir: false`), recalcular os originais e usar o `rev` devolvido |
+| K2 | `iniciar` devolve todas as gravações da história; o loop transcreveria todas | No caminho `acrescentar`, só a gravação nova |
+| K3 | Gravar mais usava o adaptador de conversa (lote), o que o banco recusa, e a gravação recuperada criaria história nova | Adaptador próprio, sem lote; `historiaId` no destino e na gravação local; `emPartes={false}` |
+| K4 | `chaveDoEvento`, `dispararGravacao`, `audioEnviando` e a varredura não leem `para_historia` | Todos passam a ler |
+| K5 | Mensagem nova no canal quebra o `else` de `historias-ao-vivo` e os fakes do lab | Ramo explícito por `tipo`; o editor assina o canal (extrair `useCanalDoLivro`) |
+| K6 | `onFailure` não marca a proposta; `propor` precisa entrar em `funcoes` | `servico_falhar_proposta` no `onFailure`; registrar a função; varredura usa `VARREDURA_PARADA_MIN` |
+| K7 | `checar`/`verificar` devolvem posição numa sublista | Converter para `paragrafo_id` antes de gravar |
+| K8 | Revisar: o `Ouvir` é por clique e a folha tira o foco do editor; posições em UTF-16 vs pontos de código no banco | `ApiDoTexto` expõe a seleção; capturar antes de abrir a folha; salvar antes de pedir; converter UTF-16 → pontos de código no servidor |
+| K9 | Ação de revisar com 2 chamadas do modelo capaz, sem `maxDuration` | `maxDuration` na página do editor; extrair `dependencias()` de `funcoes.ts` |
+| K10 | Motivos novos (`longa`, `historia_indisponivel`, `cota_ia_diaria`, `sem_consentimento`) viram "Guardada" | Entram em `MOTIVOS_ESPERA`/`FRASES_ESPERA`; a tela confere os 30 min antes de enviar |
+| K11 | `TAMANHOS_TEXTO` com 5 chaves quebra `config.test.ts` e o `--tamanho todos` do lab; dois tipos `Tamanho` com o mesmo nome | Atualizar os dois; mapa posição (1 a 5) → chave em `lib/ui/tamanho.ts` |
+| K12 | Histórico não lê `tamanho` nem `proposta_id`; `config-banco.test.ts` sem as funções novas; `lib/supabase/tipos.ts` | Ajustar a consulta, a lista do teste e regenerar os tipos |
