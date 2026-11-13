@@ -42,6 +42,11 @@ describe("lib/config.ts x banco", () => {
     ["max_historias_dia", config.MAX_HISTORIAS_DIA],
     ["max_arquivo_s", config.MAX_ARQUIVO_MIN * 60],
     ["max_fala_historia_s", config.MAX_HISTORIA_ESCRITA_MIN * 60],
+    ["trava_edicao_s", config.TRAVA_EDICAO_MIN * 60],
+    ["versao_a_cada_s", config.VERSAO_A_CADA_MIN * 60],
+    ["max_fotos_historia", config.MAX_FOTOS_HISTORIA],
+    ["max_paragrafos", config.MAX_PARAGRAFOS],
+    ["max_letras_paragrafo", config.MAX_LETRAS_PARAGRAFO],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);
