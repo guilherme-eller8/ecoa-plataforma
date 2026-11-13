@@ -36,4 +36,15 @@ export type NomeDaTela = {
 /** Situação de um áudio recebido em relação ao pipeline. */
 export type SituacaoDoAudio =
   | { tipo: "historia"; historia: string; estado: EstadoHistoria }
-  | { tipo: "espera"; rotulo: string; confirmar: boolean };
+  | { tipo: "espera"; rotulo: string; frase: string; confirmar: boolean };
+
+/** Gravação guardada que ainda não virou história (home). */
+export type GuardadaDaTela = {
+  id: string;
+  origem: string;
+  titulo: string | null;
+  duracaoS: number | null;
+  recebidaEm: string;
+  frase: string;
+  confirmar: boolean;
+};

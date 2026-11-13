@@ -4,13 +4,27 @@
 export const EVENTO_GRAVACAO = "ecoa/gravacao.recebida";
 export const EVENTO_CANAL = "pipeline";
 
-/** Origens que viram história direto no prompt 6 (P40). Lote e conversa esperam a divisão. */
-export const ORIGENS_AVULSAS = ["autor", "livre", "upload"] as const;
+/**
+ * Origens que podem virar história direto (P40, P43). O lote de arquivos espera a divisão do
+ * prompt 7; a conversa só passa se tiver uma parte só e menos de 29 min (quem decide é o banco).
+ */
+export const ORIGENS_AVULSAS = [
+  "autor",
+  "livre",
+  "upload",
+  "conversa",
+] as const;
+export const MAX_CONVERSA_CURTA_S = 29 * 60; // espelha privado.max_historia_s() - 60
 
-export function ehAvulsa(g: { origem: string; lote_id: string | null }) {
+export function ehAvulsa(
+  g: { origem: string; lote_id: string | null; duracao_s?: number | null },
+  partesNoLote = 1,
+) {
+  if (!(ORIGENS_AVULSAS as readonly string[]).includes(g.origem)) return false;
+  if (g.origem !== "conversa") return g.lote_id === null;
   return (
-    g.lote_id === null &&
-    (ORIGENS_AVULSAS as readonly string[]).includes(g.origem)
+    partesNoLote <= 1 &&
+    (g.duracao_s == null || g.duracao_s < MAX_CONVERSA_CURTA_S)
   );
 }
 
@@ -40,13 +54,24 @@ export type MensagemCanal =
       paragrafos: string[];
     };
 
-/** Motivo de uma gravação não ter virado história (servico_iniciar_historia). */
+/** Motivo de uma gravação não ter virado história (servico_iniciar_historia), em selo curto. */
 export const MOTIVOS_ESPERA = {
-  divisao: "Aguardando divisão",
-  longa: "Aguardando divisão",
-  sem_duracao: "Aguardando",
-  sem_consentimento: "Aguardando sua confirmação",
-  cota_diaria: "Aguardando amanhã",
-  livro_fechado: "Aguardando",
-  nao_recebido: "Aguardando",
+  divisao: "Guardada · conversa longa",
+  longa: "Guardada · conversa longa",
+  sem_duracao: "Guardada",
+  sem_consentimento: "Confirme o uso da IA",
+  cota_diaria: "Vira texto amanhã",
+  livro_fechado: "Guardada",
+  nao_recebido: "Guardada",
 } as const;
+
+/** A mesma espera, numa frase para a home (nada some sem explicação). */
+export const FRASES_ESPERA: Record<keyof typeof MOTIVOS_ESPERA, string> = {
+  divisao: "Guardada. Conversas longas viram histórias em breve.",
+  longa: "Guardada. Conversas longas viram histórias em breve.",
+  sem_duracao: "Guardada.",
+  sem_consentimento: "Guardada. Confirme o uso da IA para virar texto.",
+  cota_diaria: "Guardada. Vira texto amanhã.",
+  livro_fechado: "Guardada.",
+  nao_recebido: "Guardada.",
+};

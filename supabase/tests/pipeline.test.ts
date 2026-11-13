@@ -210,6 +210,45 @@ describe("servico_iniciar_historia", () => {
   });
 });
 
+describe("conversa curta vira história (P43)", () => {
+  it("uma parte só e curta: vira história", async () => {
+    const lote = crypto.randomUUID();
+    const g = await gravacao(livroB, {
+      origem: "conversa",
+      lote,
+      duracao: 155,
+    });
+    expect((await iniciar(g)).estado).toBe("ouvindo");
+  });
+
+  it("1ª parte de conversa longa (30 min) espera pelo tamanho", async () => {
+    const lote = crypto.randomUUID();
+    const g = await gravacao(livroB, {
+      origem: "conversa",
+      lote,
+      duracao: 1800,
+    });
+    expect((await iniciar(g)).motivo).toBe("divisao");
+  });
+
+  it("parte seguinte acha a 1ª no lote e espera", async () => {
+    const lote = crypto.randomUUID();
+    await gravacao(livroB, { origem: "conversa", lote, duracao: 1800 });
+    const parte2 = await gravacao(livroB, {
+      origem: "conversa",
+      lote,
+      duracao: 600,
+    });
+    expect((await iniciar(parte2)).motivo).toBe("divisao");
+  });
+
+  it("lote de vários arquivos continua esperando", async () => {
+    const lote = crypto.randomUUID();
+    const g = await gravacao(livroB, { origem: "lote", lote, duracao: 60 });
+    expect((await iniciar(g)).motivo).toBe("divisao");
+  });
+});
+
 describe("estados da história", () => {
   it("só o caminho certo: ouvindo → escrevendo → pronta; pronta não volta", async () => {
     const g = await gravacao(livroB);

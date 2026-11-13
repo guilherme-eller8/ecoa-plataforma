@@ -154,4 +154,10 @@ export const INTERVALO_TEXTO_MS = 400; // texto ao vivo: no máximo 1 mensagem p
 export const MAX_RESUMOS_CONTEXTO = 40; // histórias prontas no contexto do livro
 export const TENTATIVAS_POR_PASSO = 3; // Inngest: 1 + 2 novas tentativas
 export const VARREDURA_GRAVACAO_MIN = 5; // gravação recebida sem história há mais que isso: reenvia
-export const VARREDURA_PARADA_MIN = 20; // história em andamento há mais que isso: falhou ("parada")
+export const VARREDURA_PARADA_MIN = 20;
+// Previsão mostrada no cartão (sem ansiedade): base + segundos por segundo de áudio, por fase.
+// Calibrar com ai_usage.ms quando houver histórias reais.
+export const PREVISAO_OUVIR_BASE_S = 15; // transcrever + estruturar
+export const PREVISAO_OUVIR_POR_S = 0.08;
+export const PREVISAO_ESCREVER_BASE_S = 25; // editar + verificar
+export const PREVISAO_ESCREVER_POR_S = 0.35; // história em andamento há mais que isso: falhou ("parada")

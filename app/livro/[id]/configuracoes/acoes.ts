@@ -66,7 +66,6 @@ export async function confirmarProcessamentoIA(
       .eq("book_id", livroId)
       .eq("upload", "recebido")
       .is("processado_em", null)
-      .is("lote_id", null)
       .in("origem", [...ORIGENS_AVULSAS])
       .lte("duracao_s", MAX_HISTORIA_MIN * 60)
       .limit(50);

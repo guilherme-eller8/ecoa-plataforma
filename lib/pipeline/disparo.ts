@@ -26,6 +26,7 @@ export async function dispararSeAvulsa(g: {
   id: string;
   origem: string;
   lote_id: string | null;
+  duracao_s?: number | null;
   processado_em?: string | null;
 }) {
   if (g.processado_em || !ehAvulsa(g)) return;

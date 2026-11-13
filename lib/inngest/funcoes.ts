@@ -148,7 +148,6 @@ export const varreduraFn = inngest.createFunction(
         .select("id, book_id, duracao_s")
         .eq("upload", "recebido")
         .is("processado_em", null)
-        .is("lote_id", null)
         .in("origem", [...ORIGENS_AVULSAS])
         .lte("duracao_s", MAX_HISTORIA_MIN * 60)
         .lt(

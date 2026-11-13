@@ -890,7 +890,7 @@ async function audioEnviando(c: Contexto, id: string) {
   const { data } = await clienteAdmin()
     .from("recordings")
     .select(
-      "id, caminho, content_type, tamanho_bytes, prompt_id, upload, origem, lote_id, processado_em",
+      "id, caminho, content_type, tamanho_bytes, prompt_id, upload, origem, lote_id, duracao_s, processado_em",
     )
     .eq("id", id)
     .eq("book_id", c.livro.id)

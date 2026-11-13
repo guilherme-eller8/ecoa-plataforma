@@ -13,6 +13,7 @@ import {
   ESPERANDO_FALSAS,
   FALHAS_FALSAS,
   HISTORIA_PARA_LER,
+  GUARDADAS_JAIR,
   HISTORIAS_JAIR,
   NOMES_JAIR,
 } from "@/lib/exemplos/prompt6";
@@ -88,6 +89,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
           }}
           historias={HISTORIAS_JAIR.slice(0, 2)}
           linkFamilia="https://app.ecoa-memorias.com.br/f/v1_exemplo"
+          guardadas={GUARDADAS_JAIR}
           marcarVista={nada}
           vitrine={AO_VIVO_JAIR}
         />

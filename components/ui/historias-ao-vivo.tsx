@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { estadoDoCartao } from "@/lib/historias/etapas";
+import { andamento as andamentoPrevisto } from "@/lib/historias/previsao";
 import type { HistoriaDaTela } from "@/lib/historias/tipos";
 import {
   EVENTO_CANAL,
@@ -83,6 +84,18 @@ export function HistoriasAoVivo({
 }) {
   const router = useRouter();
   const [aoVivo, setAoVivo] = useState<Record<string, AoVivo>>(inicial);
+  // Relógio só no navegador (o servidor não sabe a hora da tela) e só com algo em andamento.
+  const [agora, setAgora] = useState<number | null>(null);
+  const emAndamento = historias.some(
+    (h) => h.estado === "ouvindo" || h.estado === "escrevendo",
+  );
+  useEffect(() => {
+    if (!emAndamento) return;
+    const tic = () => setAgora(Date.now());
+    tic();
+    const id = setInterval(tic, 1000);
+    return () => clearInterval(id);
+  }, [emAndamento]);
   const vistas = useRef(new Set<string>());
 
   const ver = (id: string) => {
@@ -159,6 +172,16 @@ export function HistoriasAoVivo({
                   : (ORIGEM[h.origem ?? ""] ?? "Áudio")
               }
               duracaoSeg={h.duracaoS}
+              andamento={
+                agora !== null &&
+                (estado === "ouvindo" || estado === "escrevendo")
+                  ? andamentoPrevisto(
+                      estado,
+                      h.duracaoS,
+                      (agora - new Date(h.criadaEm).getTime()) / 1000,
+                    )
+                  : undefined
+              }
               trecho={trecho}
               destaque={estado === "ouvindo" || escrevendo}
               acao={

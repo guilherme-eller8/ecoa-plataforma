@@ -11,10 +11,10 @@ test.describe("Histórias (exemplo)", () => {
     await expect(
       page.getByRole("heading", { name: "Histórias" }),
     ).toBeVisible();
-    await expect(page.getByText(/^Escrevendo, etapa 3 de 4/)).toBeVisible();
+    await expect(page.getByText(/^Escrevendo o texto · /)).toBeVisible();
     await expect(page.getByText(/chão de terra batida/)).toBeVisible();
     await expect(
-      page.getByText(/^Pronta para revisar, etapa 4 de 4/),
+      page.getByText("Pronta para revisar", { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByText("Não deu certo. Já estamos vendo."),
@@ -44,6 +44,27 @@ test.describe("Histórias (exemplo)", () => {
     await expect(marco).toBeHidden();
     await page.reload();
     await expect(marco).toBeHidden();
+  });
+});
+
+test.describe("Andamento e gravações guardadas (exemplo)", () => {
+  test("cartão em andamento tem barra com tempo previsto, sem números de etapa", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/historias");
+    await expect(
+      page.getByRole("progressbar", { name: "Andamento" }),
+    ).toBeVisible();
+  });
+
+  test("home mostra a gravação guardada com o motivo, para nada sumir", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/livro-com-historias");
+    await expect(page.getByText("Gravações guardadas")).toBeVisible();
+    await expect(
+      page.getByText("Guardada. Conversas longas viram histórias em breve."),
+    ).toBeVisible();
   });
 });
 
@@ -97,9 +118,9 @@ test.describe("Áudios e admin (exemplo)", () => {
     await expect(
       page.getByRole("link", { name: "Virou história" }),
     ).toBeVisible();
-    await expect(page.getByText("Aguardando divisão")).toBeVisible();
+    await expect(page.getByText("Guardada · conversa longa")).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Aguardando sua confirmação" }),
+      page.getByRole("link", { name: "Confirme o uso da IA" }),
     ).toHaveAttribute("href", /configuracoes#ia/);
   });
 

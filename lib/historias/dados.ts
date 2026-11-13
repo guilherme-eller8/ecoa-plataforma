@@ -4,6 +4,7 @@ import "server-only";
 import type { Edicao, Marcacao } from "@/lib/ai/schemas";
 import { MAX_HISTORIA_MIN } from "@/lib/config";
 import {
+  FRASES_ESPERA,
   MOTIVOS_ESPERA,
   ehAvulsa,
   type EstadoHistoria,
@@ -14,6 +15,7 @@ import type {
   HistoriaDaTela,
   HistoriaParaLer,
   NomeDaTela,
+  GuardadaDaTela,
   SituacaoDoAudio,
 } from "./tipos";
 
@@ -200,6 +202,9 @@ export async function situacaoDosAudios(
     ? await supabase.from("stories").select("id, estado").in("id", historias)
     : { data: [] };
   const estadoDe = new Map((stories ?? []).map((s) => [s.id, s.estado]));
+  const partes = new Map<string, number>();
+  for (const r of recs ?? [])
+    if (r.lote_id) partes.set(r.lote_id, (partes.get(r.lote_id) ?? 0) + 1);
 
   const mapa = new Map<string, SituacaoDoAudio>();
   for (const r of recs ?? []) {
@@ -212,7 +217,10 @@ export async function situacaoDosAudios(
       });
       continue;
     }
-    const motivo: keyof typeof MOTIVOS_ESPERA = !ehAvulsa(r)
+    const motivo: keyof typeof MOTIVOS_ESPERA = !ehAvulsa(
+      r,
+      r.lote_id ? partes.get(r.lote_id) : 1,
+    )
       ? "divisao"
       : r.duracao_s == null
         ? "sem_duracao"
@@ -224,8 +232,43 @@ export async function situacaoDosAudios(
     mapa.set(r.id, {
       tipo: "espera",
       rotulo: MOTIVOS_ESPERA[motivo],
+      frase: FRASES_ESPERA[motivo],
       confirmar: motivo === "sem_consentimento",
     });
   }
   return mapa;
+}
+
+/** Gravações que chegaram e ainda não viraram história, para a home (no máximo 5). */
+export async function gravacoesGuardadas(
+  livro: string,
+  iaConfirmada: boolean,
+): Promise<GuardadaDaTela[]> {
+  const situacoes = await situacaoDosAudios(livro, iaConfirmada);
+  const esperando = [...situacoes.entries()].filter(
+    ([, s]) => s.tipo === "espera",
+  );
+  if (esperando.length === 0) return [];
+  const supabase = await clienteSessao();
+  const { data } = await supabase
+    .from("recordings")
+    .select("id, origem, duracao_s, recebido_em, titulo")
+    .in(
+      "id",
+      esperando.map(([id]) => id),
+    )
+    .order("recebido_em", { ascending: false })
+    .limit(5);
+  return (data ?? []).map((r) => {
+    const s = situacoes.get(r.id);
+    return {
+      id: r.id,
+      origem: r.origem,
+      titulo: r.titulo,
+      duracaoS: r.duracao_s,
+      recebidaEm: r.recebido_em ?? "",
+      frase: s?.tipo === "espera" ? s.frase : "Guardada.",
+      confirmar: s?.tipo === "espera" ? s.confirmar : false,
+    };
+  });
 }

@@ -7,7 +7,7 @@ import { HistoriasAoVivo } from "@/components/ui/historias-ao-vivo";
 import { Marca } from "@/components/ui/marca";
 import { MarcoPrimeiraHistoria } from "@/components/ui/marco-primeira-historia";
 import type { AoVivo } from "@/components/ui/historias-ao-vivo";
-import type { HistoriaDaTela } from "@/lib/historias/tipos";
+import type { GuardadaDaTela, HistoriaDaTela } from "@/lib/historias/tipos";
 import { pendentes, type Passo } from "@/lib/livro/configuracao";
 import type { LivroDaTela } from "@/lib/livro/tipos";
 
@@ -16,6 +16,22 @@ const NOME_DO_PASSO: Record<Passo, string> = {
   perguntas: "Primeiras perguntas",
   fotos: "Fotos",
 };
+
+const DIA = new Intl.DateTimeFormat("pt-BR", {
+  day: "numeric",
+  month: "short",
+  timeZone: "America/Sao_Paulo",
+});
+
+function nomeDaGravacao(g: GuardadaDaTela) {
+  const tipo = g.origem === "conversa" ? "Conversa" : "Gravação";
+  const minutos = g.duracaoS
+    ? ` · ${Math.max(1, Math.round(g.duracaoS / 60))} min`
+    : "";
+  return g.recebidaEm
+    ? `${tipo} de ${DIA.format(new Date(g.recebidaEm))}${minutos}`
+    : `${tipo}${minutos}`;
+}
 
 export type ResumoDoLivro = {
   paraPerguntar: number;
@@ -31,6 +47,7 @@ export function TelaLivro({
   linkFamilia = null,
   marcarVista,
   vitrine,
+  guardadas = [],
 }: {
   livro: LivroDaTela;
   resumo: ResumoDoLivro;
@@ -38,6 +55,7 @@ export function TelaLivro({
   linkFamilia?: string | null;
   marcarVista?: (historia: string) => Promise<void>;
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
+  guardadas?: GuardadaDaTela[]; // gravações que chegaram e ainda não viraram história
 }) {
   const falta = livro.podeEscrever ? pendentes(livro.configuracao) : [];
   const base = `/livro/${livro.id}`;
@@ -154,6 +172,37 @@ export function TelaLivro({
             canal={!vitrine}
             inicial={vitrine}
           />
+        </section>
+      ) : null}
+
+      {guardadas.length ? (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-ui-20 text-tinta font-medium">
+            Gravações guardadas
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {guardadas.map((g) => (
+              <li
+                key={g.id}
+                className="bg-papel flex flex-col gap-1 rounded-2xl px-4 py-3"
+              >
+                <p className="text-ui-17 text-tinta">
+                  {g.titulo ?? nomeDaGravacao(g)}
+                </p>
+                <p className="text-ui-15 text-tinta-2">
+                  {g.frase}{" "}
+                  {g.confirmar ? (
+                    <Link
+                      href={`${base}/configuracoes#ia`}
+                      className="text-floresta font-medium underline-offset-4 hover:underline"
+                    >
+                      Confirmar
+                    </Link>
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

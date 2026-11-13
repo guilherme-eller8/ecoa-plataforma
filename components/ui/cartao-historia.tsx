@@ -10,6 +10,7 @@ import {
   type Etapa,
 } from "@/lib/ui/etapas";
 import { falarDuracao } from "@/lib/ui/tempo";
+import type { Andamento } from "@/lib/historias/previsao";
 import { IconeCheck } from "./icones";
 
 export type EstadoCartao = Etapa | "pronta" | "falhou";
@@ -24,7 +25,39 @@ type Props = {
   selo?: string; // ex.: "Corrigida pelo Jair"
   acao?: ReactNode;
   destaque?: boolean; // o cartão que está acontecendo agora
+  andamento?: Andamento; // tempo previsto: uma barra que enche e uma frase curta
 };
+
+function BarraDeAndamento({ andamento }: { andamento: Andamento }) {
+  const pct = Math.round(andamento.fracao * 100);
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-label="Andamento"
+        className="rounded-controle bg-polen-2 h-1.5 w-full overflow-hidden"
+      >
+        <div
+          className="bg-floresta h-full rounded-[inherit] transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p
+        className="text-ui-15 text-floresta flex items-center gap-2 font-medium"
+        aria-live="polite"
+      >
+        <span
+          aria-hidden="true"
+          className="animate-pulsar bg-floresta size-2 rounded-full"
+        />
+        {andamento.frase}
+      </p>
+    </div>
+  );
+}
 
 function Etapas({ atual }: { atual: Etapa }) {
   const i = indiceDaEtapa(atual);
@@ -87,6 +120,7 @@ export function CartaoHistoria({
   selo,
   acao,
   destaque = false,
+  andamento,
 }: Props) {
   const processando =
     estado === "enviando" || estado === "ouvindo" || estado === "escrevendo";
@@ -124,6 +158,16 @@ export function CartaoHistoria({
         <p className="text-ui-15 text-tinta-2" aria-live="polite">
           Não deu certo. Já estamos vendo.
         </p>
+      ) : (estado === "ouvindo" || estado === "escrevendo") && andamento ? (
+        <BarraDeAndamento andamento={andamento} />
+      ) : estado === "revisar" ? (
+        <div className="flex flex-col gap-2">
+          <div className="rounded-controle bg-floresta h-1.5 w-full" />
+          <p className="text-ui-15 text-floresta flex items-center gap-2 font-medium">
+            <IconeCheck tamanho={18} />
+            Pronta para revisar
+          </p>
+        </div>
       ) : (
         <Etapas atual={estado} />
       )}

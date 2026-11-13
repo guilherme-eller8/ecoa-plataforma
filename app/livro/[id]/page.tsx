@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { TelaLivro } from "@/components/telas/tela-livro";
 import { marcarHistoriaVista } from "./historias/acoes";
 import { registrarEvento } from "@/lib/eventos";
-import { historiasDoLivro } from "@/lib/historias/dados";
+import { gravacoesGuardadas, historiasDoLivro } from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { precisaConfigurar } from "@/lib/livro/configuracao";
 import {
@@ -40,7 +40,7 @@ async function Livro({ id }: { id: string }) {
     ),
   );
 
-  const [perguntas, causos, enquete, audios, historias, familia] =
+  const [perguntas, causos, enquete, audios, historias, familia, guardadas] =
     await Promise.all([
       perguntasDoLivro(id),
       causosDoLivro(id),
@@ -48,6 +48,7 @@ async function Livro({ id }: { id: string }) {
       totalDeAudios(id),
       historiasDoLivro(id, 20),
       linkDaFamilia(id),
+      gravacoesGuardadas(id, Boolean(livro.ia_consentimento_em)),
     ]);
   return (
     <TelaLivro
@@ -61,6 +62,7 @@ async function Livro({ id }: { id: string }) {
       }}
       historias={historias}
       linkFamilia={familia}
+      guardadas={guardadas}
       marcarVista={marcarHistoriaVista.bind(null, id)}
     />
   );

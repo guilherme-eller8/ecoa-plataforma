@@ -7,6 +7,7 @@ import type {
   Falha,
 } from "@/components/telas/admin-processamento";
 import type {
+  GuardadaDaTela,
   HistoriaDaTela,
   HistoriaParaLer,
   NomeDaTela,
@@ -128,10 +129,16 @@ export const AUDIOS_COM_SITUACAO: AudioDaTela[] = AUDIOS_JAIR.map((a, i) => ({
     i === 0
       ? { tipo: "historia", historia: id(2), estado: "pronta" }
       : i === 1
-        ? { tipo: "espera", rotulo: "Aguardando divisão", confirmar: false }
+        ? {
+            tipo: "espera",
+            rotulo: "Guardada · conversa longa",
+            frase: "Guardada. Conversas longas viram histórias em breve.",
+            confirmar: false,
+          }
         : {
             tipo: "espera",
-            rotulo: "Aguardando sua confirmação",
+            rotulo: "Confirme o uso da IA",
+            frase: "Guardada. Confirme o uso da IA para virar texto.",
             confirmar: true,
           },
 }));
@@ -163,4 +170,16 @@ export const ESPERANDO_FALSAS: Esperando[] = [
 ];
 export const CUSTOS_FALSOS: CustoDoLivro[] = [
   { autor: "Jair", reais: 2.47, historias: 3, minutos: 19 },
+];
+
+export const GUARDADAS_JAIR: GuardadaDaTela[] = [
+  {
+    id: id(31),
+    origem: "conversa",
+    titulo: null,
+    duracaoS: 2400,
+    recebidaEm: "2026-11-11T22:10:00Z",
+    frase: "Guardada. Conversas longas viram histórias em breve.",
+    confirmar: false,
+  },
 ];
