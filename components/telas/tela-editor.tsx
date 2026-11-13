@@ -104,10 +104,12 @@ export function TelaEditor({
   historia,
   podeEscrever,
   acoes,
+  propostaInicial,
 }: {
   historia: HistoriaParaEditar;
   podeEscrever: boolean;
   acoes: AcoesEditor;
+  propostaInicial?: string;
 }) {
   const router = useRouter();
   const base = `/livro/${historia.livroId}/historias/${historia.id}`;
@@ -161,7 +163,13 @@ export function TelaEditor({
   const [aberta, setAberta] = useState<{
     proposta: PropostaDaTela;
     atual: Paragrafo[];
-  } | null>(null);
+  } | null>(() => {
+    // Vitrine (e links futuros): abrir já na diferença de uma proposta pronta.
+    const p = historia.propostas.find(
+      (x) => x.id === propostaInicial && x.estado === "pronta",
+    );
+    return p ? { proposta: p, atual: historia.texto.paragrafos } : null;
+  });
   const [folha, setFolha] = useState<
     "tamanho" | "revisar" | "acrescentar" | null
   >(null);
@@ -737,7 +745,10 @@ export function TelaEditor({
               Tamanho · {rotuloDaChave(tamanhoGerando ?? tamanho)}
             </button>
           </div>
-          <DicaPrimeiraVez chave="editor-revisar">
+          <DicaPrimeiraVez
+            chave="editor-revisar"
+            depoisDe={temAudio ? "editor-ouvir" : undefined}
+          >
             Selecione um trecho para pedir uma revisão.
           </DicaPrimeiraVez>
         </div>

@@ -337,8 +337,14 @@ describe("diferencaPorPalavra", () => {
       diferencaPorPalavra("Ele foi de trem.", "Ele foi de ônibus."),
     ).toEqual([
       { tipo: "igual", texto: "Ele foi de " },
-      { tipo: "removido", texto: "trem." },
-      { tipo: "inserido", texto: "ônibus." },
+      { tipo: "removido", texto: "trem" },
+      { tipo: "inserido", texto: "ônibus" },
+      { tipo: "igual", texto: "." },
+    ]);
+    expect(diferencaPorPalavra("ainda escuro.", "ainda escuro,")).toEqual([
+      { tipo: "igual", texto: "ainda escuro" },
+      { tipo: "removido", texto: "." },
+      { tipo: "inserido", texto: "," },
     ]);
     expect(diferencaPorPalavra("", "Novo.")).toEqual([
       { tipo: "inserido", texto: "Novo." },

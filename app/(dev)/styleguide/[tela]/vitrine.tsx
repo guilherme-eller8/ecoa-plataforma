@@ -160,15 +160,19 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "editor-ia":
     case "editor-proposta":
+    case "editor-diferenca":
       return (
         <TelaEditor
           historia={
-            tela === "editor-proposta"
-              ? HISTORIA_COM_PROPOSTA
-              : HISTORIA_EDITADA
+            tela === "editor-ia" ? HISTORIA_EDITADA : HISTORIA_COM_PROPOSTA
           }
           podeEscrever
           acoes={acoesEditorComIA()}
+          propostaInicial={
+            tela === "editor-diferenca"
+              ? HISTORIA_COM_PROPOSTA.propostas[0].id
+              : undefined
+          }
         />
       );
     case "gravar-mais":

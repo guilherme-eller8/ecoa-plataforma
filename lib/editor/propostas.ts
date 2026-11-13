@@ -398,8 +398,11 @@ export function diferencaPorPalavra(
   antes: string,
   depois: string,
 ): PedacoDiferenca[] {
-  const a = antes.split(/(\s+)/).filter(Boolean);
-  const b = depois.split(/(\s+)/).filter(Boolean);
+  // Pontuação separada da palavra: "escuro." → "escuro," marca só o ponto que virou vírgula.
+  const pedacosDe = (t: string) =>
+    t.split(/(\s+|[.,;:!?…"“”()]+)/).filter(Boolean);
+  const a = pedacosDe(antes);
+  const b = pedacosDe(depois);
   if (!a.length && !b.length) return [];
   if (a.length * b.length > LIMITE_CELULAS)
     return juntar([

@@ -640,8 +640,7 @@ export async function propostasDoEditor(
       ? (tamanho as ChaveTamanho)
       : "medio",
     propostas: propostas.reverse(),
-    audiosForaDoTexto: (extras ?? []).filter((g) => !cobertas.has(g.id))
-      .length,
+    audiosForaDoTexto: (extras ?? []).filter((g) => !cobertas.has(g.id)).length,
   };
 }
 
@@ -677,7 +676,9 @@ export async function versoesDaHistoria(
     .eq("story_id", historia)
     .order("numero", { ascending: false })
     .limit(200);
-  const ids = (data ?? []).flatMap((v) => (v.proposta_id ? [v.proposta_id] : []));
+  const ids = (data ?? []).flatMap((v) =>
+    v.proposta_id ? [v.proposta_id] : [],
+  );
   const { data: props } = ids.length
     ? await supabase.from("story_proposals").select("id, tipo").in("id", ids)
     : { data: [] };

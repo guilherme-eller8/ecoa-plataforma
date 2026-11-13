@@ -153,7 +153,7 @@ export function Diferenca({
                 className={b.p.editado ? "flex flex-col gap-1" : undefined}
               >
                 {b.p.editado ? (
-                  <span className="text-ui-13 text-tinta-2 inline-flex items-center gap-1.5">
+                  <span className="font-ui text-ui-13 text-tinta-2 inline-flex items-center gap-1.5">
                     <IconeCadeado tamanho={14} />
                     Editado à mão · fica como está
                   </span>

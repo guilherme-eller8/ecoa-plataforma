@@ -21,16 +21,19 @@ function assinar(aviso: () => void) {
 
 export function DicaPrimeiraVez({
   chave,
+  depoisDe,
   children,
 }: {
   chave: string;
+  /** Só aparece depois que esta outra dica foi vista: uma dica por vez na tela. */
+  depoisDe?: string;
   children: React.ReactNode;
 }) {
   const nome = `ecoa-dica-${chave}`;
   // No servidor, escondida: nada pisca para quem já viu.
   const jaViu = useSyncExternalStore(
     assinar,
-    () => vista(nome),
+    () => vista(nome) || (depoisDe ? !vista(`ecoa-dica-${depoisDe}`) : false),
     () => true,
   );
   if (jaViu) return null;

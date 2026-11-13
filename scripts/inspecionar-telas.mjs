@@ -58,6 +58,10 @@ const TELAS = {
   "editor-trava": "/styleguide/editor-trava",
   "editor-pronta": "/styleguide/editor-pronta",
   versoes: "/styleguide/versoes",
+  "editor-ia": "/styleguide/editor-ia",
+  "editor-proposta": "/styleguide/editor-proposta",
+  "editor-diferenca": "/styleguide/editor-diferenca",
+  "gravar-mais": "/styleguide/gravar-mais",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no
