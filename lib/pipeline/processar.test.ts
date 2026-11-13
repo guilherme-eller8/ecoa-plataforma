@@ -462,3 +462,20 @@ describe("divisão em histórias (prompt 7)", () => {
     expect(m.passos).not.toContain("dividir");
   });
 });
+
+describe("áudio sem fala (achado no deploy de prévia)", () => {
+  it("para antes da escrita, com código fixo, sem chamar o modelo capaz", async () => {
+    const m = montar({
+      estrutura: {
+        falantes: [{ falante: "g1:speaker_0", papel: "autor" }],
+        vazios: Array.from({ length: 200 }, (_, i) => i + 1),
+        mudancasDeAssunto: [],
+      },
+    });
+    const erro = await processarGravacao(G, m.d, m.step).catch((e) => e);
+    expect(erro).toBeInstanceOf(ErroPipeline);
+    expect(erro.message).toBe("editar:audio_sem_fala");
+    expect(m.s.usos.map((u) => u.etapa)).not.toContain("editar");
+    expect(m.passos).not.toContain("dividir");
+  });
+});

@@ -98,20 +98,14 @@ export async function estruturar(
       segmentos: formatarSegmentos(segmentos),
     }),
     schema: Estrutura,
-    // Só recusa se nenhum falante bate: aí a resposta não serve para nada.
-    validar: (e) =>
-      e.falantes.length > 0 && !e.falantes.some((f) => falantes.has(f.falante))
-        ? `nenhum falante conhecido (${e.falantes.length} citados, ${falantes.size} no áudio)`
-        : null,
+    // Sem recusa por falante: a estrutura é dica. Falante escrito de outro jeito ("speaker_0"
+    // sem o "g1:", o uuid da gravação) é casado pelo speaker em completarFalantes.
   });
   // A estrutura é dica para a edição: id ou falante inventado é descartado, não derruba a história.
   return {
     ...r,
     dados: {
-      falantes: completarFalantes(
-        r.dados.falantes.filter((f) => falantes.has(f.falante)),
-        [...falantes],
-      ),
+      falantes: completarFalantes(r.dados.falantes, [...falantes]),
       vazios: r.dados.vazios.filter((id) => ids.has(id)),
       mudancasDeAssunto: r.dados.mudancasDeAssunto.filter((id) => ids.has(id)),
     },
@@ -132,6 +126,12 @@ export function completarFalantes(
   for (const f of dados) {
     const speaker = f.falante.split(":").at(-1) ?? f.falante;
     if (!porSpeaker.has(speaker)) porSpeaker.set(speaker, f.papel);
+  }
+  // Uma pessoa só no áudio, e o modelo não a reconheceu: é o autor contando.
+  if (todos.length === 1 && !papel.has(todos[0])) {
+    const speaker = todos[0].split(":").at(-1) ?? todos[0];
+    if (!porSpeaker.has(speaker))
+      return [{ falante: todos[0], papel: "autor" }];
   }
   return todos.map((falante) => ({
     falante,

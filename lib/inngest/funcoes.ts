@@ -16,6 +16,7 @@ import {
   TENTATIVAS_POR_PASSO,
   VARREDURA_CONFIRMADA_MIN,
   VARREDURA_GRAVACAO_MIN,
+  VARREDURA_JANELA_H,
   VARREDURA_PARADA_MIN,
 } from "@/lib/config";
 import { emailDivisaoPronta, emailHistoriaPronta } from "@/lib/email/modelos";
@@ -235,7 +236,7 @@ export const varreduraFn = inngest.createFunction(
     const reenviadas = await step.run("orfas", async () => {
       const db = clienteAdmin();
       const agora = Date.now();
-      // Prompt 7: toda origem; 7 dias (a cota diária pode adiar um lote para amanhã).
+      // Prompt 7: toda origem; 48 h (cobre a cota diária adiada; áudio de teste antigo não volta).
       const { data: candidatas } = await db
         .from("recordings")
         .select("id, book_id, lote_id, lote_total, recebido_em")
@@ -246,7 +247,10 @@ export const varreduraFn = inngest.createFunction(
           "recebido_em",
           new Date(agora - VARREDURA_GRAVACAO_MIN * 60_000).toISOString(),
         )
-        .gt("recebido_em", new Date(agora - 7 * 24 * 3600_000).toISOString())
+        .gt(
+          "recebido_em",
+          new Date(agora - VARREDURA_JANELA_H * 3600_000).toISOString(),
+        )
         .order("recebido_em")
         .limit(200);
       const lista = candidatas ?? [];

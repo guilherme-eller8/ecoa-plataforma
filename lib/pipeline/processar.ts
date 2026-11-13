@@ -13,6 +13,7 @@ import {
   estruturar,
   listasDeChecagem,
   memoria,
+  palavrasComConteudo,
   verificar,
   type GravacaoDaDivisao,
 } from "@/lib/ai/etapas";
@@ -35,6 +36,7 @@ import {
   MAX_HISTORIA_ESCRITA_MIN,
   MAX_HISTORIAS_DIVISAO,
   MIN_FALA_HISTORIA_S,
+  MIN_PALAVRAS_HISTORIA,
   MODELO_CAPAZ,
   MODELO_RAPIDO,
   TAMANHO_PADRAO,
@@ -410,8 +412,14 @@ export async function processarGravacao(
       if (!info || info.temDivisao || info.divisaoDe) return "parar" as const;
       if (info.estado === "escrevendo") return "escrever" as const;
       const estrutura = await d.banco.estrutura(historia);
-      return gravacoes.length > 1 ||
-        (estrutura?.mudancasDeAssunto.length ?? 0) > 0
+      // Pouca fala não vale uma divisão: vai para a escrita (que para em "audio_sem_fala").
+      const segmentos = await d.banco.segmentosDaHistoria(historia);
+      if (
+        !estrutura ||
+        palavrasComConteudo(segmentos, estrutura) < MIN_PALAVRAS_HISTORIA
+      )
+        return "escrever" as const;
+      return gravacoes.length > 1 || estrutura.mudancasDeAssunto.length > 0
         ? ("dividir" as const)
         : ("escrever" as const);
     }),
@@ -573,6 +581,9 @@ export async function escreverHistoria(
         d.banco.contexto(livro),
       ]);
       if (!estrutura) throw new ErroPipeline("editar", "sem_rascunho");
+      // Sem fala para escrever (só silêncio ou ruído): para aqui, sem pagar o modelo capaz.
+      if (palavrasComConteudo(segmentos, estrutura) < MIN_PALAVRAS_HISTORIA)
+        throw new ErroPipeline("editar", "audio_sem_fala");
       const r = await usoDaIA(
         d,
         { livro, historia, etapa: "editar", modelo: MODELO_CAPAZ },

@@ -176,5 +176,9 @@ export const TRECHO_ALVO_S = 60; // tamanho de um trecho na tela de divisão
 export const EDICOES_SIMULTANEAS = 4; // escrever-historia: no máximo isso ao mesmo tempo
 export const MAX_PERGUNTAS_SUGESTAO = 100; // perguntas pendentes mostradas à IA
 export const VARREDURA_CONFIRMADA_MIN = 5; // filha parada em "ouvindo" há mais que isso: reenvia
+// A varredura só olha o que chegou nessas horas: cobre a cota diária adiada (24 h) e nunca
+// reprocessa áudios de teste antigos (D3 do prompt 6).
+export const VARREDURA_JANELA_H = 48;
+export const MIN_PALAVRAS_HISTORIA = 8; // menos que isso do autor: "audio_sem_fala", sem chamar a escrita
 export const PREVISAO_DIVIDIR_BASE_S = 20;
 export const PREVISAO_DIVIDIR_POR_S = 0.02;

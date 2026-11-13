@@ -59,10 +59,11 @@ describe("estruturar", () => {
       "g1",
       segmentos,
     );
-    // Prompt 7: quem ficou sem papel entra como "outro" (a edição nunca vê falante sem papel).
+    // Prompt 7: o falante escrito com o uuid da gravação é casado pelo speaker, e ninguém fica
+    // sem papel (a edição nunca vê falante sem papel).
     expect(r.dados).toEqual({
       falantes: [
-        { falante: "g1:speaker_0", papel: "outro" },
+        { falante: "g1:speaker_0", papel: "entrevistador" },
         { falante: "g1:speaker_1", papel: "autor" },
       ],
       vazios: [1],
@@ -83,18 +84,32 @@ describe("estruturar", () => {
     ]);
   });
 
-  it("recusa só quando nenhum falante bate", async () => {
-    await expect(
-      estruturar(
-        clienteCom({
-          falantes: [{ falante: "speaker_0", papel: "autor" }],
-          vazios: [],
-          mudancasDeAssunto: [],
-        }),
-        ler,
-        "g1",
-        segmentos,
+  it("falante escrito sem o rótulo da gravação é casado pelo speaker, sem recusar", async () => {
+    const r = await estruturar(
+      clienteCom({
+        falantes: [{ falante: "speaker_0", papel: "autor" }],
+        vazios: [],
+        mudancasDeAssunto: [],
+      }),
+      ler,
+      "g1",
+      segmentos,
+    );
+    expect(r.dados.falantes).toEqual([
+      { falante: "g1:speaker_0", papel: "autor" },
+      { falante: "g1:speaker_1", papel: "outro" },
+    ]);
+  });
+
+  it("uma pessoa só no áudio, não reconhecida: vira o autor", () => {
+    expect(completarFalantes([], ["g1:speaker_0"])).toEqual([
+      { falante: "g1:speaker_0", papel: "autor" },
+    ]);
+    expect(
+      completarFalantes(
+        [{ falante: "Nelson", papel: "outro" }],
+        ["g1:speaker_0"],
       ),
-    ).rejects.toThrow("nenhum falante conhecido");
+    ).toEqual([{ falante: "g1:speaker_0", papel: "autor" }]);
   });
 });
