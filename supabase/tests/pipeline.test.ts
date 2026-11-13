@@ -30,13 +30,15 @@ async function gravacao(
     origem?: string;
     duracao?: number | null;
     lote?: string | null;
+    total?: number | null;
+    ordem?: number | null;
   } = {},
 ) {
   const id = crypto.randomUUID();
   await db.query(
     `insert into public.recordings (id, book_id, origem, nome_arquivo, caminho, content_type, tamanho_bytes,
-       duracao_s, upload, recebido_em, lote_id)
-     values ($1, $2, $3::public.recording_origem, 'a.m4a', $4, 'audio/mp4', 100, $5, 'recebido', now(), $6)`,
+       duracao_s, upload, recebido_em, lote_id, lote_total, lote_ordem)
+     values ($1, $2, $3::public.recording_origem, 'a.m4a', $4, 'audio/mp4', 100, $5, 'recebido', now(), $6, $7, $8)`,
     [
       id,
       livro,
@@ -44,6 +46,8 @@ async function gravacao(
       `livros/${livro}/audios/${id}.m4a`,
       campos.duracao === undefined ? 300 : campos.duracao,
       campos.lote ?? null,
+      campos.total ?? null,
+      campos.ordem ?? null,
     ],
   );
   return id;
@@ -162,17 +166,17 @@ describe("servico_iniciar_historia", () => {
     expect(certa).toBe(true);
   });
 
-  it("lote, conversa, longa e sem duração esperam a divisão (P40)", async () => {
+  it("lote incompleto espera; arquivo de mais de 2 h e sem duração esperam (prompt 7)", async () => {
     const lote = crypto.randomUUID();
     expect(
-      (await iniciar(await gravacao(livroA, { origem: "lote", lote }))).motivo,
-    ).toBe("divisao");
+      (
+        await iniciar(
+          await gravacao(livroA, { origem: "lote", lote, total: 3, ordem: 1 }),
+        )
+      ).motivo,
+    ).toBe("lote_incompleto");
     expect(
-      (await iniciar(await gravacao(livroA, { origem: "conversa", lote })))
-        .motivo,
-    ).toBe("divisao");
-    expect(
-      (await iniciar(await gravacao(livroA, { duracao: 3000 }))).motivo,
+      (await iniciar(await gravacao(livroA, { duracao: 7300 }))).motivo,
     ).toBe("longa");
     expect(
       (await iniciar(await gravacao(livroA, { duracao: null }))).motivo,
@@ -210,7 +214,7 @@ describe("servico_iniciar_historia", () => {
   });
 });
 
-describe("conversa curta vira história (P43)", () => {
+describe("linhas antigas, sem lote_total, seguem P43 (prompt 7)", () => {
   it("uma parte só e curta: vira história", async () => {
     const lote = crypto.randomUUID();
     const g = await gravacao(livroB, {
@@ -221,17 +225,17 @@ describe("conversa curta vira história (P43)", () => {
     expect((await iniciar(g)).estado).toBe("ouvindo");
   });
 
-  it("1ª parte de conversa longa (30 min) espera pelo tamanho", async () => {
+  it("parte de 30 min sem total espera as outras", async () => {
     const lote = crypto.randomUUID();
     const g = await gravacao(livroB, {
       origem: "conversa",
       lote,
       duracao: 1800,
     });
-    expect((await iniciar(g)).motivo).toBe("divisao");
+    expect((await iniciar(g)).motivo).toBe("lote_incompleto");
   });
 
-  it("parte seguinte acha a 1ª no lote e espera", async () => {
+  it("parte seguinte também espera enquanto houver parte de 30 min", async () => {
     const lote = crypto.randomUUID();
     await gravacao(livroB, { origem: "conversa", lote, duracao: 1800 });
     const parte2 = await gravacao(livroB, {
@@ -239,13 +243,7 @@ describe("conversa curta vira história (P43)", () => {
       lote,
       duracao: 600,
     });
-    expect((await iniciar(parte2)).motivo).toBe("divisao");
-  });
-
-  it("lote de vários arquivos continua esperando", async () => {
-    const lote = crypto.randomUUID();
-    const g = await gravacao(livroB, { origem: "lote", lote, duracao: 60 });
-    expect((await iniciar(g)).motivo).toBe("divisao");
+    expect((await iniciar(parte2)).motivo).toBe("lote_incompleto");
   });
 });
 

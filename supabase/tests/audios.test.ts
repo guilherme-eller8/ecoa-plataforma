@@ -52,15 +52,18 @@ function inserir(
     prompt?: string | null;
     origem?: string;
     lote?: string | null;
+    semTotal?: boolean; // prompt 7: lote e conversa novos levam total e posição
   } = {},
 ) {
   const id = campos.id ?? crypto.randomUUID();
+  const total = campos.lote && !campos.semTotal ? 2 : null;
   return sessao(usuario, async (tx) => ({
     id,
     r: await tenta(
       tx,
-      `insert into public.recordings (id, book_id, origem, prompt_id, nome_arquivo, caminho, content_type, tamanho_bytes, duracao_s, lote_id)
-       values ($1, $2, $3::public.recording_origem, $4, 'PTT-0001.opus', $5, 'audio/ogg', $6, 42, $7)`,
+      `insert into public.recordings (id, book_id, origem, prompt_id, nome_arquivo, caminho, content_type, tamanho_bytes, duracao_s, lote_id,
+         lote_total, lote_ordem)
+       values ($1, $2, $3::public.recording_origem, $4, 'PTT-0001.opus', $5, 'audio/ogg', $6, 42, $7, $8, $9)`,
       [
         id,
         livro,
@@ -69,6 +72,8 @@ function inserir(
         campos.caminho ?? caminho(livro, id),
         campos.tamanho ?? 2 * MB,
         campos.lote ?? null,
+        total,
+        total ? 1 : null,
       ],
     ),
   }));
@@ -148,6 +153,10 @@ describe("subir e confirmar", () => {
     expect((await inserir(ana, livroA, { origem: "lote" })).r.erro).toMatch(
       /recordings_lote_tem_id/,
     );
+    expect(
+      (await inserir(ana, livroA, { origem: "lote", lote, semTotal: true })).r
+        .erro,
+    ).toMatch(/row-level security/);
     expect(
       (await inserir(ana, livroA, { origem: "upload", lote })).r.erro,
     ).toMatch(/recordings_lote_so_em_lote_ou_conversa/);

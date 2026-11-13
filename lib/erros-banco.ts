@@ -25,6 +25,12 @@ export const FRASES_DOS_CODIGOS = {
   gravacao_expirada: "Esta gravação precisa ser enviada de novo.",
   versao_imutavel: "Esta versão não pode ser mudada.",
   glossario_cheio: "A lista de nomes chegou ao limite.",
+  divisao_invalida: "Não deu certo agora. Atualize a tela e tente de novo.",
+  divisao_ja_confirmada: "Estas histórias já foram para a escrita.",
+  divisao_curta: "Uma das histórias ficou curta demais. Junte com outra.",
+  divisao_longa:
+    "Uma das histórias passou de 1 hora. Separe em duas para escrever.",
+  divisao_limite_dia: "Hoje já foram muitas histórias. Confirme amanhã.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;
