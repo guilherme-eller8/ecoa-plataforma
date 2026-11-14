@@ -64,6 +64,11 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P56** Página de amostra só de história pronta; texto até onde couber em parágrafos inteiros; PDF só com a voz pronta.
 - **P57** Player do QR mínimo (título, ano, *Ouvir*); métrica = *Ouvir* tocado, 1 por código, rede e hora.
 - **P58** Só o responsável desliga e religa um QR; voltar para rascunho não desliga.
+- **P59** Convite de co-facilitador preso ao e-mail, uso único, 7 dias; pendentes contam no teto de 3; tetos de envio em 24 h.
+- **P60** Só do responsável: convidar, remover, trocar link ativo do autor/família, IA, QR, publicar, imprimir, pagar.
+- **P61** Compartilhar no grupo (/o/): qualquer membro; 1 link por história pronta; voz do recorte do QR; só parágrafos.
+- **P62** Lembrar com carinho: pergunta enviada há 3 dias; volta 3 dias depois do último lembrete.
+- **P63** Resumo semanal: domingo 18 h, só números, só se houver algo, descadastro de 1 clique.
 
 ## Técnicas
 
@@ -113,3 +118,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T44** Código do QR: 8 símbolos sem 0/1/I/L/O, sorteado no banco, guardado como está; limites de erro e acerto separados; segredo `QR_REDE_SEGREDO`.
 - **T45** Áudio do QR = recorte .m4a só com os trechos da história, sem metadados, bucket `qr`, ffmpeg endurecido.
 - **T46** `family_messages` mínima e fechada (política restritiva para `anon` e `porta_autor`); colunas no prompt 12.
+- **T47** `book_invites` e `story_shares` sem porta para `anon`; links `convite`/`compartilhar`/`resumo` por HMAC; `/o` e `/convite` sem cache nem índice.

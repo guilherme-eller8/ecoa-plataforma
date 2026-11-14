@@ -1,6 +1,6 @@
 # Co-facilitadores, compartilhar no grupo, lembrar e resumo semanal (prompt 11)
 
-Status: **v2 para aprovação**, revisada por 2 revisores (T28) · 2026-11-14 · PRD: Papéis e permissões, M2 (Quem mais ajuda), Jornadas (Responsável passo 3, Família, Lembretes sem API) · Decisões: P4, P7, P9, P23, P25, P31, P41, P42, P48, P56, P58, T4, T6, T23, T25, T28, T34, T36, T37, T45
+Status: **v2 aprovada pelo Guilherme em 2026-11-14** (Q1 a Q14 como recomendado; P59 a P63 e T47), revisada por 2 revisores (T28) · 2026-11-14 · PRD: Papéis e permissões, M2 (Quem mais ajuda), Jornadas (Responsável passo 3, Família, Lembretes sem API) · Decisões: P4, P7, P9, P23, P25, P31, P41, P42, P48, P56, P58, T4, T6, T23, T25, T28, T34, T36, T37, T45
 
 Relatórios: `cofacilitadores-compartilhar/critic_report.md` (segurança) e `cofacilitadores-compartilhar/codebase_details_report.md` (código). A seção 12 mostra o que mudou por causa de cada um.
 
