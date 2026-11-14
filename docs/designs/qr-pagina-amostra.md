@@ -317,3 +317,12 @@ Uma rodada, 2 revisores em Sonnet (T28). Os dois terminaram.
 | 10 | Contagem de testes; `caminhoFfmpeg` | **Aceito** |
 | 11 | Limpeza por chamada; `qr_aberto`; código escolhido pelo cliente | **Aceito** (os três) |
 | 12 | Lacunas | **Aceito:** tela de erro inesperado, normalização, título nulo, nome do arquivo, formato do texto, foto do `acervo`, configuração do job |
+
+## 13. Entrega (14/11)
+
+- **Banco:** migration aplicada no Supabase de produção (São Paulo), com `servico_qr_trechos` acrescentada antes de aplicar (o job do Inngest não chama funções de `privado`). Conferido no banco real: bucket `qr` privado, RLS nas 3 tabelas, `family_messages` sem nada para `anon` e `porta_autor`, `servico_ouvir_qr` fechada para `anon`.
+- **Vercel:** `QR_REDE_SEGREDO` cadastrado (Production e Preview, sensível) e `ouvir.ecoa-memorias.com.br` ligado ao projeto. Falta o CNAME no registro.br (seção 9).
+- **Pacotes das funções:** amostra 122 MB (Typst + mupdf + fontes), Inngest 84 MB (ffmpeg); limite de 250 MB.
+- **Testes:** 646 de unidade e banco, 193 de tela; recorte testado com o ffmpeg de verdade (sem metadados, playlist disfarçada recusada); amostra testada com o Typst de verdade (1 página, 216 mm, fonte embutida, QR lido, texto da família nunca vira código).
+- **Prévia:** `/ouvir` e `/ouvir/{código}` respondem com o banco real (estado "não encontrado" para código inexistente), com `no-store`, `noindex` e `no-referrer`; rota do PDF sem sessão vai para `/entrar`; nenhum erro de runtime.
+- **Não conferido de ponta a ponta:** criar um QR, recortar a voz e baixar o PDF de uma história real. Criar um QR é para sempre (nunca apagado), então fica para o Guilherme, com uma história de verdade. O QR impresso aponta para `ouvir.`, que serve a produção: o teste com papel só funciona depois do merge e do CNAME.
