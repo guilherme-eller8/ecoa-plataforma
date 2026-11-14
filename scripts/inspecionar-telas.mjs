@@ -62,6 +62,13 @@ const TELAS = {
   "editor-proposta": "/styleguide/editor-proposta",
   "editor-diferenca": "/styleguide/editor-diferenca",
   "gravar-mais": "/styleguide/gravar-mais",
+  // Prompt 10
+  player: "/styleguide/player",
+  "player-preparando": "/styleguide/player-preparando",
+  "player-nao-encontrado": "/styleguide/player-nao-encontrado",
+  "player-digitar": "/styleguide/player-digitar",
+  "editor-amostra": "/styleguide/editor-amostra",
+  "editor-amostra-preparando": "/styleguide/editor-amostra-preparando",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no

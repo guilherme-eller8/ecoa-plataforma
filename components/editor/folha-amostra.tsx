@@ -142,7 +142,7 @@ export function FolhaAmostra({
       ) : null}
 
       {estado ? (
-        <div className="border-linha flex flex-col gap-2 border-t pt-4">
+        <div className="bg-polen-2 rounded-interno flex flex-col gap-2 px-4 py-3">
           <p className="text-ui-15 text-tinta-2">
             Código embaixo do QR:{" "}
             <span className="text-tinta font-medium tracking-[0.08em]">
