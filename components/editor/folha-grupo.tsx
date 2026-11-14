@@ -59,7 +59,11 @@ export function FolhaGrupo({
   }
 
   return (
-    <FolhaInferior aberta={aberta} aoFechar={fechar} titulo="Compartilhar no grupo">
+    <FolhaInferior
+      aberta={aberta}
+      aoFechar={fechar}
+      titulo="Compartilhar no grupo"
+    >
       {fase.tipo === "preparando" ? (
         <p className="text-ui-17 text-tinta-2" role="status">
           Preparando o link…

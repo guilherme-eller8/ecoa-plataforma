@@ -39,7 +39,9 @@ export function TelaCompartilhada({
   if (estado.estado === "indisponivel")
     return <Recado frase="Este link não está mais disponível." />;
   if (estado.estado === "em_revisao")
-    return <Recado frase="Esta história está sendo revisada. Volte daqui a pouco." />;
+    return (
+      <Recado frase="Esta história está sendo revisada. Volte daqui a pouco." />
+    );
 
   return (
     <Moldura>
@@ -47,7 +49,7 @@ export function TelaCompartilhada({
         <p className="font-ui text-ui-15 text-tinta-2">
           Uma história de {estado.autor}
         </p>
-        <h1 className="font-livro text-livro-36 text-tinta text-balance leading-tight">
+        <h1 className="font-livro text-livro-36 text-tinta leading-tight text-balance">
           {estado.titulo}
         </h1>
         {estado.ano ? (

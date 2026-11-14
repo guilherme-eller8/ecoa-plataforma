@@ -69,6 +69,19 @@ const TELAS = {
   "player-digitar": "/styleguide/player-digitar",
   "editor-amostra": "/styleguide/editor-amostra",
   "editor-amostra-preparando": "/styleguide/editor-amostra-preparando",
+  // Prompt 11
+  pessoas: "/styleguide/pessoas",
+  "pessoas-vazia": "/styleguide/pessoas-vazia",
+  "pessoas-cofacilitador": "/styleguide/pessoas-cofacilitador",
+  "configurar-ajuda": "/styleguide/configurar-ajuda",
+  convite: "/styleguide/convite",
+  "convite-outro-email": "/styleguide/convite-outro-email",
+  "convites-pendentes": "/styleguide/convites-pendentes",
+  "editor-grupo": "/styleguide/editor-grupo",
+  compartilhada: "/styleguide/compartilhada",
+  "compartilhada-indisponivel": "/styleguide/compartilhada-indisponivel",
+  "perguntas-lembrar": "/styleguide/perguntas-lembrar",
+  "resumo-sair": "/styleguide/resumo-sair",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no
@@ -77,6 +90,7 @@ const PERGUNTA_DO_AUTOR = new Set(["autor-inicio", "autor-gravar"]);
 
 // Telas com a folha inferior aberta: é um diálogo de verdade, que pode flutuar (regra heavy-shadow).
 const COM_FOLHA_ABERTA = new Set([
+  "editor-grupo",
   "editor-amostra",
   "editor-amostra-preparando",
 ]);

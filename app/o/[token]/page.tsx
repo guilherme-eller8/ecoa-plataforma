@@ -29,5 +29,7 @@ export default function PaginaCompartilhada({
 async function Compartilhada({ token }: { token: string }) {
   await connection();
   const estado = await lerCompartilhada(token);
-  return <TelaCompartilhada estado={estado} tocou={acoes.tocou.bind(null, token)} />;
+  return (
+    <TelaCompartilhada estado={estado} tocou={acoes.tocou.bind(null, token)} />
+  );
 }

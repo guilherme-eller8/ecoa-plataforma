@@ -1601,7 +1601,10 @@ export type Database = {
         Returns: { chave_versao: number; criado: boolean; id: string }[];
       };
       revogar_compartilhamento: { Args: { p_story: string }; Returns: boolean };
-      servico_ler_compartilhada: { Args: { p_token_hash: string }; Returns: Json };
+      servico_ler_compartilhada: {
+        Args: { p_token_hash: string };
+        Returns: Json;
+      };
       servico_compartilhada_tocou: {
         Args: { p_chave: string; p_token_hash: string };
         Returns: boolean;

@@ -22,7 +22,10 @@ function Cartao({
   return (
     <li className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
       <p className="font-livro text-livro-24 text-tinta leading-snug">
-        Você foi convidado para o livro de {convite.autor}
+        Livro de {convite.autor}
+      </p>
+      <p className="text-ui-17 text-tinta-2">
+        Grave e edite as histórias junto com a família.
       </p>
       {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
       <Botao
@@ -53,6 +56,11 @@ export function TelaConvitesPendentes({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-6 pt-10 pb-12">
       <Marca />
+      <h1 className="font-ui text-tinta text-[26px] leading-tight font-semibold md:text-[32px]">
+        {convites.length === 1
+          ? "Você recebeu um convite"
+          : `Você recebeu ${convites.length} convites`}
+      </h1>
       <ul className="flex flex-col gap-4">
         {convites.map((c) => (
           <Cartao key={c.id} convite={c} aceitar={aceitar} />

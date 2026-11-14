@@ -59,7 +59,12 @@ export const resumoDoLivroFn = inngest.createFunction(
     let enviados = 0;
     for (const m of membros) {
       const saiu = await step.run(m.membro, () =>
-        enviarResumoAoMembro(livro, m, numeros, `${event.id ?? livro}-${m.membro}`),
+        enviarResumoAoMembro(
+          livro,
+          m,
+          numeros,
+          `${event.id ?? livro}-${m.membro}`,
+        ),
       );
       if (saiu) enviados++;
     }

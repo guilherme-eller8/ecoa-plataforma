@@ -58,7 +58,8 @@ export function TelaLivro({
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
   guardadas?: GuardadaDaTela[]; // gravações que chegaram e ainda não viraram história
 }) {
-  const falta = livro.podeEscrever ? pendentes(
+  const falta = livro.podeEscrever
+    ? pendentes(
         livro.configuracao,
         livro.ehResponsavel ? "responsavel" : "cofacilitador",
       )

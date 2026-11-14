@@ -71,7 +71,9 @@ describe("mensagens do prompt 11", () => {
   it("compartilhar: dele, dela, original e sem voz", () => {
     expect(
       mensagemCompartilhar({ ...base, parentesco: "avo", comVoz: true }),
-    ).toBe('Jair contou: "A fazenda". Ouça na voz dele e leia aqui: https://x/o/1');
+    ).toBe(
+      'Jair contou: "A fazenda". Ouça na voz dele e leia aqui: https://x/o/1',
+    );
     expect(
       mensagemCompartilhar({ ...base, parentesco: "mae", comVoz: true }),
     ).toContain("na voz dela");

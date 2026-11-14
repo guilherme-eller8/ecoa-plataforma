@@ -130,8 +130,7 @@ export function TelaPessoas({
 
   const ajudantes = membros.filter((m) => m.papel === "cofacilitador");
   const vagas = MAX_COFACILITADORES - ajudantes.length - convites.length;
-  const podeConvidar =
-    livro.ehResponsavel && livro.podeEscrever && vagas > 0;
+  const podeConvidar = livro.ehResponsavel && livro.podeEscrever && vagas > 0;
 
   function executar(
     acao: () => Promise<{ ok: boolean; mensagem?: string }>,
@@ -213,7 +212,9 @@ export function TelaPessoas({
                 {m.ehVoce ? " (você)" : ""}
               </p>
               <p className="text-ui-15 text-tinta-2">
-                {m.papel === "responsavel" ? "Cuida do livro" : "Ajuda a editar"}
+                {m.papel === "responsavel"
+                  ? "Cuida do livro"
+                  : "Ajuda a editar"}
               </p>
             </div>
             {livro.ehResponsavel && m.papel === "cofacilitador" ? (
@@ -246,7 +247,9 @@ export function TelaPessoas({
         ))}
       </ul>
 
-      {livro.ehResponsavel && ajudantes.length === 0 && convites.length === 0 ? (
+      {livro.ehResponsavel &&
+      ajudantes.length === 0 &&
+      convites.length === 0 ? (
         <EstadoVazio
           frase="Só você por enquanto. Chame um irmão para ajudar."
           acao={
@@ -319,8 +322,8 @@ export function TelaPessoas({
         titulo="Sair do livro"
       >
         <p className="text-ui-17 text-tinta">
-          Você deixa de ver o livro do {livro.autor}. Para voltar, precisa de
-          um novo convite.
+          Você deixa de ver o livro do {livro.autor}. Para voltar, precisa de um
+          novo convite.
         </p>
         <Botao
           larguraTotal

@@ -10,11 +10,7 @@ import { envLinks } from "@/lib/env-links";
 import { codigoDoErro, fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import type { Acao } from "@/lib/eventos-acoes";
-import {
-  hashDoToken,
-  tokenDoLink,
-  urlCompartilhada,
-} from "@/lib/links";
+import { hashDoToken, tokenDoLink, urlCompartilhada } from "@/lib/links";
 import {
   livroDaAcao,
   nomeDoAutor,
@@ -81,8 +77,7 @@ async function garantirVoz(
   }
   const r = data?.[0];
   if (!r || !codigoValido(r.codigo)) return false;
-  if (!antes)
-    evento(a, "qr_criado", { story: historiaId }); // como a amostra (prompt 10)
+  if (!antes) evento(a, "qr_criado", { story: historiaId }); // como a amostra (prompt 10)
   if (r.pedir_audio) await pedirRecorte(r.codigo);
   return true;
 }

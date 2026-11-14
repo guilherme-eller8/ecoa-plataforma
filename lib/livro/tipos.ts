@@ -207,7 +207,9 @@ export type ConviteDaTela = {
 };
 
 export type AcoesPessoas = {
-  convidar: (email: string) => Promise<Resposta<{ convite: ConviteDaTela | null }>>;
+  convidar: (
+    email: string,
+  ) => Promise<Resposta<{ convite: ConviteDaTela | null }>>;
   cancelarConvite: (convite: string) => Promise<Resposta>;
   remover: (usuario: string) => Promise<Resposta>;
   sair: () => Promise<Resposta>;

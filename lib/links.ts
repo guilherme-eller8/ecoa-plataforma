@@ -9,11 +9,7 @@ import { urlDoApp } from "@/lib/env-servidor";
 
 // convite, compartilhar e resumo: prompt 11 (T47).
 export type TipoLink =
-  | "familia"
-  | "autor"
-  | "convite"
-  | "compartilhar"
-  | "resumo";
+  "familia" | "autor" | "convite" | "compartilhar" | "resumo";
 const TAMANHO_HMAC = 22;
 
 export function tokenDoLink(

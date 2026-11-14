@@ -72,7 +72,9 @@ describe("e-mails do prompt 11", () => {
       urlConvite: "https://x/convite/v1_abc",
     });
     expect(e.assunto).toBe("Convite para ajudar num livro de memórias");
-    expect(e.texto).toContain("Ana chamou você para ajudar a fazer o livro de memórias de Jair");
+    expect(e.texto).toContain(
+      "Ana chamou você para ajudar a fazer o livro de memórias de Jair",
+    );
     expect(e.html).toContain('href="https://x/convite/v1_abc"');
     const semNome = emailConvite({ quem: "", apelido: "", urlConvite: "u" });
     expect(semNome.assunto).toBe("Convite para ajudar num livro de memórias");

@@ -159,7 +159,8 @@ export function TelaKit({
                   Sem o celular, o WhatsApp pede o contato. Pôr o celular
                 </Link>
               )}
-              {!livro.podeEscrever || !livro.ehResponsavel ? null : confirmarTrocaAutor ? (
+              {!livro.podeEscrever ||
+              !livro.ehResponsavel ? null : confirmarTrocaAutor ? (
                 <div className="flex flex-col gap-3">
                   <p className="text-ui-15 text-tinta">
                     O link antigo para de funcionar. Você vai precisar mandar o

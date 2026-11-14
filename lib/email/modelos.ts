@@ -136,7 +136,9 @@ export function emailConvite({
 }): Email {
   const assunto = "Convite para ajudar num livro de memórias";
   const sujeito = quem || "Uma pessoa da sua família";
-  const livro = apelido ? `o livro de memórias de ${apelido}` : "um livro de memórias";
+  const livro = apelido
+    ? `o livro de memórias de ${apelido}`
+    : "um livro de memórias";
   const frase = `${sujeito} chamou você para ajudar a fazer ${livro}. Entre com este e-mail para aceitar. O convite vale por ${CONVITE_VALIDADE_DIAS} dias.`;
   return {
     assunto,

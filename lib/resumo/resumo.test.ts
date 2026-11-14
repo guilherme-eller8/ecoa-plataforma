@@ -15,7 +15,11 @@ describe("resumo semanal (P63)", () => {
   });
 
   it("só sai se houver história nova ou pergunta esperando", () => {
-    const zero = { historiasNovas: 0, perguntasEsperando: 0, paginasEstimadas: 30 };
+    const zero = {
+      historiasNovas: 0,
+      perguntasEsperando: 0,
+      paginasEstimadas: 30,
+    };
     expect(temAlgo(zero)).toBe(false);
     expect(temAlgo({ ...zero, historiasNovas: 1 })).toBe(true);
     expect(temAlgo({ ...zero, perguntasEsperando: 2 })).toBe(true);

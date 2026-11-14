@@ -269,3 +269,17 @@ Uma rodada, 2 revisores em Sonnet (T28).
 | 10 | Onde moram ações e telas | **Aceito** (4.1, 5) |
 | 11 | Espelhos de config | **Aceito** (já no SQL e no teste) |
 | 12 | "Pronta" em dois sentidos | **Aceito:** "marcada como pronta" = `revisada_em` em todo o texto |
+
+## 13. Entrega (sessão 2, 2026-11-14)
+
+Construído na ordem da seção 9. Desvios pequenos do texto aprovado, nenhum de regra:
+
+| Onde | O que mudou | Por quê |
+| --- | --- | --- |
+| 4.4 Lembrar | O botão fica na aba *Enviadas* (é onde mora a pergunta enviada). O link do WhatsApp é montado na tela e a ação só grava `lembrada_em` e o evento | Abrir o WhatsApp depois de esperar o servidor é bloqueado como pop-up no celular. Mesmo padrão do *Enviar ao autor* |
+| 4.5 Descadastro | Página `/resumo/sair/{membro}/{token}` (um toque, POST pela ação) e `/resumo/sair/{membro}/{token}/um-clique` só para o POST do `List-Unsubscribe-Post` | No Next, página e rota não dividem a mesma pasta. GET nunca desliga |
+| Q11 `/o/` | A prévia do WhatsApp mostra "Uma história", sem o nome do autor | Nada do livro na metadata: menos exposição se o link sair do grupo |
+| 4.1 | `mascararEmail`, `nomeSeguro` e `primeiroNome` em `lib/convite/textos.ts` (puro, com teste), não em `lib/acesso.ts` | Testáveis sem o servidor |
+| 4.6 | "Livro novo" = ainda não passou pelas fotos (ou já viu o passo *ajuda*) | Livro que já passou pela configuração antes do prompt 11 não ganha o passo |
+
+Testes: 23 de banco no arquivo do prompt (mais a autoria `cofacilitador` ao salvar, a voz `ok`/`preparando`/`sem_voz` do `/o/` e a paridade de páginas), unidade de links, mensagens, e-mails, rotas, `passosDoPapel`, lembrar e resumo; e2e `e2e/cofacilitadores.spec.ts` (10). Suíte: 702 unidade e banco, 213 e2e.

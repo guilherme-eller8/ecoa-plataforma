@@ -21,9 +21,7 @@ export async function livrosParaResumo(): Promise<string[]> {
   return data ?? [];
 }
 
-export async function numerosDoResumo(
-  livro: string,
-): Promise<NumerosDoResumo> {
+export async function numerosDoResumo(livro: string): Promise<NumerosDoResumo> {
   const { data, error } = await clienteAdmin().rpc("servico_resumo_semanal", {
     p_livro: livro,
   });

@@ -97,9 +97,7 @@ export async function convidar(
     destino,
     emailConvite({
       quem:
-        primeiroNome(
-          String(meta?.full_name ?? meta?.name ?? "") || null,
-        ) ?? "",
+        primeiroNome(String(meta?.full_name ?? meta?.name ?? "") || null) ?? "",
       apelido: nomeSeguro(autor),
       urlConvite: urlConvite(token),
     }),
@@ -183,7 +181,8 @@ export async function sair(livroId: string): Promise<Resposta> {
   const db = await clienteSessao();
   const { data, error } = await db.rpc("sair_do_livro", { p_livro: livroId });
   if (error) return { ok: false, mensagem: fraseDoErro(error) };
-  if (!data) return { ok: false, mensagem: "Quem cuida do livro não sai dele." };
+  if (!data)
+    return { ok: false, mensagem: "Quem cuida do livro não sai dele." };
   revalidatePath("/", "layout");
   return { ok: true };
 }

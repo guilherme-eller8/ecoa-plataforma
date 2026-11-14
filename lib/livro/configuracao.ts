@@ -52,7 +52,10 @@ export function precisaConfigurar(
 }
 
 /** Passos "depois" e os sem estado, na ordem: o cartão da home mostra o primeiro. */
-export function pendentes(cfg: Configuracao, papel: Papel = "responsavel"): Passo[] {
+export function pendentes(
+  cfg: Configuracao,
+  papel: Papel = "responsavel",
+): Passo[] {
   const base: Passo[] = PASSOS.filter((p) => !cfg[p] || cfg[p] === "depois");
   return papel === "responsavel" && cfg.ajuda === "depois"
     ? [...base, "ajuda"]

@@ -67,10 +67,29 @@ import {
 import { TelaConfirmar } from "@/components/telas/tela-confirmar";
 import { TelaEntrar } from "@/components/telas/tela-entrar";
 import {
+  ConfigurarAjuda,
   ConfigurarFotos,
   ConfigurarPerguntas,
   ConfigurarQuem,
 } from "@/components/telas/configurar";
+import { FolhaGrupo } from "@/components/editor/folha-grupo";
+import { TelaCompartilhada } from "@/components/telas/tela-compartilhada";
+import { TelaConvite } from "@/components/telas/tela-convite";
+import { TelaConvitesPendentes } from "@/components/telas/tela-convites-pendentes";
+import { TelaPessoas } from "@/components/telas/tela-pessoas";
+import { TelaSairResumo } from "@/components/telas/tela-sair-resumo";
+import {
+  ACOES_GRUPO_FALSAS,
+  ACOES_PESSOAS_FALSAS,
+  COMPARTILHADA,
+  COMPARTILHADA_PREPARANDO,
+  CONVITES_JAIR,
+  LIVRO_COFACILITADORA,
+  LIVRO_NOVO_RESPONSAVEL,
+  MEMBROS_JAIR,
+  MEMBROS_VISTOS_PELA_BIA,
+  PERGUNTAS_PARA_LEMBRAR,
+} from "@/lib/exemplos/prompt11";
 import {
   TelaFamilia,
   TelaFamiliaInvalida,
@@ -119,6 +138,120 @@ const AMOSTRA_FALSA = (pronta: boolean): AcoesAmostra => ({
 
 export function Vitrine({ tela }: { tela: Tela }) {
   switch (tela) {
+    // ── Prompt 11 ──
+    case "pessoas":
+      return (
+        <TelaPessoas
+          livro={LIVRO_JAIR}
+          membros={MEMBROS_JAIR}
+          convites={CONVITES_JAIR}
+          temLinks
+          acoes={ACOES_PESSOAS_FALSAS}
+        />
+      );
+    case "pessoas-vazia":
+      return (
+        <TelaPessoas
+          livro={LIVRO_JAIR}
+          membros={MEMBROS_JAIR.slice(0, 1)}
+          convites={[]}
+          temLinks
+          acoes={ACOES_PESSOAS_FALSAS}
+        />
+      );
+    case "pessoas-cofacilitador":
+      return (
+        <TelaPessoas
+          livro={LIVRO_COFACILITADORA}
+          membros={MEMBROS_VISTOS_PELA_BIA}
+          convites={[]}
+          temLinks
+          acoes={ACOES_PESSOAS_FALSAS}
+        />
+      );
+    case "configurar-ajuda":
+      return (
+        <ConfigurarAjuda
+          livro={LIVRO_NOVO_RESPONSAVEL}
+          acoes={ACOES_FALSAS.configuracao}
+          convidar={ACOES_PESSOAS_FALSAS.convidar}
+        />
+      );
+    case "convite":
+      return (
+        <TelaConvite
+          estado={{ tipo: "entrar", quem: "Guilherme", autor: "Vô Jair" }}
+        />
+      );
+    case "convite-aceitar":
+      return (
+        <TelaConvite
+          estado={{ tipo: "aceitar", quem: "Guilherme", autor: "Vô Jair" }}
+          aceitar={async () => ({ ok: true })}
+        />
+      );
+    case "convite-outro-email":
+      return (
+        <TelaConvite
+          estado={{ tipo: "outro_email", emailMascarado: "b•••@gmail.com" }}
+          sair={nada}
+        />
+      );
+    case "convite-invalido":
+      return <TelaConvite estado={{ tipo: "invalido" }} />;
+    case "convites-pendentes":
+      return (
+        <TelaConvitesPendentes
+          convites={[{ id: CONVITES_JAIR[0].id, autor: "Vô Jair" }]}
+          livroAtual={null}
+          aceitar={async () => ({ ok: true })}
+        />
+      );
+    case "editor-grupo":
+      return (
+        <>
+          <TelaEditor
+            historia={{ ...HISTORIA_PARA_EDITAR, revisada: true }}
+            podeEscrever
+            acoes={{
+              ...acoesEditorFalsas("livre"),
+              grupo: ACOES_GRUPO_FALSAS,
+              amostra: AMOSTRA_FALSA(true),
+            }}
+          />
+          <FolhaGrupo aberta aoFechar={() => {}} acoes={ACOES_GRUPO_FALSAS} />
+        </>
+      );
+    case "compartilhada":
+    case "compartilhada-preparando":
+      return (
+        <TelaCompartilhada
+          estado={
+            tela === "compartilhada" ? COMPARTILHADA : COMPARTILHADA_PREPARANDO
+          }
+          tocou={nada}
+        />
+      );
+    case "compartilhada-indisponivel":
+      return (
+        <TelaCompartilhada estado={{ estado: "indisponivel" }} tocou={nada} />
+      );
+    case "perguntas-lembrar":
+      return (
+        <TelaPerguntas
+          livro={LIVRO_JAIR}
+          perguntas={PERGUNTAS_PARA_LEMBRAR}
+          causos={CAUSOS_JAIR}
+          enquete={ENQUETE_JAIR}
+          fotos={FOTOS_JAIR}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          acoes={ACOES_FALSAS.perguntas}
+          acoesFotos={ACOES_FALSAS.fotos}
+          abaInicial="enviadas"
+        />
+      );
+    case "resumo-sair":
+      return <TelaSairResumo valido sair={async () => ({ ok: true })} />;
     case "livro-com-historias":
       return (
         <TelaLivro

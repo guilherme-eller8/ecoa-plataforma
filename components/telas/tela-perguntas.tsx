@@ -922,7 +922,9 @@ export function TelaPerguntas({
             contagem: enviadas.length,
             conteudo: enviadas.length ? (
               <div className="flex flex-col gap-4">
-                {escrever && linkDoAutorAtual && enviadas.some((p) => p.podeLembrar) ? (
+                {escrever &&
+                linkDoAutorAtual &&
+                enviadas.some((p) => p.podeLembrar) ? (
                   <DicaPrimeiraVez chave="perguntas-lembrar">
                     Faz {LEMBRETE_APOS_DIAS} dias? Mande um lembrete gentil.
                   </DicaPrimeiraVez>

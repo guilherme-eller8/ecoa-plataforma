@@ -38,7 +38,7 @@ function ResumoSemanal({
   const [pendente, iniciar] = useTransition();
   return (
     <section className="flex flex-col gap-3">
-      <label className="flex min-h-alvo cursor-pointer items-center justify-between gap-4">
+      <label className="min-h-alvo flex cursor-pointer items-center justify-between gap-4">
         <span className="flex flex-col gap-1">
           <span className="text-ui-20 text-tinta font-medium">
             Resumo semanal
@@ -307,7 +307,7 @@ export function TelaConfiguracoes({
 
       <Link
         href={`/livro/${livro.id}/pessoas`}
-        className="rounded-cartao bg-papel border-linha hover:border-linha-forte flex min-h-alvo items-center justify-between gap-4 border p-5"
+        className="rounded-cartao bg-papel border-linha hover:border-linha-forte min-h-alvo flex items-center justify-between gap-4 border p-5"
       >
         <span className="flex flex-col gap-1">
           <span className="text-ui-20 text-tinta font-medium">Quem ajuda</span>

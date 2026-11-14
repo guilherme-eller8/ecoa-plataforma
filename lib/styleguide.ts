@@ -74,6 +74,22 @@ export const TELAS = [
   "player-digitar",
   "editor-amostra",
   "editor-amostra-preparando",
+  // Prompt 11
+  "pessoas",
+  "pessoas-vazia",
+  "pessoas-cofacilitador",
+  "configurar-ajuda",
+  "convite",
+  "convite-aceitar",
+  "convite-outro-email",
+  "convite-invalido",
+  "convites-pendentes",
+  "editor-grupo",
+  "compartilhada",
+  "compartilhada-preparando",
+  "compartilhada-indisponivel",
+  "perguntas-lembrar",
+  "resumo-sair",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

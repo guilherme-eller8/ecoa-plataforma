@@ -48,9 +48,7 @@ export function TelaConvite({
         <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           Este convite não vale mais
         </h1>
-        <p className="text-ui-17 text-tinta-2">
-          Peça um novo a quem convidou.
-        </p>
+        <p className="text-ui-17 text-tinta-2">Peça um novo a quem convidou.</p>
       </Moldura>
     );
 
@@ -60,9 +58,7 @@ export function TelaConvite({
         <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           Este convite é para {estado.emailMascarado}
         </h1>
-        <p className="text-ui-17 text-tinta-2">
-          Saia e entre com esse e-mail.
-        </p>
+        <p className="text-ui-17 text-tinta-2">Saia e entre com esse e-mail.</p>
         {sair ? (
           <form action={sair}>
             <Botao type="submit" larguraTotal>

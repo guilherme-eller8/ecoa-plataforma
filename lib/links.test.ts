@@ -61,12 +61,12 @@ describe("links do prompt 11", () => {
   it("o descadastro do resumo confere o token em tempo constante", () => {
     const token = tokenDoLink("resumo", id, 2, env);
     expect(tokenDoResumoConfere(id, token, env)).toBe(true);
-    expect(tokenDoResumoConfere(id, tokenDoLink("resumo", id, 1, env), env)).toBe(
-      true,
-    );
-    expect(tokenDoResumoConfere(id, tokenDoLink("autor", id, 2, env), env)).toBe(
-      false,
-    );
+    expect(
+      tokenDoResumoConfere(id, tokenDoLink("resumo", id, 1, env), env),
+    ).toBe(true);
+    expect(
+      tokenDoResumoConfere(id, tokenDoLink("autor", id, 2, env), env),
+    ).toBe(false);
     expect(tokenDoResumoConfere(id, "v9_" + "a".repeat(22), env)).toBe(false);
     expect(tokenDoResumoConfere(id, "lixo", env)).toBe(false);
   });

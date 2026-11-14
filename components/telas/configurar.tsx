@@ -93,8 +93,13 @@ export function ConfigurarAjuda({
       {convidados.length ? (
         <ul className="flex flex-col gap-2">
           {convidados.map((c) => (
-            <li key={c.id} className="text-ui-17 text-tinta flex flex-wrap items-center gap-3">
-              <span className="[overflow-wrap:anywhere]">Convite para {c.email}</span>
+            <li
+              key={c.id}
+              className="text-ui-17 text-tinta flex flex-wrap items-center gap-3"
+            >
+              <span className="[overflow-wrap:anywhere]">
+                Convite para {c.email}
+              </span>
               <Copiar texto={c.mensagem} rotulo="Copiar mensagem" />
             </li>
           ))}

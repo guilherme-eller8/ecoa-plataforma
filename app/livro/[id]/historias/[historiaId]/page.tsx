@@ -69,11 +69,7 @@ async function Historia({
           responderSugestao: responderSugestao.bind(null, id, historiaId),
           grupo: {
             compartilhar: grupo.compartilhar.bind(null, id, historiaId),
-            desligar: grupo.desligarCompartilhamento.bind(
-              null,
-              id,
-              historiaId,
-            ),
+            desligar: grupo.desligarCompartilhamento.bind(null, id, historiaId),
           },
           amostra: {
             preparar: amostra.prepararAmostra.bind(null, id, historiaId),

@@ -7,7 +7,11 @@ import {
   aparelhoValido,
 } from "@/lib/familia/aparelho";
 import { decidirQr, type DecisaoQr } from "@/lib/qr/host";
-import { CABECALHOS_PRIVADOS, decidirRota, ehPaginaComToken } from "@/lib/rotas";
+import {
+  CABECALHOS_PRIVADOS,
+  decidirRota,
+  ehPaginaComToken,
+} from "@/lib/rotas";
 
 // Link da família: sem sessão nem chamada ao Supabase. Grava o cookie do aparelho na
 // requisição (a página já o lê no primeiro acesso) e na resposta, e pede para não indexar
