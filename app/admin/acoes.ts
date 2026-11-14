@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { enviarAcesso, identidadeAceitavel } from "@/lib/acesso";
+import { contaParaEmail, enviarAcesso } from "@/lib/acesso";
 import { DURACAO_PLANO_MESES } from "@/lib/config";
 import { registrarEvento } from "@/lib/eventos";
 import { dispararEscrita, dispararGravacao } from "@/lib/pipeline/disparo";
@@ -40,37 +40,18 @@ export async function ativarPlano(
   const { email, autor_nome } = entrada.data;
 
   const db = clienteAdmin();
-  const { data: existente, error: erroBusca } = await db.rpc(
-    "admin_usuario_por_email",
-    { p_email: email },
-  );
-  if (erroBusca)
+  const conta = await contaParaEmail(email, db);
+  if (conta.tipo === "erro")
     return {
       ok: false,
-      mensagem: "Não deu para consultar o e-mail. Tente de novo.",
+      mensagem: "Não deu para consultar ou criar a conta. Tente de novo.",
     };
-
-  let responsavel = existente;
-  if (responsavel) {
-    const { data } = await db.auth.admin.getUserById(responsavel);
-    if (!data.user || !identidadeAceitavel(data.user)) {
-      return {
-        ok: false,
-        mensagem: "Esta conta não pode ser usada. Fale com o suporte.",
-      };
-    }
-  } else {
-    const { data, error } = await db.auth.admin.createUser({
-      email,
-      email_confirm: true,
-    });
-    if (error || !data.user)
-      return {
-        ok: false,
-        mensagem: "Não deu para criar a conta. Tente de novo.",
-      };
-    responsavel = data.user.id;
-  }
+  if (conta.tipo === "recusada")
+    return {
+      ok: false,
+      mensagem: "Esta conta não pode ser usada. Fale com o suporte.",
+    };
+  const responsavel = conta.id;
 
   const { data: livroId, error } = await db.rpc("admin_ativar_plano", {
     p_responsavel: responsavel,

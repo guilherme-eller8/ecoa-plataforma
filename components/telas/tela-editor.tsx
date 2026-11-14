@@ -5,6 +5,7 @@
 // servidor confirmar; trava "Ana está editando" conferida no banco. Uma ação principal:
 // Marcar como pronta. Design: docs/designs/editor-historias.md.
 import { FolhaAmostra } from "@/components/editor/folha-amostra";
+import { FolhaGrupo } from "@/components/editor/folha-grupo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -30,6 +31,7 @@ import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import {
   IconeCheck,
+  IconeEnviar,
   IconeMicrofone,
   IconePausa,
   IconeTocar,
@@ -149,6 +151,7 @@ export function TelaEditor({
   >(null);
   const [grifo, setGrifo] = useState<AtributosConfira | null>(null);
   const [amostraAberta, setAmostraAberta] = useState(false);
+  const [grupoAberto, setGrupoAberto] = useState(false);
   const [fontesDoCursor, setFontesDoCursor] = useState<number[]>([]);
   const [revisada, setRevisada] = useState(historia.revisada);
   const [marcando, setMarcando] = useState(false);
@@ -870,16 +873,29 @@ export function TelaEditor({
                   Voltar para rascunho
                 </Botao>
               </div>
-              {acoes.amostra ? (
-                <Botao
-                  variante="secundario"
-                  larguraTotal
-                  onClick={() => setAmostraAberta(true)}
-                  className="sm:w-auto sm:self-start"
-                >
-                  Página de amostra
-                </Botao>
-              ) : null}
+              <div className="flex flex-col gap-3 sm:flex-row">
+                {acoes.grupo ? (
+                  <Botao
+                    variante="secundario"
+                    larguraTotal
+                    onClick={() => setGrupoAberto(true)}
+                    className="sm:w-auto"
+                  >
+                    <IconeEnviar tamanho={20} />
+                    Compartilhar no grupo
+                  </Botao>
+                ) : null}
+                {acoes.amostra ? (
+                  <Botao
+                    variante="secundario"
+                    larguraTotal
+                    onClick={() => setAmostraAberta(true)}
+                    className="sm:w-auto"
+                  >
+                    Página de amostra
+                  </Botao>
+                ) : null}
+              </div>
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-3">
@@ -1127,6 +1143,13 @@ export function TelaEditor({
         </>
       ) : null}
 
+      {acoes.grupo ? (
+        <FolhaGrupo
+          aberta={grupoAberto}
+          aoFechar={() => setGrupoAberto(false)}
+          acoes={acoes.grupo}
+        />
+      ) : null}
       {acoes.amostra ? (
         <FolhaAmostra
           aberta={amostraAberta}

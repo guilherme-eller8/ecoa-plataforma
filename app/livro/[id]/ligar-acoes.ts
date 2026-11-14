@@ -24,6 +24,7 @@ export function acoesDoLivro(id: string) {
     adicionarDoBanco: a.adicionarDoBanco.bind(null, id),
     adicionarPropria: a.adicionarPropria.bind(null, id),
     mudarEstado: a.mudarEstado.bind(null, id),
+    lembrar: a.lembrarPergunta.bind(null, id),
     apagar: a.apagar.bind(null, id),
     virarPergunta: a.virarPergunta.bind(null, id),
     porNaEnquete: a.porNaEnquete.bind(null, id),

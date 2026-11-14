@@ -1,3 +1,5 @@
+import type { Parentesco } from "@/lib/supabase/tipos";
+
 // Mensagens prontas para o WhatsApp do responsável. Sem API: o botão abre o wa.me e a
 // pessoa escolhe o contato ou o grupo.
 
@@ -76,4 +78,63 @@ export function mensagemPrimeiraHistoria({
     `Ainda dá tempo de sugerir causos e votar nas próximas perguntas:`,
     link,
   ].join("\n\n");
+}
+
+// ── Prompt 11 ────────────────────────────────────────────────────────────
+
+/** Convite de co-facilitador para colar no WhatsApp (o link só vale para o e-mail convidado). */
+export function mensagemConvite({
+  autor,
+  link,
+}: {
+  autor: string;
+  link: string;
+}) {
+  return [
+    `Estou fazendo o livro de memórias de ${autor} e quero sua ajuda.`,
+    `Mandei um convite para o seu e-mail. Entre com ele por este link:`,
+    link,
+  ].join("\n\n");
+}
+
+const VOZ: Partial<Record<Parentesco, "dele" | "dela">> = {
+  pai: "dele",
+  avo: "dele",
+  tio: "dele",
+  mae: "dela",
+  avoa: "dela",
+  tia: "dela",
+};
+
+/** Compartilhar no grupo (P61). Sem voz, a mensagem não fala em voz. */
+export function mensagemCompartilhar({
+  autor,
+  titulo,
+  parentesco,
+  comVoz,
+  link,
+}: {
+  autor: string;
+  titulo: string;
+  parentesco: Parentesco | null;
+  comVoz: boolean;
+  link: string;
+}) {
+  const inicio = `${autor} contou: "${titulo}".`;
+  if (!comVoz) return `${inicio} Leia aqui: ${link}`;
+  const voz = (parentesco && VOZ[parentesco]) || "original";
+  return `${inicio} Ouça na voz ${voz} e leia aqui: ${link}`;
+}
+
+/** Lembrar com carinho (P62): pergunta enviada há 3 dias ou mais. */
+export function mensagemLembrete({
+  autor,
+  pergunta,
+  link,
+}: {
+  autor: string;
+  pergunta: string;
+  link: string;
+}) {
+  return `Oi, ${autor}! Lembrei daquela pergunta: "${pergunta}". Quando tiver um tempinho, grava pra gente? É só tocar aqui: ${link}`;
 }

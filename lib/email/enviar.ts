@@ -19,6 +19,7 @@ export async function enviarEmail(
         subject: email.assunto,
         html: email.html,
         text: email.texto,
+        headers: email.cabecalhos,
       },
       opcoes.idempotencyKey
         ? { idempotencyKey: opcoes.idempotencyKey }

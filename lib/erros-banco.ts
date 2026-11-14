@@ -50,13 +50,20 @@ export const FRASES_DOS_CODIGOS = {
     "O QR desta história está desligado. Ligue de novo para gerar a página.",
   qr_recorte_longo: "Não deu certo agora. Tente de novo.",
   qr_imutavel: "Este QR não pode mudar.",
+  // Prompt 11: co-facilitadores e compartilhar.
+  ja_membro: "Esta pessoa já ajuda no livro.",
+  limite_convites: "Muitos convites hoje. Tente amanhã.",
+  limite_cofacilitadores:
+    "O livro já tem 5 pessoas ajudando. Cancele um convite para abrir vaga.",
+  convite_invalido: "Este convite não vale mais. Peça um novo a quem convidou.",
+  compartilhar_nao_pronta: "Marque a história como pronta para compartilhar.",
   limite_mensagens: "Muitas mensagens hoje. Tente amanhã.",
   mensagem_nao_encontrada:
     "O tempo para enviar esta mensagem acabou. Comece de novo.",
   mensagem_sem_texto: "Escreva a mensagem antes.",
   audio_nao_chegou: "O áudio não chegou. Tente de novo.",
   limite_transcricao:
-    "Não conseguimos escrever o áudio. Escreva você ou envie só o áudio.",
+    "Não conseguimos escrever o áudio. Escreva a mensagem você mesmo.",
   mensagem_imutavel: "Esta mensagem não pode mudar.",
   limite_rascunhos: "Termine ou espere as mensagens que você já começou.",
   audio_longo: "O áudio passou de 5 minutos. Grave de novo, mais curto.",

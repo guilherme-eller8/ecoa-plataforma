@@ -12,7 +12,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P4** Sem cobrança recorrente; plano vencido = somente leitura; QR e leitura continuam.
 - **P5** Pagamento: Pix manual na onda 1; Mercado Pago (Pix e cartão em 12x) na onda 2.
 - **P6** Google como entrada principal, link por e-mail como alternativa; autor entra por link pessoal, sem login.
-- **P7** Papéis: 1 responsável (publica, imprime, paga, convida), até 3 co-facilitadores (onda 2), autor em modo autor.
+- **P7** Papéis: 1 responsável (publica, imprime, paga, convida), co-facilitadores (onda 2; teto → P64), autor em modo autor.
 - **P8** Modo autor: perguntas para ele, histórias livres, ouvir e corrigir os textos, ler o livro sem as mensagens.
 - **P9** Zero API do WhatsApp: a plataforma gera mensagem e link; o responsável envia.
 - **P10** Grupo de WhatsApp da família feito à mão, sem o autor, com link permanente da família.
@@ -64,6 +64,12 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P56** Página de amostra só de história pronta; texto até onde couber em parágrafos inteiros; PDF só com a voz pronta.
 - **P57** Player do QR mínimo (título, ano, *Ouvir*); métrica = *Ouvir* tocado, 1 por código, rede e hora.
 - **P58** Só o responsável desliga e religa um QR; voltar para rascunho não desliga.
+- **P59** Convite de co-facilitador preso ao e-mail, uso único, 7 dias; pendentes contam no teto (P64); tetos de envio em 24 h.
+- **P60** Só do responsável: convidar, remover, trocar link ativo do autor/família, IA, QR, publicar, imprimir, pagar.
+- **P61** Compartilhar no grupo (/o/): qualquer membro; 1 link por história pronta; voz do recorte do QR; só parágrafos.
+- **P62** Lembrar com carinho: pergunta enviada há 3 dias; volta 3 dias depois do último lembrete.
+- **P63** Resumo semanal: domingo 18 h, só números, só se houver algo, descadastro de 1 clique.
+- **P64** Até 5 co-facilitadores por livro (eram 3); pendentes contam no teto.
 - **P65** Link `/m` só de escrita; envio com texto confirmado; entra no livro o que um membro marcar; só o responsável apaga de vez.
 
 ## Técnicas
@@ -114,5 +120,6 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T44** Código do QR: 8 símbolos sem 0/1/I/L/O, sorteado no banco, guardado como está; limites de erro e acerto separados; segredo `QR_REDE_SEGREDO`.
 - **T45** Áudio do QR = recorte .m4a só com os trechos da história, sem metadados, bucket `qr`, ffmpeg endurecido.
 - **T46** `family_messages` mínima e fechada (política restritiva para `anon` e `porta_autor`); colunas no prompt 12 (QR de mensagem → T49).
+- **T47** `book_invites` e `story_shares` sem porta para `anon`; links `convite`/`compartilhar`/`resumo` por HMAC; `/o` e `/convite` sem cache nem índice.
 - **T48** Mensagem: só Scribe, na ação do servidor com reserva no banco (sem Inngest); duração real pela transcrição; link `/m` só pela chave secreta.
 - **T49** QR de mensagem no prompt 13, com a montagem.
