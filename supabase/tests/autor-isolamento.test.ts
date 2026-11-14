@@ -4,14 +4,8 @@ import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ativarPlano, como, criarBanco, criarUsuario, tenta } from "./banco";
 
-// O prompt 10 acrescenta family_messages a esta lista.
-const TABELAS_DA_FAMILIA = [
-  "polls",
-  "poll_items",
-  "poll_votes",
-  "causos",
-  "family_access",
-];
+// family_messages entrou no prompt 10 (vazia; as colunas chegam no prompt 12).
+import { TABELAS_DA_FAMILIA } from "@/lib/familia/tabelas";
 
 let db: PGlite;
 let livro: string;
@@ -60,7 +54,7 @@ describe("complementar: corpo das funções do autor", () => {
        where n.nspname in ('public', 'privado')
          and (p.proname like 'autor\\_%' or p.proname like '%\\_autor' or p.proowner = 'porta_autor'::regrole)
          and p.prosrc ~* $1`,
-      [`\\m(${[...TABELAS_DA_FAMILIA, "family_messages"].join("|")})\\M`],
+      [`\\m(${TABELAS_DA_FAMILIA.join("|")})\\M`],
     );
     return r.rows.map((x) => x.nome);
   }

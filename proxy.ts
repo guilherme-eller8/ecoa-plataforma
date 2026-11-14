@@ -6,6 +6,7 @@ import {
   COOKIE_APARELHO,
   aparelhoValido,
 } from "@/lib/familia/aparelho";
+import { decidirQr, type DecisaoQr } from "@/lib/qr/host";
 import { decidirRota } from "@/lib/rotas";
 
 // Link da família: sem sessão nem chamada ao Supabase. Grava o cookie do aparelho na
@@ -38,8 +39,33 @@ function proxyAutor(request: NextRequest) {
   return resposta;
 }
 
+// Player do QR (prompt 10): sem sessão nem Supabase. No host ouvir., só / e /{código} existem;
+// no host app., /ouvir vai para o ouvir. (o player não roda na origem dos cookies de sessão).
+function proxyQr(request: NextRequest, decisao: NonNullable<DecisaoQr>) {
+  let resposta: NextResponse;
+  if (decisao.tipo === "reescrever")
+    resposta = NextResponse.rewrite(new URL(decisao.destino, request.url));
+  else if (decisao.tipo === "redirecionar")
+    resposta = NextResponse.redirect(decisao.url, 308);
+  else if (decisao.tipo === "nao_encontrado")
+    resposta = NextResponse.rewrite(new URL("/nao-encontrado", request.url), {
+      status: 404,
+    });
+  else resposta = NextResponse.next({ request });
+  resposta.headers.set("Cache-Control", "private, no-store");
+  resposta.headers.set("Referrer-Policy", "no-referrer");
+  resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return resposta;
+}
+
 // Renova a sessão do Supabase a cada requisição e decide redirects e 404 antes de renderizar.
 export async function proxy(request: NextRequest) {
+  // Antes de /f e /a: no host ouvir., nem o link da família nem o do autor existem.
+  const qr = decidirQr(
+    request.headers.get("host") ?? request.nextUrl.host,
+    request.nextUrl.pathname,
+  );
+  if (qr) return proxyQr(request, qr);
   if (request.nextUrl.pathname.startsWith("/f/")) return proxyFamilia(request);
   if (request.nextUrl.pathname.startsWith("/a/")) return proxyAutor(request);
 

@@ -24,6 +24,7 @@ import { enviarEmail } from "@/lib/email/enviar";
 import { urlDoApp } from "@/lib/env-servidor";
 import { registrarEvento } from "@/lib/eventos";
 import { bancoPipeline } from "@/lib/pipeline/banco";
+import { recortarQrFn } from "./qr";
 import { publicarNoLivro } from "@/lib/pipeline/canal";
 import { envPipeline } from "@/lib/pipeline/env";
 import { lerErroPipeline, logarSemTexto } from "@/lib/pipeline/erros";
@@ -480,7 +481,13 @@ export const varreduraFn = inngest.createFunction(
       return (data ?? []).length;
     });
 
-    return { reenviadas, retomadas, paradas, propostas };
+    // Prompt 10: contadores do player do QR com mais de 2 h.
+    const contadores = await step.run("qr-contadores", async () => {
+      const { data } = await clienteAdmin().rpc("servico_qr_limpar_consultas");
+      return data ?? 0;
+    });
+
+    return { reenviadas, retomadas, paradas, propostas, contadores };
   },
 );
 
@@ -489,4 +496,5 @@ export const funcoes = [
   escreverHistoriaFn,
   proporFn,
   varreduraFn,
+  recortarQrFn,
 ];

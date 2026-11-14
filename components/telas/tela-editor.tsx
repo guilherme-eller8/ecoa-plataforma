@@ -4,6 +4,7 @@
 // transcrição à esquerda, texto à direita. Salvamento automático com cópia no aparelho até o
 // servidor confirmar; trava "Ana está editando" conferida no banco. Uma ação principal:
 // Marcar como pronta. Design: docs/designs/editor-historias.md.
+import { FolhaAmostra } from "@/components/editor/folha-amostra";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -147,6 +148,7 @@ export function TelaEditor({
     (FraseTocada & { posicao: { top: number; left: number } }) | null
   >(null);
   const [grifo, setGrifo] = useState<AtributosConfira | null>(null);
+  const [amostraAberta, setAmostraAberta] = useState(false);
   const [fontesDoCursor, setFontesDoCursor] = useState<number[]>([]);
   const [revisada, setRevisada] = useState(historia.revisada);
   const [marcando, setMarcando] = useState(false);
@@ -854,18 +856,30 @@ export function TelaEditor({
 
         {podeEscrever ? (
           revisada ? (
-            <div className="bg-floresta-claro rounded-cartao mt-4 flex flex-wrap items-center justify-between gap-3 py-3 pr-3 pl-5">
-              <p className="text-ui-17 text-floresta inline-flex items-center gap-2 font-medium">
-                <IconeCheck tamanho={20} />
-                Pronta para o livro
-              </p>
-              <Botao
-                variante="texto"
-                carregando={marcando}
-                onClick={() => void marcar(false)}
-              >
-                Voltar para rascunho
-              </Botao>
+            <div className="mt-4 flex flex-col gap-3">
+              <div className="bg-floresta-claro rounded-cartao flex flex-wrap items-center justify-between gap-3 py-3 pr-3 pl-5">
+                <p className="text-ui-17 text-floresta inline-flex items-center gap-2 font-medium">
+                  <IconeCheck tamanho={20} />
+                  Pronta para o livro
+                </p>
+                <Botao
+                  variante="texto"
+                  carregando={marcando}
+                  onClick={() => void marcar(false)}
+                >
+                  Voltar para rascunho
+                </Botao>
+              </div>
+              {acoes.amostra ? (
+                <Botao
+                  variante="secundario"
+                  larguraTotal
+                  onClick={() => setAmostraAberta(true)}
+                  className="sm:w-auto sm:self-start"
+                >
+                  Página de amostra
+                </Botao>
+              ) : null}
             </div>
           ) : (
             <div className="mt-4 flex flex-col gap-3">
@@ -1113,6 +1127,14 @@ export function TelaEditor({
         </>
       ) : null}
 
+      {acoes.amostra ? (
+        <FolhaAmostra
+          aberta={amostraAberta}
+          aoFechar={() => setAmostraAberta(false)}
+          urlPdf={`${base}/amostra`}
+          acoes={acoes.amostra}
+        />
+      ) : null}
       <FolhaInferior
         aberta={grifo !== null}
         aoFechar={() => setGrifo(null)}

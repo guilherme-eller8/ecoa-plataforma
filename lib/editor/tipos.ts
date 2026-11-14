@@ -1,4 +1,5 @@
 // Ações do editor (prompt 8), passadas às telas como props: o styleguide passa versões falsas.
+import type { AcoesAmostra } from "@/components/editor/folha-amostra";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { FotoDaHistoria } from "@/lib/historias/tipos";
 import type {
@@ -43,6 +44,8 @@ export type AcoesEditor = AcoesFotos & {
   responderSugestao?: (aceitar: boolean) => Promise<Resposta>;
   /** Prompt 9: sem elas (styleguide antigo), as ferramentas da IA não aparecem. */
   propostas?: AcoesPropostas;
+  /** Prompt 10: página de amostra (só em história marcada como pronta). */
+  amostra?: AcoesAmostra;
 };
 
 export type AcoesVersoes = {

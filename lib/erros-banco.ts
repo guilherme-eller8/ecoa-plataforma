@@ -40,6 +40,19 @@ export const FRASES_DOS_CODIGOS = {
   proposta_indisponivel: "Esta proposta já foi decidida. Atualize a tela.",
   proposta_em_andamento: "Espere a proposta que já está sendo escrita.",
   cota_ia_diaria: "A IA já ajudou muito hoje neste livro. Tente amanhã.",
+  // Prompt 10: QR e página de amostra.
+  historia_nao_pronta: "Marque a história como pronta para gerar a página.",
+  historia_sem_audio: "Esta história não tem áudio para o QR.",
+  historia_audio_compartilhado:
+    "Esta história divide o áudio com outra. Fale com a Ecoa.",
+  qr_colisao: "Não deu certo agora. Tente de novo.",
+  qr_desativado:
+    "O QR desta história está desligado. Ligue de novo para gerar a página.",
+  qr_recorte_longo: "Não deu certo agora. Tente de novo.",
+  qr_imutavel: "Este QR não pode mudar.",
+  qr_nao_encontrado: "Não achamos este QR.",
+  chave_invalida: "Não deu certo agora. Tente de novo.",
+  reversao_com_qr: "Não deu certo agora. Tente de novo.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

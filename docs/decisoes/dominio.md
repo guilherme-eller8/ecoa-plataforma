@@ -21,5 +21,7 @@ O subdomínio do QR vai impresso nos livros. A partir da primeira página de amo
 
 ## Pendências
 
-- [ ] Registrar o DNS de `app.` e `ouvir.` apontando para a Vercel (prompt 10 para o `ouvir.`).
+- [x] `app.` apontando para a Vercel (CNAME no registro.br).
+- [ ] `ouvir.`: CNAME `ouvir` → `fb39d318f8d07408.vercel-dns-017.com.` no registro.br (prompt 10, passo do Guilherme).
+- [ ] Pagar o domínio por vários anos (o registro.br aceita até 10) e anotar o titular e quem herda o acesso.
 - [ ] Conferir a renovação automática do domínio no registro.br: deixar vencer apaga os QR impressos.

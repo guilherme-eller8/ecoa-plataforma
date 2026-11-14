@@ -209,3 +209,25 @@ export const CONSULTAR_PROPOSTA_S = 5; // reserva do canal: proposta gerando é 
 export const PREVISAO_PROPOSTA_BASE_S = 20; // tamanho: editar + verificar
 export const PREVISAO_PROPOSTA_POR_S = 0.2;
 export const PREVISAO_REVISAR_S = 20;
+
+// ── QR e página de amostra (prompt 10, docs/designs/qr-pagina-amostra.md) ──
+// O código e o domínio vão impressos: depois da 1ª página impressa, nunca mudam.
+export const QR_ALFABETO = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"; // sem 0, 1, I, L, O (CHECK no banco)
+export const QR_TAMANHO_CODIGO = 8;
+export const QR_LADO_MM = 20; // o símbolo, sem a margem de silêncio (PRD: mínimo 2 × 2 cm)
+export const QR_MARGEM_MODULOS = 4; // margem de silêncio, em módulos
+export const QR_CORRECAO = "Q"; // correção de erro (PRD)
+// Os cinco abaixo são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+// Player público: erros e acertos em baldes separados (quem lê o QR certo quase nunca erra).
+export const QR_ERROS_POR_CHAVE = 10; // códigos inexistentes por rede em 10 min
+export const QR_ERROS_GLOBAL = 3000; // códigos inexistentes de todas as redes em 10 min
+export const QR_ACERTOS_POR_MINUTO = 60; // aberturas de códigos válidos por rede por minuto
+export const QR_AUDIO_ESPERA_MIN = 10; // um recorte pedido e não terminado é pedido de novo depois disso
+export const QR_FOLGA_RECORTE_S = 30; // o recorte pode passar da fala da história só nisso
+export const QR_AUDIO_KBPS = 48; // recorte do QR em .m4a (AAC), voz mono
+export const QR_AUDIO_URL_S = 10 * 60; // validade da URL assinada que o player toca
+// URL do QR em maiúsculas (versão 3, módulo maior) ou minúsculas (versão 4). Confirmar na folha
+// de teste com aparelhos reais (Q4) ANTES da 1ª página impressa; depois disso, nunca muda.
+export const QR_URL_MAIUSCULA = true;
+export const AMOSTRA_ESPERA_VOZ_S = 120; // a folha consulta o recorte até isso; depois pede para voltar
+export const AMOSTRA_CONSULTAR_S = 3; // intervalo da consulta do recorte na folha
