@@ -248,3 +248,14 @@ Nenhum caminho para o autor ou quem tem o link ler mensagens de outros.
 | 10 | Reserva sem plano ativo | `livro_editavel` na reserva |
 | 11 | "Só enviadas" × arquivadas | Doc corrigido (enviadas e arquivadas) |
 | 12 | Versão do consentimento; comentário de `hashDoToken` | Doc corrigido; comentário na construção |
+
+## 12. Migration aplicada (14/11)
+
+`20261122120000_mensagens_familia` aplicada no Supabase de produção, depois da `20261121120000_cofacilitadores` do prompt 11. Conferido no banco de verdade:
+
+- `family_messages` com 28 colunas; as duas políticas (`membro lê enviadas` para `authenticated`; `sem login nunca lê`, restritiva, para `anon` e `porta_autor`).
+- `anon` e `porta_autor` sem leitura em `family_messages` e `message_access`; `anon` não executa nenhuma função de mensagem; `authenticated` executa só `mensagem_editar`, `mensagem_no_livro`, `mensagem_arquivar` e `mensagem_apagar`.
+- Bucket `mensagens` privado, 4 MB, `audio/webm`, `audio/mp4`, `audio/ogg`, `image/jpeg`.
+- Avisos de segurança: nada novo de `anon`. As 4 funções de membro aparecem no aviso "Signed-In Users Can Execute SECURITY DEFINER Function", como todas as funções de membro do projeto (conferem membro e livro dentro delas).
+
+Próximo passo: sessão de construção (`/clear`), a partir deste design, depois do merge do prompt 11 na `main`.
