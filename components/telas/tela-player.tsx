@@ -13,7 +13,7 @@ import type { EstadoPlayer } from "@/lib/qr/tipos";
 
 function Moldura({ children }: { children: React.ReactNode }) {
   return (
-    <main className="bg-papel mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-10 pb-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pt-10 pb-10">
       <div className="flex flex-1 flex-col justify-center gap-8 py-10">
         {children}
       </div>
@@ -105,10 +105,12 @@ function Ouvir({
               style={{ width: `${progresso * 100}%` }}
             />
           </div>
-          <div className="font-ui text-ui-13 text-tinta-2 flex justify-between tabular-nums">
-            <span>{tempo(agora)}</span>
-            <span>{duracao ? tempo(duracao) : ""}</span>
-          </div>
+          {duracao > 0 ? (
+            <div className="font-ui text-ui-13 text-tinta-2 flex justify-between tabular-nums">
+              <span>{tempo(agora)}</span>
+              <span>{duracao ? tempo(duracao) : ""}</span>
+            </div>
+          ) : null}
         </div>
         {falhou ? (
           <p className="font-ui text-ui-15 text-erro text-center">
@@ -181,17 +183,24 @@ export function DigitarCodigo({ titulo }: { titulo: string }) {
 }
 
 function Recado({
+  titulo,
   frase,
   acao,
 }: {
-  frase: string;
+  titulo: string;
+  frase?: string;
   acao?: "tentar" | "digitar";
 }) {
   return (
     <Moldura>
-      <p className="font-livro text-livro-28 text-tinta text-balance">
-        {frase}
-      </p>
+      <div className="flex flex-col gap-3">
+        <h1 className="font-livro text-livro-36 text-tinta text-balance">
+          {titulo}
+        </h1>
+        {frase ? (
+          <p className="font-ui text-ui-17 text-tinta-2">{frase}</p>
+        ) : null}
+      </div>
       {acao === "tentar" ? (
         <Botao
           variante="secundario"
@@ -228,30 +237,31 @@ export function TelaPlayer({
     case "preparando":
       return (
         <Recado
-          frase="A voz ainda está sendo preparada. Tente de novo em alguns minutos."
+          titulo="A voz está sendo preparada"
+          frase="Tente de novo em alguns minutos."
           acao="tentar"
         />
       );
     case "nao_encontrado":
       return (
         <Recado
-          frase="Não achamos este código. Confira as letras embaixo do QR."
+          titulo="Não achamos este código"
+          frase="Confira as letras embaixo do QR."
           acao="digitar"
         />
       );
     case "desativado":
-      return <Recado frase="Este áudio não está mais disponível." />;
+      return <Recado titulo="Este áudio não está mais disponível" />;
     case "limite":
       return (
         <Recado
-          frase="Muitas tentativas agora. Tente daqui a alguns minutos."
+          titulo="Muitas tentativas agora"
+          frase="Tente daqui a alguns minutos."
           acao="tentar"
         />
       );
     default:
-      return (
-        <Recado frase="Não deu certo agora. Tente de novo." acao="tentar" />
-      );
+      return <Recado titulo="Não deu certo agora" acao="tentar" />;
   }
 }
 

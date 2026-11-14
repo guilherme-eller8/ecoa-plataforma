@@ -75,6 +75,12 @@ const TELAS = {
 // mínimo 28 px, mesmo quando passa de duas linhas. O inspetor trata isso como título longo.
 const PERGUNTA_DO_AUTOR = new Set(["autor-inicio", "autor-gravar"]);
 
+// Telas com a folha inferior aberta: é um diálogo de verdade, que pode flutuar (regra heavy-shadow).
+const COM_FOLHA_ABERTA = new Set([
+  "editor-amostra",
+  "editor-amostra-preparando",
+]);
+
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);
 let falhou = false;
 
@@ -89,7 +95,9 @@ for (const nome of escolhidas.length ? escolhidas : Object.keys(TELAS)) {
       "--allow",
       PERGUNTA_DO_AUTOR.has(nome)
         ? "palette-cream,headline-lines"
-        : "palette-cream",
+        : COM_FOLHA_ABERTA.has(nome)
+          ? "palette-cream,heavy-shadow"
+          : "palette-cream",
       "--out",
       `.taste-skill/inspect/${nome}`,
     ],
