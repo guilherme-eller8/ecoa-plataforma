@@ -50,6 +50,15 @@ export const FRASES_DOS_CODIGOS = {
     "O QR desta história está desligado. Ligue de novo para gerar a página.",
   qr_recorte_longo: "Não deu certo agora. Tente de novo.",
   qr_imutavel: "Este QR não pode mudar.",
+  limite_mensagens: "Muitas mensagens hoje. Tente amanhã.",
+  mensagem_nao_encontrada:
+    "O tempo para enviar esta mensagem acabou. Comece de novo.",
+  mensagem_sem_texto: "Escreva a mensagem antes.",
+  audio_nao_chegou: "O áudio não chegou. Tente de novo.",
+  limite_transcricao:
+    "Não conseguimos escrever o áudio. Escreva você ou envie só o áudio.",
+  mensagem_imutavel: "Esta mensagem não pode mudar.",
+  family_messages_nao_vazia: "Algo não está certo. Confira e tente de novo.",
   qr_nao_encontrado: "Não achamos este QR.",
   chave_invalida: "Não deu certo agora. Tente de novo.",
   reversao_com_qr: "Não deu certo agora. Tente de novo.",

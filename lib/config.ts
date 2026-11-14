@@ -86,6 +86,16 @@ export const MAX_CAUSOS_POR_DIA = 40; // espelhado, por livro
 export const MAX_CAUSO_AUDIO_MIN = 3;
 export const MAX_CAUSO_AUDIO_MB = 2; // igual ao limite do bucket causos
 export const CONSENTIMENTO_CAUSO_VERSAO = 1; // mudou a frase? suba a versão
+
+// Mensagens da família (prompt 12, link /m). Os espelhados conferem em config-banco.test.ts.
+export const MAX_MENSAGENS_POR_HORA = 20; // espelhado, por livro, contando rascunhos
+export const MAX_MENSAGENS_POR_DIA = 40; // espelhado, por livro
+export const MAX_MENSAGEM_AUDIO_MIN = 5; // o banco aceita até 5 min + 10 s (max_mensagem_audio_s)
+export const MAX_MENSAGEM_AUDIO_MB = 8; // igual ao limite do bucket mensagens
+export const MAX_MENSAGEM_CARACTERES = 6000; // espelhado
+export const MAX_TRANSCRICOES_POR_MENSAGEM = 3; // espelhado
+export const MENSAGEM_RASCUNHO_DURA_H = 48; // espelhado: rascunho não enviado é apagado depois disso
+export const CONSENTIMENTO_MENSAGEM_VERSAO = 1; // mudou a frase? suba a versão
 export const TEXTO_PERGUNTA_MAX = 500; // igual ao CHECK de prompts e poll_items
 
 // ── IA (laboratório e pipeline) ──────────────────────────────────────────

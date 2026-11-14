@@ -341,7 +341,7 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
     expect(r.rows).toEqual([]);
   });
 
-  it("anon executa só as portas dos links da família e do autor", async () => {
+  it("anon executa só as portas dos links da família, do autor e de mensagens", async () => {
     const r = await db.query<{ nome: string }>(
       `select n.nspname || '.' || p.proname as nome from pg_proc p join pg_namespace n on n.oid = p.pronamespace
        where n.nspname in ('public', 'privado') and has_function_privilege('anon', p.oid, 'execute')
@@ -354,6 +354,9 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "public.familia_enviar_causo",
       "public.familia_pagina",
       "public.familia_votar",
+      "public.mensagem_criar",
+      "public.mensagem_enviar",
+      "public.mensagem_pagina",
     ]);
   });
 
@@ -381,6 +384,9 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "public.enquete_salvar",
       "public.marcar_historia_pronta",
       "public.marcar_historia_vista",
+      "public.mensagem_arquivar",
+      "public.mensagem_editar",
+      "public.mensagem_no_livro",
       "public.parar_de_editar",
       "public.pedir_proposta",
       "public.responder_sugestao",
