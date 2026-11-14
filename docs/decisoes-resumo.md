@@ -71,6 +71,8 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P63** Resumo semanal: domingo 18 h, só números, só se houver algo, descadastro de 1 clique.
 - **P64** Até 5 co-facilitadores por livro (eram 3); pendentes contam no teto.
 - **P65** Link `/m` só de escrita; envio com texto confirmado; entra no livro o que um membro marcar; só o responsável apaga de vez.
+- **P66** Livro A5, capa dura 4x0 laminada, miolo 4x4 couché 115 g; história em página nova (qualquer lado); cor da capa impressa; especificação provisória versionada.
+- **P67** Sem teto de páginas (80 no plano, extra pelo orçamento); membro monta e baixa, só o responsável publica; não revisada bloqueia; sem QR que toca, sai sem QR.
 
 ## Técnicas
 
@@ -123,3 +125,6 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T47** `book_invites` e `story_shares` sem porta para `anon`; links `convite`/`compartilhar`/`resumo` por HMAC; `/o` e `/convite` sem cache nem índice.
 - **T48** Mensagem: só Scribe, na ação do servidor com reserva no banco (sem Inngest); duração real pela transcrição; link `/m` só pela chave secreta.
 - **T49** QR de mensagem no prompt 13, com a montagem.
+- **T50** `book_layouts` + `book_exports` congelada pelo banco com hash do que foi conferido; PDFs no Inngest com QR conferido por posição; QR vivo, papel congelado.
+- **T51** QR de mensagem: só com áudio transcrito, teto do link, arquivada para de tocar, publicada não se apaga.
+- **T52** Texto e QR em 100% K; capa em CMYK; fotos RGB até a gráfica pedir.

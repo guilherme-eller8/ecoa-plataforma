@@ -272,7 +272,8 @@ O resultado são dois PDFs, o miolo e a capa aberta, que a Ecoa envia à gráfic
 
 ### Regras de paginação
 
-- Todo capítulo começa em página ímpar, com páginas em branco intencionais quando necessário.
+- Cada história começa no topo de uma página nova, par ou ímpar; só o sumário e as *Mensagens da família* abrem na ímpar (P66).
+- Sem teto de páginas: o plano cobre 80, e o que passar é cobrado pelo orçamento da gráfica (P67).
 - O total é completado até o múltiplo exigido pela gráfica (normalmente 4).
 - **O mesmo motor gera a estimativa e o PDF final.** A contagem de páginas vem de uma renderização real, para o valor extra nunca surpreender.
 
@@ -280,7 +281,7 @@ O resultado são dois PDFs, o miolo e a capa aberta, que a Ecoa envia à gráfic
 
 | Item | Valor inicial | Onde mora |
 | --- | --- | --- |
-| Formato | 21 × 21 cm | `config.ts` |
+| Formato | A5 vertical, 14,8 × 21 cm; capa dura 4x0 com laminação fosca; miolo 4x4 em couché fosco 115 g (P66) | `config.ts` (`ESPEC_GRAFICA`) |
 | Sangria | 3 mm em cada lado | `config.ts` |
 | Páginas incluídas | 80 | `config.ts` |
 | Valor por página extra | a definir | `config.ts` |

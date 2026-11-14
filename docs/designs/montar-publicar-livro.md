@@ -1,6 +1,6 @@
 # Montar e publicar o livro (prompt 13)
 
-**Estado:** v2, com a revisão de segurança e de código (seção 12). SQL ensaiado no PGlite (`supabase/tests/montar-livro.test.ts`, 18 testes passando). Nada aplicado no Supabase. Espera o seu OK.
+**Estado:** aprovado pelo Guilherme em 14/11/2026 (v2 + Q16: o livro não tem teto de páginas). SQL ensaiado no PGlite (18 testes). Aplicação no Supabase pendente (a confirmação do servidor não foi respondida em 14/11).
 
 PRD: *M9* e *Livro pronto para a gráfica*. Decisões tocadas: P3, P7, P21, P56, P60, P65, T5, T19/T43, T20, T22, T36, T44, T45, T49.
 
@@ -14,7 +14,7 @@ A família tem histórias prontas e mensagens, e precisa de dois PDFs (miolo e c
 - **O risco que o código não resolve:** o maior desconhecido está na gráfica, não na tela. **Recomendação:** o PDF de 6+2 deste prompt vira a pergunta para a gráfica ("imprime isso? o que muda?"). É o teste mais rápido do gabarito e do preço, e por isso tudo o que ela não confirmou fica num lugar só (`lib/config.ts`) com uma versão.
 - **Sucesso:** gráfica aceita o PDF em até 1 rodada de ajuste só no `config.ts`. **Critério de morte do formato automático:** se a gráfica devolver o arquivo 2 vezes por problema de diagramação (não de número), os primeiros livros saem diagramados à mão pela Ecoa enquanto o template é corrigido.
 
-**O que a especificação nova muda (sua resposta de hoje):** A5 vertical (14,8 × 21 cm) cabe ~32% menos texto por página que o 21 × 21 (medido no Typst com a Newsreader: ~390 contra ~570 palavras de texto corrido, a 11 pt). Com 25 histórias, as 80 páginas apertam. Por isso cada história abre em página nova de qualquer lado (Q1), não só na ímpar.
+**O que a especificação nova muda (sua resposta de hoje):** A5 vertical (14,8 × 21 cm) cabe ~32% menos texto por página que o 21 × 21 (medido no Typst com a Newsreader: ~390 contra ~570 palavras de texto corrido, a 11 pt). Com 25 histórias, o livro tende a passar das 80. **Não há teto (Q16):** o plano cobre 80 páginas e o que passar é cobrado pelo orçamento da gráfica. Cada história abrir em página nova de qualquer lado (Q1) evita que a família pague páginas em branco.
 
 ## 2. Escopo
 
@@ -54,6 +54,7 @@ A família tem histórias prontas e mensagens, e precisa de dois PDFs (miolo e c
 | Q13 | Cor no PDF | **Texto e QR em 100% preto (K)**, cores da capa em CMYK, fotos em RGB. Texto em preto "rico" ou cinza vira 4 cores na conversão e borra letra pequena e QR. Para sair K de verdade: texto com `cmyk(0%, 0%, 0%, 100%)` (hoje a amostra usa `rgb`) e **o QR desenhado no próprio Typst** (quadrados a partir da matriz do pacote `qrcode`), não um SVG importado, que entraria em RGB. Conferido no PDF na construção. PDF/X e CMYK das fotos quando a gráfica pedir. |
 | Q14 | Tetos | **10 publicações por livro em 24 h** (as que falharam não contam) e uma por vez. **Contagem e prévia da capa: 30 por pessoa e livro por minuto**, conferido no banco (`montagem_reservar_uso`), porque o debounce da tela não protege nada. |
 | Q15 | O player de um QR de mensagem mostra o quê? | **"Mensagem de Bia, neta"** e *Ouvir*: o mesmo nome e relação impressos na página. Nunca o texto. **Mensagem arquivada para de tocar na hora** (spam, pedido de quem enviou); desarquivar volta. Apagar de vez uma mensagem publicada fica para o pedido formal do prompt 15. |
+| Q16 | Teto de páginas? | **Nenhum** (sua resposta). 80 é o que o preço base cobre; acima disso, a Ecoa cobra pelo orçamento da gráfica no prompt 14. A montagem e o Publicar nunca limitam pelo número de páginas; o contador só informa. |
 
 ## 4. Especificação da gráfica (o que é fixo e o que é provisório)
 
@@ -79,7 +80,7 @@ O PDF da capa marca `TrimBox` na área sem a dobra, e o do miolo em 148 × 210 m
 
 ### 5.1 Montar (`/livro/[id]/montar`, `/montar/capa`, `/montar/conferir`)
 
-Entrada: cartão na home "Montar o livro", visível quando há 1 história pronta. A ação principal da home continua *Nova história* (P26). Três telas, uma ação cada, com o contador fixo embaixo ("72 de 80 páginas").
+Entrada: cartão na home "Montar o livro", visível quando há 1 história pronta. A ação principal da home continua *Nova história* (P26). Três telas, uma ação cada, com o contador fixo embaixo: "72 páginas" até 80, e "92 páginas · 12 extras" acima. Nunca impede de incluir nada.
 
 - **Conteúdo.** Dedicatória no topo (campo opcional, até 600 letras). Depois as histórias prontas na ordem do livro, cada uma com título, ano e duas setas (*Subir*, *Descer*) e *Tirar* / *Pôr de volta* (riscada fica cinza e tachada, no lugar). Depois *Mensagens da família (capítulo final)* com as mensagens enviadas, do mesmo jeito. Setas em vez de arrastar: gesto óbvio para quem tem 80 anos. Ação: *Próximo: capa*.
   - Dica de 1ª vez: "Use as setas para mudar a ordem."
@@ -88,7 +89,7 @@ Entrada: cartão na home "Montar o livro", visível quando há 1 história pront
 - **Conferir.** O número grande ("84 páginas"), a frase do valor e os alertas, vermelhos primeiro, cada um com o link para resolver:
   - vermelho (bloqueia): livro sem título, história sem título, história não marcada como pronta (Q9), título da capa com mais de 3 linhas;
   - amarelo: foto abaixo de 300 DPI no tamanho impresso, história com menos de 120 palavras, história ou mensagem que sai sem QR (Q10);
-  - páginas: "84 páginas: 4 além das 80." + "R$ X a mais" ou, com `VALOR_PAGINA_EXTRA` nulo, "O valor extra sai no orçamento da gráfica."
+  - páginas (informação, nunca alerta nem bloqueio, Q16): "92 páginas. O plano inclui 80; as 12 a mais entram no orçamento da gráfica." Com `VALOR_PAGINA_EXTRA` definido, acrescenta "cerca de R$ X".
   - Ação: *Publicar* (só o responsável). Folha de confirmação: "Publicar a versão 2? O que mudar depois fica para a próxima." Co-facilitador vê "Só {responsável} publica."
   - **Publica o que a pessoa viu.** A tela de Conferir guarda o `hash` que `montagem_conteudo` devolveu e o manda no *Publicar*. Se qualquer coisa mudou desde então (montagem, uma história que ficou pronta, uma mensagem tirada, editada ou arquivada), o banco recusa com `montagem_mudou` e a tela recarrega: "O livro mudou enquanto você conferia. Confira de novo."
 
@@ -254,7 +255,7 @@ Erros novos com frase em `lib/erros-banco.ts`: `montagem_mudou`, `publicacao_em_
 ## 11. Decisões novas para registrar depois do OK
 
 - **P66:** livro A5 vertical (14,8 × 21 cm), capa dura 4x0 com laminação fosca, miolo de 80 páginas 4x4 em couché fosco 115 g; cada história abre em página nova de qualquer lado (só sumário e mensagens na ímpar); "cor do tecido" vira cor da capa impressa, de uma paleta de 5 (Q1, Q2, Q4). Substitui no PRD o formato 21 × 21 e a regra da página ímpar.
-- **P67:** qualquer membro monta e baixa; só o responsável publica; mensagem no livro é o `no_livro` da P65; história não revisada bloqueia; todas as fotos da história entram; o que não tem QR que toca sai sem QR; publicar não espera as vozes (o prompt 14 espera); 10 publicações por dia (Q5 a Q10, Q14).
+- **P67:** sem teto de páginas: 80 é o que o plano cobre, o extra sai pelo orçamento da gráfica e a montagem só informa (Q16); qualquer membro monta e baixa; só o responsável publica; mensagem no livro é o `no_livro` da P65; história não revisada bloqueia; todas as fotos da história entram; o que não tem QR que toca sai sem QR; publicar não espera as vozes (o prompt 14 espera); 10 publicações por dia (Q5 a Q10, Q14).
 - **T50:** montagem em `book_layouts`; publicação em `book_exports`, conteúdo congelado pelo banco numa transação (fonte única com a contagem) e só se o `hash` for o que a pessoa conferiu; QR vivo, papel congelado (o prompt 14 reconfere os QR no envio); teto de contagem e prévia no banco; PDFs numa função do Inngest com fotos reduzidas a 300 DPI, QR conferido por posição e pelo banco, `TrimBox` pelo mupdf, prévias JPEG; especificação da gráfica versionada no `config.ts` e gravada em cada versão (Q3, Q11, Q12).
 - **T51:** QR de mensagem: `qr_codes.message_id`, só com áudio transcrito, recorte do arquivo inteiro com o teto do link, player com nome e relação; arquivada para de tocar; mensagem com QR ou publicada não se apaga pelo produto (Q15). Completa T49.
 - **T52:** texto e QR em 100% K, cores da capa em CMYK, fotos em RGB até a gráfica pedir outra coisa (Q13).
