@@ -101,6 +101,7 @@ export const MAX_MENSAGEM_FOTO_MB = 4; // a foto vem comprimida do aparelho (com
 export const MAX_MENSAGEM_CARACTERES = 6000; // espelhado
 export const MAX_TRANSCRICOES_POR_MENSAGEM = 3; // espelhado
 export const MAX_TRANSCRICOES_POR_DIA = 60; // espelhado: tentativas por livro, em 24 h
+export const MENSAGEM_OUVIR_URL_S = 10 * 60; // validade da URL assinada que o membro ouve
 export const MENSAGEM_TRANSCREVER_TIMEOUT_S = 45; // corte do pedido ao Scribe (a reserva dura 2 min)
 export const MENSAGEM_RASCUNHO_DURA_H = 48; // espelhado: rascunho não enviado é apagado depois disso
 export const CONSENTIMENTO_MENSAGEM_VERSAO = 1; // mudou a frase? suba a versão

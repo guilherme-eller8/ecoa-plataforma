@@ -446,19 +446,94 @@ export type Database = {
       };
       family_messages: {
         Row: {
+          access_id: string;
+          aparelho_hash: string;
+          audio_caminho: string | null;
+          audio_recebido_em: string | null;
+          audio_recusado: boolean;
           book_id: string;
+          consentimento_em: string;
+          consentimento_versao: number;
           criado_em: string;
+          duracao_s: number | null;
+          editado_em: string | null;
+          editado_por: string | null;
+          enviada_em: string | null;
+          estado: Database["public"]["Enums"]["mensagem_estado"];
+          foto_caminho: string | null;
+          foto_recebida_em: string | null;
           id: string;
+          no_livro: boolean;
+          no_livro_em: string | null;
+          no_livro_por: string | null;
+          nome: string;
+          relacao: string;
+          texto: string | null;
+          texto_enviado: string | null;
+          transcricao: string | null;
+          transcricao_pedida_em: string | null;
+          transcricao_reserva: string | null;
+          transcricao_tentativas: number;
         };
         Insert: {
-          book_id: string;
+          access_id?: string;
+          aparelho_hash?: string;
+          audio_caminho?: string | null;
+          audio_recebido_em?: string | null;
+          audio_recusado?: boolean;
+          book_id?: string;
+          consentimento_em?: string;
+          consentimento_versao?: number;
           criado_em?: string;
+          duracao_s?: number | null;
+          editado_em?: string | null;
+          editado_por?: string | null;
+          enviada_em?: string | null;
+          estado?: Database["public"]["Enums"]["mensagem_estado"];
+          foto_caminho?: string | null;
+          foto_recebida_em?: string | null;
           id?: string;
+          no_livro?: boolean;
+          no_livro_em?: string | null;
+          no_livro_por?: string | null;
+          nome?: string;
+          relacao?: string;
+          texto?: string | null;
+          texto_enviado?: string | null;
+          transcricao?: string | null;
+          transcricao_pedida_em?: string | null;
+          transcricao_reserva?: string | null;
+          transcricao_tentativas?: number;
         };
         Update: {
+          access_id?: string;
+          aparelho_hash?: string;
+          audio_caminho?: string | null;
+          audio_recebido_em?: string | null;
+          audio_recusado?: boolean;
           book_id?: string;
+          consentimento_em?: string;
+          consentimento_versao?: number;
           criado_em?: string;
+          duracao_s?: number | null;
+          editado_em?: string | null;
+          editado_por?: string | null;
+          enviada_em?: string | null;
+          estado?: Database["public"]["Enums"]["mensagem_estado"];
+          foto_caminho?: string | null;
+          foto_recebida_em?: string | null;
           id?: string;
+          no_livro?: boolean;
+          no_livro_em?: string | null;
+          no_livro_por?: string | null;
+          nome?: string;
+          relacao?: string;
+          texto?: string | null;
+          texto_enviado?: string | null;
+          transcricao?: string | null;
+          transcricao_pedida_em?: string | null;
+          transcricao_reserva?: string | null;
+          transcricao_tentativas?: number;
         };
         Relationships: [
           {
@@ -469,6 +544,36 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      message_access: {
+        Row: {
+          book_id: string;
+          chave_versao: number;
+          criado_em: string;
+          criado_por: string | null;
+          id: string;
+          revogado_em: string | null;
+          token_hash: string;
+        };
+        Insert: {
+          book_id: string;
+          chave_versao?: number;
+          criado_em?: string;
+          criado_por?: string | null;
+          id?: string;
+          revogado_em?: string | null;
+          token_hash: string;
+        };
+        Update: {
+          book_id?: string;
+          chave_versao?: number;
+          criado_em?: string;
+          criado_por?: string | null;
+          id?: string;
+          revogado_em?: string | null;
+          token_hash?: string;
+        };
+        Relationships: [];
       };
       glossary_entries: {
         Row: {
@@ -1668,6 +1773,117 @@ export type Database = {
         Args: never;
         Returns: number;
       };
+      // ── Prompt 12: mensagens da família ──
+      servico_mensagem_pagina: { Args: { p_token: string }; Returns: Json };
+      servico_mensagem_criar: {
+        Args: {
+          p_aparelho: string;
+          p_audio_tipo: string | null;
+          p_consentimento: boolean;
+          p_consentimento_versao: number;
+          p_foto: boolean;
+          p_nome: string;
+          p_relacao: string;
+          p_token: string;
+        };
+        Returns: Json;
+      };
+      servico_mensagem_enviar: {
+        Args: {
+          p_aparelho: string;
+          p_id: string;
+          p_texto: string;
+          p_token: string;
+        };
+        Returns: Json;
+      };
+      servico_caminho_mensagem: {
+        Args: {
+          p_aparelho: string;
+          p_id: string;
+          p_tipo: string;
+          p_token: string;
+        };
+        Returns: string | null;
+      };
+      servico_confirmar_audio_mensagem: {
+        Args: {
+          p_aparelho: string;
+          p_duracao_s: number;
+          p_id: string;
+          p_token: string;
+        };
+        Returns: boolean;
+      };
+      servico_confirmar_foto_mensagem: {
+        Args: { p_aparelho: string; p_id: string; p_token: string };
+        Returns: boolean;
+      };
+      servico_mensagem_reservar_transcricao: {
+        Args: { p_aparelho: string; p_id: string; p_token: string };
+        Returns: Json;
+      };
+      servico_mensagem_transcrita: {
+        Args: {
+          p_aparelho: string;
+          p_fim_s: number;
+          p_id: string;
+          p_reserva: string;
+          p_texto: string;
+          p_token: string;
+        };
+        Returns: string;
+      };
+      servico_mensagem_transcricao_falhou: {
+        Args: {
+          p_aparelho: string;
+          p_id: string;
+          p_reserva: string;
+          p_token: string;
+        };
+        Returns: undefined;
+      };
+      servico_trocar_link_mensagem: {
+        Args: {
+          p_chave_versao: number;
+          p_id: string;
+          p_livro: string;
+          p_token_hash: string;
+          p_usuario: string;
+        };
+        Returns: undefined;
+      };
+      servico_mensagem_rascunhos_vencidos: {
+        Args: { p_limite: number };
+        Returns: {
+          audio_caminho: string | null;
+          foto_caminho: string | null;
+          id: string;
+        }[];
+      };
+      servico_mensagem_apagar_rascunhos: {
+        Args: { p_ids: string[] };
+        Returns: number;
+      };
+      mensagem_editar: {
+        Args: { p_id: string; p_texto: string };
+        Returns: undefined;
+      };
+      mensagem_no_livro: {
+        Args: { p_id: string; p_incluir: boolean };
+        Returns: undefined;
+      };
+      mensagem_arquivar: {
+        Args: { p_arquivar: boolean; p_id: string };
+        Returns: undefined;
+      };
+      mensagem_apagar: {
+        Args: { p_id: string };
+        Returns: {
+          audio_caminho: string | null;
+          foto_caminho: string | null;
+        }[];
+      };
     };
     Enums: {
       glossario_estado: "sugerido" | "aceito" | "recusado";
@@ -1700,6 +1916,7 @@ export type Database = {
       prompt_tipo: "pergunta" | "causo";
       recording_origem: "autor" | "livre" | "conversa" | "upload" | "lote";
       recording_upload: "enviando" | "recebido";
+      mensagem_estado: "rascunho" | "enviada" | "arquivada";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -1719,6 +1936,7 @@ export type CausoEstado = Enums["causo_estado"];
 export type EnqueteEstado = Enums["enquete_estado"];
 export type RecordingOrigem = Enums["recording_origem"];
 export type RecordingUpload = Enums["recording_upload"];
+export type MensagemEstado = Enums["mensagem_estado"];
 
 export const PARENTESCOS: readonly Parentesco[] = [
   "pai",

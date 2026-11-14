@@ -1,6 +1,7 @@
 "use client";
 
-// Gravador simples do causo: gravar, pausar, concluir, ouvir e regravar, até 3 minutos.
+// Gravador simples do causo (até 3 min) e da mensagem da família (até 5 min, prompt 12):
+// gravar, pausar, concluir, ouvir e regravar.
 // Usa o núcleo de lib/gravacao com os pedaços em memória. A resiliência (IndexedDB, envio
 // retomável) é do gravador do autor e do modo conversa (components/gravacao/gravar).
 import { useEffect, useRef, useState } from "react";
@@ -12,13 +13,16 @@ import { falarDuracao } from "@/lib/ui/tempo";
 
 export type AudioGravado = { blob: Blob; mime: string; segundos: number };
 
-const LIMITE_S = MAX_CAUSO_AUDIO_MIN * 60;
-
 export function GravadorCauso({
   aoMudar,
+  maxMin = MAX_CAUSO_AUDIO_MIN,
+  semMicrofone = "Não conseguimos usar o microfone. Libere o acesso ou escreva o causo.",
 }: {
   aoMudar: (a: AudioGravado | null) => void;
+  maxMin?: number;
+  semMicrofone?: string;
 }) {
+  const LIMITE_S = maxMin * 60;
   const [estado, setEstado] = useState<EstadoGravador>("pronto");
   const [segundos, setSegundos] = useState(0);
   const [audio, setAudio] = useState<{ url: string; segundos: number } | null>(
@@ -67,9 +71,7 @@ export function GravadorCauso({
       setEstado("gravando");
       contar(true);
     } catch {
-      setErro(
-        "Não conseguimos usar o microfone. Libere o acesso ou escreva o causo.",
-      );
+      setErro(semMicrofone);
     }
   }
 
@@ -129,9 +131,7 @@ export function GravadorCauso({
         aoTocar={tocar}
         aoConcluir={estado === "pronto" ? undefined : concluir}
       />
-      <p className="text-ui-15 text-tinta-2">
-        Até {MAX_CAUSO_AUDIO_MIN} minutos
-      </p>
+      <p className="text-ui-15 text-tinta-2">Até {maxMin} minutos</p>
       {erro ? (
         <p role="alert" className="text-ui-15 text-erro text-center">
           {erro}

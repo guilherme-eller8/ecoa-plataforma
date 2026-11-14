@@ -39,6 +39,7 @@ export type ResumoDoLivro = {
   causosNovos: number;
   enqueteAberta: boolean;
   audios: number;
+  mensagens?: { total: number; noLivro: number }; // prompt 12
 };
 
 export function TelaLivro({
@@ -134,6 +135,14 @@ export function TelaLivro({
               : `${resumo.audios} áudios recebidos`}
           </Link>
         ) : null}
+        <Link
+          href={`${base}/mensagens`}
+          className="text-ui-17 text-floresta min-h-alvo inline-flex items-center self-start font-medium underline-offset-4 hover:underline"
+        >
+          {resumo.mensagens?.total
+            ? `Mensagens da família · ${resumo.mensagens.total} · ${resumo.mensagens.noLivro} no livro`
+            : "Mensagens da família"}
+        </Link>
       </section>
 
       {prontas === 1 ? (

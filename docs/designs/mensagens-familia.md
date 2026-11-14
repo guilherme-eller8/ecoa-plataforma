@@ -259,3 +259,16 @@ Nenhum caminho para o autor ou quem tem o link ler mensagens de outros.
 - Avisos de segurança: nada novo de `anon`. As 4 funções de membro aparecem no aviso "Signed-In Users Can Execute SECURITY DEFINER Function", como todas as funções de membro do projeto (conferem membro e livro dentro delas).
 
 Próximo passo: sessão de construção (`/clear`), a partir deste design, depois do merge do prompt 11 na `main`.
+
+## 13. Entrega (14/11)
+
+Construído conforme a seção 9 (B a E). Diferenças do desenho, todas pequenas:
+
+- **Trocar o link** fica na própria aba *Mensagens* (só o responsável, com confirmação), não em *Configurações*: o link da família também é trocado onde ele aparece (Kit).
+- **"Copiar o link"** fica no rodapé da aba, junto de "Trocar o link"; a ação principal é só *Convidar pelo WhatsApp*.
+- **Convite** usa "de {apelido}" (neutro) e o pronome pelo parentesco ("não conte para ele/ela").
+- **A home** ganhou a linha *Mensagens da família* (com a contagem), não um cartão.
+
+Gate de fim: build, lint, 809 testes de unidade e banco, 225 de tela (12 novos em `e2e/mensagens.spec.ts`), formatação. Gate de design: `taste:lint` 0 FAIL; `taste:inspect` 0 FAIL nas 6 telas (o aviso restante é o vazio no desktop de 1440 px, igual às outras telas de coluna estreita). Corrigidos na crítica das capturas: caixa de texto com 10 linhas, texto da mensagem em Newsreader e "Copiar o link" fora do topo.
+
+Ficou para depois: teste das ações do `/m` com banco e Scribe falsos (as regras estão cobertas pelos 58 testes de banco e pelos de unidade da transcrição, dos bytes e do proxy).

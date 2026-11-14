@@ -4,6 +4,8 @@ export type OpcoesTranscricao = {
   chave: string;
   modelo: string;
   dicas: string[]; // nomes do glossário, como dica de vocabulário
+  diarizar?: boolean; // separar falantes (padrão: sim). Mensagem da família: uma voz só, não
+  signal?: AbortSignal; // corte do pedido (a mensagem espera no máximo 45 s)
   fetch?: typeof fetch;
   esperarMs?: number; // intervalo de consulta (AssemblyAI)
 };

@@ -19,7 +19,9 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `/convite/[token]` | Convite de co-facilitador; aceitar pelo e-mail convidado | sem login (aceitar com sessão) |
 | `/o/[token]` | História compartilhada no grupo (voz e texto) | sem login |
 | `/resumo/sair/[membro]/[token]` (+ `/um-clique`) | Descadastro do resumo semanal | sem login |
+| `/livro/[id]/mensagens` | Mensagens da família (curadoria, convite) | membro |
 | `/f/[token]` | Link da família (causos, enquete) | sem login |
+| `/m/[token]` | Deixar mensagem para o livro (só escreve; prompt 12) | sem login |
 | `/a/[token]` (+ `/gravar`) | Área do autor | sem login |
 | `/ouvir`, `/ouvir/[codigo]` | Player do QR (host `ouvir.` reescreve `/` e `/{código}`) | público |
 | `/admin` | Admin | `app_metadata.role = admin` |
@@ -34,7 +36,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Ação do servidor:** arquivo `acoes.ts` ao lado da página, `"use server"`, ligada com `.bind(null, id, …)` e passada à tela em `acoes={…}`. Acesso: `livroDaAcao(id)`; escrita pelo banco com `clienteSessao()` (RLS) e `rpc` de funções `security definer`. Resposta: `Resposta<T>` de `lib/livro/tipos.ts`; erro do banco vira frase por `fraseDoErro` (`lib/erros-banco.ts`).
 - **Tela:** `components/telas/tela-*.tsx` recebe dados e ações por props, sem buscar nada; os exemplos ficam em `lib/exemplos/prompt*.ts` e entram em `lib/styleguide.ts` + `app/(dev)/styleguide/[tela]/vitrine.tsx`. UI base em `components/ui/` (`Botao`, `Campo`, `FolhaInferior`, `DicaPrimeiraVez`, `EstadoVazio`, ícones).
 - **Clientes Supabase:** `clienteSessao` (membro, RLS), `clienteAnonimo` (portas sem login: `familia_*`, `autor_*`), `clienteAdmin` (chave secreta: só servidor, só caminhos lidos do banco). Tipos gerados à mão em `lib/supabase/tipos.ts` (acrescente só o que mudou).
-- **Storage:** buckets privados `audios`, `acervo`, `causos`, `qr`; leitura por `assinarLeitura` (`lib/storage/assinar.ts`); upload por token assinado no servidor.
+- **Storage:** buckets privados `audios`, `acervo`, `causos`, `qr`, `mensagens`; leitura por `assinarLeitura` (`lib/storage/assinar.ts`); upload por token assinado no servidor e conferência de tamanho e primeiros bytes (`lib/storage/upload.ts`).
 - **Eventos:** `registrarEvento` (`lib/eventos.ts`), ação nova = linha em `lib/eventos-acoes.ts`; detalhes só com ids e números.
 - **Números de negócio:** só em `lib/config.ts`; os conferidos no banco têm função `privado.*()` espelhada e entram em `supabase/tests/config-banco.test.ts`.
 - **Erros do SQL:** `raise exception '<codigo>'` precisa de frase em `lib/erros-banco.ts` (o teste confere).
@@ -54,6 +56,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `qr/` | Código, host, chave de rede, player, recorte da voz |
 | `gravacao/`, `audios/` | Gravador no aparelho, TUS, formatos |
 | `familia/`, `autor/`, `enquete/`, `perguntas/` | Portas sem login e listas de perguntas |
+| `mensagens/` | Link `/m`: transcrição na hora (Scribe, sem Claude), limpeza, tipo pelos bytes, leitura dos membros |
 | `convite/`, `compartilhar/`, `resumo/` | Co-facilitadores, `/o/` e resumo semanal (prompt 11) |
 | `email/`, `fotos/`, `pwa/`, `ui/`, `storage/`, `supabase/` | Apoio |
 

@@ -65,6 +65,14 @@ export const ACOES = [
   "compartilhada_tocada", // família; só o banco grava, 1 por link, rede e hora { story_id }
   "lembrou_pergunta", // { prompt_id }
   "resumo_enviado", // sistema { membros }
+  // Prompt 12: mensagens da família (só ids e booleanos; nunca texto).
+  "gerou_link_mensagem",
+  "trocou_link_mensagem",
+  "deixou_mensagem", // família { mensagem, audio, foto, alterou }
+  "mensagem_no_livro", // { mensagem, incluir }
+  "mensagem_editada", // { mensagem }
+  "mensagem_arquivada", // { mensagem, arquivar }
+  "mensagem_apagada", // { mensagem }
 ] as const;
 
 export const PAPEIS = [

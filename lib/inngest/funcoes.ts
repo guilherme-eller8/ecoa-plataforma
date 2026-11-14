@@ -488,7 +488,31 @@ export const varreduraFn = inngest.createFunction(
       return data ?? 0;
     });
 
-    return { reenviadas, retomadas, paradas, propostas, contadores };
+    // Prompt 12: rascunhos de mensagem não enviados em 48 h saem com os arquivos (LGPD). Os
+    // arquivos primeiro; a linha só sai depois (se o Storage falhar, a próxima varredura tenta).
+    const rascunhos = await step.run("mensagens-rascunhos", async () => {
+      const db = clienteAdmin();
+      const { data } = await db.rpc("servico_mensagem_rascunhos_vencidos", {
+        p_limite: 100,
+      });
+      const vencidos = data ?? [];
+      if (!vencidos.length) return 0;
+      const caminhos = vencidos.flatMap((r) =>
+        [r.audio_caminho, r.foto_caminho].filter((c): c is string =>
+          Boolean(c),
+        ),
+      );
+      if (caminhos.length) {
+        const { error } = await db.storage.from("mensagens").remove(caminhos);
+        if (error) return 0;
+      }
+      const { data: n } = await db.rpc("servico_mensagem_apagar_rascunhos", {
+        p_ids: vencidos.map((r) => r.id),
+      });
+      return n ?? 0;
+    });
+
+    return { reenviadas, retomadas, paradas, propostas, contadores, rascunhos };
   },
 );
 
