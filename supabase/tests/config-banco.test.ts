@@ -58,6 +58,7 @@ describe("lib/config.ts x banco", () => {
     ["qr_audio_espera_s", config.QR_AUDIO_ESPERA_MIN * 60],
     ["max_cofacilitadores", config.MAX_COFACILITADORES],
     ["max_convites_dia", config.MAX_CONVITES_DIA],
+    ["max_convites_por_email_dia", config.MAX_CONVITES_POR_EMAIL_DIA],
     ["convite_validade_dias", config.CONVITE_VALIDADE_DIAS],
     ["palavras_por_pagina", config.PALAVRAS_POR_PAGINA_ESTIMADA],
   ])("privado.%s() = %i", async (funcao, valor) => {

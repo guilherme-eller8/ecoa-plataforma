@@ -170,7 +170,7 @@ describe("convite preso ao e-mail", () => {
     await membro(ana, `select public.cancelar_convite($1)`, [c.id]);
   });
 
-  it("co-facilitadora não consente a IA nem desliga QR (só do responsável)", async () => {
+  it("co-facilitadora não consente a IA (só do responsável)", async () => {
     expect(
       (
         await membro(
@@ -341,11 +341,204 @@ describe("lembrar e resumo", () => {
   });
 });
 
+describe("revisão de segurança (v2)", () => {
+  it("só o servidor executa as funções servico_*", async () => {
+    const r = await sql<{ nome: string; auth: boolean; anon: boolean }>(
+      `select p.proname as nome,
+              has_function_privilege('authenticated', p.oid, 'execute') as auth,
+              has_function_privilege('anon', p.oid, 'execute') as anon
+       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+       where n.nspname = 'public' and p.proname like 'servico_%'`,
+    );
+    expect(r.length).toBeGreaterThan(10);
+    expect(r.filter((f) => f.auth || f.anon)).toEqual([]);
+  });
+
+  it("ninguém logado lê token_hash", async () => {
+    expect(
+      (await membro(ana, `select token_hash from public.book_invites`)).erro,
+    ).toMatch(/permission denied/);
+    expect(
+      (await membro(ana, `select token_hash from public.story_shares`)).erro,
+    ).toMatch(/permission denied/);
+  });
+
+  it("teto por e-mail: o mesmo e-mail recebe no máximo 3 convites em 24 h", async () => {
+    const livro = await ativarPlano(
+      db,
+      await usuario("hugo@exemplo.com"),
+      "Ari",
+    );
+    const [{ id: hugo }] = await sql<{ id: string }>(
+      `select id from auth.users where email = 'hugo@exemplo.com'`,
+    );
+    for (let i = 0; i < 3; i++)
+      expect(
+        (await convidar(livro, hugo, "ivo@exemplo.com")).erro,
+      ).toBeUndefined();
+    expect((await convidar(livro, hugo, "ivo@exemplo.com")).erro).toBe(
+      "limite_convites",
+    );
+    // A pré-checagem dá o mesmo erro, sem criar nada (o servidor chama antes de criar a conta).
+    const pre = await servico(
+      `select public.servico_pode_convidar($1, $2, 'ivo@exemplo.com')`,
+      [livro, hugo],
+    );
+    expect(pre.erro).toBe("limite_convites");
+  });
+
+  it("convite cancelado, vencido ou de quem deixou de ser responsável não vale", async () => {
+    const jo = await usuario("jo@exemplo.com");
+    const c = await convidar(livroB, beto, "jo@exemplo.com");
+    await sql(
+      `update public.book_invites set criado_em = now() - interval '8 days', expira_em = now() - interval '1 day' where id = $1`,
+      [c.id],
+    );
+    expect(
+      (await membro(jo, `select public.aceitar_convite($1)`, [c.id])).erro,
+    ).toBe("convite_invalido");
+    const lido = await servico(
+      `select estado from public.servico_ler_convite($1)`,
+      [hash(c.id)],
+    );
+    expect(lido.linhas?.[0]?.estado).toBe("vencido");
+
+    const c2 = await convidar(livroB, beto, "jo@exemplo.com");
+    const novo = await usuario("novo-resp@exemplo.com");
+    await sql(`select public.admin_trocar_responsavel($1, $2)`, [livroB, novo]);
+    expect(
+      (await membro(jo, `select public.aceitar_convite($1)`, [c2.id])).erro,
+    ).toBe("convite_invalido");
+    await sql(`select public.admin_trocar_responsavel($1, $2)`, [livroB, beto]);
+  });
+
+  it("com o plano vencido, o convite não é aceito", async () => {
+    const lia = await usuario("lia@exemplo.com");
+    const c = await convidar(livroB, beto, "lia@exemplo.com");
+    expect(c.erro).toBeUndefined();
+    await sql(
+      `update public.books set plano_estado = 'somente_leitura' where id = $1`,
+      [livroB],
+    );
+    expect(
+      (await membro(lia, `select public.aceitar_convite($1)`, [c.id])).erro,
+    ).toBe("livro_fechado");
+    await sql(`update public.books set plano_estado = 'ativo' where id = $1`, [
+      livroB,
+    ]);
+  });
+
+  it("remover tira o acesso, a trava e os links /o/ que a pessoa criou, e grava o evento", async () => {
+    const mel = await usuario("mel@exemplo.com");
+    const c = await convidar(livroB, beto, "mel@exemplo.com");
+    await membro(mel, `select public.aceitar_convite($1)`, [c.id]);
+    const h = await historiaPronta(livroB);
+    const id = crypto.randomUUID();
+    await servico(
+      `select * from public.servico_compartilhar_historia($1, $2, $3, $4, 1::smallint)`,
+      [h, mel, id, hash(id)],
+    );
+    await membro(mel, `select * from public.editar_historia($1, $2)`, [
+      h,
+      crypto.randomUUID(),
+    ]);
+    const r = await membro(beto, `select public.remover_membro($1, $2) as ok`, [
+      livroB,
+      mel,
+    ]);
+    expect(r.linhas?.[0]?.ok).toBe(true);
+    expect(
+      (await membro(mel, `select * from public.membros_do_livro($1)`, [livroB]))
+        .linhas,
+    ).toHaveLength(0);
+    expect(
+      await sql(`select 1 from public.edit_locks where user_id = $1`, [mel]),
+    ).toHaveLength(0);
+    const lida = await servico(
+      `select public.servico_ler_compartilhada($1) as r`,
+      [hash(id)],
+    );
+    expect(lida.linhas?.[0]?.r).toBeNull();
+    const ev = await sql<{ acao: string }>(
+      `select acao from public.events where book_id = $1 and acao in ('convite_aceito', 'removeu_membro') order by id`,
+      [livroB],
+    );
+    expect(ev.map((e) => e.acao)).toContain("removeu_membro");
+    expect(ev.map((e) => e.acao)).toContain("convite_aceito");
+  });
+
+  it("co-facilitadora gera o primeiro link, mas não troca o link do autor nem o da família", async () => {
+    const troca = (fn: string, livro: string, quem: string) => {
+      const id = crypto.randomUUID();
+      return servico(`select public.${fn}($1, $2, $3, $4, 1::smallint)`, [
+        livro,
+        quem,
+        id,
+        hash(id),
+      ]);
+    };
+    expect(
+      (await troca("servico_trocar_link_autor", livroA, bia)).erro,
+    ).toBeUndefined();
+    expect((await troca("servico_trocar_link_autor", livroA, bia)).erro).toBe(
+      "sem_permissao",
+    );
+    expect(
+      (await troca("servico_trocar_link_autor", livroA, ana)).erro,
+    ).toBeUndefined();
+    expect(
+      (await troca("servico_trocar_link_familia", livroA, bia)).erro,
+    ).toBeUndefined();
+    expect((await troca("servico_trocar_link_familia", livroA, bia)).erro).toBe(
+      "sem_permissao",
+    );
+  });
+
+  it("co-facilitadora não desliga QR", async () => {
+    const h = await historiaPronta(livroA);
+    await sql(
+      `insert into public.qr_codes (codigo, book_id, story_id, criado_por) values ('ABCDEFGH', $1, $2, $3)`,
+      [livroA, h, ana],
+    );
+    expect(
+      (await membro(bia, `select public.desativar_qr('ABCDEFGH', true)`)).erro,
+    ).toBe("sem_permissao");
+    expect(
+      (await membro(ana, `select public.desativar_qr('ABCDEFGH', true)`)).erro,
+    ).toBeUndefined();
+  });
+
+  it("/o/ conta 1 Ouvir por link, rede e hora", async () => {
+    const h = await historiaPronta(livroA);
+    const id = crypto.randomUUID();
+    await servico(
+      `select * from public.servico_compartilhar_historia($1, $2, $3, $4, 1::smallint)`,
+      [h, ana, id, hash(id)],
+    );
+    const k = "a".repeat(64);
+    const tocou = async () =>
+      (
+        await servico(
+          `select public.servico_compartilhada_tocou($1, $2) as ok`,
+          [hash(id), k],
+        )
+      ).linhas?.[0]?.ok;
+    expect(await tocou()).toBe(true);
+    expect(await tocou()).toBe(false);
+  });
+});
+
 describe("reversão", () => {
-  it("desce e sobe de novo", async () => {
-    const copia = await criarBanco();
-    await copia.exec(down);
-    await copia.exec(up);
-    await copia.close();
+  it("desce com dados (tira os co-facilitadores) e sobe de novo", async () => {
+    await db.exec(down);
+    const r = await sql(
+      `select 1 from public.book_members where papel = 'cofacilitador'`,
+    );
+    expect(r).toHaveLength(0);
+    const t = await sql(
+      `select tablename from pg_tables where tablename in ('book_invites', 'story_shares')`,
+    );
+    expect(t).toHaveLength(0);
+    await db.exec(up);
   });
 });

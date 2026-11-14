@@ -42,7 +42,8 @@ export const SUBIDAS_SIMULTANEAS = 2; // arquivos subindo ao mesmo tempo
 
 // ── Pessoas ──────────────────────────────────────────────────────────────
 export const MAX_COFACILITADORES = 3; // além do responsável; convites pendentes contam (espelhado)
-export const MAX_CONVITES_DIA = 10; // por livro, em 24 h (espelhado em privado.max_convites_dia)
+export const MAX_CONVITES_DIA = 10; // por livro e por responsável, em 24 h (espelhado)
+export const MAX_CONVITES_POR_EMAIL_DIA = 3; // o mesmo e-mail, somando todos os livros (espelhado)
 export const CONVITE_VALIDADE_DIAS = 7; // espelhado em privado.convite_validade_dias
 
 // ── Domínios ─────────────────────────────────────────────────────────────
