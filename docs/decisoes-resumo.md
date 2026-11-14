@@ -1,0 +1,115 @@
+# Decisões — resumo de uma linha
+
+Índice de `docs/decisoes.md` para ler no começo de toda sessão. Cada linha é o essencial; o motivo, a alternativa descartada e os números ficam lá. **Antes de mexer no assunto de uma decisão, leia a linha dela em `docs/decisoes.md`** (`grep -n "^| P27 " docs/decisoes.md`).
+
+Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha uma linha aqui. Substituída: marque aqui também (~~riscada~~ → nova).
+
+## Produto
+
+- **P1** Autosserviço: a família (ou o autor) faz o livro do áudio ao PDF; a Ecoa só entra na impressão.
+- **P2** Gravar conversando (modo conversa) é o centro; gravar sozinho é igualmente simples.
+- **P3** R$ 467 por plano anual: gravações ilimitadas e 1 livro de 80 páginas; página e cópia extras configuráveis.
+- **P4** Sem cobrança recorrente; plano vencido = somente leitura; QR e leitura continuam.
+- **P5** Pagamento: Pix manual na onda 1; Mercado Pago (Pix e cartão em 12x) na onda 2.
+- **P6** Google como entrada principal, link por e-mail como alternativa; autor entra por link pessoal, sem login.
+- **P7** Papéis: 1 responsável (publica, imprime, paga, convida), até 3 co-facilitadores (onda 2), autor em modo autor.
+- **P8** Modo autor: perguntas para ele, histórias livres, ouvir e corrigir os textos, ler o livro sem as mensagens.
+- **P9** Zero API do WhatsApp: a plataforma gera mensagem e link; o responsável envia.
+- **P10** Grupo de WhatsApp da família feito à mão, sem o autor, com link permanente da família.
+- **P11** Mural, reações e comentários ficam fora do produto.
+- **P12** Causo da família chega exatamente como enviado, sem IA.
+- **P13** Sem passo "Me conte sobre ele"; o glossário nasce das histórias.
+- ~~**P14**~~ → P30.
+- ~~**P15**~~ → P35.
+- **P16** Pergunta e causo: dois tipos, mesmo fluxo.
+- **P17** Upload em lote vira histórias por assunto, com confirmação do responsável.
+- **P18** Processamento ao vivo na tela; e-mail só se ninguém estiver olhando (detalhe em P42).
+- **P19** Controle de tamanho do texto por história, de Resumido a Detalhado.
+- **P20** Só 1ª pessoa no v1.
+- **P21** Mensagens da família: capítulo surpresa; o autor nunca vê antes do livro impresso.
+- **P22** Impressão intermediada pela Ecoa, sem integração com gráfica.
+- **P23** Design minimalista: uma ação principal por tela; régua do avô de 80 anos e do filho com pressa.
+- **P24** Onda 1 até o Natal de 2026 (coleta, IA, editor, autor, amostra); onda 2 até mar/2027.
+- **P25** Onboarding embutido: "Seu livro em 5 passos", dicas de 1 linha, marco da 1ª história; sem tour.
+- **P26** Pergunta opcional em toda porta de coleta; botão principal da home é "Nova história".
+- **P27** A IA decide o formato pelo conteúdo: conversa longa passa pela divisão em histórias.
+- **P28** Mínimo para gravar na ceia: prompts 0 a 7.
+- **P29** História sem pergunta que responde a uma pendente sugere "Marcar como respondida".
+- **P30** Primeiras perguntas por fase da vida: 1 marcada por fase, 8 no total, por parentesco.
+- **P31** Celular do autor opcional; com ele, *Enviar ao autor* abre o WhatsApp direto.
+- **P32** A família sugere pergunta ou causo pelo mesmo link; tudo cai em *Sugestões*.
+- **P33** A lista de perguntas é a base do livro (aba *Para perguntar*), não fila de envio.
+- **P34** Prompt 5A: o responsável sobe áudios já gravados, guardados sem IA.
+- **P35** Enquete por fase da vida, até 2 votos por fase, revisada antes de abrir e de votar.
+- **P36** `stories` e `story_recordings` nasceram no prompt 6, não no 5.
+- **P37** O autor vê só as perguntas enviadas a ele (`enviada`).
+- **P38** Gravação interrompida reaparece com 1 botão *Enviar*; não sobe sozinha.
+- **P39** Modo conversa sem teto: partes de 30 min ligadas por `lote_id`; autor com teto de 30 min.
+- ~~**P40**~~ → P43 e P44 (só avulsas de até 30 min viravam história no prompt 6).
+- **P41** O responsável confirma uma vez o processamento com IA fora do Brasil; consentimento do autor v2.
+- **P42** E-mail de história pronta só se ninguém viu em 2 min, sem título nem trecho.
+- ~~**P43**~~ → P44 em parte (conversa curta de 1 parte vira história sem divisão; vale para gravações antigas).
+- **P44** Grupo de gravações vira história-contêiner; 2+ gravações sempre passam pela divisão e confirmação.
+- **P45** Lote completo por `lote_total`/`lote_ordem`; espera até 6 h; ajustes da divisão ficam no aparelho até *Escrever*.
+- **P46** O título confirmado na divisão vale como título da história; pergunta respondida é sugerida.
+- **P47** E-mail sem título se a divisão esperar 10 min sem confirmação.
+- **P48** *Marcar como pronta* grava `revisada_em`; o cartão "5 passos" vira um prompt curto depois.
+- **P49** No editor, tocar numa frase põe o cursor e mostra *Ouvir* colado nela.
+- **P50** Toda ferramenta da IA vira proposta mostrada como diferença; *Aceitar* = 1 versão.
+- **P51** Trecho revisado pela IA a pedido e aceito fica travado como se editado à mão.
+- **P52** Editar continua livre enquanto a IA trabalha; mudança sobre parágrafo mexido não pode ser aceita.
+- **P53** Áudio acrescentado: 1 de até 30 min por vez; história com até 60 min e 10 áudios.
+- **P54** Até 40 pedidos de IA por livro em 24 h; tamanho pedido ao soltar o controle.
+- **P55** Telas do autor do prompt 10 esperam o sinal (autor gravar sozinho em 7 dias); sem sinal até 17/11, saem da onda 1.
+- **P56** Página de amostra só de história pronta; texto até onde couber em parágrafos inteiros; PDF só com a voz pronta.
+- **P57** Player do QR mínimo (título, ano, *Ouvir*); métrica = *Ouvir* tocado, 1 por código, rede e hora.
+- **P58** Só o responsável desliga e religa um QR; voltar para rascunho não desliga.
+
+## Técnicas
+
+- **T1** Repositório e projeto Supabase próprios, separados da landing.
+- **T2** Stack da landing: Next.js, TypeScript strict, Tailwind, zod, Supabase, Resend, Vercel.
+- **T3** Supabase em São Paulo.
+- **T4** RLS em toda tabela, com teste automático de isolamento.
+- **T5** O token do autor nunca lê `family_messages`, `polls`, `poll_votes` nem `causos` (RLS, não só tela).
+- **T6** Link sem login: token de 128 bits, só o hash no banco, um recurso por link, revogável.
+- **T7** Laboratório de IA (sem tela) antes de qualquer interface.
+- **T8** Cada parágrafo guarda os segmentos de áudio que o sustentam.
+- **T9** Dois modelos: rápido para estruturar, capaz para editar e verificar.
+- **T10** Verificação de fidelidade em chamada separada, sem o contexto da edição.
+- **T11** Mudar o tamanho sempre a partir da base estruturada, nunca da versão anterior.
+- **T12** Parágrafo editado à mão fica travado; a IA só propõe.
+- ~~**T13**~~ → T31.
+- ~~**T14**~~ → T32.
+- **T15** Gravação guardada no aparelho (IndexedDB) e enviada com retomada (TUS).
+- **T16** PWA com atalho de compartilhamento no Android, sem loja.
+- **T17** Fila de jobs gerenciada (escolha em T34).
+- **T18** Supabase Realtime para as etapas ao vivo (forma em T37).
+- **T19** Typst como motor de PDF (confirmado por T43).
+- **T20** A mesma renderização gera a estimativa de páginas e o PDF final.
+- **T21** QR aponta para `ouvir.ecoa-memorias.com.br/{código}` (com hífen, `docs/decisoes/dominio.md`); códigos nunca apagados.
+- **T22** Cada publicação do livro é uma versão congelada.
+- **T23** Registro de eventos (quem, papel, ação, livro, quando) desde o 1º dia; só ids nos detalhes.
+- **T24** EGM nos prompts complexos; SQL de subida e reversão antes de mexer no banco.
+- **T25** Link mostrado de novo = HMAC de `LINKS_SEGREDO_V{n}`; o banco guarda só o hash.
+- **T26** Enquete e sugestões abertas atualizam por consulta a cada 4 s, sem Realtime.
+- **T27** Áudio até 50 MB, upload TUS por token assinado no servidor, sem política em `storage.objects`.
+- **T28** EGM só com schema, RLS, tokens ou links sem login; até 2 revisores em Sonnet, uma rodada.
+- **T29** Funções do autor com dono `porta_autor`, livro fixado na transação; tetos do link no SQL.
+- **T30** Pedaços de 1 s no IndexedDB; envio TUS só depois de *Enviar*.
+- **T31** Sem padrão-ouro: a versão da IA fica intacta e é comparada com a corrigida pela família.
+- **T32** Transcrição com ElevenLabs Scribe; AssemblyAI pronto atrás da mesma interface.
+- ~~**T33**~~ → T34.
+- **T34** Fila de jobs: Inngest; o código roda nas funções da Vercel, as chaves nunca saem dela.
+- **T35** Transcrição síncrona num passo do Inngest (webhook volta se passar de 200 s).
+- **T36** Nenhum texto do áudio passa pelo Inngest; versões e transcrições só aceitam insert.
+- **T37** Texto ao vivo por Broadcast em canal privado `livro:{id}`; só o servidor publica.
+- **T38** Até 240 min de áudio processado por livro em 24 h, conferido no banco.
+- **T39** Vercel Hobby na onda 1; Pro antes do 1º cliente pagante.
+- **T40** Arquivo de até 2 h processado inteiro, separação lógica; história de 30 s a 60 min de fala.
+- **T41** Editor: texto em `stories.texto`; versão por sessão de edição; trava em `edit_locks` por aba.
+- **T42** Propostas em `story_proposals`; `aplicar_proposta` confere no banco que nada travado muda.
+- **T43** Typst confirmado pelo teste de 1 dia; texto da família entra como JSON, nunca como código.
+- **T44** Código do QR: 8 símbolos sem 0/1/I/L/O, sorteado no banco, guardado como está; limites de erro e acerto separados; segredo `QR_REDE_SEGREDO`.
+- **T45** Áudio do QR = recorte .m4a só com os trechos da história, sem metadados, bucket `qr`, ffmpeg endurecido.
+- **T46** `family_messages` mínima e fechada (política restritiva para `anon` e `porta_autor`); colunas no prompt 12.

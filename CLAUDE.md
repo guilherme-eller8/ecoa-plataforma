@@ -2,7 +2,14 @@
 
 @AGENTS.md
 
-Antes de qualquer tarefa, leia as seções de `docs/prd.md` citadas no prompt. O PRD é a fonte da verdade; este arquivo só guarda as regras que valem sempre. Leia `docs/decisoes.md` antes de propor qualquer mudança de produto ou de arquitetura. Se uma tarefa contrariar uma decisão de lá, pare e pergunte. Toda decisão nova aprovada entra no fim da tabela correspondente, com data e motivo; a antiga ganha "Substituída por #N" e nunca é apagada.
+Antes de qualquer tarefa, leia `docs/decisoes-resumo.md` (uma linha por decisão) e `docs/mapa.md` (onde está cada coisa e os padrões do código). O texto de cada prompt está em `docs/prompts.md`: leia só o do prompt atual. O PRD (`docs/prd.md`) é a fonte da verdade: leia só as seções citadas no prompt, achando o título com `grep -n` e lendo aquele trecho. Antes de propor mudança de produto ou de arquitetura, leia em `docs/decisoes.md` as linhas das decisões que o assunto toca (`grep -n "^| P27 "`). Se uma tarefa contrariar uma decisão, pare e pergunte. Toda decisão nova aprovada entra no fim da tabela correspondente de `docs/decisoes.md`, com data e motivo, **e** ganha uma linha em `docs/decisoes-resumo.md`; a antiga ganha "Substituída por #N" nos dois e nunca é apagada.
+
+## Economia de contexto
+
+- **Prompts com [EGM] em duas sessões.** A primeira vai até o design doc aprovado e termina. A segunda começa com `/clear`, lê o design aprovado e constrói. O design doc é a passagem; nada da exploração precisa vir junto.
+- **Design docs antigos (`docs/designs/`) não se leem inteiros.** Só o do prompt atual, ou a seção que ele cita. O padrão do código está em `docs/mapa.md`.
+- **Saídas de ferramenta curtas.** Nunca trazer HTML inteiro para a conversa (`web_fetch_vercel_url` só quando precisar dos cabeçalhos; para conferir uma página, `curl -s … | grep`). Tipos do Supabase: gerar, salvar em arquivo e acrescentar em `lib/supabase/tipos.ts` só o que mudou. Logs de build e de teste sempre com `tail` ou `grep`.
+- **Revisores do EGM com escopo fechado:** passar o design doc, o SQL e no máximo 5 arquivos do código; pedir no máximo 12 achados.
 
 ## Produto
 
@@ -52,7 +59,7 @@ EGM artifact directory: docs/designs
 4. Depois do push, quando o deploy de prévia ficar pronto: consulte os erros de runtime da Vercel e confira cada rota nova no deploy de verdade. O EGM revisa o design, não pega bug de código nem de integração (T28).
 5. Ao final, um resumo em 5 linhas, sem jargão: o que foi construído e como testar no celular.
 
-Um prompt por sessão: rode `/clear` entre prompts. O contexto vem deste arquivo, de `docs/prd.md` e de `docs/decisoes.md`, não da conversa anterior.
+Um prompt por sessão: rode `/clear` entre prompts (e entre o design e a construção, nos prompts com [EGM]). O contexto vem deste arquivo, de `docs/mapa.md`, de `docs/decisoes-resumo.md` e das seções do PRD citadas, não da conversa anterior.
 
 ## Gate de design (prompts com tela)
 

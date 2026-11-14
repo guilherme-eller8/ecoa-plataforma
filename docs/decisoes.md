@@ -2,7 +2,7 @@
 
 Fonte da verdade das decisões de produto e de arquitetura da plataforma. O detalhe de cada uma está em `docs/prd.md`.
 
-**Regra para o Claude Code:** leia este arquivo antes de propor qualquer mudança de produto ou de arquitetura. Se uma tarefa contrariar uma decisão daqui, pare e pergunte. Toda decisão nova aprovada pelo fundador entra no fim da tabela correspondente, com data e motivo. Decisões antigas não são apagadas: quando mudam, ganham a marca "Substituída por #N".
+**Regra para o Claude Code:** o resumo de uma linha está em `docs/decisoes-resumo.md` (leia sempre); aqui fica o detalhe. Leia as linhas das decisões que o assunto toca antes de propor qualquer mudança de produto ou de arquitetura. Se uma tarefa contrariar uma decisão daqui, pare e pergunte. Toda decisão nova aprovada pelo fundador entra no fim da tabela correspondente, com data e motivo. Decisões antigas não são apagadas: quando mudam, ganham a marca "Substituída por #N".
 
 ## Decisões de produto
 
