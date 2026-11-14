@@ -186,3 +186,27 @@ export type AcoesKit = AcoesLinkDoAutor & {
   pegarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
   trocarLinkDaFamilia: () => Promise<Resposta<{ url: string }>>;
 };
+
+// ── Quem ajuda (prompt 11) ───────────────────────────────────────────────
+export type MembroDaTela = {
+  userId: string;
+  papel: "responsavel" | "cofacilitador";
+  nome: string | null;
+  email: string | null;
+  ehVoce: boolean;
+};
+
+export type ConviteDaTela = {
+  id: string;
+  email: string;
+  expiraEm: string;
+  mensagem: string; // pronta para o WhatsApp, com o link /convite/{token}
+};
+
+export type AcoesPessoas = {
+  convidar: (email: string) => Promise<Resposta<{ convite: ConviteDaTela | null }>>;
+  cancelarConvite: (convite: string) => Promise<Resposta>;
+  remover: (usuario: string) => Promise<Resposta>;
+  sair: () => Promise<Resposta>;
+  trocarLinks: () => Promise<Resposta>;
+};

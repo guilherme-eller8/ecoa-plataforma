@@ -38,7 +38,7 @@ import {
 } from "@/lib/livro/acesso";
 import {
   marcar,
-  PASSOS,
+  ehPasso,
   type EstadoPasso,
   type Passo,
 } from "@/lib/livro/configuracao";
@@ -186,13 +186,11 @@ export async function marcarPasso(
   passo: Passo,
   estado: EstadoPasso,
 ): Promise<Resposta> {
-  if (
-    !PASSOS.includes(passo) ||
-    !["feito", "pulado", "depois"].includes(estado)
-  )
+  if (!ehPasso(passo) || !["feito", "pulado", "depois"].includes(estado))
     return { ok: false, mensagem: "Passo inválido." };
   const c = await paraEscrever(livroId);
   if (ehErro(c)) return c;
+  if (passo === "ajuda" && c.livro.papel !== "responsavel") return SEM_ACESSO;
   const { data, error } = await gravarConfiguracao(c, passo, estado);
   if (error) return falhou(error);
   if (!data?.length) return FECHADO;

@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
+import { Copiar } from "@/components/ui/copiar";
 import { IconeEnviar } from "@/components/ui/icones";
 import { useLinkDoAutor } from "@/components/livro/link-do-autor";
 import type { AcoesKit, LivroDaTela } from "@/lib/livro/tipos";
@@ -14,26 +15,6 @@ import {
   mensagemAoAutor,
   partesComLinks,
 } from "@/lib/whatsapp";
-
-function Copiar({ texto }: { texto: string }) {
-  const [copiado, setCopiado] = useState(false);
-  return (
-    <Botao
-      variante="texto"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(texto);
-          setCopiado(true);
-          window.setTimeout(() => setCopiado(false), 2000);
-        } catch {
-          setCopiado(false);
-        }
-      }}
-    >
-      {copiado ? "Copiado" : "Copiar"}
-    </Botao>
-  );
-}
 
 function Cartao({
   titulo,
@@ -178,7 +159,7 @@ export function TelaKit({
                   Sem o celular, o WhatsApp pede o contato. Pôr o celular
                 </Link>
               )}
-              {!livro.podeEscrever ? null : confirmarTrocaAutor ? (
+              {!livro.podeEscrever || !livro.ehResponsavel ? null : confirmarTrocaAutor ? (
                 <div className="flex flex-col gap-3">
                   <p className="text-ui-15 text-tinta">
                     O link antigo para de funcionar. Você vai precisar mandar o
@@ -249,7 +230,8 @@ export function TelaKit({
         </p>
       ) : null}
 
-      {link && livro.podeEscrever ? (
+      {/* Trocar um link que já existe: só o responsável (P60). */}
+      {link && livro.podeEscrever && livro.ehResponsavel ? (
         confirmarTroca ? (
           <div className="flex flex-col gap-3">
             <p className="text-ui-15 text-tinta">

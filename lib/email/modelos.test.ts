@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emailAcesso } from "./modelos";
+import { emailAcesso, emailConvite, emailResumo } from "./modelos";
 
 const url = "https://app.ecoa-memorias.com.br/entrar";
 
@@ -61,5 +61,41 @@ describe("emailDivisaoPronta", () => {
     );
     expect(e.html).toContain("/historias/2/dividir");
     expect(e.texto).toContain("Conferir as histórias");
+  });
+});
+
+describe("e-mails do prompt 11", () => {
+  it("convite: assunto fixo, nomes escapados, sem título de história", () => {
+    const e = emailConvite({
+      quem: "Ana",
+      apelido: "Jair",
+      urlConvite: "https://x/convite/v1_abc",
+    });
+    expect(e.assunto).toBe("Convite para ajudar num livro de memórias");
+    expect(e.texto).toContain("Ana chamou você para ajudar a fazer o livro de memórias de Jair");
+    expect(e.html).toContain('href="https://x/convite/v1_abc"');
+    const semNome = emailConvite({ quem: "", apelido: "", urlConvite: "u" });
+    expect(semNome.assunto).toBe("Convite para ajudar num livro de memórias");
+    expect(semNome.texto).toContain("Uma pessoa da sua família");
+  });
+
+  it("resumo: só números e descadastro de 1 clique", () => {
+    const e = emailResumo({
+      apelido: "Jair",
+      historiasNovas: 2,
+      perguntasEsperando: 1,
+      paginasEstimadas: 34,
+      urlLivro: "https://x/livro/1",
+      urlSair: "https://x/resumo/sair/m/t",
+    });
+    expect(e.assunto).toBe("Esta semana no livro de Jair");
+    expect(e.texto).toContain(
+      "2 histórias novas · 1 pergunta esperando · ~34 páginas",
+    );
+    expect(e.cabecalhos).toEqual({
+      "List-Unsubscribe": "<https://x/resumo/sair/m/t>",
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    });
+    expect(e.html).toContain('href="https://x/resumo/sair/m/t"');
   });
 });

@@ -161,6 +161,7 @@ export const ACOES_CONFIGURACOES_FALSAS = {
   confirmarIA: ok,
   ajustar: ok,
   acrescentar: ok,
+  definirResumo: ok,
 };
 
 export const FALHAS_FALSAS: Falha[] = [

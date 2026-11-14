@@ -54,6 +54,17 @@ export const ACOES = [
   "qr_religado",
   "amostra_gerada", // baixou o PDF de 1 página
   "qr_tocou", // família; só o banco grava (servico_qr_tocou), 1 por código, rede e hora
+  // Prompt 11: co-facilitadores, compartilhar, lembrar e resumo.
+  "convidou", // { convite_id }
+  "convite_cancelado", // { convite_id }
+  "convite_aceito", // só o banco grava (aceitar_convite) { convite_id }
+  "removeu_membro", // só o banco grava { user_id }
+  "saiu_do_livro", // só o banco grava { user_id }
+  "compartilhou_historia", // { story_id }
+  "compartilhada_desligada", // { story_id }
+  "compartilhada_tocada", // família; só o banco grava, 1 por link, rede e hora { story_id }
+  "lembrou_pergunta", // { prompt_id }
+  "resumo_enviado", // sistema { membros }
 ] as const;
 
 export const PAPEIS = [

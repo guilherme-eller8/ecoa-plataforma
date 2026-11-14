@@ -3,6 +3,9 @@ import {
   conviteDoGrupo,
   linkWhatsApp,
   mensagemAoAutor,
+  mensagemCompartilhar,
+  mensagemConvite,
+  mensagemLembrete,
   mensagemPergunta,
   partesComLinks,
 } from "./whatsapp";
@@ -60,5 +63,44 @@ describe("mensagemPrimeiraHistoria", () => {
     });
     expect(m).toContain("Vô Jair");
     expect(m).toContain("https://x/f/abc");
+  });
+});
+
+describe("mensagens do prompt 11", () => {
+  const base = { autor: "Jair", titulo: "A fazenda", link: "https://x/o/1" };
+  it("compartilhar: dele, dela, original e sem voz", () => {
+    expect(
+      mensagemCompartilhar({ ...base, parentesco: "avo", comVoz: true }),
+    ).toBe('Jair contou: "A fazenda". Ouça na voz dele e leia aqui: https://x/o/1');
+    expect(
+      mensagemCompartilhar({ ...base, parentesco: "mae", comVoz: true }),
+    ).toContain("na voz dela");
+    expect(
+      mensagemCompartilhar({ ...base, parentesco: null, comVoz: true }),
+    ).toContain("na voz original");
+    const semVoz = mensagemCompartilhar({
+      ...base,
+      parentesco: "avo",
+      comVoz: false,
+    });
+    expect(semVoz).toBe('Jair contou: "A fazenda". Leia aqui: https://x/o/1');
+    expect(semVoz).not.toMatch(/voz|Ouça/);
+  });
+
+  it("lembrete gentil com a pergunta e o link", () => {
+    const m = mensagemLembrete({
+      autor: "Jair",
+      pergunta: "Como era a escola?",
+      link: "https://x/a/t/gravar/9",
+    });
+    expect(m).toBe(
+      'Oi, Jair! Lembrei daquela pergunta: "Como era a escola?". Quando tiver um tempinho, grava pra gente? É só tocar aqui: https://x/a/t/gravar/9',
+    );
+  });
+
+  it("convite fala do e-mail e leva o link", () => {
+    const m = mensagemConvite({ autor: "Jair", link: "https://x/convite/1" });
+    expect(m).toContain("e-mail");
+    expect(m).toContain("https://x/convite/1");
   });
 });

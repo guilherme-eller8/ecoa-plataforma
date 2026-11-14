@@ -22,7 +22,54 @@ export type AcoesConfiguracoes = {
     tipo: "pessoa" | "lugar";
     nome: string;
   }) => Promise<Resposta>;
+  definirResumo: (ligado: boolean) => Promise<Resposta>;
 };
+
+/** Resumo semanal (P63): interruptor da própria pessoa. */
+function ResumoSemanal({
+  ligado: inicial,
+  definir,
+}: {
+  ligado: boolean;
+  definir: AcoesConfiguracoes["definirResumo"];
+}) {
+  const [ligado, setLigado] = useState(inicial);
+  const [erro, setErro] = useState<string | null>(null);
+  const [pendente, iniciar] = useTransition();
+  return (
+    <section className="flex flex-col gap-3">
+      <label className="flex min-h-alvo cursor-pointer items-center justify-between gap-4">
+        <span className="flex flex-col gap-1">
+          <span className="text-ui-20 text-tinta font-medium">
+            Resumo semanal
+          </span>
+          <span className="text-ui-15 text-tinta-2">
+            Um e-mail no domingo com os números do livro.
+          </span>
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          checked={ligado}
+          disabled={pendente}
+          onChange={(e) => {
+            const novo = e.target.checked;
+            setLigado(novo);
+            iniciar(async () => {
+              const r = await definir(novo);
+              if (!r.ok) {
+                setLigado(!novo);
+                setErro(r.mensagem);
+              } else setErro(null);
+            });
+          }}
+          className="accent-floresta size-6 shrink-0"
+        />
+      </label>
+      {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
+    </section>
+  );
+}
 
 const TIPO = { pessoa: "Pessoa", lugar: "Lugar" } as const;
 
@@ -233,10 +280,12 @@ export function TelaConfiguracoes({
   livro,
   nomes,
   acoes,
+  resumoLigado = true,
 }: {
   livro: LivroDaTela;
   nomes: NomeDaTela[];
   acoes: AcoesConfiguracoes;
+  resumoLigado?: boolean;
 }) {
   const sugeridos = nomes.filter((n) => n.estado === "sugerido");
   const aceitos = nomes.filter((n) => n.estado === "aceito");
@@ -255,6 +304,25 @@ export function TelaConfiguracoes({
       {!livro.iaConfirmada && livro.podeEscrever ? (
         <ConfirmarIA livro={livro} confirmar={acoes.confirmarIA} />
       ) : null}
+
+      <Link
+        href={`/livro/${livro.id}/pessoas`}
+        className="rounded-cartao bg-papel border-linha hover:border-linha-forte flex min-h-alvo items-center justify-between gap-4 border p-5"
+      >
+        <span className="flex flex-col gap-1">
+          <span className="text-ui-20 text-tinta font-medium">Quem ajuda</span>
+          <span className="text-ui-15 text-tinta-2">
+            {livro.ehResponsavel
+              ? "Chame um irmão para editar com você."
+              : "Quem faz o livro com você."}
+          </span>
+        </span>
+        <span aria-hidden="true" className="text-tinta-2 text-ui-20">
+          →
+        </span>
+      </Link>
+
+      <ResumoSemanal ligado={resumoLigado} definir={acoes.definirResumo} />
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

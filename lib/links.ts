@@ -1,5 +1,5 @@
 import "server-only";
-import { createHash, createHmac } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { envLinks, type EnvLinks } from "@/lib/env-links";
 import { urlDoApp } from "@/lib/env-servidor";
 
@@ -7,7 +7,13 @@ import { urlDoApp } from "@/lib/env-servidor";
 // (132 bits). Sem ponto: o matcher do proxy exclui caminhos que terminam em ".algo".
 // O banco guarda só sha256(token).
 
-export type TipoLink = "familia" | "autor";
+// convite, compartilhar e resumo: prompt 11 (T47).
+export type TipoLink =
+  | "familia"
+  | "autor"
+  | "convite"
+  | "compartilhar"
+  | "resumo";
 const TAMANHO_HMAC = 22;
 
 export function tokenDoLink(
@@ -38,4 +44,37 @@ export function urlFamilia(token: string): string {
 /** Início da área do autor. A pergunta é `${urlAutor(token)}/gravar/<id>` (montado na tela). */
 export function urlAutor(token: string): string {
   return `${urlDoApp()}/a/${token}`;
+}
+
+/** Convite de co-facilitador (P59): o token só apresenta o convite; aceitar é pelo e-mail. */
+export function urlConvite(token: string): string {
+  return `${urlDoApp()}/convite/${token}`;
+}
+
+/** História compartilhada no grupo (P61). */
+export function urlCompartilhada(token: string): string {
+  return `${urlDoApp()}/o/${token}`;
+}
+
+/** Descadastro de 1 clique do resumo semanal (P63): HMAC de "resumo:{membro}". */
+export function urlSairDoResumo(membroId: string, env: EnvLinks = envLinks()) {
+  const token = tokenDoLink("resumo", membroId, env.versaoAtual, env);
+  return `${urlDoApp()}/resumo/sair/${membroId}/${token}`;
+}
+
+/** Confere o token do descadastro em tempo constante. Versão desconhecida = falso. */
+export function tokenDoResumoConfere(
+  membroId: string,
+  token: string,
+  env: EnvLinks = envLinks(),
+): boolean {
+  const versao = /^v([0-9]{1,2})_/.exec(token)?.[1];
+  if (!versao || !env.segredos.has(Number(versao))) return false;
+  const esperado = Buffer.from(
+    tokenDoLink("resumo", membroId, Number(versao), env),
+  );
+  const recebido = Buffer.from(token);
+  return (
+    esperado.length === recebido.length && timingSafeEqual(esperado, recebido)
+  );
 }

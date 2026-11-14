@@ -24,3 +24,16 @@ export function decidirRota(
     return { tipo: "redirect", destino: "/" };
   return null;
 }
+
+// Páginas com token na URL (prompt 11, T47): sem cache, sem índice e sem Referer.
+const PRIVADAS = [/^\/convite\//, /^\/o\//, /^\/resumo\/sair\//];
+
+export function ehPaginaComToken(caminho: string): boolean {
+  return PRIVADAS.some((r) => r.test(caminho));
+}
+
+export const CABECALHOS_PRIVADOS: Record<string, string> = {
+  "Cache-Control": "private, no-store",
+  "Referrer-Policy": "no-referrer",
+  "X-Robots-Tag": "noindex, nofollow",
+};

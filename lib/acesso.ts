@@ -21,6 +21,37 @@ export function identidadeAceitavel(
   return provedores.every((p) => PROVEDORES_ACEITOS.has(p));
 }
 
+export type ContaParaEmail =
+  | { tipo: "existente" | "criada"; id: string }
+  | { tipo: "recusada" } // conta com identidade fora de identidadeAceitavel
+  | { tipo: "erro" };
+
+/**
+ * Acha a conta do e-mail ou cria uma (o cadastro público é fechado). Usada pelo admin, ao
+ * ativar o plano, e pelo convite de co-facilitador (P59).
+ */
+export async function contaParaEmail(
+  email: string,
+  db: ClienteAdmin = clienteAdmin(),
+): Promise<ContaParaEmail> {
+  const { data: existente, error } = await db.rpc("admin_usuario_por_email", {
+    p_email: email,
+  });
+  if (error) return { tipo: "erro" };
+  if (existente) {
+    const { data } = await db.auth.admin.getUserById(existente);
+    if (!data.user || !identidadeAceitavel(data.user))
+      return { tipo: "recusada" };
+    return { tipo: "existente", id: existente };
+  }
+  const { data, error: erroCriar } = await db.auth.admin.createUser({
+    email,
+    email_confirm: true,
+  });
+  if (erroCriar || !data.user) return { tipo: "erro" };
+  return { tipo: "criada", id: data.user.id };
+}
+
 /** Manda (ou reenvia) o e-mail de acesso ao responsável do livro. */
 export async function enviarAcesso(
   livroId: string,

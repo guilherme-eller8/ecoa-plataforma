@@ -15,6 +15,7 @@ const NOME_DO_PASSO: Record<Passo, string> = {
   quem: "Quem é",
   perguntas: "Primeiras perguntas",
   fotos: "Fotos",
+  ajuda: "Quem mais ajuda",
 };
 
 const DIA = new Intl.DateTimeFormat("pt-BR", {
@@ -57,7 +58,11 @@ export function TelaLivro({
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
   guardadas?: GuardadaDaTela[]; // gravações que chegaram e ainda não viraram história
 }) {
-  const falta = livro.podeEscrever ? pendentes(livro.configuracao) : [];
+  const falta = livro.podeEscrever ? pendentes(
+        livro.configuracao,
+        livro.ehResponsavel ? "responsavel" : "cofacilitador",
+      )
+    : [];
   const base = `/livro/${livro.id}`;
   const prontas = historias.filter((h) => h.estado === "pronta").length;
   const recentes = historias.slice(0, 3);

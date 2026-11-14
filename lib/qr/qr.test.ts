@@ -130,6 +130,11 @@ describe("proxy do player", () => {
       expect(decidirQr(DOMINIO_QR, c)).toEqual({ tipo: "nao_encontrado" });
   });
 
+  it("no host ouvir: /o, /convite e /resumo não existem (prompt 11)", () => {
+    for (const c of ["/o/v1_abc", "/convite/v1_abc", "/resumo/sair/m/t"])
+      expect(decidirQr(DOMINIO_QR, c)).toEqual({ tipo: "nao_encontrado" });
+  });
+
   it("no host app: o player vai para o host ouvir; o resto segue", () => {
     expect(decidirQr("app.ecoa-memorias.com.br", "/ouvir/7KQ2M9XA")).toEqual({
       tipo: "redirecionar",

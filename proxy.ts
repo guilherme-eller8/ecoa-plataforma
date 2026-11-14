@@ -7,7 +7,7 @@ import {
   aparelhoValido,
 } from "@/lib/familia/aparelho";
 import { decidirQr, type DecisaoQr } from "@/lib/qr/host";
-import { decidirRota } from "@/lib/rotas";
+import { CABECALHOS_PRIVADOS, decidirRota, ehPaginaComToken } from "@/lib/rotas";
 
 // Link da família: sem sessão nem chamada ao Supabase. Grava o cookie do aparelho na
 // requisição (a página já o lê no primeiro acesso) e na resposta, e pede para não indexar
@@ -58,6 +58,18 @@ function proxyQr(request: NextRequest, decisao: NonNullable<DecisaoQr>) {
   return resposta;
 }
 
+// História compartilhada no grupo (/o/{token}, prompt 11): sem sessão nem Supabase, como o
+// link do autor; sem cache, para desligar o link valer na hora.
+function proxyCompartilhada(request: NextRequest) {
+  return comCabecalhosPrivados(NextResponse.next({ request }));
+}
+
+function comCabecalhosPrivados(resposta: NextResponse) {
+  for (const [chave, valor] of Object.entries(CABECALHOS_PRIVADOS))
+    resposta.headers.set(chave, valor);
+  return resposta;
+}
+
 // Renova a sessão do Supabase a cada requisição e decide redirects e 404 antes de renderizar.
 export async function proxy(request: NextRequest) {
   // Antes de /f e /a: no host ouvir., nem o link da família nem o do autor existem.
@@ -68,6 +80,10 @@ export async function proxy(request: NextRequest) {
   if (qr) return proxyQr(request, qr);
   if (request.nextUrl.pathname.startsWith("/f/")) return proxyFamilia(request);
   if (request.nextUrl.pathname.startsWith("/a/")) return proxyAutor(request);
+  if (request.nextUrl.pathname.startsWith("/o/"))
+    return proxyCompartilhada(request);
+  // /convite e /resumo/sair passam pelo ramo de sessão, com os cabeçalhos de página com token.
+  const privada = ehPaginaComToken(request.nextUrl.pathname);
 
   let resposta = NextResponse.next({ request });
   const env = envPublico();
@@ -98,7 +114,7 @@ export async function proxy(request: NextRequest) {
     ehAdmin: claims?.app_metadata?.role === "admin",
   });
 
-  if (!decisao) return resposta;
+  if (!decisao) return privada ? comCabecalhosPrivados(resposta) : resposta;
 
   const final =
     decisao.tipo === "redirect"
@@ -108,14 +124,17 @@ export async function proxy(request: NextRequest) {
         });
   // Leva junto os cookies de sessão renovados.
   for (const cookie of resposta.cookies.getAll()) final.cookies.set(cookie);
-  return final;
+  return privada ? comCabecalhosPrivados(final) : final;
 }
 
 export const config = {
-  // /f/ e /a/ explícitos: um token nunca pode cair na exclusão de arquivos estáticos.
+  // Caminhos com token explícitos: um token nunca pode cair na exclusão de arquivos estáticos.
   matcher: [
     "/f/:path*",
     "/a/:path*",
+    "/o/:path*",
+    "/convite/:path*",
+    "/resumo/sair/:path*",
     // /api/inngest fica de fora: o Inngest chama a rota a cada passo, sem sessão.
     "/((?!_next/static|_next/image|api/inngest|favicon.ico|.*\\.[a-z0-9]+$).*)",
   ],

@@ -1,6 +1,13 @@
 // Textos dos e-mails enviados pelo app. O e-mail de link de entrada é do Supabase (ver guia de setup).
 
-export type Email = { assunto: string; html: string; texto: string };
+import { CONVITE_VALIDADE_DIAS } from "@/lib/config";
+
+export type Email = {
+  assunto: string;
+  html: string;
+  texto: string;
+  cabecalhos?: Record<string, string>;
+};
 
 const escapar = (s: string) =>
   s
@@ -14,6 +21,7 @@ function moldura(
   titulo: string,
   frase: string,
   botao: { rotulo: string; url: string },
+  rodape?: { frase: string; rotulo: string; url: string },
 ) {
   return `<!doctype html>
 <html lang="pt-BR">
@@ -26,7 +34,11 @@ function moldura(
           <tr><td>
             <a href="${botao.url}" style="display:inline-block;background:#1f3d33;color:#fffdf8;font-family:Arial,sans-serif;font-size:17px;text-decoration:none;padding:16px 28px;border-radius:999px;">${botao.rotulo}</a>
           </td></tr>
-          <tr><td style="font-family:Georgia,serif;color:#6e6259;font-size:14px;line-height:1.5;padding-top:32px;">Ecoa Memórias</td></tr>
+          <tr><td style="font-family:Georgia,serif;color:#6e6259;font-size:14px;line-height:1.5;padding-top:32px;">Ecoa Memórias${
+            rodape
+              ? `<br><br>${rodape.frase} <a href="${rodape.url}" style="color:#6e6259;">${rodape.rotulo}</a>`
+              : ""
+          }</td></tr>
         </table>
       </td></tr>
     </table>
@@ -106,5 +118,78 @@ export function emailDivisaoPronta({
       { rotulo: "Conferir as histórias", url: urlDivisao },
     ),
     texto: `As histórias da conversa de ${nome} estão prontas para conferir.\n\n${frase}\n\nConferir as histórias: ${urlDivisao}\n\nEcoa Memórias`,
+  };
+}
+
+/**
+ * Convite de co-facilitador (P59). Assunto fixo e nomes já saneados por nomeSeguro: o e-mail
+ * sai do nosso domínio para alguém que não pediu, então nada do texto vem solto da pessoa.
+ */
+export function emailConvite({
+  quem,
+  apelido,
+  urlConvite,
+}: {
+  quem: string; // primeiro nome de quem convidou, saneado (pode ser vazio)
+  apelido: string; // saneado
+  urlConvite: string;
+}): Email {
+  const assunto = "Convite para ajudar num livro de memórias";
+  const sujeito = quem || "Uma pessoa da sua família";
+  const livro = apelido ? `o livro de memórias de ${apelido}` : "um livro de memórias";
+  const frase = `${sujeito} chamou você para ajudar a fazer ${livro}. Entre com este e-mail para aceitar. O convite vale por ${CONVITE_VALIDADE_DIAS} dias.`;
+  return {
+    assunto,
+    html: moldura(escapar(assunto) + ".", escapar(frase), {
+      rotulo: "Ver o convite",
+      url: urlConvite,
+    }),
+    texto: `${frase}\n\nVer o convite: ${urlConvite}\n\nEcoa Memórias`,
+  };
+}
+
+/** Resumo semanal (P63): só números, sem título nem trecho (P42), descadastro de 1 clique. */
+export function emailResumo({
+  apelido,
+  historiasNovas,
+  perguntasEsperando,
+  paginasEstimadas,
+  urlLivro,
+  urlSair,
+}: {
+  apelido: string;
+  historiasNovas: number;
+  perguntasEsperando: number;
+  paginasEstimadas: number;
+  urlLivro: string;
+  urlSair: string;
+}): Email {
+  const nome = apelido.trim() || "seu livro";
+  const plural = (n: number, um: string, varios: string) =>
+    `${n} ${n === 1 ? um : varios}`;
+  const numeros = [
+    plural(historiasNovas, "história nova", "histórias novas"),
+    plural(perguntasEsperando, "pergunta esperando", "perguntas esperando"),
+    `~${plural(paginasEstimadas, "página", "páginas")}`,
+  ].join(" · ");
+  const assunto = `Esta semana no livro de ${nome}`;
+  const rodape = {
+    frase: "Não quer mais este resumo?",
+    rotulo: "Parar de receber",
+    url: urlSair,
+  };
+  return {
+    assunto,
+    html: moldura(
+      `Esta semana no livro de ${escapar(nome)}`,
+      escapar(numeros) + ".",
+      { rotulo: "Abrir o livro", url: urlLivro },
+      rodape,
+    ),
+    texto: `Esta semana no livro de ${nome}: ${numeros}.\n\nAbrir o livro: ${urlLivro}\n\nNão quer mais este resumo? ${urlSair}\n\nEcoa Memórias`,
+    cabecalhos: {
+      "List-Unsubscribe": `<${urlSair}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   };
 }

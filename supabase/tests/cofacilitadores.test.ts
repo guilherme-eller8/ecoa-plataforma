@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import type { PGlite } from "@electric-sql/pglite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { palavrasDoTexto } from "@/lib/livro/paginas";
 import { ativarPlano, como, criarBanco } from "./banco";
 
 const RAIZ = path.resolve(__dirname, "..");
@@ -341,6 +342,24 @@ describe("lembrar e resumo", () => {
       `select * from public.servico_livros_para_resumo()`,
     );
     expect(l.linhas!.length).toBeGreaterThan(0);
+  });
+});
+
+describe("páginas estimadas", () => {
+  it("o banco e a tela contam as mesmas palavras", async () => {
+    const textos = [
+      { paragrafos: [{ texto: "  Era uma vez,   em Minas.\nO trem  " }] },
+      { paragrafos: [{ texto: "" }, { texto: "Só — isso" }, {}] },
+      { paragrafos: [] },
+      {},
+    ];
+    for (const t of textos) {
+      const [{ n }] = await sql<{ n: number }>(
+        `select privado.palavras_do_texto($1::jsonb) as n`,
+        [JSON.stringify(t)],
+      );
+      expect(n).toBe(palavrasDoTexto(t));
+    }
   });
 });
 
