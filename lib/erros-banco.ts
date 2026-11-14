@@ -50,6 +50,13 @@ export const FRASES_DOS_CODIGOS = {
     "O QR desta história está desligado. Ligue de novo para gerar a página.",
   qr_recorte_longo: "Não deu certo agora. Tente de novo.",
   qr_imutavel: "Este QR não pode mudar.",
+  // Prompt 11: co-facilitadores e compartilhar.
+  ja_membro: "Esta pessoa já ajuda no livro.",
+  limite_convites: "Muitos convites hoje. Tente amanhã.",
+  limite_cofacilitadores:
+    "O livro já tem 3 pessoas ajudando. Cancele um convite para abrir vaga.",
+  convite_invalido: "Este convite não vale mais. Peça um novo a quem convidou.",
+  compartilhar_nao_pronta: "Marque a história como pronta para compartilhar.",
   qr_nao_encontrado: "Não achamos este QR.",
   chave_invalida: "Não deu certo agora. Tente de novo.",
   reversao_com_qr: "Não deu certo agora. Tente de novo.",

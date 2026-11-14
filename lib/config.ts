@@ -41,7 +41,9 @@ export const FORMATOS_AUDIO = [
 export const SUBIDAS_SIMULTANEAS = 2; // arquivos subindo ao mesmo tempo
 
 // ── Pessoas ──────────────────────────────────────────────────────────────
-export const MAX_COFACILITADORES = 3; // além do responsável
+export const MAX_COFACILITADORES = 3; // além do responsável; convites pendentes contam (espelhado)
+export const MAX_CONVITES_DIA = 10; // por livro, em 24 h (espelhado em privado.max_convites_dia)
+export const CONVITE_VALIDADE_DIAS = 7; // espelhado em privado.convite_validade_dias
 
 // ── Domínios ─────────────────────────────────────────────────────────────
 export const DOMINIO_APP = "app.ecoa-memorias.com.br";
@@ -56,7 +58,7 @@ export const EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>";
 // Pergunta enviada há este número de dias sem resposta mostra "Lembrar com carinho".
 export const LEMBRETE_APOS_DIAS = 3;
 // Estimativa de páginas no 21x21 enquanto o livro não é paginado de verdade.
-export const PALAVRAS_POR_PAGINA_ESTIMADA = 320;
+export const PALAVRAS_POR_PAGINA_ESTIMADA = 320; // espelhado em privado.palavras_por_pagina
 export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
 
 // ── Perguntas e configuração inicial ─────────────────────────────────────

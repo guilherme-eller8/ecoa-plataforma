@@ -7,7 +7,9 @@ grant usage on schema auth to anon, authenticated, service_role;
 create table auth.users (
   id uuid primary key,
   email varchar(255) unique,
-  raw_app_meta_data jsonb not null default '{}'::jsonb
+  email_confirmed_at timestamptz,
+  raw_app_meta_data jsonb not null default '{}'::jsonb,
+  raw_user_meta_data jsonb not null default '{}'::jsonb
 );
 create function auth.jwt() returns jsonb language sql stable as $$
   select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb
