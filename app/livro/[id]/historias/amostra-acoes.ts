@@ -8,11 +8,10 @@ import { z } from "zod";
 import { codigoDoErro, fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import type { Acao } from "@/lib/eventos-acoes";
-import { inngest } from "@/lib/inngest/cliente";
 import { livroDaAcao, type LivroComAcesso } from "@/lib/livro/acesso";
 import type { Resposta } from "@/lib/livro/tipos";
 import { codigoValido } from "@/lib/qr/codigo";
-import { EVENTO_QR_RECORTAR } from "@/lib/qr/eventos";
+import { pedirRecorte } from "@/lib/qr/player";
 import { clienteSessao } from "@/lib/supabase/servidor";
 
 const uuid = z.uuid();
@@ -78,10 +77,7 @@ export async function prepararAmostra(
   const r = data?.[0];
   if (!r || !codigoValido(r.codigo)) return ERRO;
   if (!antes) evento(a, "qr_criado", historiaId);
-  if (r.pedir_audio)
-    await inngest
-      .send({ name: EVENTO_QR_RECORTAR, data: { codigo: r.codigo } })
-      .catch(() => undefined); // a reserva vence em 10 min e a próxima consulta pede de novo
+  if (r.pedir_audio) await pedirRecorte(r.codigo);
   return {
     ok: true,
     dados: {

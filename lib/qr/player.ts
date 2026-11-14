@@ -8,6 +8,19 @@ import { clienteAdmin } from "@/lib/supabase/admin";
 import { chaveDeRede, ipDaRequisicao } from "./rede";
 import { OuvirQr, type EstadoPlayer } from "./tipos";
 
+/** Pede o recorte da voz ao Inngest. A reserva vence em 10 min e o próximo acesso pede de novo. */
+export async function pedirRecorte(codigo: string): Promise<void> {
+  await inngest
+    .send({ name: EVENTO_QR_RECORTAR, data: { codigo } })
+    .catch(() => undefined);
+}
+
+/** URL assinada do recorte da voz (bucket qr), curta como a do player. */
+export async function urlDaVoz(caminho: string): Promise<string | null> {
+  const urls = await assinarLeitura("qr", [caminho], QR_AUDIO_URL_S);
+  return urls.get(caminho) ?? null;
+}
+
 /** Consulta do player (seção 5.4): limite e código no banco, pela chave secreta. */
 export async function abrirQr(
   codigo: string,
@@ -22,15 +35,11 @@ export async function abrirQr(
     if (error) return { estado: "erro" };
     const r = OuvirQr.parse(data);
     if (r.estado === "preparando") {
-      if (r.pedir_audio)
-        await inngest
-          .send({ name: EVENTO_QR_RECORTAR, data: { codigo } })
-          .catch(() => undefined); // a reserva vence em 10 min e o próximo acesso pede de novo
+      if (r.pedir_audio) await pedirRecorte(codigo);
       return { estado: "preparando" };
     }
     if (r.estado !== "ok") return { estado: r.estado };
-    const urls = await assinarLeitura("qr", [r.audio_caminho], QR_AUDIO_URL_S);
-    const audioUrl = urls.get(r.audio_caminho);
+    const audioUrl = await urlDaVoz(r.audio_caminho);
     if (!audioUrl) return { estado: "erro" };
     return {
       estado: "ok",

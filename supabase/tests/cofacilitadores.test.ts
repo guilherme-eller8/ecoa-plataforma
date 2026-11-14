@@ -227,6 +227,33 @@ describe("co-facilitadora faz o resto", () => {
     ).toHaveLength(0);
   });
 
+  it("salva a história com a autoria de co-facilitadora (sinal da hipótese 1)", async () => {
+    const story = await historiaPronta(livroA);
+    const [{ rev }] = await sql<{ rev: number }>(
+      `select texto_rev as rev from public.stories where id = $1`,
+      [story],
+    );
+    const conteudo = JSON.stringify({
+      titulo: "O trem",
+      ano: 1962,
+      paragrafos: [
+        { id: "p1", texto: "Peguei o trem.", fontes: [], editado: true },
+      ],
+      lacunas: [],
+    });
+    const r = await membro(
+      bia,
+      `select public.salvar_historia($1, $2, $3, $4::jsonb, '[]'::jsonb) as rev`,
+      [story, crypto.randomUUID(), rev, conteudo],
+    );
+    expect(r.erro).toBeUndefined();
+    const [s] = await sql<{ origem: string; por: string }>(
+      `select texto_origem as origem, texto_por as por from public.stories where id = $1`,
+      [story],
+    );
+    expect(s).toEqual({ origem: "cofacilitador", por: bia });
+  });
+
   it("sai do livro; o responsável remove e não pode ser removido", async () => {
     const gil = await usuario("gil@exemplo.com");
     const c = await convidar(livroB, beto, "gil@exemplo.com");
@@ -330,8 +357,9 @@ describe("lembrar e resumo", () => {
     const r = await servico(`select * from public.servico_resumo_semanal($1)`, [
       livroA,
     ]);
+    // 2 = a do compartilhar e a que a co-facilitadora salvou.
     expect(r.linhas?.[0]).toEqual({
-      historias_novas: 1,
+      historias_novas: 2,
       perguntas_esperando: 1,
       paginas_estimadas: 1,
     });
@@ -528,6 +556,55 @@ describe("revisão de segurança (v2)", () => {
     expect(
       (await membro(ana, `select public.desativar_qr('ABCDEFGH', true)`)).erro,
     ).toBeUndefined();
+  });
+
+  it("/o/ com voz ok, preparando e sem voz", async () => {
+    const story = await historiaPronta(livroB);
+    const id = crypto.randomUUID();
+    await servico(
+      `select * from public.servico_compartilhar_historia($1, $2, $3, $4, 1::smallint)`,
+      [story, beto, id, hash(id)],
+    );
+    const ler = async () =>
+      (
+        await servico(`select public.servico_ler_compartilhada($1) as r`, [
+          hash(id),
+        ])
+      ).linhas?.[0]?.r as Record<string, unknown>;
+
+    // Sem QR: só o texto.
+    expect((await ler()).voz).toBe("sem_voz");
+
+    // QR sem recorte: preparando, e pede o recorte uma vez.
+    await sql(
+      `insert into public.qr_codes (codigo, book_id, story_id) values ('VVVV2222', $1, $2)`,
+      [livroB, story],
+    );
+    const preparando = await ler();
+    expect(preparando).toMatchObject({ voz: "preparando", pedir_audio: true });
+    expect(preparando.audio_caminho).toBeNull();
+    expect((await ler()).pedir_audio).toBe(false);
+
+    // Recorte pronto e atual: ok, com o caminho.
+    const [{ fonte }] = await sql<{ fonte: string }>(
+      `select privado.fonte_audio_da_historia($1) as fonte`,
+      [story],
+    );
+    const caminho = `livros/${livroB}/VVVV2222-0123456789ab.m4a`;
+    await sql(
+      `update public.qr_codes set audio_caminho = $2, audio_fonte = $3, audio_duracao_s = 30, audio_pronto_em = now()
+       where codigo = 'VVVV2222' and story_id = $1`,
+      [story, caminho, fonte],
+    );
+    expect(await ler()).toMatchObject({ voz: "ok", audio_caminho: caminho });
+
+    // QR desligado (voz vazada): o /o/ perde a voz também.
+    await sql(
+      `update public.qr_codes set desativado_em = now() where codigo = 'VVVV2222'`,
+    );
+    const semVoz = await ler();
+    expect(semVoz.voz).toBe("sem_voz");
+    expect(semVoz.audio_caminho).toBeNull();
   });
 
   it("/o/ conta 1 Ouvir por link, rede e hora", async () => {
