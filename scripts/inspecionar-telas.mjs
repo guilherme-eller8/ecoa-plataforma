@@ -70,6 +70,12 @@ const TELAS = {
   "editor-amostra": "/styleguide/editor-amostra",
   "editor-amostra-preparando": "/styleguide/editor-amostra-preparando",
   // Prompt 11
+  mensagem: "/styleguide/mensagem",
+  "mensagem-gravar": "/styleguide/mensagem-gravar",
+  "mensagem-conferir": "/styleguide/mensagem-conferir",
+  "mensagem-enviada": "/styleguide/mensagem-enviada",
+  mensagens: "/styleguide/mensagens",
+  "mensagens-vazia": "/styleguide/mensagens-vazia",
   pessoas: "/styleguide/pessoas",
   "pessoas-vazia": "/styleguide/pessoas-vazia",
   "pessoas-cofacilitador": "/styleguide/pessoas-cofacilitador",

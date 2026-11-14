@@ -12,6 +12,7 @@ import { CONSENTIMENTO_CAUSO_VERSAO, MAX_CAUSO_AUDIO_MB } from "@/lib/config";
 import { fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import { COOKIE_APARELHO, aparelhoValido } from "@/lib/familia/aparelho";
+import { assinarUpload as assinarNoStorage } from "@/lib/storage/upload";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { tokenValido } from "@/lib/links-formato";
 import { clienteAnonimo } from "@/lib/supabase/anonimo";
@@ -74,11 +75,9 @@ async function assinarUpload(
     p_causo: causo,
   });
   if (!caminho || !audioDoCauso(caminho, livro, causo)) return null;
-  const { data } = await admin.storage
-    .from("causos")
-    .createSignedUploadUrl(caminho);
-  if (!data) return null;
-  return { caminho, token: data.token, contentType: tipo.contentType };
+  const assinado = await assinarNoStorage("causos", caminho);
+  if (!assinado) return null;
+  return { ...assinado, contentType: tipo.contentType };
 }
 
 export async function enviarCauso(

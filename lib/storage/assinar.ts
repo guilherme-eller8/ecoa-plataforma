@@ -8,7 +8,7 @@ const UMA_HORA = 60 * 60;
  * por uma porta com token): nunca um caminho vindo do navegador.
  */
 export async function assinarLeitura(
-  bucket: "acervo" | "causos" | "audios" | "qr",
+  bucket: "acervo" | "causos" | "audios" | "qr" | "mensagens",
   caminhos: string[],
   validadeS: number = UMA_HORA,
 ) {

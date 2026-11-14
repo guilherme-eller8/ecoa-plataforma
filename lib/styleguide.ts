@@ -90,6 +90,18 @@ export const TELAS = [
   "compartilhada-indisponivel",
   "perguntas-lembrar",
   "resumo-sair",
+  // Prompt 12
+  "mensagem",
+  "mensagem-gravar",
+  "mensagem-escrever",
+  "mensagem-escrevendo",
+  "mensagem-conferir",
+  "mensagem-enviada",
+  "mensagem-fechada",
+  "mensagem-invalida",
+  "mensagens",
+  "mensagens-vazia",
+  "mensagens-cofacilitador",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

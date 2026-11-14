@@ -6,7 +6,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { TABELAS_DA_FAMILIA } from "@/lib/familia/tabelas";
+import { BUCKETS_DA_FAMILIA, TABELAS_DA_FAMILIA } from "@/lib/familia/tabelas";
 
 const RAIZ = path.resolve(__dirname, "../..");
 
@@ -63,6 +63,25 @@ describe("rotas do autor x tabelas da família", () => {
       (TABELAS_DA_FAMILIA as readonly string[]).includes(n),
     );
     expect(proibidas).toEqual([]);
+  });
+
+  // Prompt 12: nem o bucket das mensagens nem as funções do link /m.
+  it.each(lidos)("%s não cita bucket nem função de mensagens", (f) => {
+    const fonte = readFileSync(path.join(RAIZ, f), "utf8");
+    const proibidos = nomesUsados(fonte).filter(
+      (n) =>
+        (BUCKETS_DA_FAMILIA as readonly string[]).includes(n) ||
+        /mensage/.test(n),
+    );
+    expect(proibidos).toEqual([]);
+  });
+
+  it("o detector pega o bucket e a função de mensagens", () => {
+    expect(
+      nomesUsados(
+        `admin.storage.from("mensagens"); admin.rpc("servico_reservar_transcricao_mensagem")`,
+      ),
+    ).toEqual(["mensagens", "servico_reservar_transcricao_mensagem"]);
   });
 
   it("o detector pega um .from() de family_messages", () => {

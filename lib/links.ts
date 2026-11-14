@@ -7,9 +7,9 @@ import { urlDoApp } from "@/lib/env-servidor";
 // (132 bits). Sem ponto: o matcher do proxy exclui caminhos que terminam em ".algo".
 // O banco guarda só sha256(token).
 
-// convite, compartilhar e resumo: prompt 11 (T47).
+// convite, compartilhar e resumo: prompt 11 (T47). mensagem: prompt 12 (T48).
 export type TipoLink =
-  "familia" | "autor" | "convite" | "compartilhar" | "resumo";
+  "familia" | "autor" | "convite" | "compartilhar" | "resumo" | "mensagem";
 const TAMANHO_HMAC = 22;
 
 export function tokenDoLink(
@@ -28,7 +28,7 @@ export function tokenDoLink(
   return `v${versao}_${hmac}`;
 }
 
-/** O mesmo cálculo de privado.livro_da_familia: sha256 em hexadecimal. */
+/** O mesmo cálculo das tabelas de links (privado.livro_da_familia, link_da_mensagem…): sha256 hex. */
 export function hashDoToken(token: string): string {
   return createHash("sha256").update(token, "utf8").digest("hex");
 }
@@ -40,6 +40,11 @@ export function urlFamilia(token: string): string {
 /** Início da área do autor. A pergunta é `${urlAutor(token)}/gravar/<id>` (montado na tela). */
 export function urlAutor(token: string): string {
   return `${urlDoApp()}/a/${token}`;
+}
+
+/** Deixar uma mensagem para o livro (P65): link só de escrita, que circula fora do grupo. */
+export function urlMensagem(token: string): string {
+  return `${urlDoApp()}/m/${token}`;
 }
 
 /** Convite de co-facilitador (P59): o token só apresenta o convite; aceitar é pelo e-mail. */

@@ -22,6 +22,7 @@ describe("tokens dos links", () => {
   it("muda com o tipo, o id e a versão", () => {
     const t = tokenDoLink("familia", id, 1, env);
     expect(tokenDoLink("autor", id, 1, env)).not.toBe(t);
+    expect(tokenDoLink("mensagem", id, 1, env)).not.toBe(t); // prompt 12
     expect(tokenDoLink("familia", id.replace("6666", "6667"), 1, env)).not.toBe(
       t,
     );

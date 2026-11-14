@@ -77,6 +77,19 @@ import { TelaCompartilhada } from "@/components/telas/tela-compartilhada";
 import { TelaConvite } from "@/components/telas/tela-convite";
 import { TelaConvitesPendentes } from "@/components/telas/tela-convites-pendentes";
 import { TelaPessoas } from "@/components/telas/tela-pessoas";
+import {
+  TelaMensagem,
+  TelaMensagemInvalida,
+} from "@/components/telas/tela-mensagem";
+import { TelaMensagens } from "@/components/telas/tela-mensagens";
+import {
+  ACOES_MENSAGEM_FALSAS,
+  ACOES_MENSAGENS_FALSAS,
+  LINK_MENSAGEM_EXEMPLO,
+  MENSAGENS_JAIR,
+  PAGINA_MENSAGEM,
+  TEXTO_CONFERIR,
+} from "@/lib/exemplos/prompt12";
 import { TelaSairResumo } from "@/components/telas/tela-sair-resumo";
 import {
   ACOES_GRUPO_FALSAS,
@@ -138,6 +151,68 @@ const AMOSTRA_FALSA = (pronta: boolean): AcoesAmostra => ({
 
 export function Vitrine({ tela }: { tela: Tela }) {
   switch (tela) {
+    // ── Prompt 12 ──
+    case "mensagem":
+    case "mensagem-gravar":
+    case "mensagem-escrever":
+    case "mensagem-escrevendo":
+    case "mensagem-conferir":
+    case "mensagem-enviada": {
+      const passo = (
+        {
+          mensagem: "quem",
+          "mensagem-gravar": "gravar",
+          "mensagem-escrever": "escrever",
+          "mensagem-escrevendo": "escrevendo",
+          "mensagem-conferir": "conferir",
+          "mensagem-enviada": "enviada",
+        } as const
+      )[tela];
+      return (
+        <TelaMensagem
+          pagina={PAGINA_MENSAGEM}
+          acoes={ACOES_MENSAGEM_FALSAS}
+          inicial={passo}
+          textoInicial={passo === "conferir" ? TEXTO_CONFERIR : ""}
+        />
+      );
+    }
+    case "mensagem-fechada":
+      return (
+        <TelaMensagem
+          pagina={{ ...PAGINA_MENSAGEM, aberto: false }}
+          acoes={ACOES_MENSAGEM_FALSAS}
+        />
+      );
+    case "mensagem-invalida":
+      return <TelaMensagemInvalida />;
+    case "mensagens":
+      return (
+        <TelaMensagens
+          livro={LIVRO_JAIR}
+          mensagens={MENSAGENS_JAIR}
+          link={LINK_MENSAGEM_EXEMPLO}
+          acoes={ACOES_MENSAGENS_FALSAS}
+        />
+      );
+    case "mensagens-vazia":
+      return (
+        <TelaMensagens
+          livro={LIVRO_JAIR}
+          mensagens={[]}
+          link={null}
+          acoes={ACOES_MENSAGENS_FALSAS}
+        />
+      );
+    case "mensagens-cofacilitador":
+      return (
+        <TelaMensagens
+          livro={LIVRO_COFACILITADORA}
+          mensagens={MENSAGENS_JAIR}
+          link={LINK_MENSAGEM_EXEMPLO}
+          acoes={ACOES_MENSAGENS_FALSAS}
+        />
+      );
     // ── Prompt 11 ──
     case "pessoas":
       return (

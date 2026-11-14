@@ -7,4 +7,8 @@ export const TABELAS_DA_FAMILIA = [
   "causos",
   "family_access",
   "family_messages",
+  "message_access",
 ] as const;
+
+// Buckets da família: as rotas do autor nunca os citam (lib/autor/rotas-autor.test.ts).
+export const BUCKETS_DA_FAMILIA = ["causos", "mensagens"] as const;

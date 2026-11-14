@@ -15,6 +15,7 @@ import {
   perguntasDoLivro,
   totalDeAudios,
 } from "@/lib/livro/dados";
+import { contarMensagens } from "@/lib/mensagens/dados";
 
 export default function PaginaLivro({ params }: PageProps<"/livro/[id]">) {
   return (
@@ -40,16 +41,25 @@ async function Livro({ id }: { id: string }) {
     ),
   );
 
-  const [perguntas, causos, enquete, audios, historias, familia, guardadas] =
-    await Promise.all([
-      perguntasDoLivro(id),
-      causosDoLivro(id),
-      enqueteDoLivro(id),
-      totalDeAudios(id),
-      historiasDoLivro(id, 20),
-      linkDaFamilia(id),
-      gravacoesGuardadas(id, Boolean(livro.ia_consentimento_em)),
-    ]);
+  const [
+    perguntas,
+    causos,
+    enquete,
+    audios,
+    historias,
+    familia,
+    guardadas,
+    mensagens,
+  ] = await Promise.all([
+    perguntasDoLivro(id),
+    causosDoLivro(id),
+    enqueteDoLivro(id),
+    totalDeAudios(id),
+    historiasDoLivro(id, 20),
+    linkDaFamilia(id),
+    gravacoesGuardadas(id, Boolean(livro.ia_consentimento_em)),
+    contarMensagens(id),
+  ]);
   return (
     <TelaLivro
       livro={tela}
@@ -59,6 +69,7 @@ async function Livro({ id }: { id: string }) {
         causosNovos: causos.filter((c) => c.estado === "novo").length,
         enqueteAberta: enquete?.estado === "aberta",
         audios,
+        mensagens,
       }}
       historias={historias}
       linkFamilia={familia}

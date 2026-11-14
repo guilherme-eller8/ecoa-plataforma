@@ -13,10 +13,11 @@ import {
   ehPaginaComToken,
 } from "@/lib/rotas";
 
-// Link da família: sem sessão nem chamada ao Supabase. Grava o cookie do aparelho na
-// requisição (a página já o lê no primeiro acesso) e na resposta, e pede para não indexar
-// nem vazar o token pelo Referer.
-function proxyFamilia(request: NextRequest) {
+// Links da família (/f) e de mensagens (/m, prompt 12): sem sessão nem chamada ao Supabase.
+// Grava o cookie do aparelho na requisição (a página já o lê no primeiro acesso) e na resposta,
+// só para aquele caminho (os dois cookies convivem), e pede para não indexar nem vazar o token
+// pelo Referer.
+function proxyAparelho(request: NextRequest, caminho: "/f" | "/m") {
   const atual = request.cookies.get(COOKIE_APARELHO)?.value;
   const valor = aparelhoValido(atual) ? atual : crypto.randomUUID();
   if (valor !== atual) request.cookies.set(COOKIE_APARELHO, valor);
@@ -27,7 +28,7 @@ function proxyFamilia(request: NextRequest) {
       sameSite: "lax",
       secure: request.nextUrl.protocol === "https:",
       maxAge: APARELHO_DURA_S,
-      path: "/f",
+      path: caminho,
     });
   resposta.headers.set("Referrer-Policy", "no-referrer");
   resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
@@ -82,7 +83,11 @@ export async function proxy(request: NextRequest) {
     request.nextUrl.pathname,
   );
   if (qr) return proxyQr(request, qr);
-  if (request.nextUrl.pathname.startsWith("/f/")) return proxyFamilia(request);
+  if (request.nextUrl.pathname.startsWith("/f/"))
+    return proxyAparelho(request, "/f");
+  // Mensagens: o link circula fora do grupo; sem cache também (rascunho é do aparelho).
+  if (request.nextUrl.pathname.startsWith("/m/"))
+    return comCabecalhosPrivados(proxyAparelho(request, "/m"));
   if (request.nextUrl.pathname.startsWith("/a/")) return proxyAutor(request);
   if (request.nextUrl.pathname.startsWith("/o/"))
     return proxyCompartilhada(request);
@@ -135,6 +140,7 @@ export const config = {
   // Caminhos com token explícitos: um token nunca pode cair na exclusão de arquivos estáticos.
   matcher: [
     "/f/:path*",
+    "/m/:path*",
     "/a/:path*",
     "/o/:path*",
     "/convite/:path*",

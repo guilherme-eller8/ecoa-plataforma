@@ -33,7 +33,7 @@ export const transcreverScribe: Transcritor = async (audio, nomeArquivo, o) => {
   form.append("file", new Blob([new Uint8Array(audio)]), nomeArquivo);
   form.append("model_id", o.modelo);
   form.append("language_code", "por");
-  form.append("diarize", "true");
+  form.append("diarize", o.diarizar === false ? "false" : "true");
   form.append("timestamps_granularity", "word");
   form.append("tag_audio_events", "false");
   for (const termo of o.dicas.slice(0, 100)) form.append("keyterms", termo);
@@ -43,6 +43,7 @@ export const transcreverScribe: Transcritor = async (audio, nomeArquivo, o) => {
     method: "POST",
     headers: { "xi-api-key": o.chave },
     body: form,
+    signal: o.signal,
   });
   const bruto = await exigirOk(resposta, "ElevenLabs");
   return {

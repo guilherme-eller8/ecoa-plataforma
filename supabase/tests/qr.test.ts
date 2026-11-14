@@ -15,6 +15,11 @@ const down = readFileSync(
   path.join(RAIZ, "reversao/20261120120000_qr_amostra.down.sql"),
   "utf8",
 );
+// A reversão do prompt 12 (mensagens) roda antes da deste arquivo, como no banco de verdade.
+const downMensagens = readFileSync(
+  path.join(RAIZ, "reversao/20261122120000_mensagens_familia.down.sql"),
+  "utf8",
+);
 
 let db: PGlite;
 let ana: string; // responsável do livro A
@@ -140,8 +145,10 @@ afterAll(async () => {
   await db.close();
 });
 
-describe("family_messages nasce fechada", () => {
-  it.each(["anon", "authenticated", "porta_autor"])(
+// O prompt 12 abriu a leitura das enviadas para o membro (mensagens.test.ts); a política
+// restritiva para anon e porta_autor continua.
+describe("family_messages fechada para quem não tem login", () => {
+  it.each(["anon", "porta_autor"])(
     "%s não tem privilégio de tabela nem de coluna",
     async (papel) => {
       const [r] = await sql<{ tabela: boolean; coluna: boolean }>(
@@ -153,13 +160,14 @@ describe("family_messages nasce fechada", () => {
     },
   );
 
-  it("RLS ligada; a única política nega anon e porta_autor (restritiva)", async () => {
+  it("RLS ligada; a política restritiva nega anon e porta_autor", async () => {
     const [t] = await sql<{ rls: boolean }>(
       `select relrowsecurity as rls from pg_class where oid = 'public.family_messages'::regclass`,
     );
     expect(t.rls).toBe(true);
     const p = await sql<{ permissive: string; roles: string[]; qual: string }>(
-      `select permissive, roles, qual from pg_policies where tablename = 'family_messages'`,
+      `select permissive, roles, qual from pg_policies
+       where tablename = 'family_messages' and permissive = 'RESTRICTIVE'`,
     );
     expect(p).toEqual([
       {
@@ -168,15 +176,6 @@ describe("family_messages nasce fechada", () => {
         qual: "false",
       },
     ]);
-  });
-
-  it("um membro logado não lê nem com uma mensagem guardada", async () => {
-    await sql(`insert into public.family_messages (book_id) values ($1)`, [
-      livroA,
-    ]);
-    const r = await comoMembro(ana, `select * from public.family_messages`);
-    expect(r.erro).toMatch(/permission denied/);
-    await sql(`delete from public.family_messages`);
   });
 
   it.each(["qr_codes", "qr_consultas"])(
@@ -566,6 +565,7 @@ describe("servico_qr_tocou (a métrica)", () => {
 
 describe("reversão", () => {
   it("trava com QR criado; forçada passa; sobe de novo", async () => {
+    await db.exec(downMensagens);
     await expect(db.exec(down)).rejects.toThrow(/reversao_com_qr/);
     await db.exec(`set ecoa.reversao_destrutiva = 'sim'`);
     await db.exec(down);

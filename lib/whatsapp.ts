@@ -138,3 +138,32 @@ export function mensagemLembrete({
 }) {
   return `Oi, ${autor}! Lembrei daquela pergunta: "${pergunta}". Quando tiver um tempinho, grava pra gente? É só tocar aqui: ${link}`;
 }
+
+// ── Prompt 12 ────────────────────────────────────────────────────────────
+
+const PRONOME: Partial<Record<Parentesco, "ele" | "ela">> = {
+  pai: "ele",
+  avo: "ele",
+  tio: "ele",
+  mae: "ela",
+  avoa: "ela",
+  tia: "ela",
+};
+
+/** Convite para deixar mensagem no livro (P65). É surpresa: o texto pede para não contar. */
+export function conviteMensagem({
+  autor,
+  parentesco,
+  link,
+}: {
+  autor: string;
+  parentesco: Parentesco | null;
+  link: string;
+}) {
+  const quem = (parentesco && PRONOME[parentesco]) || autor;
+  return [
+    `Estamos fazendo um livro com as histórias de ${autor}. É surpresa: não conte para ${quem}.`,
+    `Deixe uma mensagem para o livro, gravada ou escrita:`,
+    link,
+  ].join("\n\n");
+}

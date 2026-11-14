@@ -57,6 +57,17 @@ export const FRASES_DOS_CODIGOS = {
     "O livro já tem 5 pessoas ajudando. Cancele um convite para abrir vaga.",
   convite_invalido: "Este convite não vale mais. Peça um novo a quem convidou.",
   compartilhar_nao_pronta: "Marque a história como pronta para compartilhar.",
+  limite_mensagens: "Muitas mensagens hoje. Tente amanhã.",
+  mensagem_nao_encontrada:
+    "O tempo para enviar esta mensagem acabou. Comece de novo.",
+  mensagem_sem_texto: "Escreva a mensagem antes.",
+  audio_nao_chegou: "O áudio não chegou. Tente de novo.",
+  limite_transcricao:
+    "Não conseguimos escrever o áudio. Escreva a mensagem você mesmo.",
+  mensagem_imutavel: "Esta mensagem não pode mudar.",
+  limite_rascunhos: "Termine ou espere as mensagens que você já começou.",
+  audio_longo: "O áudio passou de 5 minutos. Grave de novo, mais curto.",
+  family_messages_nao_vazia: "Algo não está certo. Confira e tente de novo.",
   qr_nao_encontrado: "Não achamos este QR.",
   chave_invalida: "Não deu certo agora. Tente de novo.",
   reversao_com_qr: "Não deu certo agora. Tente de novo.",

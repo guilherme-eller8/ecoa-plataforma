@@ -42,3 +42,17 @@ export function tipoDoAudio(
   if (base === "audio/ogg") return { ext: "ogg", contentType: "audio/ogg" };
   return null;
 }
+
+/** Áudio ou foto de uma mensagem da família (os mesmos CHECKs de family_messages). */
+export function arquivoDaMensagem(
+  caminho: string,
+  livro: string,
+  mensagem: string,
+  tipo: "audio" | "foto",
+): boolean {
+  if (!ehUuid(livro) || !ehUuid(mensagem)) return false;
+  const base = `^livros/${livro}/mensagens/${mensagem}`;
+  return new RegExp(
+    tipo === "audio" ? `${base}\\.(webm|m4a|ogg)$` : `${base}-foto\\.jpg$`,
+  ).test(caminho);
+}
