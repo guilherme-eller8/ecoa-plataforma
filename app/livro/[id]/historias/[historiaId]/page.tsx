@@ -11,6 +11,7 @@ import {
   registrarFotos,
   responderSugestao,
 } from "@/app/livro/[id]/acoes";
+import * as amostra from "@/app/livro/[id]/historias/amostra-acoes";
 import * as editor from "@/app/livro/[id]/historias/editor-acoes";
 import * as propostas from "@/app/livro/[id]/historias/propostas-acoes";
 import { historiaParaEditar, historiaParaLer } from "@/lib/historias/dados";
@@ -65,6 +66,10 @@ async function Historia({
           prepararFotos: prepararFotos.bind(null, id),
           registrarFotos: registrarFotos.bind(null, id),
           responderSugestao: responderSugestao.bind(null, id, historiaId),
+          amostra: {
+            preparar: amostra.prepararAmostra.bind(null, id, historiaId),
+            desligar: amostra.desligarQr.bind(null, id, historiaId),
+          },
           propostas: {
             pedirTamanho: propostas.pedirTamanho.bind(null, id, historiaId),
             revisarTrecho: propostas.revisarTrecho.bind(null, id, historiaId),

@@ -48,6 +48,12 @@ export const ACOES = [
   "pediu_proposta",
   "aplicou_proposta",
   "descartou_proposta",
+  // Prompt 10: QR e página de amostra. { story }.
+  "qr_criado",
+  "qr_desligado", // só o responsável
+  "qr_religado",
+  "amostra_gerada", // baixou o PDF de 1 página
+  "qr_tocou", // família; só o banco grava (servico_qr_tocou), 1 por código, rede e hora
 ] as const;
 
 export const PAPEIS = [

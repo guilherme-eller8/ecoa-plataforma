@@ -1,9 +1,7 @@
 // Normaliza o áudio (FLAC mono 16 kHz) e mede a duração. Fica fora de lib/ai de propósito:
 // na plataforma, o ffmpeg vem do serviço de fila.
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
-import { createRequire } from "node:module";
-import { join } from "node:path";
+import { caminhoFfmpeg } from "../../lib/audio/ffmpeg";
 
 export const EXTENSOES_AUDIO = [
   ".opus",
@@ -14,18 +12,6 @@ export const EXTENSOES_AUDIO = [
   ".webm",
   ".flac",
 ];
-
-function caminhoFfmpeg(): string {
-  try {
-    const estatico = createRequire(join(process.cwd(), "package.json"))(
-      "ffmpeg-static",
-    ) as string | null;
-    if (estatico && existsSync(estatico)) return estatico;
-  } catch {
-    // sem ffmpeg-static: tenta o do sistema
-  }
-  return "ffmpeg";
-}
 
 export async function normalizarAudio(
   entrada: string,

@@ -27,6 +27,11 @@ import {
   HISTORIAS_COM_DIVISAO,
 } from "@/lib/exemplos/prompt7";
 import { TelaEditor } from "@/components/telas/tela-editor";
+import {
+  FolhaAmostra,
+  type AcoesAmostra,
+} from "@/components/editor/folha-amostra";
+import { TelaDigitarCodigo, TelaPlayer } from "@/components/telas/tela-player";
 import { TelaGravarMais } from "@/components/telas/tela-gravar-mais";
 import {
   HISTORIA_COM_PROPOSTA,
@@ -98,6 +103,20 @@ const lerDeExemplo = async () => [
 const acaoFalsa = async (): Promise<Resultado | null> => null;
 const nada = async () => {};
 
+// Prompt 10: folha da página de amostra, com a voz pronta ou ainda preparando.
+const AMOSTRA_FALSA = (pronta: boolean): AcoesAmostra => ({
+  preparar: async () => ({
+    ok: true,
+    dados: {
+      codigo: "7KQ2M9XA",
+      vozPronta: pronta,
+      desligado: false,
+      responsavel: true,
+    },
+  }),
+  desligar: async () => ({ ok: true }),
+});
+
 export function Vitrine({ tela }: { tela: Tela }) {
   switch (tela) {
     case "livro-com-historias":
@@ -149,14 +168,34 @@ export function Vitrine({ tela }: { tela: Tela }) {
             revisada: tela === "editor-pronta",
           }}
           podeEscrever={tela !== "editor-somente-leitura"}
-          acoes={acoesEditorFalsas(
-            tela === "editor-trava"
-              ? "outra-pessoa"
-              : tela === "editor-outra-tela"
-                ? "outra-tela"
-                : "livre",
-          )}
+          acoes={{
+            ...acoesEditorFalsas(
+              tela === "editor-trava"
+                ? "outra-pessoa"
+                : tela === "editor-outra-tela"
+                  ? "outra-tela"
+                  : "livre",
+            ),
+            amostra: AMOSTRA_FALSA(true),
+          }}
         />
+      );
+    case "editor-amostra":
+    case "editor-amostra-preparando":
+      return (
+        <>
+          <TelaEditor
+            historia={{ ...HISTORIA_PARA_EDITAR, revisada: true }}
+            podeEscrever
+            acoes={acoesEditorFalsas("livre")}
+          />
+          <FolhaAmostra
+            aberta
+            aoFechar={() => {}}
+            urlPdf="#"
+            acoes={AMOSTRA_FALSA(tela === "editor-amostra")}
+          />
+        </>
       );
     case "editor-ia":
     case "editor-proposta":
@@ -497,5 +536,35 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "familia-invalida":
       return <TelaFamiliaInvalida />;
+    // Prompt 10: player do QR.
+    case "player":
+      return (
+        <TelaPlayer
+          estado={{
+            estado: "ok",
+            titulo: "O trem para Guarapari",
+            ano: 1962,
+            audioUrl: "/exemplo/trem.m4a",
+          }}
+          tocou={async () => {}}
+        />
+      );
+    case "player-preparando":
+      return (
+        <TelaPlayer estado={{ estado: "preparando" }} tocou={async () => {}} />
+      );
+    case "player-nao-encontrado":
+      return (
+        <TelaPlayer
+          estado={{ estado: "nao_encontrado" }}
+          tocou={async () => {}}
+        />
+      );
+    case "player-desativado":
+      return (
+        <TelaPlayer estado={{ estado: "desativado" }} tocou={async () => {}} />
+      );
+    case "player-digitar":
+      return <TelaDigitarCodigo />;
   }
 }

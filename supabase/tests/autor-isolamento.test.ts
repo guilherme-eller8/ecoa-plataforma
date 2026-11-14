@@ -5,14 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ativarPlano, como, criarBanco, criarUsuario, tenta } from "./banco";
 
 // family_messages entrou no prompt 10 (vazia; as colunas chegam no prompt 12).
-const TABELAS_DA_FAMILIA = [
-  "polls",
-  "poll_items",
-  "poll_votes",
-  "causos",
-  "family_access",
-  "family_messages",
-];
+import { TABELAS_DA_FAMILIA } from "@/lib/familia/tabelas";
 
 let db: PGlite;
 let livro: string;

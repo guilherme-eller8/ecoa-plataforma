@@ -226,3 +226,8 @@ export const QR_AUDIO_ESPERA_MIN = 10; // um recorte pedido e não terminado é 
 export const QR_FOLGA_RECORTE_S = 30; // o recorte pode passar da fala da história só nisso
 export const QR_AUDIO_KBPS = 48; // recorte do QR em .m4a (AAC), voz mono
 export const QR_AUDIO_URL_S = 10 * 60; // validade da URL assinada que o player toca
+// URL do QR em maiúsculas (versão 3, módulo maior) ou minúsculas (versão 4). Confirmar na folha
+// de teste com aparelhos reais (Q4) ANTES da 1ª página impressa; depois disso, nunca muda.
+export const QR_URL_MAIUSCULA = true;
+export const AMOSTRA_ESPERA_VOZ_S = 120; // a folha consulta o recorte até isso; depois pede para voltar
+export const AMOSTRA_CONSULTAR_S = 3; // intervalo da consulta do recorte na folha

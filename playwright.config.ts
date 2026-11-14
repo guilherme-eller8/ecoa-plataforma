@@ -29,6 +29,7 @@ export default defineConfig({
       SUPABASE_SECRET_KEY: "sb_secret_teste",
       RESEND_API_KEY: "re_teste",
       LINKS_SEGREDO_V1: "segredo_de_teste_com_mais_de_32_caracteres",
+      QR_REDE_SEGREDO: "segredo_de_rede_de_teste_com_mais_de_32_caracteres",
       // Libera /styleguide e as telas de exemplo no build de produção do teste.
       ECOA_STYLEGUIDE: "1",
     },
