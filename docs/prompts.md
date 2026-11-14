@@ -214,7 +214,7 @@ Gate de design. Aceite: imprimo a página numa impressora comum e o QR de 2 cm a
 ```
 Leia docs/prd.md: Papéis e permissões, M2 (co-facilitadores) e Jornadas.
 
-1. Convite de até 3 co-facilitadores por e-mail ou link, aceito com Google ou e-mail. Passo Quem mais ajuda na configuração inicial (pulável) e tela de membros onde o responsável remove pessoas.
+1. Convite de até 5 co-facilitadores por e-mail ou link, aceito com Google ou e-mail. Passo Quem mais ajuda na configuração inicial (pulável) e tela de membros onde o responsável remove pessoas.
 2. Permissões: o co-facilitador faz tudo, menos convidar, publicar, imprimir e pagar. Teste de RLS para cada regra.
 3. Compartilhar no grupo em cada história pronta: link /o/[token] com áudio, título e texto, e mensagem pronta para colar no WhatsApp. Revogável.
 4. Lembrar com carinho em perguntas enviadas há 3 dias, abrindo wa.me com uma mensagem gentil.

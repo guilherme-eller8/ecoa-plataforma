@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { envLinks } from "./env-links";
-import { hashDoToken, tokenDoLink } from "./links";
+import { hashDoToken, tokenDoLink, tokenDoResumoConfere } from "./links";
 
 const env = envLinks({
   LINKS_VERSAO_ATUAL: "2",
@@ -45,5 +45,29 @@ describe("tokens dos links", () => {
 
   it("versão sem segredo não gera token", () => {
     expect(() => tokenDoLink("familia", id, 3, env)).toThrow();
+  });
+});
+
+describe("links do prompt 11", () => {
+  it("convite, compartilhar e resumo têm tokens diferentes para o mesmo id", () => {
+    const t = new Set(
+      (["familia", "autor", "convite", "compartilhar", "resumo"] as const).map(
+        (tipo) => tokenDoLink(tipo, id, 1, env),
+      ),
+    );
+    expect(t.size).toBe(5);
+  });
+
+  it("o descadastro do resumo confere o token em tempo constante", () => {
+    const token = tokenDoLink("resumo", id, 2, env);
+    expect(tokenDoResumoConfere(id, token, env)).toBe(true);
+    expect(
+      tokenDoResumoConfere(id, tokenDoLink("resumo", id, 1, env), env),
+    ).toBe(true);
+    expect(
+      tokenDoResumoConfere(id, tokenDoLink("autor", id, 2, env), env),
+    ).toBe(false);
+    expect(tokenDoResumoConfere(id, "v9_" + "a".repeat(22), env)).toBe(false);
+    expect(tokenDoResumoConfere(id, "lixo", env)).toBe(false);
   });
 });

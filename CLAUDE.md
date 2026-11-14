@@ -13,13 +13,13 @@ Antes de qualquer tarefa, leia `docs/decisoes-resumo.md` (uma linha por decisão
 
 ## Produto
 
-A família (um responsável e até 3 co-facilitadores) ou o próprio autor cria um livro de memórias, do primeiro áudio ao PDF da gráfica, sem a Ecoa no circuito, exceto na impressão. Gravar conversando é o centro da experiência. A IA transforma a fala em texto fiel, como um jornalista que não inventa: cada parágrafo aponta para os trechos do áudio que o sustentam. Cada história impressa tem um QR que toca a voz original para sempre.
+A família (um responsável e até 5 co-facilitadores) ou o próprio autor cria um livro de memórias, do primeiro áudio ao PDF da gráfica, sem a Ecoa no circuito, exceto na impressão. Gravar conversando é o centro da experiência. A IA transforma a fala em texto fiel, como um jornalista que não inventa: cada parágrafo aponta para os trechos do áudio que o sustentam. Cada história impressa tem um QR que toca a voz original para sempre.
 
 ## Vocabulário
 
 - **Autor:** quem conta as histórias. Entra por link pessoal, sem login.
 - **Responsável:** quem comprou, publica e envia o livro para a impressão. Entra com Google ou link por e-mail.
-- **Co-facilitador:** irmão ou parente com acesso total, menos convidar, publicar, imprimir e pagar (até 3).
+- **Co-facilitador:** irmão ou parente com acesso total, menos convidar, publicar, imprimir e pagar (até 5).
 - **Família:** quem participa pelos links do grupo de WhatsApp (sugerir causo, deixar mensagem, ouvir). Sem login.
 
 ## Stack

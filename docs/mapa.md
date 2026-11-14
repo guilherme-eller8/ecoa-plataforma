@@ -15,6 +15,10 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `/livro/[id]/historias` (+ `/nova`, `/gravar`) | Lista e nova história | membro |
 | `/livro/[id]/historias/[historiaId]` | Acompanhar ou editar (história pronta) | membro |
 | `…/[historiaId]/dividir`, `/versoes`, `/gravar`, `/parar`, `/amostra` | Divisão, histórico, gravar mais, PDF da amostra | membro |
+| `/livro/[id]/pessoas` | Quem ajuda: convidar, cancelar, remover, sair (prompt 11) | membro |
+| `/convite/[token]` | Convite de co-facilitador; aceitar pelo e-mail convidado | sem login (aceitar com sessão) |
+| `/o/[token]` | História compartilhada no grupo (voz e texto) | sem login |
+| `/resumo/sair/[membro]/[token]` (+ `/um-clique`) | Descadastro do resumo semanal | sem login |
 | `/f/[token]` | Link da família (causos, enquete) | sem login |
 | `/a/[token]` (+ `/gravar`) | Área do autor | sem login |
 | `/ouvir`, `/ouvir/[codigo]` | Player do QR (host `ouvir.` reescreve `/` e `/{código}`) | público |
@@ -22,7 +26,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `/api/inngest` | Funções do Inngest | Inngest |
 | `/styleguide/[tela]` | Telas com dados falsos (gate de design) | dev ou `ECOA_STYLEGUIDE=1` |
 
-`proxy.ts` decide antes de renderizar: host `ouvir.` (`lib/qr/host.ts`), `/f` e `/a` sem sessão, o resto renova a sessão e aplica `lib/rotas.ts`.
+`proxy.ts` decide antes de renderizar: host `ouvir.` (`lib/qr/host.ts`), `/f`, `/a` e `/o` sem sessão, o resto renova a sessão e aplica `lib/rotas.ts`. Páginas com token (`/convite`, `/o`, `/resumo/sair`) saem com `no-store`, `noindex` e `no-referrer` (`ehPaginaComToken`).
 
 ## Padrões
 
@@ -34,7 +38,8 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Eventos:** `registrarEvento` (`lib/eventos.ts`), ação nova = linha em `lib/eventos-acoes.ts`; detalhes só com ids e números.
 - **Números de negócio:** só em `lib/config.ts`; os conferidos no banco têm função `privado.*()` espelhada e entram em `supabase/tests/config-banco.test.ts`.
 - **Erros do SQL:** `raise exception '<codigo>'` precisa de frase em `lib/erros-banco.ts` (o teste confere).
-- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura) e `lib/inngest/qr.ts`; os passos devolvem só ids e tempos (T36).
+- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro); os passos devolvem só ids e tempos (T36).
+- **Papel na tela:** `livro.ehResponsavel` esconde o que é só do responsável (P60); o banco confere com `privado.eh_responsavel`. Links novos sem login: tipo em `TipoLink` (`lib/links.ts`), token por HMAC.
 
 ## Domínios em `lib/`
 
@@ -49,6 +54,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `qr/` | Código, host, chave de rede, player, recorte da voz |
 | `gravacao/`, `audios/` | Gravador no aparelho, TUS, formatos |
 | `familia/`, `autor/`, `enquete/`, `perguntas/` | Portas sem login e listas de perguntas |
+| `convite/`, `compartilhar/`, `resumo/` | Co-facilitadores, `/o/` e resumo semanal (prompt 11) |
 | `email/`, `fotos/`, `pwa/`, `ui/`, `storage/`, `supabase/` | Apoio |
 
 ## Banco (`supabase/`)

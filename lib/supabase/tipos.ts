@@ -154,12 +154,71 @@ export type Database = {
         };
         Relationships: [];
       };
+      // Prompt 11: convites de co-facilitador (token_hash fica fora do grant de leitura).
+      book_invites: {
+        Row: {
+          aceito_em: string | null;
+          aceito_por: string | null;
+          book_id: string;
+          chave_versao: number;
+          criado_em: string;
+          criado_por: string | null;
+          email: string;
+          expira_em: string;
+          id: string;
+          revogado_em: string | null;
+          token_hash: string;
+        };
+        Insert: {
+          aceito_em?: string | null;
+          aceito_por?: string | null;
+          book_id: string;
+          chave_versao: number;
+          criado_em?: string;
+          criado_por?: string | null;
+          email: string;
+          expira_em: string;
+          id: string;
+          revogado_em?: string | null;
+          token_hash: string;
+        };
+        Update: { revogado_em?: string | null };
+        Relationships: [];
+      };
+      // Prompt 11: compartilhar no grupo (/o/{token}).
+      story_shares: {
+        Row: {
+          book_id: string;
+          chave_versao: number;
+          criado_em: string;
+          criado_por: string | null;
+          id: string;
+          revogado_em: string | null;
+          revogado_por: string | null;
+          story_id: string;
+          token_hash: string;
+        };
+        Insert: {
+          book_id: string;
+          chave_versao: number;
+          criado_em?: string;
+          criado_por?: string | null;
+          id: string;
+          revogado_em?: string | null;
+          revogado_por?: string | null;
+          story_id: string;
+          token_hash: string;
+        };
+        Update: { revogado_em?: string | null };
+        Relationships: [];
+      };
       book_members: {
         Row: {
           book_id: string;
           criado_em: string;
           id: string;
           papel: Database["public"]["Enums"]["papel_membro"];
+          resumo_semanal: boolean;
           user_id: string;
         };
         Insert: {
@@ -167,6 +226,7 @@ export type Database = {
           criado_em?: string;
           id?: string;
           papel: Database["public"]["Enums"]["papel_membro"];
+          resumo_semanal?: boolean;
           user_id: string;
         };
         Update: {
@@ -174,6 +234,7 @@ export type Database = {
           criado_em?: string;
           id?: string;
           papel?: Database["public"]["Enums"]["papel_membro"];
+          resumo_semanal?: boolean;
           user_id?: string;
         };
         Relationships: [
@@ -647,6 +708,7 @@ export type Database = {
           criado_em: string;
           criado_por: string | null;
           enviada_em: string | null;
+          lembrada_em: string | null;
           estado: Database["public"]["Enums"]["prompt_estado"];
           id: string;
           ordem: number;
@@ -665,6 +727,7 @@ export type Database = {
           criado_em?: string;
           criado_por?: string | null;
           enviada_em?: string | null;
+          lembrada_em?: string | null;
           estado?: Database["public"]["Enums"]["prompt_estado"];
           id?: string;
           ordem?: number;
@@ -683,6 +746,7 @@ export type Database = {
           criado_em?: string;
           criado_por?: string | null;
           enviada_em?: string | null;
+          lembrada_em?: string | null;
           estado?: Database["public"]["Enums"]["prompt_estado"];
           id?: string;
           ordem?: number;
@@ -1471,6 +1535,98 @@ export type Database = {
       servico_sugerir_pergunta: {
         Args: { p_prompt: string; p_story: string };
         Returns: boolean;
+      };
+      // ── Prompt 11 ──
+      servico_pode_convidar: {
+        Args: { p_email: string; p_livro: string; p_usuario: string };
+        Returns: undefined;
+      };
+      servico_criar_convite: {
+        Args: {
+          p_chave_versao: number;
+          p_email: string;
+          p_id: string;
+          p_livro: string;
+          p_token_hash: string;
+          p_usuario: string;
+        };
+        Returns: undefined;
+      };
+      servico_ler_convite: {
+        Args: { p_token_hash: string };
+        Returns: {
+          autor: string | null;
+          book_id: string;
+          convite_id: string;
+          criado_por: string | null;
+          email: string;
+          estado: string;
+        }[];
+      };
+      meus_convites: {
+        Args: never;
+        Returns: {
+          autor: string | null;
+          book_id: string;
+          convite_id: string;
+          criado_por: string | null;
+          expira_em: string;
+        }[];
+      };
+      aceitar_convite: { Args: { p_convite: string }; Returns: string };
+      cancelar_convite: { Args: { p_convite: string }; Returns: boolean };
+      membros_do_livro: {
+        Args: { p_livro: string };
+        Returns: {
+          criado_em: string;
+          email: string | null;
+          nome: string | null;
+          papel: Database["public"]["Enums"]["papel_membro"];
+          user_id: string;
+        }[];
+      };
+      remover_membro: {
+        Args: { p_livro: string; p_usuario: string };
+        Returns: boolean;
+      };
+      sair_do_livro: { Args: { p_livro: string }; Returns: boolean };
+      servico_compartilhar_historia: {
+        Args: {
+          p_chave_versao: number;
+          p_id: string;
+          p_story: string;
+          p_token_hash: string;
+          p_usuario: string;
+        };
+        Returns: { chave_versao: number; criado: boolean; id: string }[];
+      };
+      revogar_compartilhamento: { Args: { p_story: string }; Returns: boolean };
+      servico_ler_compartilhada: {
+        Args: { p_token_hash: string };
+        Returns: Json;
+      };
+      servico_compartilhada_tocou: {
+        Args: { p_chave: string; p_token_hash: string };
+        Returns: boolean;
+      };
+      lembrar_pergunta: { Args: { p_prompt: string }; Returns: boolean };
+      definir_resumo_semanal: {
+        Args: { p_ligado: boolean; p_livro: string };
+        Returns: boolean;
+      };
+      servico_desligar_resumo: { Args: { p_membro: string }; Returns: boolean };
+      servico_livros_para_resumo: { Args: never; Returns: string[] };
+      servico_membros_para_resumo: {
+        Args: { p_livro: string };
+        Returns: { membro_id: string; user_id: string }[];
+      };
+      servico_resumo_semanal: {
+        Args: { p_livro: string };
+        Returns: {
+          historias_novas: number;
+          paginas_estimadas: number;
+          perguntas_esperando: number;
+        }[];
       };
       criar_qr: {
         Args: { p_story: string };

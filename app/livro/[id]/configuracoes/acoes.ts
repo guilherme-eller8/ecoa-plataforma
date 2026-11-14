@@ -161,3 +161,22 @@ export async function acrescentarNome(
   atualizar(livroId);
   return { ok: true };
 }
+
+/** Resumo semanal por e-mail (P63): cada pessoa liga ou desliga o seu. Vale com o plano vencido. */
+export async function definirResumo(
+  livroId: string,
+  ligado: boolean,
+): Promise<Resposta> {
+  const acesso = await livroDaAcao(livroId);
+  if (!acesso) return SEM_ACESSO;
+  if (typeof ligado !== "boolean")
+    return { ok: false, mensagem: "Escolha ligado ou desligado." };
+  const db = await clienteSessao();
+  const { error } = await db.rpc("definir_resumo_semanal", {
+    p_livro: livroId,
+    p_ligado: ligado,
+  });
+  if (error) return { ok: false, mensagem: fraseDoErro(error) };
+  atualizar(livroId);
+  return { ok: true };
+}

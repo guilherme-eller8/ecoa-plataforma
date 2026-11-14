@@ -1,4 +1,5 @@
 import "server-only";
+import { LEMBRETE_APOS_DIAS } from "@/lib/config";
 import { envLinks } from "@/lib/env-links";
 import { tokenDoLink, urlAutor, urlFamilia } from "@/lib/links";
 import { assinarLeitura } from "@/lib/storage/assinar";
@@ -52,6 +53,21 @@ export async function livroDaTela(
   };
 }
 
+/** Lembrar com carinho (P62): enviada, e 3 dias desde o envio ou desde o último lembrete. */
+export function podeLembrar(
+  estado: string,
+  enviadaEm: string | null,
+  lembradaEm: string | null,
+  agora = Date.now(),
+): boolean {
+  if (estado !== "enviada" || !enviadaEm) return false;
+  const ultimo = Math.max(
+    Date.parse(enviadaEm),
+    lembradaEm ? Date.parse(lembradaEm) : 0,
+  );
+  return agora - ultimo >= LEMBRETE_APOS_DIAS * 86_400_000;
+}
+
 export async function perguntasDoLivro(
   livro: string,
 ): Promise<PerguntaDaTela[]> {
@@ -59,7 +75,7 @@ export async function perguntasDoLivro(
   const { data } = await supabase
     .from("prompts")
     .select(
-      "id, tipo, texto, origem, banco_id, causo_id, photo_id, estado, enviada_em, ordem, criado_em, causos(nome), photos(caminho)",
+      "id, tipo, texto, origem, banco_id, causo_id, photo_id, estado, enviada_em, lembrada_em, ordem, criado_em, causos(nome), photos(caminho)",
     )
     .eq("book_id", livro)
     .order("ordem")
@@ -80,6 +96,7 @@ export async function perguntasDoLivro(
     fotoUrl: p.photos ? (urls.get(p.photos.caminho) ?? null) : null,
     estado: p.estado,
     enviadaEm: p.enviada_em,
+    podeLembrar: podeLembrar(p.estado, p.enviada_em, p.lembrada_em),
   }));
 }
 

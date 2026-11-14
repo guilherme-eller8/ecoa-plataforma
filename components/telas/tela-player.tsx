@@ -30,14 +30,11 @@ function tempo(s: number) {
   return `${m}:${String(Math.floor(s % 60)).padStart(2, "0")}`; // taste-skill-ignore: relógio
 }
 
-function Ouvir({
-  titulo,
-  ano,
+/** Botão grande de Ouvir com andamento. Também na história compartilhada (/o/, prompt 11). */
+export function PlayerDeVoz({
   audioUrl,
   tocou,
 }: {
-  titulo: string;
-  ano: number | null;
   audioUrl: string;
   tocou: () => Promise<void>;
 }) {
@@ -63,62 +60,48 @@ function Ouvir({
   const progresso = duracao > 0 ? Math.min(1, agora / duracao) : 0;
 
   return (
-    <Moldura>
-      <div className="flex flex-col gap-3 text-center">
-        {ano ? (
-          <p className="font-ui text-ui-15 text-tinta-2 tracking-[0.12em]">
-            {ano}
-          </p>
-        ) : null}
-        <h1 className="font-livro text-livro-36 text-tinta text-balance">
-          {titulo}
-        </h1>
-      </div>
-
-      <div className="flex flex-col items-center gap-6">
-        <button
-          type="button"
-          onClick={alternar}
-          aria-label={tocando ? "Pausar" : "Ouvir"}
-          className="bg-floresta text-papel hover:bg-floresta-escuro focus-visible:ring-floresta flex size-28 items-center justify-center rounded-full transition-transform duration-[var(--dur-rapida)] focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:outline-none active:scale-[0.97]"
+    <div className="flex flex-col items-center gap-6">
+      <button
+        type="button"
+        onClick={alternar}
+        aria-label={tocando ? "Pausar" : "Ouvir"}
+        className="bg-floresta text-papel hover:bg-floresta-escuro focus-visible:ring-floresta flex size-28 items-center justify-center rounded-full transition-transform duration-[var(--dur-rapida)] focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:outline-none active:scale-[0.97]"
+      >
+        {tocando ? (
+          <IconePausa tamanho={44} />
+        ) : (
+          <IconeTocar tamanho={44} className="translate-x-0.5" />
+        )}
+      </button>
+      <p className="font-ui text-ui-20 text-tinta font-medium">
+        {tocando ? "Pausar" : agora > 0 ? "Continuar" : "Ouvir"}
+      </p>
+      <div className="flex w-full flex-col gap-2">
+        <div
+          className="bg-polen-2 h-1.5 w-full overflow-hidden rounded-full"
+          role="progressbar"
+          aria-label="Andamento"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(progresso * 100)}
         >
-          {tocando ? (
-            <IconePausa tamanho={44} />
-          ) : (
-            <IconeTocar tamanho={44} className="translate-x-0.5" />
-          )}
-        </button>
-        <p className="font-ui text-ui-20 text-tinta font-medium">
-          {tocando ? "Pausar" : agora > 0 ? "Continuar" : "Ouvir"}
-        </p>
-        <div className="flex w-full flex-col gap-2">
           <div
-            className="bg-polen-2 h-1.5 w-full overflow-hidden rounded-full"
-            role="progressbar"
-            aria-label="Andamento"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progresso * 100)}
-          >
-            <div
-              className="bg-floresta h-full rounded-full"
-              style={{ width: `${progresso * 100}%` }}
-            />
-          </div>
-          {duracao > 0 ? (
-            <div className="font-ui text-ui-13 text-tinta-2 flex justify-between tabular-nums">
-              <span>{tempo(agora)}</span>
-              <span>{duracao ? tempo(duracao) : ""}</span>
-            </div>
-          ) : null}
+            className="bg-floresta h-full rounded-full"
+            style={{ width: `${progresso * 100}%` }}
+          />
         </div>
-        {falhou ? (
-          <p className="font-ui text-ui-15 text-erro text-center">
-            Não deu para tocar agora. Toque de novo.
-          </p>
+        {duracao > 0 ? (
+          <div className="font-ui text-ui-13 text-tinta-2 flex justify-between tabular-nums">
+            <span>{tempo(agora)}</span>
+            <span>{duracao ? tempo(duracao) : ""}</span>
+          </div>
         ) : null}
       </div>
-
+      {falhou ? (
+        <p className="font-ui text-ui-15 text-erro text-center">
+          Não deu para tocar agora. Toque de novo.
+        </p>
+      ) : null}
       <audio
         ref={audio}
         src={audioUrl}
@@ -130,6 +113,34 @@ function Ouvir({
         onLoadedMetadata={(e) => setDuracao(e.currentTarget.duration)}
         onError={() => setFalhou(true)}
       />
+    </div>
+  );
+}
+
+function Ouvir({
+  titulo,
+  ano,
+  audioUrl,
+  tocou,
+}: {
+  titulo: string;
+  ano: number | null;
+  audioUrl: string;
+  tocou: () => Promise<void>;
+}) {
+  return (
+    <Moldura>
+      <div className="flex flex-col gap-3 text-center">
+        {ano ? (
+          <p className="font-ui text-ui-15 text-tinta-2 tracking-[0.12em]">
+            {ano}
+          </p>
+        ) : null}
+        <h1 className="font-livro text-livro-36 text-tinta text-balance">
+          {titulo}
+        </h1>
+      </div>
+      <PlayerDeVoz audioUrl={audioUrl} tocou={tocou} />
     </Moldura>
   );
 }

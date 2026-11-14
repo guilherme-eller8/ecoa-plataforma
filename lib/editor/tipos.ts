@@ -1,4 +1,5 @@
 // Ações do editor (prompt 8), passadas às telas como props: o styleguide passa versões falsas.
+import type { AcoesGrupo } from "@/components/editor/folha-grupo";
 import type { AcoesAmostra } from "@/components/editor/folha-amostra";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { FotoDaHistoria } from "@/lib/historias/tipos";
@@ -46,6 +47,8 @@ export type AcoesEditor = AcoesFotos & {
   propostas?: AcoesPropostas;
   /** Prompt 10: página de amostra (só em história marcada como pronta). */
   amostra?: AcoesAmostra;
+  /** Prompt 11: compartilhar no grupo (só em história marcada como pronta). */
+  grupo?: AcoesGrupo;
 };
 
 export type AcoesVersoes = {

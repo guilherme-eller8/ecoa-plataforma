@@ -1,6 +1,6 @@
 "use client";
 
-// Configuração inicial em 3 passos. Todo passo tem a ação principal, Pular e Depois.
+// Configuração inicial em 3 passos (4 para o responsável de um livro novo). Todo passo tem a ação principal, Pular e Depois.
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import { Botao } from "@/components/ui/botao";
@@ -8,11 +8,19 @@ import { Campo, CampoTexto } from "@/components/ui/campo";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { Seletor } from "@/components/ui/seletor";
 import { UploadFotos } from "@/components/fotos/upload-fotos";
+import { Copiar } from "@/components/ui/copiar";
+import { FormConvite } from "@/components/telas/tela-pessoas";
 import { TEXTO_PERGUNTA_MAX } from "@/lib/config";
-import { proximoPasso, PASSOS, type Passo } from "@/lib/livro/configuracao";
+import {
+  passosDoPapel,
+  proximoPasso,
+  type Passo,
+} from "@/lib/livro/configuracao";
 import type {
   AcoesConfiguracao,
   AcoesFotos,
+  AcoesPessoas,
+  ConviteDaTela,
   LivroDaTela,
 } from "@/lib/livro/tipos";
 import {
@@ -40,11 +48,91 @@ type Props = {
   fotos: AcoesFotos;
 };
 
+/** Passo 4, Quem mais ajuda (prompt 11): convite de co-facilitador, pulável. */
+export function ConfigurarAjuda({
+  livro,
+  acoes,
+  convidar,
+}: {
+  livro: LivroDaTela;
+  acoes: AcoesConfiguracao;
+  convidar: AcoesPessoas["convidar"];
+}) {
+  const nav = useNavegar(livro);
+  const [convidados, setConvidados] = useState<ConviteDaTela[]>([]);
+  const [enviado, setEnviado] = useState(false);
+  const [pendente, iniciar] = useTransition();
+  const [erro, setErro] = useState<string | null>(null);
+
+  function continuar() {
+    iniciar(async () => {
+      const r = await acoes.marcarPasso("ajuda", "feito");
+      if (!r.ok) return setErro(r.mensagem);
+      nav.depoisDe("ajuda");
+    });
+  }
+
+  return (
+    <Moldura
+      passo="ajuda"
+      titulo="Quem mais ajuda?"
+      livro={livro}
+      acoes={acoes}
+      erro={erro}
+      principal={
+        enviado ? (
+          <Botao larguraTotal carregando={pendente} onClick={continuar}>
+            Continuar
+          </Botao>
+        ) : null
+      }
+    >
+      <p className="text-ui-17 text-tinta-2">
+        Um irmão ou parente pode gravar e editar com você.
+      </p>
+      {convidados.length ? (
+        <ul className="flex flex-col gap-2">
+          {convidados.map((c) => (
+            <li
+              key={c.id}
+              className="text-ui-17 text-tinta flex flex-wrap items-center gap-3"
+            >
+              <span className="[overflow-wrap:anywhere]">
+                Convite para {c.email}
+              </span>
+              <Copiar texto={c.mensagem} rotulo="Copiar mensagem" />
+            </li>
+          ))}
+        </ul>
+      ) : enviado ? (
+        <p className="text-ui-17 text-tinta">Convite enviado.</p>
+      ) : null}
+      <FormConvite
+        convidar={convidar}
+        rotulo={enviado ? "Convidar mais alguém" : "Enviar convite"}
+        aoConvidar={(c) => {
+          setEnviado(true);
+          if (c) setConvidados((cs) => [...cs, c]);
+        }}
+      />
+    </Moldura>
+  );
+}
+
+/** Os passos desta pessoa: o 4º (Quem mais ajuda) só para o responsável de um livro novo. */
+function passosDe(livro: LivroDaTela, atual?: Passo): Passo[] {
+  const passos = passosDoPapel(
+    livro.ehResponsavel ? "responsavel" : "cofacilitador",
+    livro.configuracao,
+  );
+  return atual && !passos.includes(atual) ? [...passos, atual] : passos;
+}
+
 function useNavegar(livro: LivroDaTela) {
   const router = useRouter();
   return {
     depoisDe(passo: Passo) {
-      const p = proximoPasso(passo);
+      const p = proximoPasso(passo, passosDe(livro));
       router.push(
         p ? `/livro/${livro.id}/configurar/${p}` : `/livro/${livro.id}/kit`,
       );
@@ -73,7 +161,8 @@ function Moldura({
   const nav = useNavegar(livro);
   const [pendente, iniciar] = useTransition();
   const [erroDoRodape, setErroDoRodape] = useState<string | null>(null);
-  const indice = PASSOS.indexOf(passo) + 1;
+  const passos = passosDe(livro, passo);
+  const indice = passos.indexOf(passo) + 1;
 
   function marcar(estado: "pulado" | "depois") {
     iniciar(async () => {
@@ -87,7 +176,7 @@ function Moldura({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-10">
       <p className="text-ui-15 text-tinta-2">
-        Passo {indice} de {PASSOS.length}
+        Passo {indice} de {passos.length}
       </p>
       <h1 className="font-livro text-livro-28 text-tinta leading-tight">
         {titulo}
