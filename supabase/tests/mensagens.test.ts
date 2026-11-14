@@ -1,6 +1,7 @@
-// Mensagens da família (prompt 12). Design: docs/designs/mensagens-familia.md.
+// Mensagens da família (prompt 12). Design: docs/designs/mensagens-familia.md (v2).
 // O link /m só escreve: quem tem o link não lê nada de ninguém; o rascunho é do aparelho;
-// o autor e anon nunca alcançam family_messages nem message_access; enviada nunca some.
+// o autor e anon nunca alcançam family_messages, message_access nem as funções do link;
+// o que a pessoa enviou não muda; enviada só sai de vez pelo responsável.
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
@@ -74,6 +75,11 @@ const valor = (r: Resposta) => {
   if (r.erro) throw new Error(r.erro);
   return Object.values(r.linhas![0])[0];
 };
+const semGatilho = (q: string) =>
+  db.exec(`
+    alter table public.family_messages disable trigger family_messages_regras;
+    ${q};
+    alter table public.family_messages enable trigger family_messages_regras;`);
 
 async function trocarLink(livro: string, usuario: string, token: string) {
   return servico(
@@ -100,8 +106,8 @@ async function criar(
     consentimento?: boolean;
   } = {},
 ): Promise<Criada | { erro: string }> {
-  const r = await anon(
-    `select public.mensagem_criar($1, $2, $3, $4, $5, $6, $7, 1::smallint) as m`,
+  const r = await servico(
+    `select public.servico_mensagem_criar($1, $2, $3, $4, $5, $6, $7, 1::smallint) as m`,
     [
       c.token ?? tokenA,
       c.aparelho ?? ap(1),
@@ -130,28 +136,43 @@ const reservar = (id: string, aparelho = ap(1)) =>
     `select public.servico_mensagem_reservar_transcricao($1, $2, $3) as r`,
     [tokenA, aparelho, id],
   );
-const transcrita = (id: string, texto: string, aparelho = ap(1)) =>
-  servico(`select public.servico_mensagem_transcrita($1, $2, $3, $4) as ok`, [
+const transcrita = (
+  id: string,
+  reserva: string,
+  texto: string,
+  fim = 100,
+  aparelho = ap(1),
+) =>
+  servico(
+    `select public.servico_mensagem_transcrita($1, $2, $3, $4, $5, $6) as r`,
+    [tokenA, aparelho, id, reserva, texto, fim],
+  );
+const falhou = (id: string, reserva: string) =>
+  servico(`select public.servico_mensagem_transcricao_falhou($1, $2, $3, $4)`, [
     tokenA,
-    aparelho,
+    ap(1),
     id,
-    texto,
+    reserva,
   ]);
 const enviar = (id: string, texto: string | null, aparelho = ap(1)) =>
-  anon(`select public.mensagem_enviar($1, $2, $3, $4) as r`, [
+  servico(`select public.servico_mensagem_enviar($1, $2, $3, $4) as r`, [
     tokenA,
     aparelho,
     id,
     texto,
   ]);
+const reservaDe = async (id: string) =>
+  (valor(await reservar(id)) as { reserva: string }).reserva;
 
 /** Mensagem enviada com áudio e texto, pronta para os testes dos membros. */
-async function enviada(texto = "Tio, obrigado por tudo.") {
-  const m = await criada();
-  valor(await confirmarAudio(m.id));
-  valor(await reservar(m.id));
-  valor(await transcrita(m.id, "Tio obrigado por tudo"));
-  valor(await enviar(m.id, texto));
+async function enviada(texto = "Tio, obrigado por tudo.", aparelho = ap(1)) {
+  const m = await criada({ aparelho });
+  valor(await confirmarAudio(m.id, aparelho));
+  const r = valor(await reservar(m.id, aparelho)) as { reserva: string };
+  valor(
+    await transcrita(m.id, r.reserva, "tio obrigado por tudo", 100, aparelho),
+  );
+  valor(await enviar(m.id, texto, aparelho));
   return m.id;
 }
 
@@ -160,8 +181,8 @@ beforeAll(async () => {
   ana = await criarUsuario(db, "ana@exemplo.com");
   caio = await criarUsuario(db, "caio@exemplo.com");
   beto = await criarUsuario(db, "beto@exemplo.com");
-  livroA = await ativarPlano(db, ana, "Nelson");
-  livroB = await ativarPlano(db, beto, "Jair");
+  livroA = await ativarPlano(db, ana, "Nelson da Silva");
+  livroB = await ativarPlano(db, beto, "Jair Souza");
   await sql(
     `insert into public.book_members (book_id, user_id, papel) values ($1, $2, 'cofacilitador')`,
     [livroA, caio],
@@ -183,12 +204,9 @@ afterAll(async () => {
   await db.close();
 });
 
-// Cada teste começa sem mensagens (o gatilho só deixa apagar com a reversão autorizada).
+// Cada teste começa sem mensagens.
 beforeEach(async () => {
-  await db.exec(`
-    alter table public.family_messages disable trigger family_messages_regras;
-    delete from public.family_messages;
-    alter table public.family_messages enable trigger family_messages_regras;`);
+  await semGatilho(`delete from public.family_messages`);
 });
 
 describe("privilégios e RLS", () => {
@@ -205,6 +223,27 @@ describe("privilégios e RLS", () => {
       }
     },
   );
+
+  it.each(["anon", "authenticated", "porta_autor"])(
+    "%s não executa nenhuma função do link /m",
+    async (papel) => {
+      const r = await sql<{ nome: string }>(
+        `select p.proname as nome from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname in ('public', 'privado') and p.proname like '%mensage%'
+           and p.proname not in ('mensagem_editar', 'mensagem_no_livro', 'mensagem_arquivar', 'mensagem_apagar')
+           and has_function_privilege($1, p.oid, 'execute')`,
+        [papel],
+      );
+      expect(r).toEqual([]);
+    },
+  );
+
+  it("o autor nunca é membro: book_members só tem responsável e co-facilitador", async () => {
+    const r = await sql<{ v: string }>(
+      `select unnest(enum_range(null::public.papel_membro))::text as v`,
+    );
+    expect(r.map((x) => x.v)).toEqual(["responsavel", "cofacilitador"]);
+  });
 
   it("authenticated lê só as colunas da lista, sem aparelho nem transcrição; não escreve", async () => {
     const r = await sql<{ coluna: string }>(
@@ -240,7 +279,7 @@ describe("privilégios e RLS", () => {
     expect(w.escreve).toBe(false);
   });
 
-  it("a política restritiva do prompt 10 continua; membro lê só enviadas", async () => {
+  it("a política restritiva do prompt 10 continua; a do membro exclui rascunho", async () => {
     const p = await sql<{
       policyname: string;
       permissive: string;
@@ -263,9 +302,9 @@ describe("privilégios e RLS", () => {
     ]);
   });
 
-  it("membro vê as enviadas do próprio livro, nunca rascunho nem outro livro", async () => {
+  it("membro vê enviadas e arquivadas do próprio livro, nunca rascunho nem outro livro", async () => {
     const id = await enviada();
-    const rascunho = await criada();
+    await criada({ aparelho: ap(2) });
     const a = await comoMembro(
       ana,
       `select id, nome from public.family_messages`,
@@ -275,12 +314,16 @@ describe("privilégios e RLS", () => {
     expect(c.linhas).toEqual([{ id }]);
     const b = await comoMembro(beto, `select id from public.family_messages`);
     expect(b.linhas).toEqual([]);
-    expect(rascunho.id).not.toBe(id);
     const h = await comoMembro(
       ana,
       `select aparelho_hash from public.family_messages`,
     );
     expect(h.erro).toMatch(/permission denied/);
+    const t = await comoMembro(
+      ana,
+      `select transcricao from public.family_messages`,
+    );
+    expect(t.erro).toMatch(/permission denied/);
   });
 
   it("membro lê o link de mensagens do próprio livro, sem o hash", async () => {
@@ -299,9 +342,11 @@ describe("privilégios e RLS", () => {
 
 describe("página do link", () => {
   const pagina = async (token: string) =>
-    valor(await anon(`select public.mensagem_pagina($1) as p`, [token]));
+    valor(
+      await servico(`select public.servico_mensagem_pagina($1) as p`, [token]),
+    );
 
-  it("mostra só o apelido e se está aberto", async () => {
+  it("mostra só o apelido (nunca o nome completo) e se está aberto", async () => {
     expect(await pagina(tokenA)).toEqual({ autor: "Tio Nelson", aberto: true });
   });
 
@@ -322,14 +367,12 @@ describe("página do link", () => {
     expect(valor(r)).toBeNull();
   });
 
-  it("trocar o link derruba o antigo", async () => {
+  it("trocar o link derruba o antigo; livro sem apelido não mostra nome", async () => {
     const novo = "v1_mensagemNOVOAAAAAAAAA";
     valor(await trocarLink(livroB, beto, novo));
     expect(await pagina(tokenB)).toBeNull();
-    expect(await pagina(novo)).toMatchObject({ autor: "Jair" });
-    expect((await criar({ token: tokenB })) as { erro: string }).toEqual({
-      erro: "link_invalido",
-    });
+    expect(await pagina(novo)).toEqual({ autor: null, aberto: true });
+    expect(await criar({ token: tokenB })).toEqual({ erro: "link_invalido" });
   });
 
   it("trocar o link é só de membro do livro", async () => {
@@ -368,15 +411,21 @@ describe("criar o rascunho", () => {
     expect(await criar({ token: "v1_mensagemVENCIDOAAAAAA" })).toEqual({
       erro: "livro_fechado",
     });
-    const p = await anon(`select public.mensagem_pagina($1) as p`, [
+    const p = await servico(`select public.servico_mensagem_pagina($1) as p`, [
       "v1_mensagemVENCIDOAAAAAA",
     ]);
     expect(valor(p)).toMatchObject({ aberto: false });
   });
 
-  it("limite por hora por livro, contando rascunhos", async () => {
-    for (let i = 0; i < 20; i++) await criada({ aparelho: ap(100 + i) });
-    expect(await criar({ aparelho: ap(999) })).toEqual({
+  it("no máximo 3 rascunhos abertos por aparelho; outro aparelho segue", async () => {
+    for (let i = 0; i < 3; i++) await criada();
+    expect(await criar()).toEqual({ erro: "limite_rascunhos" });
+    expect(await criar({ aparelho: ap(2) })).toMatchObject({ livro: livroA });
+  });
+
+  it("no máximo 100 rascunhos por livro por dia", async () => {
+    for (let i = 0; i < 100; i++) await criada({ aparelho: ap(1000 + i) });
+    expect(await criar({ aparelho: ap(9999) })).toEqual({
       erro: "limite_mensagens",
     });
   });
@@ -401,7 +450,7 @@ describe("upload, transcrição e envio: só o aparelho que criou", () => {
     expect(valor(await caminho(ap(1), "audio"))).toBeNull();
   });
 
-  it("duração acima de 5 min e 10 s é recusada", async () => {
+  it("duração declarada acima de 5 min e 10 s é recusada", async () => {
     const m = await criada();
     expect(await confirmarAudio(m.id, ap(1), 311)).toEqual({
       erro: "dados_invalidos",
@@ -414,77 +463,113 @@ describe("upload, transcrição e envio: só o aparelho que criou", () => {
     const m = await criada();
     expect(await reservar(m.id)).toEqual({ erro: "audio_nao_chegou" });
     valor(await confirmarAudio(m.id));
-    expect(valor(await reservar(m.id))).toEqual({
+    const r = valor(await reservar(m.id)) as Record<string, string>;
+    expect(r).toMatchObject({
       caminho: m.audio_caminho,
-      livro: livroA,
+      apelido: "Tio Nelson",
     });
     expect(valor(await reservar(m.id))).toEqual({ espera: true });
     expect(await reservar(m.id, ap(2))).toEqual({
       erro: "mensagem_nao_encontrada",
     });
-    expect(valor(await transcrita(m.id, "primeira"))).toBe(true);
-    expect(valor(await transcrita(m.id, "segunda"))).toBe(false);
+    expect(valor(await transcrita(m.id, crypto.randomUUID(), "intrusa"))).toBe(
+      "reserva_vencida",
+    );
+    expect(valor(await transcrita(m.id, r.reserva, "primeira"))).toBe("ok");
+    expect(valor(await transcrita(m.id, r.reserva, "segunda"))).toBe(
+      "ja_havia",
+    );
     expect(valor(await reservar(m.id))).toEqual({ texto: "primeira" });
   });
 
-  it("no máximo 3 tentativas de transcrição por mensagem", async () => {
+  it("a falha só libera a reserva de quem falhou; no máximo 3 tentativas por mensagem", async () => {
     const m = await criada();
     valor(await confirmarAudio(m.id));
-    for (let i = 0; i < 3; i++) {
-      expect(valor(await reservar(m.id))).toMatchObject({
-        caminho: m.audio_caminho,
-      });
-      valor(
-        await servico(
-          `select public.servico_mensagem_transcricao_falhou($1, $2, $3)`,
-          [tokenA, ap(1), m.id],
-        ),
-      );
-    }
+    const r1 = await reservaDe(m.id);
+    valor(await falhou(m.id, crypto.randomUUID())); // não é a reserva dela: nada muda
+    expect(valor(await reservar(m.id))).toEqual({ espera: true });
+    valor(await falhou(m.id, r1));
+    valor(await falhou(m.id, await reservaDe(m.id)));
+    await reservaDe(m.id);
+    await semGatilho(
+      `update public.family_messages set transcricao_pedida_em = now() - interval '3 minutes'`,
+    );
     expect(await reservar(m.id)).toEqual({ erro: "limite_transcricao" });
   });
 
-  it("enviar: outro aparelho não envia; áudio que não chegou trava; foto que não chegou cai", async () => {
+  it("no máximo 60 transcrições por livro por dia", async () => {
+    const m = await criada();
+    valor(await confirmarAudio(m.id));
+    await semGatilho(
+      `insert into public.family_messages (book_id, access_id, aparelho_hash, nome, relacao,
+         consentimento_em, consentimento_versao, transcricao_tentativas)
+       select f.book_id, f.access_id, repeat('a', 64), 'X', 'Y', now(), 1, 3
+       from public.family_messages f, generate_series(1, 20) where f.id = '${m.id}'`,
+    );
+    expect(await reservar(m.id)).toEqual({ erro: "limite_transcricao" });
+  });
+
+  it("áudio acima de 5 min (pela transcrição) é recusado e não envia", async () => {
+    const m = await criada();
+    valor(await confirmarAudio(m.id, ap(1), 290));
+    const r = await reservaDe(m.id);
+    expect(valor(await transcrita(m.id, r, "longo demais", 1800))).toBe(
+      "audio_longo",
+    );
+    expect(await reservar(m.id)).toEqual({ erro: "audio_longo" });
+    expect(await enviar(m.id, "oi")).toEqual({ erro: "audio_longo" });
+  });
+
+  it("enviar: outro aparelho não envia; áudio que não chegou trava; foto que não chegou fica de fora", async () => {
     const m = await criada({ foto: true });
     expect(await enviar(m.id, "oi", ap(2))).toEqual({
       erro: "mensagem_nao_encontrada",
     });
     expect(await enviar(m.id, "oi")).toEqual({ erro: "audio_nao_chegou" });
     valor(await confirmarAudio(m.id));
-    valor(await reservar(m.id));
-    valor(await transcrita(m.id, "oi tio"));
+    const r = await reservaDe(m.id);
+    valor(await transcrita(m.id, r, "oi tio"));
     expect(valor(await enviar(m.id, "Oi, tio!"))).toEqual({
       id: m.id,
       livro: livroA,
       audio: true,
       foto: false,
-      alterou: true,
+      transcricao: "oi tio",
     });
-    const [r] = await sql(
-      `select estado, texto, texto_enviado, foto_caminho from public.family_messages where id = $1`,
+    const [x] = await sql(
+      `select estado, texto, texto_enviado, foto_caminho, foto_recebida_em
+       from public.family_messages where id = $1`,
       [m.id],
     );
-    expect(r).toEqual({
+    expect(x).toEqual({
       estado: "enviada",
       texto: "Oi, tio!",
       texto_enviado: "Oi, tio!",
-      foto_caminho: null,
+      foto_caminho: m.foto_caminho,
+      foto_recebida_em: null,
     });
     expect(await enviar(m.id, "de novo")).toEqual({
       erro: "mensagem_nao_encontrada",
     });
+    // A foto que chegar atrasada não entra na mensagem enviada.
+    expect(
+      await servico(
+        `update public.family_messages set foto_recebida_em = now() where id = $1`,
+        [m.id],
+      ),
+    ).toEqual({ erro: "mensagem_imutavel" });
   });
 
-  it("sem áudio, precisa de texto; com áudio, pode ir sem texto", async () => {
+  it("sempre precisa de texto, com ou sem áudio", async () => {
     const t = await criada({ audio: null });
     expect(await enviar(t.id, "  ")).toEqual({ erro: "mensagem_sem_texto" });
     expect(valor(await enviar(t.id, "Saudade!"))).toMatchObject({
       audio: false,
-      alterou: false,
+      transcricao: null,
     });
     const a = await criada();
     valor(await confirmarAudio(a.id));
-    expect(valor(await enviar(a.id, null))).toMatchObject({ audio: true });
+    expect(await enviar(a.id, null)).toEqual({ erro: "mensagem_sem_texto" });
   });
 
   it("texto acima do limite é recusado", async () => {
@@ -494,12 +579,22 @@ describe("upload, transcrição e envio: só o aparelho que criou", () => {
     });
   });
 
+  it("no máximo 20 enviadas por hora por livro", async () => {
+    for (let i = 0; i < 20; i++) {
+      const m = await criada({ audio: null, aparelho: ap(200 + i) });
+      valor(await enviar(m.id, "oi", ap(200 + i)));
+    }
+    const m = await criada({ audio: null, aparelho: ap(300) });
+    expect(await enviar(m.id, "oi", ap(300))).toEqual({
+      erro: "limite_mensagens",
+    });
+  });
+
   it("rascunho de mais de 48 h não é mais do aparelho", async () => {
     const m = await criada();
-    await db.exec(`
-      alter table public.family_messages disable trigger family_messages_regras;
-      update public.family_messages set criado_em = now() - interval '49 hours';
-      alter table public.family_messages enable trigger family_messages_regras;`);
+    await semGatilho(
+      `update public.family_messages set criado_em = now() - interval '49 hours'`,
+    );
     expect(await enviar(m.id, "oi")).toEqual({
       erro: "mensagem_nao_encontrada",
     });
@@ -529,7 +624,7 @@ describe("membros", () => {
       editado_por: caio,
     });
     valor(
-      await comoMembro(ana, `select public.mensagem_arquivar($1, true)`, [id]),
+      await comoMembro(caio, `select public.mensagem_arquivar($1, true)`, [id]),
     );
     [r] = await sql(
       `select estado, no_livro from public.family_messages where id = $1`,
@@ -548,32 +643,23 @@ describe("membros", () => {
     expect(r).toEqual({ estado: "enviada" });
   });
 
-  it("sem texto não entra no livro; texto vazio não é aceito", async () => {
-    const m = await criada();
-    valor(await confirmarAudio(m.id));
-    valor(await enviar(m.id, null));
+  it("texto vazio não é aceito", async () => {
+    const id = await enviada();
     expect(
-      await comoMembro(ana, `select public.mensagem_no_livro($1, true)`, [
-        m.id,
-      ]),
-    ).toEqual({
-      erro: "mensagem_sem_texto",
-    });
-    expect(
-      await comoMembro(ana, `select public.mensagem_editar($1, ' ')`, [m.id]),
+      await comoMembro(ana, `select public.mensagem_editar($1, ' ')`, [id]),
     ).toEqual({
       erro: "mensagem_sem_texto",
     });
   });
 
-  it("outro livro, rascunho e plano vencido são barrados", async () => {
+  it("outro livro, rascunho e anon são barrados", async () => {
     const id = await enviada();
     expect(
       await comoMembro(beto, `select public.mensagem_editar($1, 'x')`, [id]),
     ).toEqual({
       erro: "sem_permissao",
     });
-    const r = await criada();
+    const r = await criada({ aparelho: ap(2) });
     expect(
       await comoMembro(ana, `select public.mensagem_no_livro($1, true)`, [
         r.id,
@@ -586,6 +672,42 @@ describe("membros", () => {
     ).toMatchObject({
       erro: expect.stringMatching(/permission denied/),
     });
+  });
+
+  it("apagar de vez: só o responsável, só arquivada; devolve os caminhos", async () => {
+    const id = await enviada();
+    expect(
+      await comoMembro(ana, `select * from public.mensagem_apagar($1)`, [id]),
+    ).toEqual({
+      erro: "sem_permissao",
+    });
+    valor(
+      await comoMembro(ana, `select public.mensagem_arquivar($1, true)`, [id]),
+    );
+    expect(
+      await comoMembro(caio, `select * from public.mensagem_apagar($1)`, [id]),
+    ).toEqual({
+      erro: "sem_permissao",
+    });
+    expect(
+      await comoMembro(beto, `select * from public.mensagem_apagar($1)`, [id]),
+    ).toEqual({
+      erro: "sem_permissao",
+    });
+    const r = await comoMembro(
+      ana,
+      `select * from public.mensagem_apagar($1)`,
+      [id],
+    );
+    expect(r.linhas).toEqual([
+      {
+        audio_caminho: `livros/${livroA}/mensagens/${id}.webm`,
+        foto_caminho: null,
+      },
+    ]);
+    expect(
+      await sql(`select id from public.family_messages where id = $1`, [id]),
+    ).toEqual([]);
   });
 });
 
@@ -602,6 +724,25 @@ describe("o que foi enviado não some nem muda", () => {
     });
   });
 
+  it("a marca de apagar vale só para a mensagem marcada", async () => {
+    const a = await enviada("A", ap(1));
+    const b = await enviada("B", ap(2));
+    const r = await como(db, "service_role", {}, async (tx) => {
+      await tx.query(`select set_config('ecoa.apagar_mensagem', $1, true)`, [
+        a,
+      ]);
+      await tx.exec("savepoint s");
+      try {
+        await tx.query(`delete from public.family_messages where id = $1`, [b]);
+        return "apagou";
+      } catch (e) {
+        await tx.exec("rollback to savepoint s");
+        return (e as Error).message;
+      }
+    });
+    expect(r).toBe("mensagem_imutavel");
+  });
+
   it.each([
     ["texto_enviado", `texto_enviado = 'outro'`],
     ["transcricao", `transcricao = 'outra'`],
@@ -611,6 +752,8 @@ describe("o que foi enviado não some nem muda", () => {
       `estado = 'rascunho', enviada_em = null, texto = null, texto_enviado = null`,
     ],
     ["áudio", `audio_caminho = null`],
+    ["foto", `foto_caminho = 'outra.jpg'`],
+    ["recusar o áudio depois", `audio_recusado = true`],
   ])("%s não muda depois de enviada", async (_n, set) => {
     const id = await enviada();
     expect(
@@ -627,11 +770,11 @@ describe("limpeza dos rascunhos", () => {
   it("lista e apaga só rascunhos vencidos", async () => {
     const velho = await criada({ foto: true });
     const novo = await criada({ aparelho: ap(2) });
-    const id = await enviada();
-    await db.exec(`
-      alter table public.family_messages disable trigger family_messages_regras;
-      update public.family_messages set criado_em = now() - interval '49 hours' where id in ('${velho.id}', '${id}');
-      alter table public.family_messages enable trigger family_messages_regras;`);
+    const id = await enviada("oi", ap(3));
+    await semGatilho(
+      `update public.family_messages set criado_em = now() - interval '49 hours'
+       where id in ('${velho.id}', '${id}')`,
+    );
     const lista = await servico(
       `select * from public.servico_mensagem_rascunhos_vencidos(100)`,
     );
@@ -651,7 +794,7 @@ describe("limpeza dos rascunhos", () => {
       ),
     ).toBe(1);
     const ficou = await sql<{ id: string }>(
-      `select id from public.family_messages order by id`,
+      `select id from public.family_messages`,
     );
     expect(ficou.map((x) => x.id).sort()).toEqual([novo.id, id].sort());
   });

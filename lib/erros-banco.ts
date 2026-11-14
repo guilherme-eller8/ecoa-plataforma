@@ -58,6 +58,8 @@ export const FRASES_DOS_CODIGOS = {
   limite_transcricao:
     "Não conseguimos escrever o áudio. Escreva você ou envie só o áudio.",
   mensagem_imutavel: "Esta mensagem não pode mudar.",
+  limite_rascunhos: "Termine ou espere as mensagens que você já começou.",
+  audio_longo: "O áudio passou de 5 minutos. Grave de novo, mais curto.",
   family_messages_nao_vazia: "Algo não está certo. Confira e tente de novo.",
   qr_nao_encontrado: "Não achamos este QR.",
   chave_invalida: "Não deu certo agora. Tente de novo.",

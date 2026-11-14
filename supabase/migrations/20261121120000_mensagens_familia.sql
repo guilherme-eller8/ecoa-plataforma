@@ -1,29 +1,37 @@
 -- 20261121120000_mensagens_familia.sql
--- Prompt 12: mensagens da família para o livro. Design: docs/designs/mensagens-familia.md.
+-- Prompt 12: mensagens da família para o livro. Design: docs/designs/mensagens-familia.md (v2).
 --
 -- Regras deste arquivo:
 -- * O link /m/{token} é só de escrita: quem tem o link cria a própria mensagem e não lê nada,
 --   nem as mensagens dos outros, nem a lista. O rascunho fica preso ao aparelho (cookie da
 --   rota /m, guardado como hash por livro) e só o servidor devolve a transcrição a ele.
+-- * Nenhuma função do link é executável por anon: o servidor chama todas com a chave secreta
+--   (limites por aparelho e por livro aqui; validação de arquivo no servidor).
 -- * family_messages continua fechada para anon e porta_autor (política restritiva do prompt
---   10, intocada). O membro lê só mensagens enviadas do próprio livro, por colunas, sem o hash
---   do aparelho nem a transcrição bruta.
--- * Mensagem enviada nunca é apagada nem volta a rascunho, nem pela chave secreta. O texto que a
---   pessoa enviou (texto_enviado) e a transcrição (transcricao) são gravados uma vez. Só o
---   rascunho não enviado é apagado, pela limpeza (48 h).
+--   10, intocada). O membro lê só mensagens enviadas e arquivadas do próprio livro, por
+--   colunas, sem o hash do aparelho nem a transcrição bruta.
+-- * Mensagem enviada não volta a rascunho, e o que a pessoa enviou (texto_enviado, nome,
+--   relação, áudio, foto) e a transcrição bruta da máquina não mudam, nem pela chave secreta.
+--   Só sai de vez por mensagem_apagar (o responsável, arquivada antes) ou o rascunho vencido.
 -- * Nenhum grant novo para porta_autor.
 
 -- Espelham lib/config.ts. supabase/tests/config-banco.test.ts confere.
 create function privado.max_mensagens_por_hora() returns integer
-language sql immutable set search_path = '' as $$ select 20 $$;   -- MAX_MENSAGENS_POR_HORA, por livro
+language sql immutable set search_path = '' as $$ select 20 $$;   -- MAX_MENSAGENS_POR_HORA (enviadas, por livro)
 create function privado.max_mensagens_por_dia() returns integer
-language sql immutable set search_path = '' as $$ select 40 $$;   -- MAX_MENSAGENS_POR_DIA, por livro
+language sql immutable set search_path = '' as $$ select 40 $$;   -- MAX_MENSAGENS_POR_DIA (enviadas, por livro)
+create function privado.max_rascunhos_por_dia() returns integer
+language sql immutable set search_path = '' as $$ select 100 $$;  -- MAX_RASCUNHOS_POR_DIA (por livro)
+create function privado.max_rascunhos_por_aparelho() returns integer
+language sql immutable set search_path = '' as $$ select 3 $$;    -- MAX_RASCUNHOS_POR_APARELHO (abertos)
 create function privado.max_mensagem_audio_s() returns integer
 language sql immutable set search_path = '' as $$ select 310 $$;  -- MAX_MENSAGEM_AUDIO_MIN = 5, + 10 s
 create function privado.max_mensagem_caracteres() returns integer
 language sql immutable set search_path = '' as $$ select 6000 $$; -- MAX_MENSAGEM_CARACTERES
 create function privado.max_transcricoes_por_mensagem() returns integer
 language sql immutable set search_path = '' as $$ select 3 $$;    -- MAX_TRANSCRICOES_POR_MENSAGEM
+create function privado.max_transcricoes_por_dia() returns integer
+language sql immutable set search_path = '' as $$ select 60 $$;   -- MAX_TRANSCRICOES_POR_DIA (por livro)
 create function privado.mensagem_rascunho_dura_h() returns integer
 language sql immutable set search_path = '' as $$ select 48 $$;   -- MENSAGEM_RASCUNHO_DURA_H
 
@@ -72,10 +80,12 @@ alter table public.family_messages
   add column audio_caminho text unique,
   add column audio_recebido_em timestamptz,
   add column duracao_s integer check (duracao_s is null or duracao_s between 1 and 310),
+  add column audio_recusado boolean not null default false,
   add column foto_caminho text unique,
   add column foto_recebida_em timestamptz,
   add column transcricao text check (transcricao is null or char_length(transcricao) <= 12000),
   add column transcricao_tentativas smallint not null default 0 check (transcricao_tentativas between 0 and 3),
+  add column transcricao_reserva uuid,
   add column transcricao_pedida_em timestamptz,
   add column texto text check (texto is null or char_length(btrim(texto)) between 1 and 6000),
   add column texto_enviado text check (texto_enviado is null or char_length(texto_enviado) <= 6000),
@@ -97,25 +107,29 @@ alter table public.family_messages
     or (audio_caminho is not null and duracao_s is not null)),
   add constraint family_messages_foto_recebida check (foto_recebida_em is null or foto_caminho is not null),
   add constraint family_messages_transcricao_tem_audio check (transcricao is null or audio_recebido_em is not null),
-  -- Enviada: tem data, tem texto ou áudio, e nada pela metade (áudio e foto chegaram).
+  -- Enviada: tem data e texto (o que a pessoa conferiu ou escreveu), e o áudio, se havia, chegou
+  -- e não foi recusado. A foto que não chegou fica de fora (foto_recebida_em nulo), sem travar.
   add constraint family_messages_enviada_completa check (estado = 'rascunho' or (
-    enviada_em is not null
-    and (texto is not null or audio_recebido_em is not null)
-    and (audio_caminho is null or audio_recebido_em is not null)
-    and (foto_caminho is null or foto_recebida_em is not null))),
+    enviada_em is not null and texto is not null and texto_enviado is not null
+    and (audio_caminho is null or (audio_recebido_em is not null and not audio_recusado)))),
   add constraint family_messages_rascunho_sem_livro check (estado <> 'rascunho' or (
     enviada_em is null and texto is null and texto_enviado is null)),
-  add constraint family_messages_no_livro check (not no_livro or (estado = 'enviada' and texto is not null));
+  add constraint family_messages_no_livro check (not no_livro or estado = 'enviada');
 
 create index family_messages_livro_estado on public.family_messages (book_id, estado, enviada_em desc);
 create index family_messages_rascunhos on public.family_messages (criado_em) where estado = 'rascunho';
+create index family_messages_aparelho on public.family_messages (book_id, aparelho_hash) where estado = 'rascunho';
 
--- Regras que nem a chave secreta fura: o que a pessoa mandou não muda; enviada não some.
+-- Regras que nem a chave secreta fura: o que a pessoa mandou não muda; enviada só sai por
+-- mensagem_apagar, que marca a transação com ecoa.apagar_mensagem = id.
 create function privado.mensagem_regras() returns trigger
 language plpgsql set search_path = '' as $$
 begin
   if tg_op = 'DELETE' then
-    if old.estado = 'rascunho' then return old; end if;
+    if old.estado = 'rascunho'
+       or coalesce(current_setting('ecoa.apagar_mensagem', true), '') = old.id::text then
+      return old;
+    end if;
     raise exception 'mensagem_imutavel';
   end if;
   if new.id <> old.id or new.book_id <> old.book_id or new.access_id <> old.access_id
@@ -123,16 +137,18 @@ begin
      or new.criado_em <> old.criado_em or new.consentimento_em <> old.consentimento_em
      or new.consentimento_versao <> old.consentimento_versao
      or new.audio_caminho is distinct from old.audio_caminho
+     or new.foto_caminho is distinct from old.foto_caminho
      or (old.audio_recebido_em is not null and new.audio_recebido_em is distinct from old.audio_recebido_em)
      or (old.duracao_s is not null and new.duracao_s is distinct from old.duracao_s)
+     or (old.audio_recusado and not new.audio_recusado)
+     or (old.foto_recebida_em is not null and new.foto_recebida_em is distinct from old.foto_recebida_em)
      or (old.transcricao is not null and new.transcricao is distinct from old.transcricao)
      or (old.texto_enviado is not null and new.texto_enviado is distinct from old.texto_enviado)
      or (old.enviada_em is not null and new.enviada_em is distinct from old.enviada_em)
      or (old.estado <> 'rascunho' and new.estado = 'rascunho')
-     or (old.foto_recebida_em is not null and new.foto_recebida_em is distinct from old.foto_recebida_em)
-     -- A foto que não chegou cai no envio; depois disso o caminho não muda.
-     or (new.foto_caminho is distinct from old.foto_caminho
-         and not (old.estado = 'rascunho' and old.foto_recebida_em is null and new.foto_caminho is null)) then
+     -- Depois de enviada, nada do envio muda (foto atrasada não entra; áudio não é recusado depois).
+     or (old.estado <> 'rascunho' and (new.foto_recebida_em is distinct from old.foto_recebida_em
+         or new.audio_recusado <> old.audio_recusado)) then
     raise exception 'mensagem_imutavel';
   end if;
   return new;
@@ -186,9 +202,10 @@ begin
   return m;
 end $$;
 
--- ── 4. Portas do link (anon) ───────────────────────────────────────────────
--- O que a página /m/[token] mostra. null = link inválido ou revogado. Nada além do apelido.
-create function public.mensagem_pagina(p_token text)
+-- ── 4. Funções do link /m (só o servidor, com a chave secreta) ─────────────
+-- O que a página /m/[token] mostra. null = link inválido ou revogado. Só o apelido (nunca o
+-- nome completo do autor): sem apelido, a página diz "Uma mensagem para o livro".
+create function public.servico_mensagem_pagina(p_token text)
 returns jsonb language plpgsql stable security definer set search_path = '' as $$
 declare
   l record;
@@ -196,12 +213,12 @@ begin
   select * into l from privado.link_da_mensagem(p_token);
   if l.livro is null then return null; end if;
   return jsonb_build_object(
-    'autor', (select coalesce(b.autor_apelido, b.autor_nome) from public.books b where b.id = l.livro),
+    'autor', (select b.autor_apelido from public.books b where b.id = l.livro),
     'aberto', privado.livro_editavel(l.livro));
 end $$;
 
 -- Cria o rascunho. Com áudio ou foto, devolve os caminhos fixos que o servidor vai assinar.
-create function public.mensagem_criar(
+create function public.servico_mensagem_criar(
   p_token text, p_aparelho text, p_nome text, p_relacao text, p_audio_tipo text, p_foto boolean,
   p_consentimento boolean, p_consentimento_versao smallint
 ) returns jsonb language plpgsql security definer set search_path = '' as $$
@@ -227,12 +244,16 @@ begin
   if v_hash is null then raise exception 'dados_invalidos'; end if;
   if not privado.livro_editavel(l.livro) then raise exception 'livro_fechado'; end if;
 
-  -- Uma fila por livro: a contagem e o insert não correm em paralelo. Rascunhos contam.
+  -- Uma fila por livro: a contagem e o insert não correm em paralelo.
   perform pg_advisory_xact_lock(hashtextextended('mensagens:' || l.livro::text, 0));
   if (select count(*) from public.family_messages f
-      where f.book_id = l.livro and f.criado_em > now() - interval '1 hour') >= privado.max_mensagens_por_hora()
-     or (select count(*) from public.family_messages f
-      where f.book_id = l.livro and f.criado_em > now() - interval '1 day') >= privado.max_mensagens_por_dia() then
+      where f.book_id = l.livro and f.aparelho_hash = v_hash and f.estado = 'rascunho'
+        and f.criado_em > now() - make_interval(hours => privado.mensagem_rascunho_dura_h()))
+     >= privado.max_rascunhos_por_aparelho() then
+    raise exception 'limite_rascunhos';
+  end if;
+  if (select count(*) from public.family_messages f
+      where f.book_id = l.livro and f.criado_em > now() - interval '1 day') >= privado.max_rascunhos_por_dia() then
     raise exception 'limite_mensagens';
   end if;
 
@@ -249,9 +270,10 @@ begin
   return jsonb_build_object('id', v_id, 'livro', l.livro, 'audio_caminho', v_audio, 'foto_caminho', v_foto);
 end $$;
 
--- Envia o rascunho do aparelho. Sem texto só se houver áudio. A foto que não chegou cai.
--- Devolve {livro, audio, foto, alterou}: alterou = a pessoa mexeu na transcrição (métrica).
-create function public.mensagem_enviar(p_token text, p_aparelho text, p_id uuid, p_texto text)
+-- Envia o rascunho do aparelho. Sempre com texto (o conferido ou o escrito). O áudio, se havia,
+-- precisa ter chegado e não ter sido recusado. Devolve a transcrição bruta ao servidor, para a
+-- métrica "a pessoa mexeu no texto" (só o booleano vai para events).
+create function public.servico_mensagem_enviar(p_token text, p_aparelho text, p_id uuid, p_texto text)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   m public.family_messages;
@@ -261,22 +283,29 @@ begin
      or (v_texto is not null and char_length(v_texto) > privado.max_mensagem_caracteres()) then
     raise exception 'dados_invalidos';
   end if;
+  if v_texto is null then raise exception 'mensagem_sem_texto'; end if;
   m := privado.rascunho_do_aparelho(p_token, p_aparelho, p_id);
   if not privado.livro_editavel(m.book_id) then raise exception 'livro_fechado'; end if;
+  if m.audio_recusado then raise exception 'audio_longo'; end if;
   if m.audio_caminho is not null and m.audio_recebido_em is null then raise exception 'audio_nao_chegou'; end if;
-  if v_texto is null and m.audio_caminho is null then raise exception 'mensagem_sem_texto'; end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('mensagens:' || m.book_id::text, 0));
+  if (select count(*) from public.family_messages f
+      where f.book_id = m.book_id and f.enviada_em > now() - interval '1 hour') >= privado.max_mensagens_por_hora()
+     or (select count(*) from public.family_messages f
+      where f.book_id = m.book_id and f.enviada_em > now() - interval '1 day') >= privado.max_mensagens_por_dia() then
+    raise exception 'limite_mensagens';
+  end if;
 
   update public.family_messages f
-  set estado = 'enviada', enviada_em = now(), texto = v_texto, texto_enviado = v_texto,
-      foto_caminho = case when f.foto_recebida_em is null then null else f.foto_caminho end
+  set estado = 'enviada', enviada_em = now(), texto = v_texto, texto_enviado = v_texto
   where f.id = m.id;
   return jsonb_build_object('id', m.id, 'livro', m.book_id,
     'audio', m.audio_caminho is not null,
     'foto', m.foto_recebida_em is not null,
-    'alterou', m.transcricao is not null and v_texto is distinct from m.transcricao);
+    'transcricao', m.transcricao);
 end $$;
 
--- ── 5. Funções do servidor (chave secreta), que ainda conferem token e aparelho ──
 -- Caminho para assinar o upload: só rascunho do aparelho, arquivo ainda não recebido, até 30 min.
 create function public.servico_caminho_mensagem(p_token text, p_aparelho text, p_id uuid, p_tipo text)
 returns text language plpgsql security definer set search_path = '' as $$
@@ -291,7 +320,8 @@ begin
   return null;
 end $$;
 
--- O servidor chama depois de conferir que o arquivo existe no Storage e o tamanho.
+-- O servidor chama depois de conferir no Storage que o arquivo existe, o tamanho e os primeiros
+-- bytes (o tipo de verdade, não o declarado). A duração é a do aparelho; a real vem da transcrição.
 create function public.servico_confirmar_audio_mensagem(p_token text, p_aparelho text, p_id uuid, p_duracao_s integer)
 returns boolean language plpgsql security definer set search_path = '' as $$
 declare
@@ -323,15 +353,18 @@ begin
   return true;
 end $$;
 
--- Antes de chamar o transcritor. Já transcrita: devolve o texto ao mesmo aparelho (resposta
--- perdida na rede). Senão reserva por 2 min e conta a tentativa (no máximo 3 por mensagem).
--- Devolve {texto} ou {caminho}; {espera: true} se outra chamada está transcrevendo agora.
+-- Antes de chamar o transcritor. Já transcrita: devolve a transcrição ao mesmo aparelho (resposta
+-- perdida na rede). Senão reserva por 2 min com um id próprio e conta a tentativa (3 por mensagem,
+-- 60 por livro por dia). Devolve {texto} | {espera: true} | {reserva, caminho, apelido}.
 create function public.servico_mensagem_reservar_transcricao(p_token text, p_aparelho text, p_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   m public.family_messages;
+  v_reserva uuid := gen_random_uuid();
 begin
   m := privado.rascunho_do_aparelho(p_token, p_aparelho, p_id);
+  if not privado.livro_editavel(m.book_id) then raise exception 'livro_fechado'; end if;
+  if m.audio_recusado then raise exception 'audio_longo'; end if;
   if m.audio_recebido_em is null then raise exception 'audio_nao_chegou'; end if;
   if m.transcricao is not null then return jsonb_build_object('texto', m.transcricao); end if;
   if m.transcricao_pedida_em > now() - interval '2 minutes' then
@@ -340,36 +373,60 @@ begin
   if m.transcricao_tentativas >= privado.max_transcricoes_por_mensagem() then
     raise exception 'limite_transcricao';
   end if;
+  perform pg_advisory_xact_lock(hashtextextended('transcricoes:' || m.book_id::text, 0));
+  if (select coalesce(sum(f.transcricao_tentativas), 0) from public.family_messages f
+      where f.book_id = m.book_id and f.criado_em > now() - interval '1 day')
+     >= privado.max_transcricoes_por_dia() then
+    raise exception 'limite_transcricao';
+  end if;
   update public.family_messages
-  set transcricao_tentativas = transcricao_tentativas + 1, transcricao_pedida_em = now()
+  set transcricao_tentativas = transcricao_tentativas + 1, transcricao_pedida_em = now(),
+      transcricao_reserva = v_reserva
   where id = m.id;
-  return jsonb_build_object('caminho', m.audio_caminho, 'livro', m.book_id);
+  return jsonb_build_object('reserva', v_reserva, 'caminho', m.audio_caminho,
+    'apelido', (select b.autor_apelido from public.books b where b.id = m.book_id));
 end $$;
 
--- Grava a transcrição uma vez (a primeira que chega). false = já havia uma.
-create function public.servico_mensagem_transcrita(p_token text, p_aparelho text, p_id uuid, p_texto text)
-returns boolean language plpgsql security definer set search_path = '' as $$
+-- Grava a transcrição bruta (as palavras do Scribe juntas, sem limpeza) uma vez, se a reserva é
+-- desta chamada. p_fim_s = fim da última palavra (a duração real): acima do teto, o áudio é
+-- recusado e a pessoa grava de novo. Devolve 'ok' | 'ja_havia' | 'audio_longo' | 'reserva_vencida'.
+create function public.servico_mensagem_transcrita(
+  p_token text, p_aparelho text, p_id uuid, p_reserva uuid, p_texto text, p_fim_s numeric
+) returns text language plpgsql security definer set search_path = '' as $$
 declare
   m public.family_messages;
 begin
-  if p_texto is null or char_length(p_texto) > 12000 then raise exception 'dados_invalidos'; end if;
+  if p_texto is null or char_length(p_texto) > 12000 or p_reserva is null
+     or p_fim_s is null or p_fim_s < 0 then
+    raise exception 'dados_invalidos';
+  end if;
   m := privado.rascunho_do_aparelho(p_token, p_aparelho, p_id);
-  if m.transcricao is not null or m.audio_recebido_em is null then return false; end if;
-  update public.family_messages set transcricao = p_texto, transcricao_pedida_em = null where id = m.id;
-  return true;
+  if m.transcricao is not null then return 'ja_havia'; end if;
+  if m.transcricao_reserva is distinct from p_reserva then return 'reserva_vencida'; end if;
+  if p_fim_s > privado.max_mensagem_audio_s() then
+    update public.family_messages
+    set audio_recusado = true, transcricao_pedida_em = null, transcricao_reserva = null
+    where id = m.id;
+    return 'audio_longo';
+  end if;
+  update public.family_messages
+  set transcricao = p_texto, transcricao_pedida_em = null, transcricao_reserva = null
+  where id = m.id;
+  return 'ok';
 end $$;
 
--- A transcrição falhou: libera a reserva para a próxima tentativa (que ainda conta).
-create function public.servico_mensagem_transcricao_falhou(p_token text, p_aparelho text, p_id uuid)
+-- A transcrição falhou: libera a reserva (só a desta chamada) para a próxima tentativa.
+create function public.servico_mensagem_transcricao_falhou(p_token text, p_aparelho text, p_id uuid, p_reserva uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 declare
   m public.family_messages;
 begin
   m := privado.rascunho_do_aparelho(p_token, p_aparelho, p_id);
-  update public.family_messages set transcricao_pedida_em = null where id = m.id and transcricao is null;
+  update public.family_messages set transcricao_pedida_em = null, transcricao_reserva = null
+  where id = m.id and transcricao is null and transcricao_reserva = p_reserva;
 end $$;
 
--- Gera ou troca o link de mensagens. Revoga o ativo e cria o novo na mesma transação.
+-- Gera ou troca o link de mensagens. p_usuario vem da sessão no servidor (nunca do formulário).
 create function public.servico_trocar_link_mensagem(
   p_livro uuid, p_usuario uuid, p_id uuid, p_token_hash text, p_chave_versao smallint
 ) returns void language plpgsql security definer set search_path = '' as $$
@@ -406,7 +463,7 @@ begin
   return v;
 end $$;
 
--- ── 6. Ações dos membros (conferem membro e plano ativo) ───────────────────
+-- ── 5. Ações dos membros ───────────────────────────────────────────────────
 create function public.mensagem_editar(p_id uuid, p_texto text)
 returns void language plpgsql security definer set search_path = '' as $$
 declare
@@ -426,12 +483,11 @@ end $$;
 create function public.mensagem_no_livro(p_id uuid, p_incluir boolean)
 returns void language plpgsql security definer set search_path = '' as $$
 declare
-  m record;
+  v_livro uuid;
 begin
   if p_incluir is null then raise exception 'dados_invalidos'; end if;
-  select f.book_id, f.texto into m from public.family_messages f where f.id = p_id and f.estado = 'enviada';
-  perform privado.membro_editando(m.book_id);
-  if p_incluir and m.texto is null then raise exception 'mensagem_sem_texto'; end if;
+  select f.book_id into v_livro from public.family_messages f where f.id = p_id and f.estado = 'enviada';
+  perform privado.membro_editando(v_livro);
   update public.family_messages
   set no_livro = p_incluir, no_livro_em = now(), no_livro_por = (select auth.uid())
   where id = p_id and no_livro <> p_incluir;
@@ -453,36 +509,56 @@ begin
   where id = p_id;
 end $$;
 
--- ── 7. Quem executa o quê ──────────────────────────────────────────────────
+-- Apagar de vez (spam ou pedido de quem enviou, LGPD): só o responsável, só arquivada. Vale com
+-- o plano vencido. Devolve os caminhos para o servidor apagar os arquivos depois.
+create function public.mensagem_apagar(p_id uuid)
+returns table (audio_caminho text, foto_caminho text)
+language plpgsql security definer set search_path = '' as $$
+declare
+  m record;
+begin
+  select f.id, f.book_id, f.audio_caminho, f.foto_caminho into m
+  from public.family_messages f where f.id = p_id and f.estado = 'arquivada';
+  if m.id is null or not exists (
+       select 1 from public.book_members b
+       where b.book_id = m.book_id and b.user_id = (select auth.uid()) and b.papel = 'responsavel') then
+    raise exception 'sem_permissao';
+  end if;
+  perform set_config('ecoa.apagar_mensagem', m.id::text, true);
+  delete from public.family_messages f where f.id = m.id;
+  perform set_config('ecoa.apagar_mensagem', '', true);
+  return query select m.audio_caminho, m.foto_caminho;
+end $$;
+
+-- ── 6. Quem executa o quê ──────────────────────────────────────────────────
 revoke all on function
-  public.mensagem_pagina(text),
-  public.mensagem_criar(text, text, text, text, text, boolean, boolean, smallint),
-  public.mensagem_enviar(text, text, uuid, text),
+  public.servico_mensagem_pagina(text),
+  public.servico_mensagem_criar(text, text, text, text, text, boolean, boolean, smallint),
+  public.servico_mensagem_enviar(text, text, uuid, text),
   public.servico_caminho_mensagem(text, text, uuid, text),
   public.servico_confirmar_audio_mensagem(text, text, uuid, integer),
   public.servico_confirmar_foto_mensagem(text, text, uuid),
   public.servico_mensagem_reservar_transcricao(text, text, uuid),
-  public.servico_mensagem_transcrita(text, text, uuid, text),
-  public.servico_mensagem_transcricao_falhou(text, text, uuid),
+  public.servico_mensagem_transcrita(text, text, uuid, uuid, text, numeric),
+  public.servico_mensagem_transcricao_falhou(text, text, uuid, uuid),
   public.servico_trocar_link_mensagem(uuid, uuid, uuid, text, smallint),
   public.servico_mensagem_rascunhos_vencidos(integer),
   public.servico_mensagem_apagar_rascunhos(uuid[]),
   public.mensagem_editar(uuid, text),
   public.mensagem_no_livro(uuid, boolean),
-  public.mensagem_arquivar(uuid, boolean)
+  public.mensagem_arquivar(uuid, boolean),
+  public.mensagem_apagar(uuid)
   from public, anon, authenticated;
 grant execute on function
-  public.mensagem_pagina(text),
-  public.mensagem_criar(text, text, text, text, text, boolean, boolean, smallint),
-  public.mensagem_enviar(text, text, uuid, text)
-  to anon, service_role;
-grant execute on function
+  public.servico_mensagem_pagina(text),
+  public.servico_mensagem_criar(text, text, text, text, text, boolean, boolean, smallint),
+  public.servico_mensagem_enviar(text, text, uuid, text),
   public.servico_caminho_mensagem(text, text, uuid, text),
   public.servico_confirmar_audio_mensagem(text, text, uuid, integer),
   public.servico_confirmar_foto_mensagem(text, text, uuid),
   public.servico_mensagem_reservar_transcricao(text, text, uuid),
-  public.servico_mensagem_transcrita(text, text, uuid, text),
-  public.servico_mensagem_transcricao_falhou(text, text, uuid),
+  public.servico_mensagem_transcrita(text, text, uuid, uuid, text, numeric),
+  public.servico_mensagem_transcricao_falhou(text, text, uuid, uuid),
   public.servico_trocar_link_mensagem(uuid, uuid, uuid, text, smallint),
   public.servico_mensagem_rascunhos_vencidos(integer),
   public.servico_mensagem_apagar_rascunhos(uuid[])
@@ -490,21 +566,25 @@ grant execute on function
 grant execute on function
   public.mensagem_editar(uuid, text),
   public.mensagem_no_livro(uuid, boolean),
-  public.mensagem_arquivar(uuid, boolean)
+  public.mensagem_arquivar(uuid, boolean),
+  public.mensagem_apagar(uuid)
   to authenticated, service_role;
 revoke all on function
-  privado.max_mensagens_por_hora(), privado.max_mensagens_por_dia(), privado.max_mensagem_audio_s(),
+  privado.max_mensagens_por_hora(), privado.max_mensagens_por_dia(), privado.max_rascunhos_por_dia(),
+  privado.max_rascunhos_por_aparelho(), privado.max_mensagem_audio_s(),
   privado.max_mensagem_caracteres(), privado.max_transcricoes_por_mensagem(),
-  privado.mensagem_rascunho_dura_h(), privado.mensagem_regras(), privado.mensagem_sem_truncate(),
+  privado.max_transcricoes_por_dia(), privado.mensagem_rascunho_dura_h(),
+  privado.mensagem_regras(), privado.mensagem_sem_truncate(),
   privado.link_da_mensagem(text), privado.rascunho_do_aparelho(text, text, uuid)
   from public, anon, authenticated;
 
--- ── 8. Storage (pulado nos testes com PGlite) ──────────────────────────────
+-- ── 7. Storage (pulado nos testes com PGlite) ──────────────────────────────
 -- Bucket privado, sem políticas em storage.objects: só URLs assinadas pelo servidor.
+-- 4 MB: 5 min de voz a 48 kbps (GRAVACAO_KBPS) são ~1,8 MB; a foto vem comprimida do aparelho.
 do $$ begin
   if to_regclass('storage.buckets') is not null then
     insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-      values ('mensagens', 'mensagens', false, 8388608,
+      values ('mensagens', 'mensagens', false, 4194304,
               array['audio/webm', 'audio/mp4', 'audio/ogg', 'image/jpeg'])
     on conflict (id) do nothing;
   end if;

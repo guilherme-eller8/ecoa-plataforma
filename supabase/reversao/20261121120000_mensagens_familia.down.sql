@@ -12,21 +12,22 @@ begin
   end if;
 end $$;
 
+drop function if exists public.mensagem_apagar(uuid);
 drop function if exists public.mensagem_arquivar(uuid, boolean);
 drop function if exists public.mensagem_no_livro(uuid, boolean);
 drop function if exists public.mensagem_editar(uuid, text);
 drop function if exists public.servico_mensagem_apagar_rascunhos(uuid[]);
 drop function if exists public.servico_mensagem_rascunhos_vencidos(integer);
 drop function if exists public.servico_trocar_link_mensagem(uuid, uuid, uuid, text, smallint);
-drop function if exists public.servico_mensagem_transcricao_falhou(text, text, uuid);
-drop function if exists public.servico_mensagem_transcrita(text, text, uuid, text);
+drop function if exists public.servico_mensagem_transcricao_falhou(text, text, uuid, uuid);
+drop function if exists public.servico_mensagem_transcrita(text, text, uuid, uuid, text, numeric);
 drop function if exists public.servico_mensagem_reservar_transcricao(text, text, uuid);
 drop function if exists public.servico_confirmar_foto_mensagem(text, text, uuid);
 drop function if exists public.servico_confirmar_audio_mensagem(text, text, uuid, integer);
 drop function if exists public.servico_caminho_mensagem(text, text, uuid, text);
-drop function if exists public.mensagem_enviar(text, text, uuid, text);
-drop function if exists public.mensagem_criar(text, text, text, text, text, boolean, boolean, smallint);
-drop function if exists public.mensagem_pagina(text);
+drop function if exists public.servico_mensagem_enviar(text, text, uuid, text);
+drop function if exists public.servico_mensagem_criar(text, text, text, text, text, boolean, boolean, smallint);
+drop function if exists public.servico_mensagem_pagina(text);
 drop function if exists privado.rascunho_do_aparelho(text, text, uuid);
 drop function if exists privado.link_da_mensagem(text);
 
@@ -39,6 +40,7 @@ delete from public.family_messages;
 
 drop policy if exists "membro lê enviadas" on public.family_messages;
 revoke all on public.family_messages from authenticated;
+drop index if exists public.family_messages_aparelho;
 drop index if exists public.family_messages_rascunhos;
 drop index if exists public.family_messages_livro_estado;
 alter table public.family_messages
@@ -51,10 +53,12 @@ alter table public.family_messages
   drop column if exists audio_caminho,
   drop column if exists audio_recebido_em,
   drop column if exists duracao_s,
+  drop column if exists audio_recusado,
   drop column if exists foto_caminho,
   drop column if exists foto_recebida_em,
   drop column if exists transcricao,
   drop column if exists transcricao_tentativas,
+  drop column if exists transcricao_reserva,
   drop column if exists transcricao_pedida_em,
   drop column if exists texto,
   drop column if exists texto_enviado,
@@ -80,8 +84,11 @@ do $$ begin
 end $$;
 
 drop function if exists privado.mensagem_rascunho_dura_h();
+drop function if exists privado.max_transcricoes_por_dia();
 drop function if exists privado.max_transcricoes_por_mensagem();
 drop function if exists privado.max_mensagem_caracteres();
 drop function if exists privado.max_mensagem_audio_s();
+drop function if exists privado.max_rascunhos_por_aparelho();
+drop function if exists privado.max_rascunhos_por_dia();
 drop function if exists privado.max_mensagens_por_dia();
 drop function if exists privado.max_mensagens_por_hora();
