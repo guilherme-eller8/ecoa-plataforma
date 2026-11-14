@@ -41,6 +41,8 @@ export type PerguntaDaTela = {
   fotoUrl: string | null;
   estado: PromptEstado;
   enviadaEm: string | null;
+  // Prompt 11: enviada há LEMBRETE_APOS_DIAS ou mais desde o envio ou o último lembrete.
+  podeLembrar?: boolean;
 };
 
 export type CausoDaTela = {
@@ -114,6 +116,7 @@ export type AcoesPerguntas = AcoesLinkDoAutor & {
     fotoId?: string | null;
   }) => Promise<Resposta>;
   mudarEstado: (pergunta: string, estado: PromptEstado) => Promise<Resposta>;
+  lembrar: (pergunta: string) => Promise<Resposta>;
   apagar: (pergunta: string) => Promise<Resposta>;
   virarPergunta: (causo: string, texto: string) => Promise<Resposta>;
   porNaEnquete: (causo: string) => Promise<Resposta<{ adicionado: boolean }>>;

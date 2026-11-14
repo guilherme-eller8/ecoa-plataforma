@@ -414,6 +414,23 @@ export async function mudarEstado(
   return { ok: true };
 }
 
+/** Lembrar com carinho (P62): grava lembrada_em (o botão some por 3 dias). O WhatsApp abre na tela. */
+export async function lembrarPergunta(
+  livroId: string,
+  pergunta: string,
+): Promise<Resposta> {
+  if (!uuid.safeParse(pergunta).success) return SEM_ACESSO;
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  const { data, error } = await c.supabase.rpc("lembrar_pergunta", {
+    p_prompt: pergunta,
+  });
+  if (error) return falhou(error);
+  if (data) evento(c, "lembrou_pergunta", { prompt_id: pergunta });
+  atualizar(livroId);
+  return { ok: true };
+}
+
 export async function apagar(
   livroId: string,
   pergunta: string,

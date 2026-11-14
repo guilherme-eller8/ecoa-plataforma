@@ -56,10 +56,14 @@ export function urlCompartilhada(token: string): string {
   return `${urlDoApp()}/o/${token}`;
 }
 
-/** Descadastro de 1 clique do resumo semanal (P63): HMAC de "resumo:{membro}". */
+/**
+ * Descadastro do resumo semanal (P63): HMAC de "resumo:{membro}". A página pede um toque (GET
+ * nunca desliga); /um-clique recebe o POST do List-Unsubscribe-Post (RFC 8058).
+ */
 export function urlSairDoResumo(membroId: string, env: EnvLinks = envLinks()) {
   const token = tokenDoLink("resumo", membroId, env.versaoAtual, env);
-  return `${urlDoApp()}/resumo/sair/${membroId}/${token}`;
+  const pagina = `${urlDoApp()}/resumo/sair/${membroId}/${token}`;
+  return { pagina, umClique: `${pagina}/um-clique` };
 }
 
 /** Confere o token do descadastro em tempo constante. Versão desconhecida = falso. */

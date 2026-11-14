@@ -162,7 +162,7 @@ export function emailResumo({
   perguntasEsperando: number;
   paginasEstimadas: number;
   urlLivro: string;
-  urlSair: string;
+  urlSair: { pagina: string; umClique: string };
 }): Email {
   const nome = apelido.trim() || "seu livro";
   const plural = (n: number, um: string, varios: string) =>
@@ -176,7 +176,7 @@ export function emailResumo({
   const rodape = {
     frase: "Não quer mais este resumo?",
     rotulo: "Parar de receber",
-    url: urlSair,
+    url: urlSair.pagina,
   };
   return {
     assunto,
@@ -186,9 +186,9 @@ export function emailResumo({
       { rotulo: "Abrir o livro", url: urlLivro },
       rodape,
     ),
-    texto: `Esta semana no livro de ${nome}: ${numeros}.\n\nAbrir o livro: ${urlLivro}\n\nNão quer mais este resumo? ${urlSair}\n\nEcoa Memórias`,
+    texto: `Esta semana no livro de ${nome}: ${numeros}.\n\nAbrir o livro: ${urlLivro}\n\nNão quer mais este resumo? ${urlSair.pagina}\n\nEcoa Memórias`,
     cabecalhos: {
-      "List-Unsubscribe": `<${urlSair}>`,
+      "List-Unsubscribe": `<${urlSair.umClique}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     },
   };

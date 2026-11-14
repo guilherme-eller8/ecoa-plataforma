@@ -86,14 +86,17 @@ describe("e-mails do prompt 11", () => {
       perguntasEsperando: 1,
       paginasEstimadas: 34,
       urlLivro: "https://x/livro/1",
-      urlSair: "https://x/resumo/sair/m/t",
+      urlSair: {
+        pagina: "https://x/resumo/sair/m/t",
+        umClique: "https://x/resumo/sair/m/t/um-clique",
+      },
     });
     expect(e.assunto).toBe("Esta semana no livro de Jair");
     expect(e.texto).toContain(
       "2 histórias novas · 1 pergunta esperando · ~34 páginas",
     );
     expect(e.cabecalhos).toEqual({
-      "List-Unsubscribe": "<https://x/resumo/sair/m/t>",
+      "List-Unsubscribe": "<https://x/resumo/sair/m/t/um-clique>",
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
     });
     expect(e.html).toContain('href="https://x/resumo/sair/m/t"');

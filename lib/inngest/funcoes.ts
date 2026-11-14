@@ -1,4 +1,5 @@
 import "server-only";
+import { resumoDoLivroFn, resumoSemanalFn } from "./resumo";
 // Funções do Inngest (T34). O Inngest só orquestra: o código roda aqui, na Vercel, e cada
 // passo devolve só ids e contagens (T36). Design: docs/designs/pipeline-texto-ao-vivo.md.
 import { join } from "node:path";
@@ -497,4 +498,6 @@ export const funcoes = [
   proporFn,
   varreduraFn,
   recortarQrFn,
+  resumoSemanalFn,
+  resumoDoLivroFn,
 ];

@@ -209,6 +209,7 @@ export const ACOES_FALSAS = {
     adicionarDoBanco: okCom({ salvas: 1 }),
     adicionarPropria: ok,
     mudarEstado: ok,
+    lembrar: ok,
     apagar: ok,
     virarPergunta: ok,
     porNaEnquete: okCom({ adicionado: true }),

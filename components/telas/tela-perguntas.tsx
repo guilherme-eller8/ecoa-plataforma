@@ -11,6 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMemo, useState, useTransition, type ReactNode } from "react";
 import { Abas } from "@/components/ui/abas";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
+import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { IconeEnviar, IconeTocar } from "@/components/ui/icones";
@@ -18,6 +19,7 @@ import { AtualizarSozinho } from "@/components/livro/atualizar-sozinho";
 import { EscolherDoBanco } from "@/components/perguntas/escolher-do-banco";
 import { UploadFotos } from "@/components/fotos/upload-fotos";
 import { EscreverPergunta } from "@/components/telas/configurar";
+import { LEMBRETE_APOS_DIAS } from "@/lib/config";
 import { agruparPorFase, faseDoItem } from "@/lib/enquete/fases";
 import {
   ranking,
@@ -38,7 +40,11 @@ import type {
 import { textoSugerido } from "@/lib/perguntas/sugestao";
 import type { PromptTipo } from "@/lib/supabase/tipos";
 import { falarDuracao } from "@/lib/ui/tempo";
-import { linkWhatsApp, mensagemPergunta } from "@/lib/whatsapp";
+import {
+  linkWhatsApp,
+  mensagemLembrete,
+  mensagemPergunta,
+} from "@/lib/whatsapp";
 
 import type { AbaPerguntas } from "@/lib/perguntas/abas";
 export type { AbaPerguntas };
@@ -110,6 +116,7 @@ function CartaoPergunta({
 }) {
   const { pendente, erro, rodar } = useAcao();
   const [menu, setMenu] = useState(false);
+  const [lembrou, setLembrou] = useState(false);
   const escrever = livro.podeEscrever;
   return (
     <li className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-4">
@@ -204,15 +211,39 @@ function CartaoPergunta({
               Voltar para a lista
             </Botao>
           ) : p.estado === "enviada" ? (
-            <Botao
-              variante="texto"
-              disabled={pendente}
-              onClick={() =>
-                rodar(() => acoes.mudarEstado(p.id, "para_enviar"))
-              }
-            >
-              Desfazer envio
-            </Botao>
+            <>
+              {p.podeLembrar && linkAutor && !lembrou ? (
+                <a
+                  href={linkWhatsApp(
+                    mensagemLembrete({
+                      autor: livro.autor,
+                      pergunta: p.texto,
+                      link: linkDaPergunta(linkAutor, p.id),
+                    }),
+                    livro.autorCelular,
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => {
+                    setLembrou(true);
+                    rodar(() => acoes.lembrar(p.id));
+                  }}
+                  className={classesDoBotao({ variante: "secundario" })}
+                >
+                  <IconeEnviar tamanho={18} />
+                  <span>Lembrar com carinho</span>
+                </a>
+              ) : null}
+              <Botao
+                variante="texto"
+                disabled={pendente}
+                onClick={() =>
+                  rodar(() => acoes.mudarEstado(p.id, "para_enviar"))
+                }
+              >
+                Desfazer envio
+              </Botao>
+            </>
           ) : null}
         </div>
       ) : null}
@@ -890,7 +921,14 @@ export function TelaPerguntas({
             rotulo: "Enviadas",
             contagem: enviadas.length,
             conteudo: enviadas.length ? (
-              lista(enviadas)
+              <div className="flex flex-col gap-4">
+                {escrever && linkDoAutorAtual && enviadas.some((p) => p.podeLembrar) ? (
+                  <DicaPrimeiraVez chave="perguntas-lembrar">
+                    Faz {LEMBRETE_APOS_DIAS} dias? Mande um lembrete gentil.
+                  </DicaPrimeiraVez>
+                ) : null}
+                {lista(enviadas)}
+              </div>
             ) : (
               <p className="text-ui-17 text-tinta-2">Nada enviado ainda.</p>
             ),
