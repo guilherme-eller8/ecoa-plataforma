@@ -4,7 +4,7 @@
 
 ## Resumo, decisões e ondas
 
-A plataforma permite que a família (um responsável e até 3 co-facilitadores) ou o próprio autor criem um livro de memórias do primeiro áudio ao PDF de gráfica, sem a Ecoa no circuito, exceto na impressão. Gravar conversando é o centro da experiência. Gravar sozinho é igualmente simples.
+A plataforma permite que a família (um responsável e até 5 co-facilitadores) ou o próprio autor criem um livro de memórias do primeiro áudio ao PDF de gráfica, sem a Ecoa no circuito, exceto na impressão. Gravar conversando é o centro da experiência. Gravar sozinho é igualmente simples.
 
 **Vocabulário:** *autor* é quem conta as histórias. *Responsável* é quem comprou e publica o livro. *Co-facilitadores* são irmãos ou parentes com acesso total. *Família* é quem participa pelos links do grupo de WhatsApp.
 
@@ -16,7 +16,7 @@ A plataforma permite que a família (um responsável e até 3 co-facilitadores) 
 | Pagamento | Onda 1: Pix manual, passe ativado no admin. Onda 2: link do Mercado Pago com Pix e cartão em até 12x, ativação automática. Exige CNPJ. |
 | Renovação | Sem cobrança recorrente. Ao vencer, o passe fica em somente leitura e renova com novo pagamento. |
 | Login | Google como entrada principal e link por e-mail como alternativa. O autor entra por link pessoal, sem login. |
-| Papéis | 1 responsável (publica e envia à impressão), até 3 co-facilitadores com acesso total e o autor, em modo autor. |
+| Papéis | 1 responsável (publica e envia à impressão), até 5 co-facilitadores com acesso total e o autor, em modo autor. |
 | Coleta | Link de pergunta para o autor, gravação livre do autor, modo conversa e upload de 1 ou vários áudios. A pergunta é opcional em todas as portas, e lotes ou gravações longas com vários assuntos são divididos automaticamente em histórias. |
 | Processamento | Visível na tela em tempo real: o texto aparece sendo escrito. E-mail só como reforço. |
 | Tamanho do texto | Controle por história, de resumido a detalhado. |
@@ -41,7 +41,7 @@ Só o responsável e os co-facilitadores têm login. O autor e a família entram
 | Papel | Entra por | Pode | Não pode |
 | --- | --- | --- | --- |
 | Responsável | Google ou link por e-mail | Tudo no livro; convidar e remover co-facilitadores; publicar; enviar para impressão; pagar | Ver outros livros |
-| Co-facilitador (até 3, onda 2) | Convite por link, depois Google ou e-mail | Tudo o que o responsável faz, menos convidar, publicar, imprimir e pagar | Ver outros livros |
+| Co-facilitador (até 5, onda 2) | Convite por link, depois Google ou e-mail | Tudo o que o responsável faz, menos convidar, publicar, imprimir e pagar | Ver outros livros |
 | Autor | Link pessoal permanente e revogável, sem login | Ver as perguntas para ele, gravar respostas e histórias livres, ouvir e corrigir os próprios textos, ler o livro em modo leitura | Ver mensagens da família, a enquete ou os causos sugeridos; publicar |
 | Família e amigos | Links do grupo, sem login | Votar na enquete de perguntas, sugerir causo (áudio ou texto), deixar mensagem para o livro (onda 2), ouvir histórias compartilhadas | Ver o painel ou editar |
 | Leitor do livro | QR impresso | Ouvir o áudio original daquela história ou mensagem, para sempre | Qualquer outra coisa |
@@ -114,7 +114,7 @@ Onze módulos, cada um com a onda em que entra e critérios de aceite verificáv
 - **Quem é:** nome (o único campo obrigatório), apelido, celular do autor (opcional: com ele, *Enviar ao autor* abre a conversa direto no WhatsApp; sem ele, o WhatsApp pede o contato), parentesco (pai, mãe, avô, avó, tio, tia, outro) e foto.
 - **Primeiras perguntas, por fase da vida:** Família e raízes, Infância, Escola, Juventude, Trabalho, Amor e casamento, Filhos, Maturidade e legado. 1 pergunta por fase já vem marcada (8, escolhidas pelo parentesco); *Ver mais* abre a fase toda. O responsável desmarca, marca outras e escreve perguntas ou causos próprios em texto livre ("A viagem pra Guarapari em que você dormiu e perdeu a praia").
 - **Fotos:** várias de uma vez. Ficam no acervo e podem virar perguntas com foto.
-- **Quem mais ajuda (onda 2):** convite para até 3 co-facilitadores, por e-mail ou link.
+- **Quem mais ajuda (onda 2):** convite para até 5 co-facilitadores, por e-mail ou link.
 - **Glossário sem formulário:** nasce das próprias histórias. A IA sugere os nomes de pessoas e lugares citados, e o responsável ajusta em Configurações quando quiser.
 - Todo passo tem *Pular* e *Depois*.
 - **Aceite:** configurar só com o nome leva menos de 30 segundos; ajustando as primeiras perguntas, menos de 3 minutos.

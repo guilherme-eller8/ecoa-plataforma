@@ -1,6 +1,6 @@
 # Co-facilitadores, compartilhar no grupo, lembrar e resumo semanal (prompt 11)
 
-Status: **v2 aprovada pelo Guilherme em 2026-11-14** (Q1 a Q14 como recomendado; P59 a P63 e T47), revisada por 2 revisores (T28) · 2026-11-14 · PRD: Papéis e permissões, M2 (Quem mais ajuda), Jornadas (Responsável passo 3, Família, Lembretes sem API) · Decisões: P4, P7, P9, P23, P25, P31, P41, P42, P48, P56, P58, T4, T6, T23, T25, T28, T34, T36, T37, T45
+Status: **v2 aprovada pelo Guilherme em 2026-11-14** (Q1 a Q14 como recomendado; P59 a P63 e T47; teto de 5 co-facilitadores pela P64, no mesmo dia), revisada por 2 revisores (T28) · 2026-11-14 · PRD: Papéis e permissões, M2 (Quem mais ajuda), Jornadas (Responsável passo 3, Família, Lembretes sem API) · Decisões: P4, P7, P9, P23, P25, P31, P41, P42, P48, P56, P58, T4, T6, T23, T25, T28, T34, T36, T37, T45
 
 Relatórios: `cofacilitadores-compartilhar/critic_report.md` (segurança) e `cofacilitadores-compartilhar/codebase_details_report.md` (código). A seção 12 mostra o que mudou por causa de cada um.
 
@@ -22,7 +22,7 @@ Hoje o livro tem um só login. Quem segura o celular na conversa com o avô, ou 
 ## 2. Escopo
 
 **Entra:**
-1. Convite de até 3 co-facilitadores, **preso ao e-mail** (sua decisão de hoje), enviado por e-mail e com mensagem copiável para o WhatsApp. Aceite com Google ou link por e-mail.
+1. Convite de até 5 co-facilitadores (P64), **preso ao e-mail** (sua decisão de hoje), enviado por e-mail e com mensagem copiável para o WhatsApp. Aceite com Google ou link por e-mail.
 2. Passo *Quem mais ajuda* depois das fotos na configuração inicial (pulável, só para o responsável e só em livro novo), e a tela *Quem ajuda* (`/livro/[id]/pessoas`): o responsável vê, convida, cancela e remove; o co-facilitador vê e pode sair.
 3. Permissões no banco, com teste para cada regra (seção 4.2).
 4. *Compartilhar no grupo* em cada história marcada como pronta: link `/o/[token]` com título, ano, texto e voz, mais a mensagem pronta para o WhatsApp. Revogável.
@@ -42,8 +42,8 @@ Hoje o livro tem um só login. Quem segura o celular na conversa com o avô, ou 
 | --- | --- | --- | --- | --- |
 | Q1 | **SQL (seção 7)** | Aprovar | Ensaiado em PGlite com as migrations reais: 20 testes novos; a suíte inteira passa (659); a reversão desce com dados e sobe de novo | — |
 | Q2 | **Convite preso ao e-mail, uso único, vale 7 dias.** O servidor confere as regras, cria a conta do convidado (o cadastro é fechado) e só então grava o convite. Aceitar **não usa o token**: quem entra com o e-mail convidado vê *Aceitar* na lista de livros e no próprio link | Assim | Link repassado no WhatsApp não vale para mais ninguém. Sem cookie de "voltar ao convite" depois do Google | A irmã precisa entrar com o e-mail que o irmão digitou. Se usar outro, a tela diz "Este convite é para b•••@gmail.com" |
-| Q3 | **Pendentes contam no teto de 3**; reconvidar o mesmo e-mail troca o convite. O convite cai se quem convidou deixa de ser o responsável, e não é aceito com o plano vencido | Assim | O teto nunca estoura (livro travado no banco ao convidar e ao aceitar) | Cancelar um convite parado para abrir vaga |
-| Q4 | **Tetos de convite em 24 h:** 10 por livro, 10 por responsável (somando livros), 3 para o mesmo e-mail (somando livros) | Assim | Cada convite cria uma conta e manda e-mail do nosso domínio. Sem teto, uma sessão roubada usa a Ecoa para mandar e-mail a estranhos | Nada no uso normal (no máximo 3 vagas) |
+| Q3 | **Pendentes contam no teto de 5** (P64); reconvidar o mesmo e-mail troca o convite. O convite cai se quem convidou deixa de ser o responsável, e não é aceito com o plano vencido | Assim | O teto nunca estoura (livro travado no banco ao convidar e ao aceitar) | Cancelar um convite parado para abrir vaga |
+| Q4 | **Tetos de convite em 24 h:** 10 por livro, 10 por responsável (somando livros), 3 para o mesmo e-mail (somando livros) | Assim | Cada convite cria uma conta e manda e-mail do nosso domínio. Sem teto, uma sessão roubada usa a Ecoa para mandar e-mail a estranhos | Nada no uso normal (no máximo 5 vagas) |
 | Q5 | **Só do responsável:** convidar, cancelar convite, remover, confirmar a IA (P41, já é), desligar QR (P58, já é), e publicar, imprimir e pagar quando existirem | Assim | É a lista do prompt e do P7, mais as duas que já eram dele | — |
 | Q6 | **Trocar o link do autor ou o da família que já existe: só o responsável. Gerar o primeiro: qualquer membro.** *(mudou da v1)* | Assim | O PRD diz "revogável pelo responsável". Um link trocado tira o avô do ar até ele receber o novo; quem pode fazer isso é quem tem a palavra final (P7). Gerar o primeiro continua livre para o kit funcionar com qualquer um | Se o link vazar à noite, a irmã precisa chamar o irmão |
 | Q7 | **Remover:** a pessoa perde o acesso na hora, a trava de edição dela some e **os links `/o/` que ela criou são desligados**. A tela então oferece "Ela conhecia o link do Jair e o da família. Trocar os dois agora?" (não troca sozinho: o avô ficaria sem acesso até receber o novo). Remover e sair valem com o plano vencido. As versões que ela salvou ficam com a autoria | Assim | Ação de segurança, como P58. Quem saiu brigado não deixa link no ar | O responsável decide sobre os links do autor e da família |
@@ -145,7 +145,7 @@ Na aba *Para perguntar*, a pergunta com `estado = 'enviada'` e `greatest(enviada
 
 | Tela | Ação principal | Estado vazio / dica |
 | --- | --- | --- |
-| *Quem ajuda* (`/livro/[id]/pessoas`) | *Convidar* (responsável, até 3) | "Só você por enquanto. Chame um irmão para ajudar." + *Convidar* |
+| *Quem ajuda* (`/livro/[id]/pessoas`) | *Convidar* (responsável, até 5) | "Só você por enquanto. Chame um irmão para ajudar." + *Convidar* |
 | Folha *Convidar* | *Enviar convite* | — |
 | Folha *Remover* | *Remover* | Depois: "Trocar os links do Jair e da família?" |
 | Passo *Quem mais ajuda* | *Enviar convite* (*Pular*, *Depois*) | — |
@@ -165,7 +165,7 @@ Cada tela em `components/telas/tela-*.tsx`, com dados falsos em `lib/exemplos/pr
 | --- | --- |
 | Link do convite repassado no grupo | Preso ao e-mail confirmado (conferido no banco). O token só apresenta o convite |
 | Co-facilitador se dá poderes (convida, remove, entra direto em `book_members`, troca o link do avô) | Nenhum grant de escrita em `book_members` e `book_invites`; funções com o papel conferido. Testado |
-| Corrida para passar de 3 | `for update` na linha do livro ao convidar e ao aceitar. **Limite:** o PGlite tem uma conexão só, então o teste cobre a regra, não a corrida; a garantia é o `for update` |
+| Corrida para passar de 5 | `for update` na linha do livro ao convidar e ao aceitar. **Limite:** o PGlite tem uma conexão só, então o teste cobre a regra, não a corrida; a garantia é o `for update` |
 | A Ecoa vira canhão de e-mail ou de phishing | Pré-checagem antes de criar conta; 10 por livro, 10 por responsável e 3 por e-mail em 24 h; assunto fixo; nomes saneados; conta nova apagada se o convite falhar |
 | Oráculo de contas | Conta recusada por identidade responde "Convite enviado" sem enviar nada. `ja_membro` só confirma o que o responsável já vê na lista |
 | Contas criadas e nunca usadas | Ficam sem livro (a lista de livros mostra vazio). **Risco aceito** até o prompt 15 (LGPD), que limpa contas sem login e sem livro |
@@ -202,7 +202,7 @@ A reversão apaga convites, compartilhamentos e as preferências do resumo, **ti
 
 ## 8. Testes
 
-- **Banco (prontos, 20):** convite só do responsável; aceitar só com o e-mail certo e confirmado; idempotente; co-facilitadora não convida, não cancela, não remove, não lê convites, não escreve em `book_members`, não confirma a IA, não desliga QR, não troca link do autor nem da família (mas gera o primeiro); teto de 3 com pendentes; reconvidar troca; `ja_membro`; teto de 3 por e-mail, também na pré-checagem; convite vencido e de responsável antigo não vale; plano vencido não aceita; remover tira acesso, trava e `/o/` dela e grava o evento; sair; responsável não é removido; nenhuma `servico_*` para `authenticated` ou `anon`; `token_hash` ilegível; compartilhar só membro, link único, sem fontes, revogar; `/o/` conta 1 *Ouvir* por hora; lembrar; resumo só números; reversão com dados.
+- **Banco (prontos, 20):** convite só do responsável; aceitar só com o e-mail certo e confirmado; idempotente; co-facilitadora não convida, não cancela, não remove, não lê convites, não escreve em `book_members`, não confirma a IA, não desliga QR, não troca link do autor nem da família (mas gera o primeiro); teto de 5 com pendentes; reconvidar troca; `ja_membro`; teto de 3 por e-mail, também na pré-checagem; convite vencido e de responsável antigo não vale; plano vencido não aceita; remover tira acesso, trava e `/o/` dela e grava o evento; sair; responsável não é removido; nenhuma `servico_*` para `authenticated` ou `anon`; `token_hash` ilegível; compartilhar só membro, link único, sem fontes, revogar; `/o/` conta 1 *Ouvir* por hora; lembrar; resumo só números; reversão com dados.
 - **Na construção:** co-facilitadora salva versão (`salvar_historia`, origem `cofacilitador`); `/o/` com voz `ok`, `preparando` e `sem_voz`.
 - **Código:** `lib/links.test.ts` (tipos `convite`, `compartilhar`, `resumo`); `lib/rotas.test.ts` e `lib/qr/host.test.ts` (`/convite`, `/o`, `/resumo/sair` sem login; `/o` fora do host `ouvir.`; cabeçalhos); `lib/whatsapp.test.ts` (dele, dela, original, sem voz, lembrete); `mascararEmail`, `nomeSeguro`, `contaParaEmail`; paridade de páginas; `passosDoPapel`; modelos de e-mail sem título e com assunto fixo; `/o/` com link revogado e errado iguais.
 - **E2E (styleguide):** responsável vê *Convidar*; co-facilitadora vê *Quem ajuda* sem *Convidar* e com *Sair*.
@@ -218,7 +218,7 @@ A reversão apaga convites, compartilhamentos e as preferências do resumo, **ti
 
 ## 10. Decisões novas para registrar depois do OK
 
-- **P59** Convite de co-facilitador preso ao e-mail confirmado, uso único, 7 dias; conta criada só depois da pré-checagem; aceitar pelo e-mail, não pelo token; pendentes contam no teto de 3; cai se quem convidou deixa de ser o responsável; tetos de 10 por livro, 10 por responsável e 3 por e-mail em 24 h.
+- **P59** Convite de co-facilitador preso ao e-mail confirmado, uso único, 7 dias; conta criada só depois da pré-checagem; aceitar pelo e-mail, não pelo token; pendentes contam no teto de 3 (5 pela P64); cai se quem convidou deixa de ser o responsável; tetos de 10 por livro, 10 por responsável e 3 por e-mail em 24 h.
 - **P60** Só do responsável: convidar, cancelar, remover, trocar um link do autor ou da família que já existe, confirmar a IA, desligar QR, publicar, imprimir e pagar. Remover desliga os `/o/` da pessoa e oferece trocar os links.
 - **P61** Compartilhar no grupo: qualquer membro; 1 link por história marcada como pronta (HMAC); voz = recorte do QR, sem voz quando não houver; só parágrafos; texto atual; vale com plano vencido.
 - **P62** Lembrar com carinho: pergunta enviada há 3 dias; o botão volta 3 dias depois do último lembrete.

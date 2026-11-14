@@ -16,7 +16,7 @@
 
 -- Espelham lib/config.ts. supabase/tests/config-banco.test.ts confere.
 create function privado.max_cofacilitadores() returns integer
-language sql immutable set search_path = '' as $$ select 3 $$;  -- MAX_COFACILITADORES
+language sql immutable set search_path = '' as $$ select 5 $$;  -- MAX_COFACILITADORES (P64)
 create function privado.max_convites_dia() returns integer
 language sql immutable set search_path = '' as $$ select 10 $$; -- MAX_CONVITES_DIA (por livro e por responsável)
 create function privado.max_convites_por_email_dia() returns integer

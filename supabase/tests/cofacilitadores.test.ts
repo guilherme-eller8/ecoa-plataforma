@@ -182,20 +182,23 @@ describe("convite preso ao e-mail", () => {
     ).toBe("sem_permissao");
   });
 
-  it("teto de 3 conta os convites pendentes", async () => {
+  it("teto de 5 conta os convites pendentes", async () => {
     const a = await convidar(livroA, ana, "f1@exemplo.com");
-    const b = await convidar(livroA, ana, "f2@exemplo.com");
-    expect(a.erro ?? b.erro).toBeUndefined(); // Bia + 2 pendentes = 3
-    expect((await convidar(livroA, ana, "f3@exemplo.com")).erro).toBe(
+    for (const n of [2, 3, 4])
+      expect(
+        (await convidar(livroA, ana, `f${n}@exemplo.com`)).erro,
+      ).toBeUndefined();
+    expect(a.erro).toBeUndefined(); // Bia + 4 pendentes = 5
+    expect((await convidar(livroA, ana, "f5@exemplo.com")).erro).toBe(
       "limite_cofacilitadores",
     );
     // Reconvidar o mesmo e-mail troca o convite, não soma.
     expect(
-      (await convidar(livroA, ana, "f2@exemplo.com")).erro,
+      (await convidar(livroA, ana, "f4@exemplo.com")).erro,
     ).toBeUndefined();
     await membro(ana, `select public.cancelar_convite($1)`, [a.id]);
     expect(
-      (await convidar(livroA, ana, "f3@exemplo.com")).erro,
+      (await convidar(livroA, ana, "f5@exemplo.com")).erro,
     ).toBeUndefined();
   });
 
