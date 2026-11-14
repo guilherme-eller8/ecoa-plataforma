@@ -1,6 +1,6 @@
 # Mensagens da família para o livro (prompt 12)
 
-Status: **v2 para aprovação**, revisada por 2 revisores (T28) · 2026-11-14 · PRD: M8, Papéis e permissões, Jornadas (Família), Livro pronto para a gráfica (estrutura do miolo), Segurança, LGPD · Decisões: P4, P7, P9, P12, P21, P23, P24, T5, T6, T23, T25, T26, T27, T28, T32, T35, T36, T38, T46
+Status: **v2 aprovada pelo Guilherme em 2026-11-14** (Q1 a Q13 como recomendado; P65, T48 e T49). Depois do OK: Q11 alinhada à P60 do prompt 11 (rodou em paralelo), migration renomeada para `20261122120000` (a do prompt 11 é `20261121120000`) e números das decisões trocados (P59 a P64 e T47 são do prompt 11), revisada por 2 revisores (T28) · 2026-11-14 · PRD: M8, Papéis e permissões, Jornadas (Família), Livro pronto para a gráfica (estrutura do miolo), Segurança, LGPD · Decisões: P4, P7, P9, P12, P21, P23, P24, T5, T6, T23, T25, T26, T27, T28, T32, T35, T36, T38, T46
 
 Relatórios: `mensagens-familia/critic_report.md` (segurança) e `mensagens-familia/codebase_details_report.md` (código). A seção 11 mostra o que mudou por causa de cada um.
 
@@ -36,7 +36,7 @@ O capítulo de mensagens é o diferencial emocional do livro (P21): o autor abre
 
 | # | Decisão | Recomendo | Por quê | O que se perde |
 | --- | --- | --- | --- | --- |
-| Q1 | **SQL (seção 7)** | Aprovar | Ensaiado em PGlite com as migrations reais: 56 testes novos; suíte inteira passando (719). Depois de aplicar, confiro no Supabase de verdade (Storage, grants e os avisos de segurança), que o PGlite não reproduz | — |
+| Q1 | **SQL (seção 7)** | Aprovar | Ensaiado em PGlite com as migrations reais: 58 testes novos; suíte inteira passando (721). Depois de aplicar, confiro no Supabase de verdade (Storage, grants e os avisos de segurança), que o PGlite não reproduz | — |
 | Q2 | **Link próprio `/m`**, separado do `/f` | Assim (você confirmou) | O André vai mandar para gente de fora do grupo. Um link separado é revogado sem derrubar o `/f`, e quem recebe não vê enquete nem causos | Mais um link (fica na aba *Mensagens*) |
 | Q3 | **Transcrição: só ElevenLabs Scribe**, sem Claude. O banco guarda a transcrição bruta; a pessoa recebe uma sugestão sem hesitações ("ahn", "hum", "éé"). Nenhuma palavra é trocada nem juntada | Assim | É a voz de quem não é o autor. Uma IA "limpando" pode trocar uma palavra e a pessoa não perceber no celular. A regra de juntar repetições saiu na revisão ("não, não" e "tchau tchau" são fala de verdade) | Texto com marcas de fala ("né", "aí"): quem enviou ou o André ajusta |
 | Q4 | **Transcrição dentro da ação do servidor**, sem Inngest. Exceção a T35 só para mensagens. A página tem `maxDuration` de 60 s, o pedido ao Scribe é cortado em 45 s, e a reserva no banco dura 2 min e tem dono | Assim | Quem enviou está esperando na tela; 5 min de áudio levam segundos. Sem fila, sem consulta a cada 4 s. Se a resposta se perder na rede, a próxima chamada devolve o texto já gravado | Sem retomada automática: quem enviou toca *Tentar de novo*. Depois de 3 falhas: "Escreva a mensagem você mesmo" |
@@ -46,7 +46,7 @@ O capítulo de mensagens é o diferencial emocional do livro (P21): o autor abre
 | Q8 | **Arquivar tira da lista e do livro; o responsável apaga de vez** uma arquivada ("Apagar para sempre", com confirmação), com evento. Enviada não é apagada por mais nada, nem pela chave secreta. Rascunho não enviado é apagado em 48 h | Assim | Spam e pedido de quem enviou (LGPD) precisam de saída agora, não no prompt 15. Só o responsável, e em 2 passos, para ninguém apagar a voz de um parente por engano | A regra "áudio original nunca é apagado" ganha uma exceção para mensagens, só pelo responsável |
 | Q9 | **QR de mensagem vai para o prompt 13.** Substitui a parte de T46 que o punha aqui | Assim | No 13, a montagem cria os QR de histórias e mensagens no mesmo passo. Lá, `mensagem_apagar` passa a recusar mensagem com QR impresso | Nada até o livro ser montado |
 | Q10 | **Limites próprios, maiores que os do causo:** áudio até 5 min e 4 MB, foto até 4 MB, texto até 6.000 caracteres; 20 enviadas por hora e 40 por dia por livro; 100 rascunhos por dia por livro; 3 rascunhos abertos por aparelho; 3 transcrições por mensagem e 60 por livro por dia. O áudio cuja transcrição passa de 5 min e 10 s é recusado ("Grave de novo, mais curto"). Plano vencido fecha o link | Assim | O causo é uma sugestão de 3 min; a mensagem é um depoimento. O teto por hora conta só enviadas, para o convite a 30 pessoas não travar. A duração real vem da transcrição, não do aparelho. Pior caso de abuso num link vazado: ~US$ 13 por dia de transcrição até o André trocar o link | Uma família que mande mais de 40 num dia espera o dia seguinte |
-| Q11 | **Quem gera ou troca o link:** qualquer membro, como o link da família | Assim | Mandar o link não é "convidar co-facilitador" (P7) | — |
+| Q11 | **Quem gera ou troca o link:** qualquer membro gera o primeiro; trocar o link ativo é só do responsável (alinhado à P60 do prompt 11, depois da aprovação) | Assim | Mandar o link não é "convidar co-facilitador"; trocar derruba os rascunhos de quem está escrevendo, como nos links do autor e da família | O co-facilitador pede ao responsável para trocar |
 | Q12 | **A página `/m` mostra só o apelido do autor.** Sem apelido: "Uma mensagem para o livro". Nunca o nome completo, nada do livro | Assim | Menos dado exposto num link que circula | O convite do WhatsApp dá o contexto |
 | Q13 | **Um consentimento só, com texto específico** (versão 1): "Autorizo guardar minha voz, meu texto e minha foto no livro do {apelido}, enquanto o livro existir. A família que faz o livro pode ouvir, ajustar o texto e imprimir. A voz é transcrita por um serviço nos Estados Unidos." DPA, retenção zero no fornecedor e menores ficam para o prompt 15 | Assim | Duas caixas de seleção para um avô de 80 anos é atrito sem ganho real. O texto diz destino, prazo e quem vê | Revisão jurídica do texto no prompt 15 |
 
@@ -133,7 +133,7 @@ O banco guarda o bruto: as palavras do Scribe (`normalizarScribe`, sem eventos d
 
 ## 7. SQL
 
-Arquivos: `supabase/migrations/20261121120000_mensagens_familia.sql` (subida) e `supabase/reversao/20261121120000_mensagens_familia.down.sql` (reversão). Resumo da subida:
+Arquivos: `supabase/migrations/20261122120000_mensagens_familia.sql` (subida) e `supabase/reversao/20261122120000_mensagens_familia.down.sql` (reversão). Resumo da subida:
 
 ```sql
 -- Espelhados em lib/config.ts (config-banco.test.ts confere)
@@ -177,15 +177,15 @@ Reversão: trava se houver mensagem ou link; forçada com `set ecoa.reversao_des
 
 ## 8. Testes
 
-**Banco (feitos e passando):** `supabase/tests/mensagens.test.ts`, 56 testes:
+**Banco (feitos e passando):** `supabase/tests/mensagens.test.ts`, 58 testes:
 - Privilégios: `anon` e `porta_autor` sem nada nas duas tabelas; nenhuma função do link executável por `anon`, `authenticated` ou `porta_autor`; o autor nunca é membro (enum); `authenticated` lê exatamente as 17 colunas e não escreve; as duas políticas; membro vê enviadas e arquivadas do próprio livro (co-facilitador também), nunca rascunho, outro livro, o hash do aparelho ou a transcrição.
-- Página: só o apelido; tokens inválido, da família, do autor e curto não abrem; o token `/m` não abre `/f`; livro sem apelido não mostra nome; trocar o link derruba o antigo; só membro troca.
+- Página: só o apelido; tokens inválido, da família, do autor e curto não abrem; o token `/m` não abre `/f`; livro sem apelido não mostra nome; trocar o link derruba o antigo; só membro gera; co-facilitador não troca o link ativo (P60).
 - Criar: caminhos fixos; 8 entradas inválidas; plano vencido; 3 rascunhos por aparelho; 100 por livro por dia.
 - Upload, transcrição e envio: caminho só para o mesmo aparelho e antes de chegar; duração declarada acima do teto; reserva de 2 min com dono, grava uma vez, devolve ao mesmo aparelho; falha alheia não libera; 3 tentativas; 60 por livro por dia; áudio longo pela transcrição recusado e não envia; outro aparelho não envia; áudio que não chegou trava; foto que não chegou fica de fora e não entra depois; texto sempre exigido; texto acima do limite; 20 enviadas por hora; rascunho de 49 h.
 - Membros: editar, incluir e arquivar; texto vazio; outro livro, rascunho e anon barrados; apagar só pelo responsável e só arquivada.
 - Imutável: enviada não é apagada nem truncada pela chave secreta; a marca de apagar vale só para a mensagem marcada; texto enviado, transcrição, nome, áudio, foto, recusar o áudio depois e voltar a rascunho recusados.
 - Limpeza: só rascunhos vencidos. Reversão: trava, forçada passa, sobe de novo.
-- Também mudaram: `qr.test.ts` (membro agora lê as enviadas; a restritiva continua; a reversão do 12 roda antes da do 10), `rls.test.ts` (4 funções novas de `authenticated`; `anon` sem nenhuma nova), `config-banco.test.ts` (9 números), `lib/familia/tabelas.ts` (`message_access` e `BUCKETS_DA_FAMILIA`), `lib/autor/rotas-autor.test.ts` (bucket e funções de mensagem). Suíte inteira: 719 passando.
+- Também mudaram: `qr.test.ts` (membro agora lê as enviadas; a restritiva continua; a reversão do 12 roda antes da do 10), `rls.test.ts` (4 funções novas de `authenticated`; `anon` sem nenhuma nova), `config-banco.test.ts` (9 números), `lib/familia/tabelas.ts` (`message_access` e `BUCKETS_DA_FAMILIA`), `lib/autor/rotas-autor.test.ts` (bucket e funções de mensagem). Suíte inteira: 721 passando.
 
 **Unidade (a fazer):** `limparTranscricao`; primeiros bytes por tipo; token `mensagem` no HMAC; convite do WhatsApp; ações do `/m` com banco e Scribe falsos (assina só o caminho do banco, tamanho e bytes conferidos, corte de 45 s, `ja_havia` e `audio_longo`, falha libera só a própria reserva); ação de ouvir com membro de outro livro; proxy com `/m` (cookie `path=/m`, cabeçalhos, sem sessão).
 
@@ -205,9 +205,9 @@ Reversão: trava se houver mensagem ou link; forçada com `set ecoa.reversao_des
 
 ## 10. Decisões novas para registrar depois do OK
 
-- **P59:** link `/m` próprio, só de escrita, um ativo por livro; rascunho preso ao aparelho por 48 h; enviar exige texto confirmado pela pessoa; só entra no livro o que um membro marcar; membros ajustam o texto, e o enviado e a transcrição ficam fixos; arquivar tira do livro, e só o responsável apaga de vez (exceção à regra do áudio original, só para mensagens); consentimento único com destino, prazo e quem vê (Q2, Q5 a Q8, Q10 a Q13).
-- **T47:** transcrição da mensagem só com Scribe (bruto guardado, sugestão sem hesitações), sem Claude; feita na ação do servidor (60 s, corte de 45 s) com reserva com dono no banco e até 3 tentativas, sem Inngest (exceção a T35 só para mensagens); a duração real vem da transcrição; todas as funções do link `/m` só com a chave secreta (Q3, Q4, Q10).
-- **T48:** QR de mensagem no prompt 13, junto com a montagem. Substitui a parte de T46 que o punha no prompt 12 (Q9).
+- **P65:** link `/m` próprio, só de escrita, um ativo por livro; rascunho preso ao aparelho por 48 h; enviar exige texto confirmado pela pessoa; só entra no livro o que um membro marcar; membros ajustam o texto, e o enviado e a transcrição ficam fixos; arquivar tira do livro, e só o responsável apaga de vez (exceção à regra do áudio original, só para mensagens); consentimento único com destino, prazo e quem vê (Q2, Q5 a Q8, Q10 a Q13).
+- **T48:** transcrição da mensagem só com Scribe (bruto guardado, sugestão sem hesitações), sem Claude; feita na ação do servidor (60 s, corte de 45 s) com reserva com dono no banco e até 3 tentativas, sem Inngest (exceção a T35 só para mensagens); a duração real vem da transcrição; todas as funções do link `/m` só com a chave secreta (Q3, Q4, Q10).
+- **T49:** QR de mensagem no prompt 13, junto com a montagem. Substitui a parte de T46 que o punha no prompt 12 (Q9).
 
 ## 11. Revisão
 

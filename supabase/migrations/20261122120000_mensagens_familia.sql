@@ -1,4 +1,4 @@
--- 20261121120000_mensagens_familia.sql
+-- 20261122120000_mensagens_familia.sql
 -- Prompt 12: mensagens da família para o livro. Design: docs/designs/mensagens-familia.md (v2).
 --
 -- Regras deste arquivo:
@@ -427,11 +427,18 @@ begin
 end $$;
 
 -- Gera ou troca o link de mensagens. p_usuario vem da sessão no servidor (nunca do formulário).
+-- Como os links do autor e da família (P60): qualquer membro gera o primeiro; trocar um link
+-- ativo é só do responsável.
 create function public.servico_trocar_link_mensagem(
   p_livro uuid, p_usuario uuid, p_id uuid, p_token_hash text, p_chave_versao smallint
 ) returns void language plpgsql security definer set search_path = '' as $$
 begin
   if not exists (select 1 from public.book_members m where m.book_id = p_livro and m.user_id = p_usuario) then
+    raise exception 'sem_permissao';
+  end if;
+  if exists (select 1 from public.message_access a where a.book_id = p_livro and a.revogado_em is null)
+     and not exists (select 1 from public.book_members m
+                     where m.book_id = p_livro and m.user_id = p_usuario and m.papel = 'responsavel') then
     raise exception 'sem_permissao';
   end if;
   if not privado.livro_editavel(p_livro) then raise exception 'livro_fechado'; end if;

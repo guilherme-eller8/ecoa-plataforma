@@ -18,11 +18,11 @@ import {
 
 const RAIZ = path.resolve(__dirname, "..");
 const up = readFileSync(
-  path.join(RAIZ, "migrations/20261121120000_mensagens_familia.sql"),
+  path.join(RAIZ, "migrations/20261122120000_mensagens_familia.sql"),
   "utf8",
 );
 const down = readFileSync(
-  path.join(RAIZ, "reversao/20261121120000_mensagens_familia.down.sql"),
+  path.join(RAIZ, "reversao/20261122120000_mensagens_familia.down.sql"),
   "utf8",
 );
 
@@ -373,6 +373,23 @@ describe("página do link", () => {
     expect(await pagina(tokenB)).toBeNull();
     expect(await pagina(novo)).toEqual({ autor: null, aberto: true });
     expect(await criar({ token: tokenB })).toEqual({ erro: "link_invalido" });
+  });
+
+  it("co-facilitador não troca o link ativo (P60)", async () => {
+    expect(await trocarLink(livroA, caio, "v1_mensagemCAIOAAAAAAAAA")).toEqual({
+      erro: "sem_permissao",
+    });
+  });
+
+  it("co-facilitador gera o primeiro link", async () => {
+    const zeca = await criarUsuario(db, "zeca@exemplo.com");
+    const livro = await ativarPlano(db, zeca, "Lia");
+    const cofac = await criarUsuario(db, "cofac@exemplo.com");
+    await sql(
+      `insert into public.book_members (book_id, user_id, papel) values ($1, $2, 'cofacilitador')`,
+      [livro, cofac],
+    );
+    valor(await trocarLink(livro, cofac, "v1_mensagemPRIMEIROAAAAA"));
   });
 
   it("trocar o link é só de membro do livro", async () => {

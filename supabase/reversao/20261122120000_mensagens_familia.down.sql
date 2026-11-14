@@ -1,4 +1,4 @@
--- Reversão de 20261121120000_mensagens_familia.sql.
+-- Reversão de 20261122120000_mensagens_familia.sql.
 -- Volta family_messages ao formato do prompt 10 (id, book_id, criado_em), vazia e fechada.
 -- ATENÇÃO: com mensagem guardada, apagaria a voz e o texto de quem escreveu para o livro.
 

@@ -17,7 +17,7 @@ const down = readFileSync(
 );
 // A reversão do prompt 12 (mensagens) roda antes da deste arquivo, como no banco de verdade.
 const downMensagens = readFileSync(
-  path.join(RAIZ, "reversao/20261121120000_mensagens_familia.down.sql"),
+  path.join(RAIZ, "reversao/20261122120000_mensagens_familia.down.sql"),
   "utf8",
 );
 

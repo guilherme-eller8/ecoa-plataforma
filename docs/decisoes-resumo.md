@@ -64,6 +64,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P56** Página de amostra só de história pronta; texto até onde couber em parágrafos inteiros; PDF só com a voz pronta.
 - **P57** Player do QR mínimo (título, ano, *Ouvir*); métrica = *Ouvir* tocado, 1 por código, rede e hora.
 - **P58** Só o responsável desliga e religa um QR; voltar para rascunho não desliga.
+- **P65** Link `/m` só de escrita; envio com texto confirmado; entra no livro o que um membro marcar; só o responsável apaga de vez.
 
 ## Técnicas
 
@@ -101,7 +102,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T32** Transcrição com ElevenLabs Scribe; AssemblyAI pronto atrás da mesma interface.
 - ~~**T33**~~ → T34.
 - **T34** Fila de jobs: Inngest; o código roda nas funções da Vercel, as chaves nunca saem dela.
-- **T35** Transcrição síncrona num passo do Inngest (webhook volta se passar de 200 s).
+- **T35** Transcrição síncrona num passo do Inngest (webhook volta se passar de 200 s); exceção das mensagens em T48.
 - **T36** Nenhum texto do áudio passa pelo Inngest; versões e transcrições só aceitam insert.
 - **T37** Texto ao vivo por Broadcast em canal privado `livro:{id}`; só o servidor publica.
 - **T38** Até 240 min de áudio processado por livro em 24 h, conferido no banco.
@@ -112,4 +113,6 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T43** Typst confirmado pelo teste de 1 dia; texto da família entra como JSON, nunca como código.
 - **T44** Código do QR: 8 símbolos sem 0/1/I/L/O, sorteado no banco, guardado como está; limites de erro e acerto separados; segredo `QR_REDE_SEGREDO`.
 - **T45** Áudio do QR = recorte .m4a só com os trechos da história, sem metadados, bucket `qr`, ffmpeg endurecido.
-- **T46** `family_messages` mínima e fechada (política restritiva para `anon` e `porta_autor`); colunas no prompt 12.
+- **T46** `family_messages` mínima e fechada (política restritiva para `anon` e `porta_autor`); colunas no prompt 12 (QR de mensagem → T49).
+- **T48** Mensagem: só Scribe, na ação do servidor com reserva no banco (sem Inngest); duração real pela transcrição; link `/m` só pela chave secreta.
+- **T49** QR de mensagem no prompt 13, com a montagem.
