@@ -1,27 +1,24 @@
 -- Reversão de 20261123120000_montar_livro.sql.
 -- ATENÇÃO: com versão publicada ou QR de mensagem, apagaria livros congelados e códigos impressos.
+-- Antes de forçar: esvazie o bucket 'exportacoes' e apague do bucket 'qr' os recortes dos QR de
+-- mensagem (o Supabase não apaga bucket com arquivos; a reversão não mexe em Storage).
 
 -- Trava: com publicação ou QR de mensagem, só roda com `set ecoa.reversao_destrutiva = 'sim'`.
 do $$
 begin
   if ((to_regclass('public.book_exports') is not null and exists (select 1 from public.book_exports))
+      or (to_regclass('public.book_layouts') is not null and exists (select 1 from public.book_layouts))
       or exists (select 1 from public.qr_codes where message_id is not null))
      and coalesce(current_setting('ecoa.reversao_destrutiva', true), '') <> 'sim' then
     raise exception 'reversao_com_publicacoes: rode com ecoa.reversao_destrutiva = sim';
   end if;
 end $$;
 
-do $$
-begin
-  if to_regclass('storage.buckets') is not null then
-    delete from storage.buckets where id = 'exportacoes';
-  end if;
-end $$;
 
 drop function if exists public.servico_export_falhou(uuid, text);
 drop function if exists public.servico_export_pronto(uuid, jsonb, integer, numeric, text, bigint, bigint, integer);
 drop function if exists public.servico_export_conteudo(uuid);
-drop function if exists public.publicar_livro(uuid, integer);
+drop function if exists public.publicar_livro(uuid, text);
 drop table if exists public.book_exports;
 drop function if exists privado.export_imutavel();
 drop function if exists privado.export_sem_truncate();
@@ -29,6 +26,9 @@ drop type if exists public.export_estado;
 
 drop function if exists public.montagem_salvar(uuid, integer, text, text, text, uuid, text, uuid[], uuid[], uuid[]);
 drop function if exists public.montagem_conteudo(uuid);
+drop function if exists public.montagem_reservar_uso(uuid);
+drop table if exists public.montagem_usos;
+drop function if exists privado.hash_conteudo(jsonb);
 drop function if exists privado.conteudo_do_livro(uuid, boolean);
 drop table if exists public.book_layouts;
 
@@ -270,3 +270,12 @@ drop function if exists privado.capa_cores();
 drop function if exists privado.publicacao_expira_s();
 drop function if exists privado.max_publicacoes_dia();
 drop function if exists privado.max_itens_livro();
+drop function if exists privado.max_usos_montagem_minuto();
+-- O bucket sai por último (só sai vazio).
+do $$
+begin
+  if to_regclass('storage.buckets') is not null then
+    delete from storage.buckets where id = 'exportacoes';
+  end if;
+end $$;
+

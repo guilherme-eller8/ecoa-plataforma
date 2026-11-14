@@ -12,8 +12,11 @@ create function privado.max_itens_livro() returns integer
 language sql immutable set search_path = '' as $$ select 150 $$;   -- MAX_ITENS_LIVRO (por lista)
 create function privado.max_publicacoes_dia() returns integer
 language sql immutable set search_path = '' as $$ select 10 $$;    -- MAX_PUBLICACOES_DIA (por livro)
+-- Passado disso, uma geração 'gerando' é dada como presa: cobre 3 tentativas de 300 s e a espera.
 create function privado.publicacao_expira_s() returns integer
-language sql immutable set search_path = '' as $$ select 900 $$;   -- PUBLICACAO_EXPIRA_MIN × 60
+language sql immutable set search_path = '' as $$ select 1800 $$;  -- PUBLICACAO_EXPIRA_MIN × 60
+create function privado.max_usos_montagem_minuto() returns integer
+language sql immutable set search_path = '' as $$ select 30 $$;    -- MAX_USOS_MONTAGEM_MINUTO
 create function privado.capa_cores() returns text[]
 language sql immutable set search_path = '' as $$
   select array['terracota', 'oliva', 'azul', 'areia', 'grafite']    -- chaves de CAPA_CORES
@@ -60,11 +63,12 @@ language sql stable security definer set search_path = '' as $$
               else privado.fonte_audio_da_mensagem(p_message) end
 $$;
 
--- Teto da duração do recorte: a fala da história ou a duração da mensagem, mais a folga.
+-- Teto da duração do recorte: a fala da história, ou o teto do áudio de mensagem (a duração
+-- gravada da mensagem vem do aparelho de quem enviou; a transcrição conferiu o teto), mais a folga.
 create function privado.qr_duracao_max_s(p_story uuid, p_message uuid) returns numeric
 language sql stable security definer set search_path = '' as $$
   select case when p_story is not null then privado.fala_da_historia_s(p_story)
-              else (select f.duracao_s from public.family_messages f where f.id = p_message) end
+              else privado.max_mensagem_audio_s()::numeric end
          + privado.qr_folga_recorte_s()
 $$;
 
@@ -208,6 +212,11 @@ begin
     return jsonb_build_object('estado', 'limite');
   end if;
   if q.desativado_em is not null then return jsonb_build_object('estado', 'desativado'); end if;
+  -- Mensagem arquivada (spam, pedido de quem enviou): para de tocar já; desarquivar volta.
+  if q.message_id is not null and (select f.estado from public.family_messages f where f.id = q.message_id)
+                                  is distinct from 'enviada' then
+    return jsonb_build_object('estado', 'desativado');
+  end if;
   if q.audio_caminho is null
      or q.audio_fonte is distinct from privado.fonte_audio_do_qr(q.story_id, q.message_id) then
     return jsonb_build_object('estado', 'preparando', 'pedir_audio', privado.qr_reservar_audio(q.codigo));
@@ -263,7 +272,8 @@ begin
       'gravacoes', case when m.audio_caminho is null then '[]'::jsonb else jsonb_build_array(jsonb_build_object(
         'recording_id', null, 'caminho', m.audio_caminho,
         'content_type', case substring(m.audio_caminho from '\.([a-z0-9]+)$')
-                          when 'webm' then 'audio/webm' when 'm4a' then 'audio/mp4' else 'audio/ogg' end,
+                          when 'webm' then 'audio/webm' when 'm4a' then 'audio/mp4'
+                          when 'ogg' then 'audio/ogg' end,  -- o CHECK do caminho só aceita esses 3
         'duracao_s', m.duracao_s, 'segmentos', null)) end);
   end if;
   return jsonb_build_object(
@@ -332,7 +342,9 @@ language sql stable security definer set search_path = '' as $$
                                                          'altura', ph.altura) order by sp.ordem)
                      from public.story_photos sp join public.photos ph on ph.id = sp.photo_id
                      where sp.story_id = st.id), '[]') as fotos,
-           (select jsonb_build_object('codigo', q.codigo, 'ligado', q.desativado_em is null)
+           -- ligado = vai impresso: não desligado e com áudio que o recorte aceita (Q10).
+           (select jsonb_build_object('codigo', q.codigo,
+                     'ligado', q.desativado_em is null and privado.historia_aceita_qr(st.id))
             from public.qr_codes q where q.story_id = st.id) as qr,
            array_position(l.oh, st.id) as pos, st.criado_em
     from public.stories st, l
@@ -341,8 +353,11 @@ language sql stable security definer set search_path = '' as $$
   m as (
     select f.id, f.nome, f.relacao, f.no_livro as incluida, f.texto,
            case when f.foto_recebida_em is not null then f.foto_caminho end as foto_caminho,
-           f.audio_caminho is not null and f.audio_recebido_em is not null and not f.audio_recusado as com_audio,
-           (select jsonb_build_object('codigo', q.codigo, 'ligado', q.desativado_em is null)
+           -- Com áudio = chegou, não foi recusado e foi transcrito (a transcrição conferiu o teto).
+           f.audio_caminho is not null and f.audio_recebido_em is not null and not f.audio_recusado
+             and f.transcricao is not null as com_audio,
+           (select jsonb_build_object('codigo', q.codigo, 'ligado', q.desativado_em is null
+                     and f.audio_recebido_em is not null and not f.audio_recusado and f.transcricao is not null)
             from public.qr_codes q where q.message_id = f.id) as qr,
            array_position(l.om, f.id) as pos, f.enviada_em
     from public.family_messages f, l
@@ -368,11 +383,47 @@ language sql stable security definer set search_path = '' as $$
 $$;
 
 -- A tela de montagem lê por aqui (membro; vale com o plano vencido, só leitura).
+-- hash = sha256 do conteúdo; a tela de Conferir manda de volta ao publicar.
+create function privado.hash_conteudo(p_conteudo jsonb) returns text
+language sql immutable set search_path = '' as $$
+  select encode(sha256(convert_to(p_conteudo::text, 'utf8')), 'hex')
+$$;
 create function public.montagem_conteudo(p_book uuid) returns jsonb
 language plpgsql stable security definer set search_path = '' as $$
+declare
+  v jsonb;
 begin
   if p_book is null or not privado.eh_membro(p_book) then raise exception 'sem_permissao'; end if;
-  return privado.conteudo_do_livro(p_book, false);
+  v := privado.conteudo_do_livro(p_book, false);
+  return v || jsonb_build_object('hash', privado.hash_conteudo(v));
+end $$;
+
+-- Teto de contagens e prévias de capa (Typst e sharp no servidor): por pessoa e livro, por minuto.
+create table public.montagem_usos (
+  book_id uuid not null references public.books (id) on delete cascade,
+  user_id uuid not null references auth.users (id) on delete cascade,
+  janela timestamptz not null,
+  n integer not null default 1 check (n >= 1),
+  primary key (book_id, user_id, janela)
+);
+alter table public.montagem_usos enable row level security;
+revoke all on public.montagem_usos from public, anon, authenticated, porta_autor, service_role;
+create policy "ninguém lê direto" on public.montagem_usos as restrictive
+  for all to anon, authenticated, porta_autor using (false) with check (false);
+
+-- Membro reserva 1 uso. false = passou do teto neste minuto (a tela espera e tenta de novo).
+create function public.montagem_reservar_uso(p_book uuid) returns boolean
+language plpgsql security definer set search_path = '' as $$
+declare
+  v_n integer;
+begin
+  if p_book is null or not privado.eh_membro(p_book) then raise exception 'sem_permissao'; end if;
+  delete from public.montagem_usos u where u.janela < now() - interval '1 hour';
+  insert into public.montagem_usos as u (book_id, user_id, janela)
+    values (p_book, (select auth.uid()), date_trunc('minute', now()))
+    on conflict (book_id, user_id, janela) do update set n = u.n + 1
+    returning u.n into v_n;
+  return v_n <= privado.max_usos_montagem_minuto();
 end $$;
 
 -- Salva a montagem inteira. p_rev = a revisão que a tela leu (0 = ainda não existe). Outra pessoa
@@ -404,6 +455,7 @@ begin
     raise exception 'dados_invalidos';
   end if;
 
+  perform pg_advisory_xact_lock(hashtextextended('publicar:' || p_book::text, 0));
   if p_rev = 0 then
     insert into public.book_layouts as lo (book_id, titulo, subtitulo, dedicatoria, capa_foto_id, capa_cor,
                                      ordem_historias, ordem_mensagens, fora, atualizado_por)
@@ -499,27 +551,32 @@ create policy "membro lê" on public.book_exports for select to authenticated
 create policy "sem login nunca lê" on public.book_exports as restrictive
   for all to anon, porta_autor using (false) with check (false);
 
--- Publicar (só o responsável, plano ativo). p_rev = a revisão da montagem que a pessoa conferiu.
+-- Publicar (só o responsável, plano ativo). p_hash = o hash do montagem_conteudo que a tela de
+-- Conferir mostrou: qualquer mudança desde então (montagem, história, mensagem) recusa com montagem_mudou.
 -- Bloqueia: livro vazio, livro sem título, história sem título ou não marcada como pronta.
 -- Cria os QR que faltam (histórias com áudio; mensagens com áudio) e congela o conteúdo.
 -- pedir_audio = códigos cujo recorte esta chamada reservou (o servidor envia qr/recortar).
-create function public.publicar_livro(p_book uuid, p_rev integer)
+create function public.publicar_livro(p_book uuid, p_hash text)
 returns table (export_id uuid, versao integer, pedir_audio text[])
 language plpgsql security definer set search_path = '' as $$
 declare
   v_conteudo jsonb;
-  v_rev integer;
   v_id uuid;
   v_versao integer;
   v_pedir text[] := '{}';
   v_qr integer;
   r record;
 begin
-  perform pg_advisory_xact_lock(hashtextextended('publicar:' || p_book::text, 0));
   if p_book is null or not privado.eh_responsavel(p_book) then raise exception 'sem_permissao'; end if;
   if not privado.livro_editavel(p_book) then raise exception 'livro_fechado'; end if;
-  select lo.rev into v_rev from public.book_layouts lo where lo.book_id = p_book;
-  if v_rev is null or v_rev is distinct from p_rev then raise exception 'montagem_mudou'; end if;
+  perform pg_advisory_xact_lock(hashtextextended('publicar:' || p_book::text, 0));
+  -- Trava o que entra no livro até o fim da transação: nada muda entre conferir o hash e congelar.
+  perform 1 from public.book_layouts lo where lo.book_id = p_book for update;
+  perform 1 from public.stories st where st.book_id = p_book for share;
+  perform 1 from public.family_messages f where f.book_id = p_book and f.estado <> 'rascunho' for share;
+  if p_hash is null or p_hash is distinct from privado.hash_conteudo(privado.conteudo_do_livro(p_book, false)) then
+    raise exception 'montagem_mudou';
+  end if;
 
   -- Uma publicação por vez; a que ficou presa passa a falhou.
   update public.book_exports e set estado = 'falhou', erro = 'expirou', terminado_em = now()
@@ -529,7 +586,8 @@ begin
     raise exception 'publicacao_em_andamento';
   end if;
   if (select count(*) from public.book_exports e
-      where e.book_id = p_book and e.criado_em > now() - interval '24 hours') >= privado.max_publicacoes_dia() then
+      where e.book_id = p_book and e.estado <> 'falhou'
+        and e.criado_em > now() - interval '24 hours') >= privado.max_publicacoes_dia() then
     raise exception 'limite_publicacoes';
   end if;
 
@@ -557,6 +615,7 @@ begin
   end loop;
   for r in select (m ->> 'id')::uuid as id from jsonb_array_elements(v_conteudo -> 'mensagens') m
            where m -> 'qr' = 'null'::jsonb and (m ->> 'com_audio')::boolean loop
+    -- (com_audio já exige transcrição: a duração real passou pelo teto)
     perform pg_advisory_xact_lock(hashtextextended('qr:' || r.id::text, 0));
     if not exists (select 1 from public.qr_codes q where q.message_id = r.id) then
       perform privado.qr_inserir(p_book, null, r.id);
@@ -655,23 +714,23 @@ end $$;
 -- ── 6. Quem executa o quê ──────────────────────────────────────────────────
 revoke all on function
   privado.max_itens_livro(), privado.max_publicacoes_dia(), privado.publicacao_expira_s(),
-  privado.capa_cores(), privado.fonte_audio_da_mensagem(uuid), privado.fonte_audio_do_qr(uuid, uuid),
+  privado.max_usos_montagem_minuto(), privado.hash_conteudo(jsonb), privado.capa_cores(), privado.fonte_audio_da_mensagem(uuid), privado.fonte_audio_do_qr(uuid, uuid),
   privado.qr_duracao_max_s(uuid, uuid), privado.qr_inserir(uuid, uuid, uuid),
   privado.historia_aceita_qr(uuid), privado.conteudo_do_livro(uuid, boolean),
   privado.export_imutavel(), privado.export_sem_truncate()
-from public;
+from public, anon, authenticated, porta_autor;
 revoke all on function
-  public.montagem_conteudo(uuid),
+  public.montagem_conteudo(uuid), public.montagem_reservar_uso(uuid),
   public.montagem_salvar(uuid, integer, text, text, text, uuid, text, uuid[], uuid[], uuid[]),
-  public.publicar_livro(uuid, integer),
+  public.publicar_livro(uuid, text),
   public.servico_export_conteudo(uuid),
   public.servico_export_pronto(uuid, jsonb, integer, numeric, text, bigint, bigint, integer),
   public.servico_export_falhou(uuid, text)
 from public, anon, authenticated, porta_autor, service_role;
 grant execute on function
-  public.montagem_conteudo(uuid),
+  public.montagem_conteudo(uuid), public.montagem_reservar_uso(uuid),
   public.montagem_salvar(uuid, integer, text, text, text, uuid, text, uuid[], uuid[], uuid[]),
-  public.publicar_livro(uuid, integer)
+  public.publicar_livro(uuid, text)
 to authenticated;
 grant execute on function
   public.servico_export_conteudo(uuid),
