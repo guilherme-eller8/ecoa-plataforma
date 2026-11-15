@@ -12,6 +12,7 @@ import { SugestaoDePergunta } from "@/components/ui/sugestao-pergunta";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { HistoriaParaLer } from "@/lib/historias/tipos";
 import type { LivroDaTela, Resposta } from "@/lib/livro/tipos";
+import { FRASE_DA_FALHA } from "@/lib/pipeline/regras";
 
 const TIPO: Record<string, string> = {
   fato: "Fato",
@@ -83,7 +84,12 @@ export function TelaHistoria({
 
       <header className="flex flex-col gap-3">
         <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-          {historia.titulo ?? (pronta ? "História sem título" : "Escrevendo…")}
+          {historia.titulo ??
+            (pronta
+              ? "História sem título"
+              : historia.estado === "falhou"
+                ? "Não virou história"
+                : "Escrevendo…")}
         </h1>
         {historia.pergunta || respondida ? (
           <p className="text-ui-15 text-tinta-2">
@@ -135,11 +141,26 @@ export function TelaHistoria({
             Conferir as histórias
           </Link>
         </div>
+      ) : historia.estado === "falhou" ? (
+        <div className="flex flex-col gap-4">
+          <p className="text-ui-17 text-tinta-2">
+            {FRASE_DA_FALHA[historia.falha ?? "geral"]}
+          </p>
+          {historia.falha === "sem_fala" ? (
+            <Link
+              href={`/livro/${livro.id}/historias/nova`}
+              className={
+                classesDoBotao({ larguraTotal: true }) +
+                " sm:w-auto sm:self-start"
+              }
+            >
+              Gravar de novo
+            </Link>
+          ) : null}
+        </div>
       ) : !pronta ? (
         <p className="text-ui-17 text-tinta-2">
-          {historia.estado === "falhou"
-            ? "Não deu certo. Já estamos vendo."
-            : "A história ainda está sendo escrita. Volte em instantes."}
+          A história ainda está sendo escrita. Volte em instantes.
         </p>
       ) : (
         <>

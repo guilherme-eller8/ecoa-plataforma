@@ -27,7 +27,8 @@ import {
   type Palavra,
   type Segmento,
 } from "@/lib/ai/schemas";
-import { segmentar } from "@/lib/ai/segmentar";
+import { contarPalavras, segmentar } from "@/lib/ai/segmentar";
+import { sinaisDaTranscricao } from "@/lib/ai/sinais";
 import type { Transcritor } from "@/lib/ai/transcricao";
 import {
   ESPERA_EMAIL_DIVISAO_MIN,
@@ -40,6 +41,9 @@ import {
   MODELO_CAPAZ,
   MODELO_RAPIDO,
   TAMANHO_PADRAO,
+  TRANSCREVER_TIMEOUT_BASE_S,
+  TRANSCREVER_TIMEOUT_MAX_S,
+  TRANSCREVER_TIMEOUT_POR_MIN_S,
 } from "@/lib/config";
 import {
   falaDe,
@@ -119,7 +123,18 @@ export type LinhaUso = {
   ms?: number | null;
   msPrimeiraPalavra?: number | null;
   idRequisicao?: string | null;
+  /** Chamadas ao provedor nesta linha (1 = deu certo de primeira). */
+  tentativas?: number;
+  /** Código fixo quando falhou (lib/pipeline/erros.ts). Nunca texto. */
+  erroCodigo?: string | null;
+  /** Etapa editar: do áudio recebido à 1ª palavra publicada. */
+  msDesdeEnvio?: number | null;
+  /** Contagens da etapa. Só números: o banco recusa qualquer texto. */
+  detalhes?: Record<string, number>;
 };
+
+/** O que cada etapa acrescenta à linha de uso depois de dar certo. */
+export type ExtraDoUso = Pick<LinhaUso, "detalhes" | "msDesdeEnvio">;
 
 export type Rascunho = { edicao: Edicao; marcacoes?: Marcacao[] };
 
@@ -184,6 +199,8 @@ export interface BancoPipeline {
   ): Promise<number>;
   registrarUso(linha: LinhaUso): Promise<void>;
   versaoDaIA(historia: string): Promise<Edicao | null>;
+  /** Quando a gravação chegou (evals: espera até a 1ª palavra). Opcional nos testes. */
+  recebidaEm?(gravacao: string): Promise<string | null>;
   foiVista(historia: string): Promise<boolean>;
   avisoDoLivro(
     livro: string,
@@ -255,7 +272,9 @@ export async function usoDaIA<T>(
   d: Dependencias,
   base: Omit<LinhaUso, "ok" | "custoUSD" | "provedor">,
   chamada: () => Promise<RespostaIA<T>>,
+  extra?: (r: RespostaIA<T>) => ExtraDoUso | Promise<ExtraDoUso>,
 ): Promise<RespostaIA<T>> {
+  const inicio = Date.now();
   try {
     const r = await chamada();
     await d.banco.registrarUso({
@@ -267,6 +286,9 @@ export async function usoDaIA<T>(
       ms: r.ms,
       msPrimeiraPalavra: r.msPrimeiraPalavra,
       idRequisicao: r.idRequisicao,
+      tentativas: r.tentativas,
+      // Registro não derruba o passo: se a conta do extra falhar, a linha vai sem ele.
+      ...(extra ? await Promise.resolve(extra(r)).catch(() => ({})) : {}),
     });
     return r;
   } catch (e) {
@@ -277,9 +299,21 @@ export async function usoDaIA<T>(
       ok: false,
       uso,
       custoUSD: uso ? custoClaudeUSD(base.modelo, uso) : 0,
+      ms: Date.now() - inicio,
+      tentativas: e instanceof ErroIA ? e.tentativas : 1,
+      erroCodigo: codigoDaIA(e),
     });
     throw e;
   }
+}
+
+/** Quanto o pedido de transcrição pode demorar, pela duração do áudio (null = o teto). */
+export function timeoutDaTranscricaoMs(duracaoS: number | null): number {
+  if (duracaoS == null) return TRANSCREVER_TIMEOUT_MAX_S * 1000;
+  const s =
+    TRANSCREVER_TIMEOUT_BASE_S +
+    (duracaoS / 60) * TRANSCREVER_TIMEOUT_POR_MIN_S;
+  return Math.round(Math.min(s, TRANSCREVER_TIMEOUT_MAX_S) * 1000);
 }
 
 /** Transcreve uma gravação do contêiner, com os ids continuando os da anterior (prompt 7). */
@@ -305,6 +339,7 @@ export async function transcreverUma(
       chave: d.chaveTranscricao,
       modelo: d.modeloTranscricao,
       dicas: nomesDoGlossario(glossario),
+      signal: AbortSignal.timeout(timeoutDaTranscricaoMs(g.duracaoS)),
     });
   } catch (e) {
     logarSemTexto("transcrever", e);
@@ -318,6 +353,7 @@ export async function transcreverUma(
       ok: false,
       custoUSD: 0,
       ms: Date.now() - inicio,
+      erroCodigo: "scribe_falhou",
     });
     throw new ErroPipeline("transcrever", "scribe_falhou");
   }
@@ -349,6 +385,10 @@ export async function transcreverUma(
     minutosAudio: minutos,
     custoUSD: custoTranscricaoUSD(d.provedor, minutos),
     ms: Date.now() - inicio,
+    detalhes: {
+      ...sinaisDaTranscricao(bruta.palavras, g.duracaoS),
+      segmentos: segmentos.length,
+    },
   });
   return { segmentos: segmentos.length };
 }
@@ -398,6 +438,9 @@ export async function processarGravacao(
   const historia = ini.historia;
   const livro = ini.livro;
   const gravacoes = ini.gravacoes?.length ? ini.gravacoes : [gravacao];
+  // Evals: a espera "do envio à 1ª palavra" só faz sentido quando uma gravação vira história
+  // direto. Lote e conversa em partes param na confirmação da pessoa.
+  const envio = gravacoes.length === 1 ? gravacoes[0] : undefined;
 
   // O 1º passo mantém o nome do prompt 6: execuções em voo continuam valendo.
   for (const [n, g] of gravacoes.entries())
@@ -416,6 +459,14 @@ export async function processarGravacao(
         d,
         { livro, historia, etapa: "estruturar", modelo: MODELO_RAPIDO },
         () => estruturar(d.ia, d.ler, rotulos, segmentos),
+        (r) => ({
+          detalhes: {
+            segmentos: segmentos.length,
+            falantes: r.dados.falantes.length,
+            vazios: r.dados.vazios.length,
+            mudancas: r.dados.mudancasDeAssunto.length,
+          },
+        }),
       );
       await d.banco.gravarEstrutura(historia, r.dados);
       return { falantes: r.dados.falantes.length };
@@ -452,7 +503,7 @@ export async function processarGravacao(
         dividirHistoria(d, historia, livro, gravacoes.length),
       ),
     );
-    if (div.seguir) return escreverHistoria(historia, livro, d, step);
+    if (div.seguir) return escreverHistoria(historia, livro, d, step, envio);
     await step.sleep("esperar-divisao", `${ESPERA_EMAIL_DIVISAO_MIN}m`);
     const emailEnviado = await step.run("avisar-divisao", async () => {
       try {
@@ -469,7 +520,7 @@ export async function processarGravacao(
     return { fim: "separar", historia, historias: div.historias, emailEnviado };
   }
 
-  return escreverHistoria(historia, livro, d, step);
+  return escreverHistoria(historia, livro, d, step, envio);
 }
 
 /**
@@ -587,9 +638,12 @@ export async function escreverHistoria(
   livro: string,
   d: Dependencias,
   step: Passos,
+  /** A gravação que virou esta história sem passar por confirmação (mede a espera). */
+  gravacaoDoEnvio?: string,
 ): Promise<Resultado> {
   const editado = await step.run("editar", () =>
     seguro("editar", async () => {
+      let primeiraPalavraEm: number | null = null;
       await d.banco.mudarEtapa(historia, "escrevendo");
       await d.publicar(livro, { tipo: "etapa", historia, etapa: "escrevendo" });
       const [segmentos, estrutura, ctx] = await Promise.all([
@@ -611,6 +665,9 @@ export async function escreverHistoria(
             glossario: ctx.glossario,
             historias: ctx.historias,
             tamanho: TAMANHO_PADRAO,
+            aoPrimeiraPalavra: () => {
+              primeiraPalavraEm ??= Date.now();
+            },
             intervaloTextoMs: INTERVALO_TEXTO_MS,
             aoTexto: async (acumulado, tentativa) => {
               const p = extrairTextoParcial(acumulado);
@@ -620,6 +677,26 @@ export async function escreverHistoria(
                 .catch((e) => logarSemTexto("publicar texto", e));
             },
           }),
+        async (r) => {
+          const recebida =
+            gravacaoDoEnvio && primeiraPalavraEm != null
+              ? await d.banco.recebidaEm?.(gravacaoDoEnvio)
+              : null;
+          const espera = recebida
+            ? primeiraPalavraEm! - Date.parse(recebida)
+            : NaN;
+          return {
+            msDesdeEnvio: Number.isFinite(espera) ? Math.max(0, espera) : null,
+            detalhes: {
+              paragrafos: r.dados.paragrafos.length,
+              palavras: r.dados.paragrafos.reduce(
+                (t, x) => t + contarPalavras(x.texto),
+                0,
+              ),
+              palavras_fala: palavrasComConteudo(segmentos, estrutura),
+            },
+          };
+        },
       );
       await d.banco.gravarRascunho(historia, { edicao: r.dados });
       return {
@@ -651,6 +728,14 @@ export async function escreverHistoria(
           });
           return { ...v.resposta, dados: v };
         },
+        (r) => ({
+          detalhes: {
+            paragrafos: rascunho.edicao.paragrafos.length,
+            das_checagens: locais.length,
+            do_verificador: r.dados.marcacoes.length,
+            nao_localizadas: r.dados.naoLocalizadas,
+          },
+        }),
       );
       const marcacoes = [...locais, ...ver.dados.marcacoes].sort(
         (a, b) => a.paragrafo - b.paragrafo || a.inicio - b.inicio,

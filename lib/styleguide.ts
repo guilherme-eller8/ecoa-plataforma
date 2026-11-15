@@ -45,6 +45,7 @@ export const TELAS = [
   "historias",
   "historias-vazia",
   "historia",
+  "historia-sem-fala",
   "configuracoes",
   "configuracoes-vazia",
   "audios-situacao",

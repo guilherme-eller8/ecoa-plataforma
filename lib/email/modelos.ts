@@ -96,6 +96,33 @@ export function emailHistoriaPronta({
 }
 
 /**
+ * Aviso ao admin: uma história falhou. Só ids e códigos fixos (T36, T50): nunca título, nome
+ * ou trecho da fala.
+ */
+export function emailFalha({
+  livro,
+  etapa,
+  codigo,
+  urlAdmin,
+}: {
+  livro: string;
+  etapa: string;
+  codigo: string;
+  urlAdmin: string;
+}): Email {
+  const assunto = `Ecoa: uma história falhou (${etapa} · ${codigo})`;
+  const frase = `Livro ${livro.slice(0, 8)}. Etapa: ${etapa}. Código: ${codigo}. Chega no máximo 1 aviso por livro a cada hora; a lista completa fica no admin.`;
+  return {
+    assunto,
+    html: moldura("Uma história falhou.", escapar(frase), {
+      rotulo: "Abrir o admin",
+      url: urlAdmin,
+    }),
+    texto: `Uma história falhou.\n\n${frase}\n\nAbrir o admin: ${urlAdmin}\n\nEcoa Memórias`,
+  };
+}
+
+/**
  * Divisão esperando confirmação há 10 min (prompt 7, D8). Como em historiaPronta (P42), sem
  * título nem trecho: o título sai da fala e pode ser sensível.
  */

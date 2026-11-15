@@ -42,7 +42,9 @@ export type ChamadaIA<T> = {
 export type RespostaIA<T> = {
   dados: T;
   uso: Uso;
+  /** Do início da 1ª tentativa ao fim da que deu certo (o que a pessoa esperou). */
   ms: number;
+  /** Também contado do início da 1ª tentativa. */
   msPrimeiraPalavra: number | null;
   idRequisicao: string | null;
   tentativas: number;
@@ -61,11 +63,16 @@ export class ErroIA extends Error {
       "recusa" | "api" | "json_invalido" | "cortada" = "json_invalido",
     /** Motivo escrito pelo nosso código (validação, corte). Nunca texto da fala nem do zod. */
     readonly motivo: string | null = null,
+    /** Quantas chamadas ao modelo foram feitas até desistir. */
+    readonly tentativas: number = 1,
   ) {
     super(mensagem);
     this.name = "ErroIA";
   }
 }
+
+/** Teto de saída na 2ª tentativa de uma resposta cortada (o modelo aceita até 128 mil). */
+export const MAX_TOKENS_SEGUNDA_TENTATIVA = 64000;
 
 /** Detecta o 1º caractere do primeiro valor de `"campo": "..."` num JSON parcial. */
 export function detectorPrimeiraPalavra(
@@ -89,8 +96,10 @@ export class ClienteAnthropic implements ClienteIA {
     let ultimoMotivo: string | null = null;
     const pendentes: Promise<void>[] = [];
     const esperarTexto = () => Promise.allSettled(pendentes.splice(0));
+    const inicio = Date.now();
+    // Resposta cortada: repetir com o mesmo teto dá o mesmo corte. A 2ª tentativa dobra o teto.
+    let maxTokens = c.maxTokens;
     for (let tentativa = 1; tentativa <= 2; tentativa++) {
-      const inicio = Date.now();
       let msPrimeira: number | null = null;
       let acumulado = "";
       let ultimoTexto = 0;
@@ -115,7 +124,7 @@ export class ClienteAnthropic implements ClienteIA {
 
       const stream = this.client.messages.stream({
         model: c.modelo,
-        max_tokens: c.maxTokens,
+        max_tokens: maxTokens,
         system,
         messages: [{ role: "user", content: c.usuario }],
         output_config: {
@@ -148,6 +157,8 @@ export class ClienteAnthropic implements ClienteIA {
             `${c.etapa}: API respondeu ${e.status ?? "?"}`,
             uso,
             "api",
+            null,
+            tentativa,
           );
         }
         // JSON fora do schema: tenta mais uma vez. O uso desta tentativa não chega até aqui
@@ -169,12 +180,18 @@ export class ClienteAnthropic implements ClienteIA {
           `${c.etapa}: o modelo recusou a tarefa`,
           uso,
           "recusa",
+          null,
+          tentativa,
         );
       }
       if (mensagem.stop_reason === "max_tokens") {
-        ultimoErro = `resposta cortada em ${c.maxTokens} tokens`;
+        ultimoErro = `resposta cortada em ${maxTokens} tokens`;
         ultimoCodigo = "cortada";
         ultimoMotivo = ultimoErro;
+        maxTokens = Math.max(
+          maxTokens,
+          Math.min(maxTokens * 2, MAX_TOKENS_SEGUNDA_TENTATIVA),
+        );
         continue;
       }
       const dados = mensagem.parsed_output as T | null | undefined;
@@ -205,6 +222,7 @@ export class ClienteAnthropic implements ClienteIA {
       uso,
       ultimoCodigo,
       ultimoMotivo,
+      2,
     );
   }
 }

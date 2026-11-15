@@ -33,12 +33,15 @@ export type Database = {
           book_id: string;
           criado_em: string;
           custo_usd: number;
+          detalhes: Json | null;
+          erro_codigo: string | null;
           etapa: string;
           id: number;
           id_requisicao: string | null;
           minutos_audio: number | null;
           modelo: string;
           ms: number | null;
+          ms_desde_envio: number | null;
           ms_primeira_palavra: number | null;
           ok: boolean;
           provedor: string;
@@ -54,12 +57,15 @@ export type Database = {
           book_id: string;
           criado_em?: string;
           custo_usd: number;
+          detalhes?: Json | null;
+          erro_codigo?: string | null;
           etapa: string;
           id?: number;
           id_requisicao?: string | null;
           minutos_audio?: number | null;
           modelo: string;
           ms?: number | null;
+          ms_desde_envio?: number | null;
           ms_primeira_palavra?: number | null;
           ok: boolean;
           provedor: string;
@@ -75,12 +81,15 @@ export type Database = {
           book_id?: string;
           criado_em?: string;
           custo_usd?: number;
+          detalhes?: Json | null;
+          erro_codigo?: string | null;
           etapa?: string;
           id?: number;
           id_requisicao?: string | null;
           minutos_audio?: number | null;
           modelo?: string;
           ms?: number | null;
+          ms_desde_envio?: number | null;
           ms_primeira_palavra?: number | null;
           ok?: boolean;
           provedor?: string;
@@ -1443,6 +1452,16 @@ export type Database = {
       admin_ativar_plano: {
         Args: { p_autor_nome: string; p_meses: number; p_responsavel: string };
         Returns: string;
+      };
+      admin_custos_por_livro: {
+        Args: never;
+        Returns: {
+          book_id: string;
+          chamadas: number;
+          custo_usd: number;
+          falhas: number;
+          minutos_audio: number;
+        }[];
       };
       admin_listar_livros: {
         Args: never;

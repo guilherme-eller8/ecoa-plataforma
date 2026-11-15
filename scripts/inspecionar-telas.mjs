@@ -59,6 +59,7 @@ const TELAS = {
   "dividir-confirmada": "/styleguide/dividir-confirmada",
   "livro-conferir": "/styleguide/livro-conferir",
   "historia-sugestao": "/styleguide/historia-sugestao",
+  "historia-sem-fala": "/styleguide/historia-sem-fala",
   // Prompt 8
   editor: "/styleguide/editor",
   "editor-trava": "/styleguide/editor-trava",

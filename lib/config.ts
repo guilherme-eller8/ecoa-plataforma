@@ -228,6 +228,8 @@ export const TAMANHO_PADRAO = "medio";
 
 // Segmentação da transcrição.
 export const PAUSA_SEGMENTO_S = 1.5;
+// Evals: palavra com confiança do provedor abaixo disso conta como "duvidosa" (T54).
+export const CONFIANCA_DUVIDOSA = 0.5;
 export const MAX_PALAVRAS_SEGMENTO = 40;
 
 // Metas do PRD.
@@ -250,6 +252,11 @@ export const ESPERA_EMAIL_MIN = 2; // e-mail só se ninguém viu a história pro
 export const INTERVALO_TEXTO_MS = 400; // texto ao vivo: no máximo 1 mensagem por intervalo
 export const MAX_RESUMOS_CONTEXTO = 40; // histórias prontas no contexto do livro
 export const TENTATIVAS_POR_PASSO = 3; // Inngest: 1 + 2 novas tentativas
+// Corte do pedido de transcrição no pipeline: base + por minuto de áudio, até o teto (o passo
+// inteiro tem 300 s). Sem corte, um pedido travado só morria no teto da função, 3 vezes.
+export const TRANSCREVER_TIMEOUT_BASE_S = 60;
+export const TRANSCREVER_TIMEOUT_POR_MIN_S = 10;
+export const TRANSCREVER_TIMEOUT_MAX_S = 270;
 export const VARREDURA_GRAVACAO_MIN = 5; // gravação recebida sem história há mais que isso: reenvia
 export const VARREDURA_PARADA_MIN = 20;
 // Previsão mostrada no cartão (sem ansiedade): base + segundos por segundo de áudio, por fase.
