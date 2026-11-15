@@ -112,6 +112,20 @@ export const HISTORIA_PARA_LER: HistoriaParaLer = {
   sugestao: null,
 };
 
+/** Falhou porque não havia fala no áudio: a tela diz o que fazer e leva a gravar de novo. */
+export const HISTORIA_SEM_FALA: HistoriaParaLer = {
+  id: id(3),
+  titulo: null,
+  estado: "falhou",
+  falha: "sem_fala",
+  pergunta: null,
+  paragrafos: [],
+  marcacoes: [],
+  lacunas: [],
+  audios: [{ id: id(8), url: "/exemplo/audio-1.opus", duracaoS: 4 }],
+  sugestao: null,
+};
+
 export const NOMES_JAIR: NomeDaTela[] = [
   {
     id: id(11),

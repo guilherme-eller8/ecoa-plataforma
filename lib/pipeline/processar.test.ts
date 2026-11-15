@@ -479,3 +479,13 @@ describe("áudio sem fala (achado no deploy de prévia)", () => {
     expect(m.passos).not.toContain("dividir");
   });
 });
+
+describe("tempo máximo da transcrição", () => {
+  it("cresce com a duração do áudio e para no teto", async () => {
+    const { timeoutDaTranscricaoMs } = await import("./processar");
+    expect(timeoutDaTranscricaoMs(0)).toBe(60_000);
+    expect(timeoutDaTranscricaoMs(6 * 60)).toBe(120_000);
+    expect(timeoutDaTranscricaoMs(30 * 60)).toBe(270_000);
+    expect(timeoutDaTranscricaoMs(null)).toBe(270_000);
+  });
+});

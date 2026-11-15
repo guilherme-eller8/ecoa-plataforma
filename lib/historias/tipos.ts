@@ -4,7 +4,7 @@ import type { ChaveTamanho } from "@/lib/ui/tamanho";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { TextoDaHistoria } from "@/lib/editor/conteudo";
 import type { SegmentoDaTela } from "@/lib/editor/ouvir";
-import type { EstadoHistoria } from "@/lib/pipeline/regras";
+import type { EstadoHistoria, TipoDeFalha } from "@/lib/pipeline/regras";
 
 export type HistoriaDaTela = {
   id: string;
@@ -21,6 +21,7 @@ export type HistoriaDaTela = {
   propostas: number | null; // em "separar": quantas histórias a IA propôs
   dividida: boolean; // já passou por uma divisão confirmada (o canal não volta a "conferir")
   revisada: boolean; // prompt 8: a família marcou como pronta
+  falha?: TipoDeFalha; // só em "falhou": o que a pessoa pode fazer (sem o código do erro)
 };
 
 export type HistoriaParaLer = {
@@ -39,6 +40,7 @@ export type HistoriaParaLer = {
     fimS?: number;
   }[];
   sugestao: { id: string; texto: string } | null; // pergunta pendente que ela parece responder
+  falha?: TipoDeFalha; // só em "falhou"
 };
 
 export type NomeDaTela = {

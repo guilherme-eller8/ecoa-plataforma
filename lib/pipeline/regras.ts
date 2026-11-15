@@ -49,9 +49,31 @@ export const ETAPA_DO_ESTADO = {
 export type EstadoHistoria = keyof typeof ETAPA_DO_ESTADO;
 export type EtapaPublicada = (typeof ETAPA_DO_ESTADO)[EstadoHistoria];
 
+/**
+ * O que a pessoa vê quando a história falha. Só dois tipos saem do servidor (o código do erro
+ * continua só no admin): não havia fala no áudio (só ela resolve, gravando de novo) ou o resto.
+ */
+export type TipoDeFalha = "sem_fala" | "geral";
+
+const CODIGOS_SEM_FALA = new Set(["audio_sem_fala", "transcricao_vazia"]);
+
+export function tipoDeFalha(codigo: string | null | undefined): TipoDeFalha {
+  return codigo && CODIGOS_SEM_FALA.has(codigo) ? "sem_fala" : "geral";
+}
+
+export const FRASE_DA_FALHA: Record<TipoDeFalha, string> = {
+  sem_fala: "Não ouvimos fala nesse áudio. Grave de novo.",
+  geral: "Não deu certo desta vez. Já fomos avisados.",
+};
+
 /** O que o servidor publica no canal do livro. O texto vai inteiro, até onde chegou. */
 export type MensagemCanal =
-  | { tipo: "etapa"; historia: string; etapa: EtapaPublicada }
+  | {
+      tipo: "etapa";
+      historia: string;
+      etapa: EtapaPublicada;
+      falha?: TipoDeFalha; // só com etapa "falhou"
+    }
   | {
       tipo: "texto";
       historia: string;

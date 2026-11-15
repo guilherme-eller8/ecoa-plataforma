@@ -29,7 +29,12 @@ import { bancoPipeline } from "@/lib/pipeline/banco";
 import { recortarQrFn } from "./qr";
 import { publicarNoLivro } from "@/lib/pipeline/canal";
 import { envPipeline } from "@/lib/pipeline/env";
-import { lerErroPipeline, logarSemTexto } from "@/lib/pipeline/erros";
+import { avisarAdminsDaFalha } from "@/lib/email/alerta";
+import {
+  ehDefinitivo,
+  lerErroPipeline,
+  logarSemTexto,
+} from "@/lib/pipeline/erros";
 import { bancoPropostas } from "@/lib/pipeline/banco-propostas";
 import {
   escreverHistoria,
@@ -46,6 +51,7 @@ import {
   EVENTO_HISTORIA_CONFIRMADA,
   EVENTO_PROPOSTA,
   chaveDoEvento,
+  tipoDeFalha,
 } from "@/lib/pipeline/regras";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { inngest } from "./cliente";
@@ -147,6 +153,27 @@ export function dependencias(): DependenciasPropostas {
   };
 }
 
+/**
+ * O `step` do Inngest como o pipeline usa. Erro que uma nova tentativa não muda (áudio sem
+ * fala, recusa, resposta cortada…) vira NonRetriableError: a história falha na hora, sem
+ * esperar nem pagar as outras tentativas. A mensagem `etapa:codigo` segue igual para o onFailure.
+ */
+export function passosDe(step: unknown): Passos {
+  const s = step as Passos;
+  return {
+    run: (id, fn) =>
+      s.run(id, async () => {
+        try {
+          return await fn();
+        } catch (e) {
+          if (ehDefinitivo(e)) throw new NonRetriableError(e.message);
+          throw e;
+        }
+      }),
+    sleep: (id, tempo) => s.sleep(id, tempo),
+  };
+}
+
 /** onFailure das duas funções: só muda quem está em andamento (nada desfaz o "pronta"). */
 async function marcarFalha(historia: string, livro: string, erro?: string) {
   const { etapa, codigo } = lerErroPipeline(erro);
@@ -155,12 +182,20 @@ async function marcarFalha(historia: string, livro: string, erro?: string) {
     "falhou",
     { etapa, codigo },
   );
-  if (mudou)
-    await publicarNoLivro(livro, {
-      tipo: "etapa",
-      historia,
-      etapa: "falhou",
-    }).catch((e) => logarSemTexto("publicar falha", e));
+  if (!mudou) return;
+  const falha = tipoDeFalha(codigo);
+  await publicarNoLivro(livro, {
+    tipo: "etapa",
+    historia,
+    etapa: "falhou",
+    falha,
+  }).catch((e) => logarSemTexto("publicar falha", e));
+  // Áudio sem fala é a pessoa quem resolve (a tela diz "Grave de novo"). O resto avisa o admin:
+  // é o que torna verdadeira a frase "Já fomos avisados".
+  if (falha === "geral")
+    await avisarAdminsDaFalha({ livro, etapa, codigo }).catch((e) =>
+      logarSemTexto("avisar admin", e),
+    );
 }
 
 export const processarGravacaoFn = inngest.createFunction(
@@ -220,7 +255,7 @@ export const processarGravacaoFn = inngest.createFunction(
     return processarGravacao(
       dados.data.recordingId,
       dependencias(),
-      step as unknown as Passos,
+      passosDe(step),
     );
   },
 );
@@ -254,7 +289,7 @@ export const escreverHistoriaFn = inngest.createFunction(
     if (!dados.success) throw new NonRetriableError("evento:dados_invalidos");
     const d = dependencias();
     const historia = dados.data.historiaId;
-    const passos = step as unknown as Passos;
+    const passos = passosDe(step);
     const r = await passos.run("retomar", async () => {
       const info = await d.banco.info(historia);
       if (!info) return { seguir: false, livro: null, estado: null };
@@ -294,7 +329,7 @@ export const proporFn = inngest.createFunction(
     const dados = dadosDaProposta.safeParse(event.data);
     if (!dados.success) throw new NonRetriableError("evento:dados_invalidos");
     const d = dependencias();
-    const passos = step as unknown as Passos;
+    const passos = passosDe(step);
     const tipo = await passos.run("tipo", async () => {
       const p = await d.propostas.proposta(dados.data.propostaId);
       return p && p.historia === dados.data.historiaId ? p.tipo : null;

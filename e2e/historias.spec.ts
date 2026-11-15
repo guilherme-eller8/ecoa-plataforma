@@ -17,7 +17,7 @@ test.describe("Histórias (exemplo)", () => {
       page.getByText("Pronta para revisar", { exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByText("Não deu certo. Já estamos vendo."),
+      page.getByText("Não deu certo desta vez. Já fomos avisados."),
     ).toBeVisible();
     await expect(page.getByRole("link", { name: "Revisar" })).toBeVisible();
   });
@@ -134,4 +134,20 @@ test.describe("Áudios e admin (exemplo)", () => {
     await expect(page.getByText("Processando de novo.")).toBeVisible();
     await expect(page.getByText(/R\$ 2,47/)).toBeVisible();
   });
+});
+
+test("história sem fala no áudio: diz o que fazer e leva a gravar de novo", async ({
+  page,
+}) => {
+  await page.goto("/styleguide/historia-sem-fala");
+  await expect(
+    page.getByRole("heading", { name: "Não virou história" }),
+  ).toBeVisible();
+  await expect(page.getByText("Escrevendo…")).toHaveCount(0);
+  await expect(
+    page.getByText("Não ouvimos fala nesse áudio. Grave de novo."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Gravar de novo" }),
+  ).toHaveAttribute("href", /\/historias\/nova$/);
 });

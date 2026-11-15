@@ -6,10 +6,13 @@ import { ESPERA_LOTE_H, MAX_ARQUIVO_MIN } from "@/lib/config";
 import {
   FRASES_ESPERA,
   MOTIVOS_ESPERA,
+  tipoDeFalha,
   type EstadoHistoria,
   type MotivoEspera,
+  type TipoDeFalha,
 } from "@/lib/pipeline/regras";
 import { assinarLeitura } from "@/lib/storage/assinar";
+import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import { normalizarTexto } from "@/lib/editor/conteudo";
 import type { PropostaDaTela } from "@/lib/editor/tipos";
@@ -74,6 +77,24 @@ function trechoDaGravacao(
     fim: Math.max(...segs.map((x) => x.fim)),
     duracao: segs.reduce((t, x) => t + (x.fim - x.inicio), 0),
   };
+}
+
+/**
+ * O tipo de falha de cada história que falhou. A coluna `erro` não tem grant para a sessão (o
+ * código é só do admin): aqui o servidor lê com a chave secreta e devolve só o tipo. Os ids
+ * vêm sempre de uma consulta da sessão (RLS), nunca da tela.
+ */
+async function falhasDe(
+  livro: string,
+  ids: string[],
+): Promise<Map<string, TipoDeFalha>> {
+  if (ids.length === 0) return new Map();
+  const { data } = await clienteAdmin()
+    .from("stories")
+    .select("id, erro")
+    .eq("book_id", livro)
+    .in("id", ids);
+  return new Map((data ?? []).map((s) => [s.id, tipoDeFalha(s.erro)]));
 }
 
 export async function historiasDoLivro(
@@ -161,6 +182,10 @@ export async function historiasDoLivro(
     if (atual) trechoDe.set(s.id, atual);
   }
   const perguntaDe = new Map((ps ?? []).map((p) => [p.id, p.texto]));
+  const falhaDe = await falhasDe(
+    livro,
+    linhas.filter((s) => s.estado === "falhou").map((s) => s.id),
+  );
 
   return linhas.map((s) => {
     const divisao = s.divisao as {
@@ -181,6 +206,9 @@ export async function historiasDoLivro(
       propostas: divisao?.ia?.historias?.length ?? null,
       dividida: Boolean(s.divisao_de) || Boolean(divisao?.final),
       revisada: Boolean(s.revisada_em),
+      ...(s.estado === "falhou"
+        ? { falha: falhaDe.get(s.id) ?? ("geral" as const) }
+        : {}),
     };
   });
 }
@@ -242,10 +270,15 @@ export async function historiaParaLer(
     (recs ?? []).map((r) => r.caminho),
   );
   const edicao = (v?.conteudo ?? null) as Edicao | null;
+  const falha =
+    s.estado === "falhou"
+      ? ((await falhasDe(livro, [s.id])).get(s.id) ?? ("geral" as const))
+      : undefined;
   return {
     id: s.id,
     titulo: s.titulo,
     estado: s.estado as EstadoHistoria,
+    ...(falha ? { falha } : {}),
     pergunta: p?.texto ?? null,
     paragrafos: edicao?.paragrafos.map((x) => x.texto) ?? [],
     marcacoes: ((v?.marcacoes ?? []) as Marcacao[]) ?? [],

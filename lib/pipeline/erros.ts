@@ -35,6 +35,25 @@ export class ErroPipeline extends Error {
   }
 }
 
+/**
+ * Erros que uma nova tentativa não muda: o passo para na hora, sem repetir (e sem pagar de novo
+ * o modelo). Falha do provedor (`scribe_falhou`, `ia_api`) e JSON inválido continuam repetindo:
+ * são os que uma nova tentativa pode resolver.
+ */
+export const CODIGOS_DEFINITIVOS: ReadonlySet<CodigoPipeline> = new Set([
+  "audio_sem_fala",
+  "transcricao_vazia",
+  "audio_ausente",
+  "ia_recusou",
+  "resposta_cortada", // já tentou de novo com o dobro do limite (lib/ai/claude.ts)
+  "longa",
+  "proposta_vencida",
+] as const);
+
+export function ehDefinitivo(e: unknown): e is ErroPipeline {
+  return e instanceof ErroPipeline && CODIGOS_DEFINITIVOS.has(e.codigo);
+}
+
 export function codigoDaIA(e: unknown): CodigoPipeline {
   if (!(e instanceof ErroIA)) return "erro_inesperado";
   return (

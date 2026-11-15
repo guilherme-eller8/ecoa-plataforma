@@ -40,6 +40,9 @@ import {
   MODELO_CAPAZ,
   MODELO_RAPIDO,
   TAMANHO_PADRAO,
+  TRANSCREVER_TIMEOUT_BASE_S,
+  TRANSCREVER_TIMEOUT_MAX_S,
+  TRANSCREVER_TIMEOUT_POR_MIN_S,
 } from "@/lib/config";
 import {
   falaDe,
@@ -119,6 +122,8 @@ export type LinhaUso = {
   ms?: number | null;
   msPrimeiraPalavra?: number | null;
   idRequisicao?: string | null;
+  /** Chamadas ao provedor nesta linha (1 = deu certo de primeira). */
+  tentativas?: number;
 };
 
 export type Rascunho = { edicao: Edicao; marcacoes?: Marcacao[] };
@@ -256,6 +261,7 @@ export async function usoDaIA<T>(
   base: Omit<LinhaUso, "ok" | "custoUSD" | "provedor">,
   chamada: () => Promise<RespostaIA<T>>,
 ): Promise<RespostaIA<T>> {
+  const inicio = Date.now();
   try {
     const r = await chamada();
     await d.banco.registrarUso({
@@ -267,6 +273,7 @@ export async function usoDaIA<T>(
       ms: r.ms,
       msPrimeiraPalavra: r.msPrimeiraPalavra,
       idRequisicao: r.idRequisicao,
+      tentativas: r.tentativas,
     });
     return r;
   } catch (e) {
@@ -277,9 +284,20 @@ export async function usoDaIA<T>(
       ok: false,
       uso,
       custoUSD: uso ? custoClaudeUSD(base.modelo, uso) : 0,
+      ms: Date.now() - inicio,
+      tentativas: e instanceof ErroIA ? e.tentativas : 1,
     });
     throw e;
   }
+}
+
+/** Quanto o pedido de transcrição pode demorar, pela duração do áudio (null = o teto). */
+export function timeoutDaTranscricaoMs(duracaoS: number | null): number {
+  if (duracaoS == null) return TRANSCREVER_TIMEOUT_MAX_S * 1000;
+  const s =
+    TRANSCREVER_TIMEOUT_BASE_S +
+    (duracaoS / 60) * TRANSCREVER_TIMEOUT_POR_MIN_S;
+  return Math.round(Math.min(s, TRANSCREVER_TIMEOUT_MAX_S) * 1000);
 }
 
 /** Transcreve uma gravação do contêiner, com os ids continuando os da anterior (prompt 7). */
@@ -305,6 +323,7 @@ export async function transcreverUma(
       chave: d.chaveTranscricao,
       modelo: d.modeloTranscricao,
       dicas: nomesDoGlossario(glossario),
+      signal: AbortSignal.timeout(timeoutDaTranscricaoMs(g.duracaoS)),
     });
   } catch (e) {
     logarSemTexto("transcrever", e);

@@ -1,5 +1,6 @@
 // Cartão de história com as etapas ao vivo (PRD, M5):
-// Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta. Ou: Não deu certo.
+// Enviando → Ouvindo → Escrevendo → Pronta para revisar. Depois: Pronta. Ou: falhou (com a
+// frase do tipo de falha).
 // Prompt 7: uma conversa longa ou um lote passa por Separando → Conferir antes de escrever.
 // Só apresentação: recebe o estado pronto, não busca nada.
 import type { ReactNode } from "react";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/ui/etapas";
 import { falarDuracao } from "@/lib/ui/tempo";
 import type { Andamento } from "@/lib/historias/previsao";
+import { FRASE_DA_FALHA, type TipoDeFalha } from "@/lib/pipeline/regras";
 import { IconeCheck } from "./icones";
 
 export type EstadoCartao =
@@ -33,6 +35,7 @@ type Props = {
   destaque?: boolean; // o cartão que está acontecendo agora
   andamento?: Andamento; // tempo previsto: uma barra que enche e uma frase curta
   propostas?: number | null; // conferir: quantas histórias a IA encontrou
+  falha?: TipoDeFalha; // falhou: sem fala no áudio (a pessoa grava de novo) ou o resto
 };
 
 function BarraDeAndamento({ andamento }: { andamento: Andamento }) {
@@ -129,6 +132,7 @@ export function CartaoHistoria({
   destaque = false,
   andamento,
   propostas,
+  falha = "geral",
 }: Props) {
   const processando =
     estado === "enviando" ||
@@ -176,7 +180,7 @@ export function CartaoHistoria({
 
       {estado === "pronta" ? null : estado === "falhou" ? (
         <p className="text-ui-15 text-tinta-2" aria-live="polite">
-          Não deu certo. Já estamos vendo.
+          {FRASE_DA_FALHA[falha]}
         </p>
       ) : (estado === "ouvindo" ||
           estado === "escrevendo" ||

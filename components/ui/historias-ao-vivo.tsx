@@ -14,6 +14,7 @@ import {
   topicoDoLivro,
   type EtapaPublicada,
   type MensagemCanal,
+  type TipoDeFalha,
 } from "@/lib/pipeline/regras";
 import { clienteNavegador } from "@/lib/supabase/navegador";
 import { classesDoBotao } from "./botao";
@@ -21,6 +22,7 @@ import { CartaoHistoria } from "./cartao-historia";
 
 export type AoVivo = {
   etapa?: EtapaPublicada;
+  falha?: TipoDeFalha;
   tentativa: number;
   titulo: string | null;
   paragrafos: string[];
@@ -125,7 +127,10 @@ export function HistoriasAoVivo({
           paragrafos: [],
         };
         if (m.tipo === "etapa")
-          return { ...atual, [m.historia]: { ...antes, etapa: m.etapa } };
+          return {
+            ...atual,
+            [m.historia]: { ...antes, etapa: m.etapa, falha: m.falha },
+          };
         if (m.tentativa < antes.tentativa) return atual;
         return {
           ...atual,
@@ -190,6 +195,7 @@ export function HistoriasAoVivo({
               }
               duracaoSeg={h.duracaoS}
               propostas={h.propostas}
+              falha={h.falha ?? vivo?.falha}
               andamento={
                 agora !== null &&
                 (estado === "ouvindo" ||

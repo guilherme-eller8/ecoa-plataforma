@@ -24,6 +24,7 @@ import {
   ESPERANDO_FALSAS,
   FALHAS_FALSAS,
   HISTORIA_PARA_LER,
+  HISTORIA_SEM_FALA,
   GUARDADAS_JAIR,
   HISTORIAS_JAIR,
   NOMES_JAIR,
@@ -367,6 +368,8 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "historia":
       return <TelaHistoria livro={LIVRO_JAIR} historia={HISTORIA_PARA_LER} />;
+    case "historia-sem-fala":
+      return <TelaHistoria livro={LIVRO_JAIR} historia={HISTORIA_SEM_FALA} />;
     case "historia-sugestao":
       return (
         <TelaHistoria

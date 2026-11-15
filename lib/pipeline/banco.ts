@@ -408,6 +408,7 @@ export function bancoPipeline(
         etapa: l.etapa,
         provedor: l.provedor,
         modelo: l.modelo,
+        tentativa: Math.min(20, Math.max(1, Math.round(l.tentativas ?? 1))),
         ok: l.ok,
         tokens_entrada: l.uso?.entrada ?? 0,
         tokens_saida: l.uso?.saida ?? 0,

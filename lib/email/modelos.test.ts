@@ -104,3 +104,21 @@ describe("e-mails do prompt 11", () => {
     expect(e.html).toContain('href="https://x/resumo/sair/m/t"');
   });
 });
+
+describe("emailFalha (aviso ao admin)", () => {
+  it("leva só ids e códigos, com o link do admin", async () => {
+    const { emailFalha } = await import("./modelos");
+    const e = emailFalha({
+      livro: "0f3a9c1e-1111-4222-8333-444455556666",
+      etapa: "editar",
+      codigo: "json_invalido",
+      urlAdmin: "https://app.exemplo/admin",
+    });
+    expect(e.assunto).toBe(
+      "Ecoa: uma história falhou (editar · json_invalido)",
+    );
+    expect(e.texto).toContain("Livro 0f3a9c1e.");
+    expect(e.texto).toContain("https://app.exemplo/admin");
+    expect(e.html).toContain("Abrir o admin");
+  });
+});
