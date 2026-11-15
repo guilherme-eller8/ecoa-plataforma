@@ -20,10 +20,15 @@
 // Frente: foto num retângulo, título (até 3 linhas) e subtítulo.
 #place(top + left, dx: mm(x-frente), dy: mm(y-topo), block(width: mm(largura-frente), {
   if d.foto != none {
-    // A imagem cobre a caixa; o foco escolhido decide que parte aparece (o resto é cortado).
-    box(width: mm(d.foto.larguraMm), height: mm(d.foto.alturaMm), clip: true,
-      place(top + left, dx: mm(d.foto.dxMm), dy: mm(d.foto.dyMm),
-        image(d.foto.arquivo, width: mm(d.foto.imgLarguraMm), height: mm(d.foto.imgAlturaMm))))
+    if d.foto.at("vazio", default: false) {
+      // Contagem de páginas: sem o arquivo da foto, um cinza do mesmo tamanho (como no miolo).
+      rect(width: mm(d.foto.larguraMm), height: mm(d.foto.alturaMm), fill: luma(230), stroke: none)
+    } else {
+      // A imagem cobre a caixa; o foco escolhido decide que parte aparece (o resto é cortado).
+      box(width: mm(d.foto.larguraMm), height: mm(d.foto.alturaMm), clip: true,
+        place(top + left, dx: mm(d.foto.dxMm), dy: mm(d.foto.dyMm),
+          image(d.foto.arquivo, width: mm(d.foto.imgLarguraMm), height: mm(d.foto.imgAlturaMm))))
+    }
     v(10mm)
   } else {
     v(40mm)

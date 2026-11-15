@@ -30,6 +30,8 @@ export type FotoDaCapaParaTypst = FotoParaTypst & {
   imgAlturaMm: number;
   dxMm: number; // deslocamento da imagem dentro da caixa (≤ 0)
   dyMm: number;
+  /** Sem o arquivo (contagem de páginas): a caixa sai cinza, como no miolo. */
+  vazio?: boolean;
 };
 export type FotoPedida = {
   arquivo: string; // nome local no Typst: nunca o caminho do Storage
