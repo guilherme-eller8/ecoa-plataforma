@@ -97,7 +97,7 @@ export function TelaMensagens({
   );
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-2xl lg:max-w-3xl">
       <Link
         href={`/livro/${livro.id}`}
         className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"

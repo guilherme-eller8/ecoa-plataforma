@@ -9,16 +9,10 @@ import { useEffect, useRef, useState } from "react";
 import { estadoDoCartao } from "@/lib/historias/etapas";
 import { andamento as andamentoPrevisto } from "@/lib/historias/previsao";
 import type { HistoriaDaTela } from "@/lib/historias/tipos";
-import {
-  EVENTO_CANAL,
-  topicoDoLivro,
-  type EtapaPublicada,
-  type MensagemCanal,
-  type TipoDeFalha,
-} from "@/lib/pipeline/regras";
-import { clienteNavegador } from "@/lib/supabase/navegador";
+import type { EtapaPublicada, TipoDeFalha } from "@/lib/pipeline/regras";
 import { classesDoBotao } from "./botao";
 import { CartaoHistoria } from "./cartao-historia";
+import { useCanalDoLivro, useRelerEnquanto } from "./atualizar-ao-vivo";
 
 export type AoVivo = {
   etapa?: EtapaPublicada;
@@ -36,40 +30,6 @@ const ORIGEM: Record<string, string> = {
   lote: "Áudios enviados",
 };
 
-function useCanalDoLivro(
-  livroId: string,
-  aoReceber: (m: MensagemCanal) => void,
-  ligado: boolean,
-) {
-  const router = useRouter();
-  const receber = useRef(aoReceber);
-  useEffect(() => {
-    receber.current = aoReceber;
-  });
-  useEffect(() => {
-    if (!ligado) return;
-    const supabase = clienteNavegador();
-    let vivo = true;
-    let canal: ReturnType<typeof supabase.channel> | null = null;
-    void supabase.realtime.setAuth().then(() => {
-      if (!vivo) return;
-      canal = supabase
-        .channel(topicoDoLivro(livroId), { config: { private: true } })
-        .on("broadcast", { event: EVENTO_CANAL }, ({ payload }) =>
-          receber.current(payload as MensagemCanal),
-        )
-        .subscribe((status) => {
-          // O que aconteceu antes de assinar está no banco.
-          if (status === "SUBSCRIBED") router.refresh();
-        });
-    });
-    return () => {
-      vivo = false;
-      if (canal) void supabase.removeChannel(canal);
-    };
-  }, [livroId, router, ligado]);
-}
-
 export function HistoriasAoVivo({
   livroId,
   historias,
@@ -77,6 +37,7 @@ export function HistoriasAoVivo({
   vazio,
   canal = true,
   inicial = {},
+  colunas = 1,
 }: {
   livroId: string;
   historias: HistoriaDaTela[];
@@ -84,6 +45,7 @@ export function HistoriasAoVivo({
   vazio?: React.ReactNode;
   canal?: boolean; // false na vitrine (sem Supabase)
   inicial?: Record<string, AoVivo>; // vitrine: texto ao vivo de exemplo
+  colunas?: 1 | 2; // 2: a lista se divide em duas colunas em tela larga
 }) {
   const router = useRouter();
   const [aoVivo, setAoVivo] = useState<Record<string, AoVivo>>(inicial);
@@ -102,6 +64,9 @@ export function HistoriasAoVivo({
     const id = setInterval(tic, 1000);
     return () => clearInterval(id);
   }, [emAndamento]);
+  // O canal adianta, mas pode perder uma mensagem (aba dormindo, rede): com algo em andamento
+  // a tela também pergunta ao servidor a cada poucos segundos.
+  useRelerEnquanto(emAndamento);
   const vistas = useRef(new Set<string>());
 
   const ver = (id: string) => {
@@ -159,7 +124,9 @@ export function HistoriasAoVivo({
   if (historias.length === 0) return <>{vazio}</>;
 
   return (
-    <ul className="flex flex-col gap-4">
+    <ul
+      className={`grid items-start gap-4 ${colunas === 2 ? "lg:grid-cols-2" : ""}`}
+    >
       {historias.map((h) => {
         const vivo = aoVivo[h.id];
         const doServidor = estadoDoCartao(h.estado, h.revisada);

@@ -78,7 +78,7 @@ export function TelaGravarConversa({
   const voltar = `/livro/${livro.id}/historias/nova`;
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-2xl lg:max-w-3xl">
       {escolha === null ? (
         <Link
           href={voltar}

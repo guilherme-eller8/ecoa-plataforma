@@ -217,7 +217,7 @@ export function TelaDividir({
     </Link>
   );
   const moldura =
-    "mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12";
+    "mx-auto flex min-h-dvh w-full max-w-xl md:max-w-2xl lg:max-w-3xl flex-col gap-8 px-5 pt-8 pb-12";
 
   if (divisao.situacao === "confirmada")
     return (

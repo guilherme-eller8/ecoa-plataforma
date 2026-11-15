@@ -857,7 +857,7 @@ export function TelaPerguntas({
   );
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 pt-8 pb-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 pt-8 pb-12 lg:max-w-3xl">
       <AtualizarSozinho
         ativo={aba === "causos" || aba === "enquete"}
         pausado={tocando || adicionar}

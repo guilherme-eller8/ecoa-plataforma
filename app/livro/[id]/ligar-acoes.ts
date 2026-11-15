@@ -1,5 +1,6 @@
 import "server-only";
 import type {
+  AcoesArquivar,
   AcoesAudios,
   AcoesConfiguracao,
   AcoesFotos,
@@ -46,5 +47,8 @@ export function acoesDoLivro(id: string) {
     reassinarAudio: a.reassinarAudio.bind(null, id),
     confirmarAudio: a.confirmarAudio.bind(null, id),
   };
-  return { configuracao, fotos, perguntas, kit, audios };
+  const arquivar: AcoesArquivar = {
+    arquivar: a.arquivarAudio.bind(null, id),
+  };
+  return { configuracao, fotos, perguntas, kit, audios, arquivar };
 }

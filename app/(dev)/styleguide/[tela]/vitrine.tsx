@@ -511,7 +511,9 @@ export function Vitrine({ tela }: { tela: Tela }) {
         />
       );
     case "audios-situacao":
-      return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_COM_SITUACAO} />;
+      return (
+        <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_COM_SITUACAO} vitrine />
+      );
     case "admin-aderencia":
       return (
         <TelaAderencia linhas={LINHAS_ADERENCIA} funil={FUNIL_ADERENCIA} />
@@ -598,7 +600,14 @@ export function Vitrine({ tela }: { tela: Tela }) {
         />
       );
     case "audios":
-      return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_JAIR} />;
+      return (
+        <TelaAudios
+          livro={LIVRO_JAIR}
+          audios={AUDIOS_JAIR}
+          acoes={{ arquivar: async () => ({ ok: true }) }}
+          vitrine
+        />
+      );
     case "gravar-conversa":
     case "gravar-conversa-pergunta":
     case "gravar-conversa-partes":
@@ -661,7 +670,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
         />
       );
     case "audios-vazia":
-      return <TelaAudios livro={LIVRO_JAIR} audios={[]} />;
+      return <TelaAudios livro={LIVRO_JAIR} audios={[]} vitrine />;
     case "entrar":
       return <TelaEntrar pedirLink={acaoFalsa} entrarComGoogle={nada} />;
     case "entrar-email":

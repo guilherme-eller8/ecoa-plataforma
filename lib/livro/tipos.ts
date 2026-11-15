@@ -144,6 +144,7 @@ export type AudioDaTela = {
   recebidoEm: string;
   url: string | null; // assinada por 1 h
   processado: boolean;
+  arquivado?: boolean; // P69: fora das listas, nunca apagado
   situacao?: SituacaoDoAudio; // prompt 6: virou história ou por que espera
   envio?: { id: string; total: number; ordem: number } | null; // prompt 7: do mesmo lote
 };
@@ -178,6 +179,11 @@ export type AcoesAudios = {
   ) => Promise<Resposta<AudioPreparado[]>>;
   reassinarAudio: (id: string) => Promise<Resposta<AudioPreparado>>;
   confirmarAudio: (id: string) => Promise<Resposta>;
+};
+
+/** P69: arquivar tira o áudio das listas (nunca o apaga); desarquivar o devolve. */
+export type AcoesArquivar = {
+  arquivar: (id: string, arquivar: boolean) => Promise<Resposta>;
 };
 
 export type AcoesLinkDoAutor = {

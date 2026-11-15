@@ -902,6 +902,8 @@ export type Database = {
           atualizado_por: string | null;
           book_id: string;
           capa_cor: string;
+          capa_foco_x: number;
+          capa_foco_y: number;
           capa_foto_id: string | null;
           dedicatoria: string | null;
           fora: string[];
@@ -1025,6 +1027,7 @@ export type Database = {
       };
       recordings: {
         Row: {
+          arquivado_em: string | null;
           author_access_id: string | null;
           lote_id: string | null;
           lote_ordem: number | null;
@@ -1841,6 +1844,10 @@ export type Database = {
         Args: never;
         Returns: number;
       };
+      audio_arquivar: {
+        Args: { p_arquivar: boolean; p_book: string; p_id: string };
+        Returns: boolean;
+      };
       // ── Prompt 13: montar e publicar ──
       montagem_conteudo: { Args: { p_book: string }; Returns: Json };
       montagem_reservar_uso: { Args: { p_book: string }; Returns: boolean };
@@ -1848,6 +1855,8 @@ export type Database = {
         Args: {
           p_book: string;
           p_capa_cor: string;
+          p_capa_foco_x: number;
+          p_capa_foco_y: number;
           p_capa_foto: string | null;
           p_dedicatoria: string | null;
           p_fora: string[];

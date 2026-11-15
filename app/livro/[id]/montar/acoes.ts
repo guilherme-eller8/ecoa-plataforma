@@ -56,6 +56,8 @@ const Entrada = z.object({
   dedicatoria: z.string().max(DEDICATORIA_MAX * 2),
   capaFotoId: uuid.nullable(),
   capaCor: z.enum(Object.keys(CAPA_CORES) as [string, ...string[]]),
+  capaFocoX: z.number().int().min(0).max(100),
+  capaFocoY: z.number().int().min(0).max(100),
   ordemHistorias: z.array(uuid).max(MAX_ITENS_LIVRO),
   ordemMensagens: z.array(uuid).max(MAX_ITENS_LIVRO),
   fora: z.array(uuid).max(MAX_ITENS_LIVRO),
@@ -88,6 +90,8 @@ export async function salvarMontagem(
     p_ordem_historias: d.ordemHistorias,
     p_ordem_mensagens: d.ordemMensagens,
     p_fora: d.fora,
+    p_capa_foco_x: d.capaFocoX,
+    p_capa_foco_y: d.capaFocoY,
   });
   if (error) return { ok: false, mensagem: fraseDoErro(error) };
   after(() =>
@@ -143,6 +147,8 @@ const Previa = z.object({
   titulo: z.string().max(TITULO_LIVRO_MAX * 2),
   subtitulo: z.string().max(SUBTITULO_LIVRO_MAX * 2),
   fotoId: uuid.nullable(),
+  focoX: z.number().int().min(0).max(100),
+  focoY: z.number().int().min(0).max(100),
   cor: z.enum(Object.keys(CAPA_CORES) as [string, ...string[]]),
   paginas: z.number().int().min(4).max(2000),
 });
@@ -185,6 +191,8 @@ export async function previaCapa(
             caminho: data.caminho,
             largura: data.largura,
             altura: data.altura,
+            foco_x: p.data.focoX,
+            foco_y: p.data.focoY,
           };
         }
       }

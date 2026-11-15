@@ -130,7 +130,13 @@ export function compilarCapa(
   try {
     const fotos = new Map<string, Buffer>();
     if (foto && dados.foto) fotos.set(dados.foto.arquivo, foto);
-    const { c, fonte } = novoCompilador("capa.typ", dados, fotos, [
+    // Escolheu foto mas o arquivo não veio (contagem de páginas): o template desenha um cinza.
+    // Sem isso o Typst não acha o arquivo e a capa inteira falha (falhou_typst).
+    const pedido =
+      dados.foto && !foto
+        ? { ...dados, foto: { ...dados.foto, vazio: true } }
+        : dados;
+    const { c, fonte } = novoCompilador("capa.typ", pedido, fotos, [
       "comum.typ",
     ]);
     const doc = compilar(c, fonte);

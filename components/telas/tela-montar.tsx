@@ -11,6 +11,8 @@ import {
   useContagem,
   useSalvarMontagem,
 } from "@/components/montar/moldura";
+import { UploadFotos } from "@/components/fotos/upload-fotos";
+import { FocoDaFoto } from "@/components/montar/foco-da-foto";
 import { PreviaDaCapa } from "@/components/montar/previa-capa";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
@@ -34,7 +36,7 @@ import type {
   MensagemNaMontagem,
   MontagemDaTela,
 } from "@/lib/livro/montar-tipos";
-import type { LivroDaTela } from "@/lib/livro/tipos";
+import type { AcoesFotos, LivroDaTela } from "@/lib/livro/tipos";
 
 const DATA = new Intl.DateTimeFormat("pt-BR", {
   day: "numeric",
@@ -188,6 +190,8 @@ export function TelaMontarConteudo({
       dedicatoria: ded,
       capaFotoId: montagem.capaFotoId,
       capaCor: montagem.capaCor,
+      capaFocoX: montagem.capaFocoX,
+      capaFocoY: montagem.capaFocoY,
       ordemHistorias: h.map((x) => x.id),
       ordemMensagens: m.map((x) => x.id),
       fora: h.filter((x) => !x.incluida).map((x) => x.id),
@@ -390,11 +394,14 @@ export function TelaMontarCapa({
   livro,
   montagem,
   acoes,
+  fotos,
   previaInicial = null,
 }: {
   livro: LivroDaTela;
   montagem: MontagemDaTela;
   acoes: AcoesMontar;
+  /** Subir uma foto nova direto da capa (na vitrine não há servidor). */
+  fotos?: AcoesFotos;
   /** Só na vitrine: uma prévia pronta, sem servidor. */
   previaInicial?: string | null;
 }) {
@@ -403,6 +410,8 @@ export function TelaMontarCapa({
   const [subtitulo, setSubtitulo] = useState(montagem.subtitulo);
   const [fotoId, setFotoId] = useState(montagem.capaFotoId);
   const [cor, setCor] = useState<CorDaCapa>(montagem.capaCor);
+  const [focoX, setFocoX] = useState(montagem.capaFocoX);
+  const [focoY, setFocoY] = useState(montagem.capaFocoY);
   const [escolherFoto, setEscolherFoto] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [previa, setPrevia] = useState<string | null>(previaInicial);
@@ -421,7 +430,13 @@ export function TelaMontarCapa({
   const contagem = useContagem(acoes.contar, versaoSalva);
   const paginas = contagem.contagem?.paginas ?? 80;
 
-  const salvar = (t: string, s: string, f: string | null, c: CorDaCapa) =>
+  const salvar = (
+    t: string,
+    s: string,
+    f: string | null,
+    c: CorDaCapa,
+    foco: { x: number; y: number } = { x: focoX, y: focoY },
+  ) =>
     void salvarMontagem((rev) => ({
       rev,
       titulo: t,
@@ -429,6 +444,8 @@ export function TelaMontarCapa({
       dedicatoria: montagem.dedicatoria,
       capaFotoId: f,
       capaCor: c,
+      capaFocoX: foco.x,
+      capaFocoY: foco.y,
       ordemHistorias: montagem.historias.map((h) => h.id),
       ordemMensagens: montagem.mensagens.map((m) => m.id),
       fora: montagem.historias.filter((h) => !h.incluida).map((h) => h.id),
@@ -460,7 +477,7 @@ export function TelaMontarCapa({
     let vivo = true;
     const t = setTimeout(() => {
       void acoes
-        .previaCapa({ titulo, subtitulo, fotoId, cor, paginas })
+        .previaCapa({ titulo, subtitulo, fotoId, focoX, focoY, cor, paginas })
         .then((r) => {
           if (!vivo) return;
           setPreviaErro(!r.ok);
@@ -471,7 +488,7 @@ export function TelaMontarCapa({
       vivo = false;
       clearTimeout(t);
     };
-  }, [titulo, subtitulo, fotoId, cor, paginas, acoes]);
+  }, [titulo, subtitulo, fotoId, focoX, focoY, cor, paginas, acoes]);
 
   const longo = (contagem.contagem?.linhasDoTitulo ?? 0) > TITULO_CAPA_LINHAS;
   const fotoEscolhida = montagem.fotos.find((f) => f.id === fotoId);
@@ -509,86 +526,107 @@ export function TelaMontarCapa({
       {aviso ? <Aviso ok={false}>{aviso}</Aviso> : null}
       {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
 
-      {previa ? (
-        <PreviaDaCapa
-          src={previa}
-          alt="Capa aberta: contracapa, lombada e capa"
-        />
-      ) : (
-        <p className="rounded-cartao bg-polen-2 text-ui-15 text-tinta-2 p-6">
-          Montando a prévia…
-        </p>
-      )}
-      {previaErro ? (
-        <p role="status" className="text-ui-15 text-tinta-2">
-          A prévia não atualizou agora. Seus textos estão salvos.
-        </p>
-      ) : null}
-
-      <Campo
-        rotulo="Título"
-        value={titulo}
-        maxLength={TITULO_LIVRO_MAX}
-        disabled={!pode}
-        erro={
-          longo
-            ? `Não cabe na capa em ${TITULO_CAPA_LINHAS} linhas. Encurte o título.`
-            : undefined
-        }
-        onChange={(e) => setTitulo(e.target.value)}
-        onBlur={() => titulo.trim() && salvar(titulo, subtitulo, fotoId, cor)}
-      />
-      <Campo
-        rotulo="Subtítulo (opcional)"
-        value={subtitulo}
-        maxLength={SUBTITULO_LIVRO_MAX}
-        disabled={!pode}
-        onChange={(e) => setSubtitulo(e.target.value)}
-        onBlur={() => titulo.trim() && salvar(titulo, subtitulo, fotoId, cor)}
-      />
-
-      <div className="flex flex-col gap-2">
-        <span className="text-ui-15 text-tinta font-medium">Foto da capa</span>
-        <div className="flex items-center gap-4">
-          {fotoEscolhida ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={fotoEscolhida.url}
-              alt="Foto da capa"
-              className="rounded-interno size-20 object-cover"
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] lg:items-start lg:gap-10">
+        <div className="flex flex-col gap-3 lg:sticky lg:top-6">
+          {previa ? (
+            <PreviaDaCapa
+              src={previa}
+              alt="Capa aberta: contracapa, lombada e capa"
             />
+          ) : (
+            <p className="rounded-cartao bg-polen-2 text-ui-15 text-tinta-2 p-6">
+              Montando a prévia…
+            </p>
+          )}
+          {previaErro ? (
+            <p role="status" className="text-ui-15 text-tinta-2">
+              A prévia não atualizou agora. Seus textos estão salvos.
+            </p>
           ) : null}
-          <Botao
-            variante="secundario"
-            disabled={!pode}
-            onClick={() => setEscolherFoto(true)}
-          >
-            {fotoEscolhida ? "Trocar a foto" : "Escolher uma foto"}
-          </Botao>
         </div>
-      </div>
+        <div className="flex flex-col gap-7">
+          <Campo
+            rotulo="Título"
+            value={titulo}
+            maxLength={TITULO_LIVRO_MAX}
+            disabled={!pode}
+            erro={
+              longo
+                ? `Não cabe na capa em ${TITULO_CAPA_LINHAS} linhas. Encurte o título.`
+                : undefined
+            }
+            onChange={(e) => setTitulo(e.target.value)}
+            onBlur={() =>
+              titulo.trim() && salvar(titulo, subtitulo, fotoId, cor)
+            }
+          />
+          <Campo
+            rotulo="Subtítulo (opcional)"
+            value={subtitulo}
+            maxLength={SUBTITULO_LIVRO_MAX}
+            disabled={!pode}
+            onChange={(e) => setSubtitulo(e.target.value)}
+            onBlur={() =>
+              titulo.trim() && salvar(titulo, subtitulo, fotoId, cor)
+            }
+          />
 
-      <div className="flex flex-col gap-2">
-        <span id="rotulo-cor" className="text-ui-15 text-tinta font-medium">
-          Cor da capa
-        </span>
-        <div
-          role="radiogroup"
-          aria-labelledby="rotulo-cor"
-          className="flex flex-wrap gap-1"
-        >
-          {(Object.keys(CAPA_CORES) as CorDaCapa[]).map((c) => (
-            <Bolinha
-              key={c}
-              cor={c}
-              marcada={cor === c}
-              pode={pode}
-              aoEscolher={() => {
-                setCor(c);
-                if (titulo.trim()) salvar(titulo, subtitulo, fotoId, c);
-              }}
-            />
-          ))}
+          <div className="flex flex-col gap-2">
+            <span className="text-ui-15 text-tinta font-medium">
+              Foto da capa
+            </span>
+            {fotoEscolhida ? (
+              <FocoDaFoto
+                url={fotoEscolhida.url}
+                largura={fotoEscolhida.largura}
+                altura={fotoEscolhida.altura}
+                x={focoX}
+                y={focoY}
+                desabilitado={!pode}
+                aoMudar={(nx, ny) => {
+                  setFocoX(nx);
+                  setFocoY(ny);
+                }}
+                aoSoltar={(nx, ny) => {
+                  if (titulo.trim())
+                    salvar(titulo, subtitulo, fotoId, cor, { x: nx, y: ny });
+                }}
+              />
+            ) : null}
+            <div className="flex items-center gap-4">
+              <Botao
+                variante="secundario"
+                disabled={!pode}
+                onClick={() => setEscolherFoto(true)}
+              >
+                {fotoEscolhida ? "Trocar a foto" : "Escolher uma foto"}
+              </Botao>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span id="rotulo-cor" className="text-ui-15 text-tinta font-medium">
+              Cor da capa
+            </span>
+            <div
+              role="radiogroup"
+              aria-labelledby="rotulo-cor"
+              className="flex flex-wrap gap-1"
+            >
+              {(Object.keys(CAPA_CORES) as CorDaCapa[]).map((c) => (
+                <Bolinha
+                  key={c}
+                  cor={c}
+                  marcada={cor === c}
+                  pode={pode}
+                  aoEscolher={() => {
+                    setCor(c);
+                    if (titulo.trim()) salvar(titulo, subtitulo, fotoId, c);
+                  }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -597,9 +635,32 @@ export function TelaMontarCapa({
         aoFechar={() => setEscolherFoto(false)}
         titulo="Foto da capa"
       >
+        {fotos ? (
+          <div className="mb-4 flex flex-col gap-2">
+            <UploadFotos
+              acoes={fotos}
+              uma
+              rotulo="Subir uma foto nova"
+              aoTerminar={(ids) => {
+                const nova = ids[0];
+                if (!nova) return;
+                setFotoId(nova);
+                setFocoX(50);
+                setFocoY(50);
+                setEscolherFoto(false);
+                if (titulo.trim())
+                  salvar(titulo, subtitulo, nova, cor, { x: 50, y: 50 });
+                // A lista do acervo (com a foto nova) vem do servidor, depois de salvar.
+                void esperar().then(() => router.refresh());
+              }}
+            />
+          </div>
+        ) : null}
         {montagem.fotos.length === 0 ? (
           <p className="text-ui-17 text-tinta-2">
-            Ainda não há fotos no acervo. Suba fotos na configuração do livro.
+            {fotos
+              ? "Ainda não há fotos no acervo."
+              : "Suba fotos na configuração do livro."}
           </p>
         ) : (
           <ul className="grid grid-cols-3 gap-2">
@@ -612,8 +673,11 @@ export function TelaMontarCapa({
                   className={`rounded-interno block aspect-square w-full overflow-hidden border-2 ${f.id === fotoId ? "border-floresta" : "border-transparent"}`}
                   onClick={() => {
                     setFotoId(f.id);
+                    setFocoX(50);
+                    setFocoY(50);
                     setEscolherFoto(false);
-                    if (titulo.trim()) salvar(titulo, subtitulo, f.id, cor);
+                    if (titulo.trim())
+                      salvar(titulo, subtitulo, f.id, cor, { x: 50, y: 50 });
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}

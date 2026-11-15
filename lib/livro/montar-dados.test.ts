@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { conteudoDeExemplo } from "@/lib/exemplos/prompt13";
-import { montarDadosCapa, montarDadosMiolo } from "./montar-dados";
+import {
+  enquadrarFoto,
+  fotoDaCapaMm,
+  montarDadosCapa,
+  montarDadosMiolo,
+} from "./montar-dados";
 
 const data = new Date("2026-11-15T15:00:00Z");
 const base = { modo: "final", versao: 2, data } as const;
@@ -83,5 +88,60 @@ describe("JSON dos templates a partir do conteúdo do banco", () => {
     }).dados;
     expect(maior.lombada).toBeGreaterThan(dados.lombada);
     expect(maior.guias).toBe(true);
+  });
+});
+
+describe("foco da foto da capa", () => {
+  const caixa = fotoDaCapaMm();
+
+  it("foto mais larga que a caixa: corta dos lados conforme o foco", () => {
+    const f = { largura: 3000, altura: 1500 }; // 2:1, a caixa é mais "quadrada"
+    const meio = enquadrarFoto(caixa, f, { x: 50, y: 50 });
+    expect(meio.imgAlturaMm).toBe(caixa.alturaMm);
+    expect(meio.dyMm).toBe(0);
+    expect(meio.dxMm).toBeCloseTo(
+      -(meio.imgLarguraMm - caixa.larguraMm) / 2,
+      1,
+    );
+    const inicio = enquadrarFoto(caixa, f, { x: 0, y: 50 });
+    const fim = enquadrarFoto(caixa, f, { x: 100, y: 50 });
+    expect(inicio.dxMm).toBe(0);
+    expect(fim.dxMm).toBeCloseTo(-(fim.imgLarguraMm - caixa.larguraMm), 1);
+  });
+
+  it("foto mais alta que a caixa: corta em cima e embaixo, e a imagem sempre cobre a caixa", () => {
+    const f = { largura: 1500, altura: 3000 };
+    const topo = enquadrarFoto(caixa, f, { x: 50, y: 0 });
+    const base = enquadrarFoto(caixa, f, { x: 50, y: 100 });
+    expect(topo.dxMm).toBe(0);
+    expect(topo.dyMm).toBe(0);
+    expect(base.dyMm).toBeCloseTo(-(base.imgAlturaMm - caixa.alturaMm), 1);
+    for (const e of [topo, base]) {
+      expect(e.imgLarguraMm).toBeGreaterThanOrEqual(caixa.larguraMm);
+      expect(e.imgAlturaMm).toBeGreaterThanOrEqual(caixa.alturaMm);
+    }
+  });
+
+  it("sem proporção conhecida usa 4:3 e foco fora de 0 a 100 é contido", () => {
+    const e = enquadrarFoto(
+      caixa,
+      { largura: null, altura: null },
+      { x: 500, y: -9 },
+    );
+    expect(e.dxMm).toBeLessThanOrEqual(0);
+    expect(e.dyMm).toBe(0);
+  });
+
+  it("o foco da foto vai para o JSON da capa", () => {
+    const c = conteudoDeExemplo();
+    c.livro.capa_foto = {
+      caminho: "livros/x/acervo/y.jpg",
+      largura: 3000,
+      altura: 1500,
+      foco_x: 0,
+      foco_y: 50,
+    };
+    const { dados } = montarDadosCapa(c, { paginas: 80, guias: false });
+    expect(dados.foto).toMatchObject({ dxMm: 0, dyMm: 0 });
   });
 });

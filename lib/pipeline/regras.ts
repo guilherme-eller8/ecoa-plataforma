@@ -91,7 +91,7 @@ export const MOTIVOS_ESPERA = {
   cota_diaria: "Vira texto amanhã",
   livro_fechado: "Guardada",
   descartada: "Fora das histórias",
-  nao_recebido: "Guardada",
+  nao_recebido: "Começando a ouvir",
 } as const;
 
 export type MotivoEspera = keyof typeof MOTIVOS_ESPERA;
@@ -106,5 +106,5 @@ export const FRASES_ESPERA: Record<MotivoEspera, string> = {
   cota_diaria: "Guardada. Vira texto amanhã.",
   livro_fechado: "Guardada.",
   descartada: "Ficou fora das histórias. O áudio continua guardado.",
-  nao_recebido: "Guardada.",
+  nao_recebido: "Recebida. Já vai começar a ouvir.",
 };

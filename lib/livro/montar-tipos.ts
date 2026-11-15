@@ -49,6 +49,8 @@ export type MontagemDaTela = {
   dedicatoria: string;
   capaCor: CorDaCapa;
   capaFotoId: string | null;
+  capaFocoX: number; // 0 a 100, % da foto (50 = centro)
+  capaFocoY: number;
   capaFotoUrl: string | null;
   fotos: FotoParaCapa[];
   historias: HistoriaNaMontagem[]; // na ordem do livro
@@ -67,6 +69,8 @@ export type EntradaMontagem = {
   dedicatoria: string;
   capaFotoId: string | null;
   capaCor: CorDaCapa;
+  capaFocoX: number;
+  capaFocoY: number;
   ordemHistorias: string[];
   ordemMensagens: string[];
   fora: string[];
@@ -88,6 +92,8 @@ export type AcoesMontar = {
     titulo: string;
     subtitulo: string;
     fotoId: string | null;
+    focoX: number;
+    focoY: number;
     cor: CorDaCapa;
     paginas: number;
   }) => Promise<Resposta<{ imagem: string }>>;

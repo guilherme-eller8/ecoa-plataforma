@@ -174,7 +174,7 @@ function Moldura({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-10">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-10 md:max-w-2xl lg:max-w-3xl">
       <p className="text-ui-15 text-tinta-2">
         Passo {indice} de {passos.length}
       </p>

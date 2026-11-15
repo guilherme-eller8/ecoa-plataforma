@@ -5,6 +5,7 @@ import { TelaMontarCapa } from "@/components/telas/tela-montar";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { livroDaTela } from "@/lib/livro/dados";
 import { montagemDaTela } from "@/lib/livro/montar-servidor";
+import { acoesDoLivro } from "../../ligar-acoes";
 import { acoesDaMontagem } from "../ligar";
 
 export const metadata: Metadata = { title: "Capa do livro · Ecoa Memórias" };
@@ -34,6 +35,7 @@ async function Capa({ id }: { id: string }) {
       livro={tela}
       montagem={montagem}
       acoes={acoesDaMontagem(id)}
+      fotos={acoesDoLivro(id).fotos}
     />
   );
 }
