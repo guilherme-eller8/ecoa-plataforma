@@ -140,3 +140,17 @@ describe("quem pode", () => {
     }
   });
 });
+
+describe("área do autor", () => {
+  it("função do autor que leia stories tem de filtrar as arquivadas (hoje nenhuma lê)", async () => {
+    const r = await db.query<{ nome: string }>(
+      `select p.proname as nome
+         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public'
+          and (p.proname like 'autor\\_%' or p.proname like '%\\_autor' or p.proowner = 'porta_autor'::regrole)
+          and p.prosrc ~* 'public\\.stories'
+          and p.prosrc !~* 'arquivada_em'`,
+    );
+    expect(r.rows.map((x) => x.nome)).toEqual([]);
+  });
+});

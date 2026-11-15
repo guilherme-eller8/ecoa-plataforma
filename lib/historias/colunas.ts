@@ -5,10 +5,10 @@
 export const COLUNAS_LISTA =
   "id, titulo, estado, prompt_id, criado_em, vista_em, divisao, divisao_de, texto, revisada_em, arquivada_em" as const;
 export const COLUNAS_LER =
-  "id, titulo, estado, prompt_id, pergunta_sugerida" as const;
+  "id, titulo, estado, prompt_id, pergunta_sugerida, arquivada_em" as const;
 export const COLUNAS_SITUACAO = "id, estado, criado_em" as const;
 export const COLUNAS_EDITAR =
-  "id, estado, prompt_id, pergunta_sugerida, texto, texto_marcacoes, texto_rev, revisada_em, estrutura, ano, titulo" as const;
+  "id, estado, prompt_id, pergunta_sugerida, texto, texto_marcacoes, texto_rev, revisada_em, estrutura, ano, titulo, arquivada_em" as const;
 export const COLUNAS_VERSOES =
   "id, estado, titulo, texto, texto_rev, versao_rev, texto_por, texto_origem, texto_em" as const;
 export const COLUNAS_DIVISAO = "id, estado, divisao" as const;

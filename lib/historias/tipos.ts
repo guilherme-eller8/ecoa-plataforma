@@ -36,6 +36,7 @@ export type HistoriaParaLer = {
   id: string;
   titulo: string | null;
   estado: EstadoHistoria;
+  arquivada?: boolean; // P71
   pergunta: string | null;
   paragrafos: string[];
   marcacoes: Marcacao[];
@@ -106,6 +107,7 @@ export type HistoriaParaEditar = {
   marcacoes: Marcacao[];
   rev: number; // stories.texto_rev
   revisada: boolean;
+  arquivada?: boolean; // P71: fora das listas e da montagem
   segmentos: SegmentoDaTela[];
   audios: { id: string; url: string | null }[]; // uma por gravação
   fotos: FotoDaHistoria[];

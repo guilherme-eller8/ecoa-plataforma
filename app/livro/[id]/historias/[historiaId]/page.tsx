@@ -18,6 +18,7 @@ import * as propostas from "@/app/livro/[id]/historias/propostas-acoes";
 import { historiaParaEditar, historiaParaLer } from "@/lib/historias/dados";
 import { livroDaPagina, nomeDoAutor } from "@/lib/livro/acesso";
 import { livroDaTela } from "@/lib/livro/dados";
+import { acoesDoLivro } from "../../ligar-acoes";
 
 export const metadata: Metadata = { title: "História · Ecoa Memórias" };
 
@@ -55,6 +56,7 @@ async function Historia({
       <TelaEditor
         historia={paraEditar}
         podeEscrever={podeEscrever}
+        arquivar={acoesDoLivro(id).arquivarHistoria}
         acoes={{
           editar: editor.editar.bind(null, id, historiaId),
           salvar: editor.salvar.bind(null, id, historiaId),
@@ -108,6 +110,7 @@ async function Historia({
     <TelaHistoria
       livro={tela}
       historia={historia}
+      arquivar={acoesDoLivro(id).arquivarHistoria}
       responderSugestao={responderSugestao.bind(null, id, historiaId)}
     />
   );

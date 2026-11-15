@@ -418,6 +418,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
             revisada: tela === "editor-pronta",
           }}
           podeEscrever={tela !== "editor-somente-leitura"}
+          arquivar={{ arquivar: async () => ({ ok: true }) }}
           acoes={{
             ...acoesEditorFalsas(
               tela === "editor-trava"

@@ -27,6 +27,8 @@ import { Transcricao } from "@/components/editor/transcricao";
 import { Aviso } from "@/components/ui/aviso";
 import { AvisoSalvo, type EstadoSalvo } from "@/components/ui/aviso-salvo";
 import { Botao } from "@/components/ui/botao";
+import { BotaoArquivar } from "@/components/ui/botao-arquivar";
+import { FaixaArquivada } from "@/components/ui/faixa-arquivada";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import {
@@ -64,6 +66,7 @@ import {
 } from "@/lib/editor/tipos";
 import { rotuloDaChave, type ChaveTamanho } from "@/lib/ui/tamanho";
 import type { HistoriaParaEditar } from "@/lib/historias/tipos";
+import type { AcoesArquivar } from "@/lib/livro/tipos";
 
 const TIPO: Record<string, string> = {
   fato: "Fato",
@@ -107,11 +110,13 @@ export function TelaEditor({
   historia,
   podeEscrever,
   acoes,
+  arquivar,
   propostaInicial,
 }: {
   historia: HistoriaParaEditar;
   podeEscrever: boolean;
   acoes: AcoesEditor;
+  arquivar?: AcoesArquivar; // P71
   propostaInicial?: string;
 }) {
   const router = useRouter();
@@ -976,8 +981,16 @@ export function TelaEditor({
               Histórico
             </Link>
           ) : null}
+          {podeEscrever && arquivar ? (
+            <BotaoArquivar
+              id={historia.id}
+              acoes={arquivar}
+              arquivar={!historia.arquivada}
+            />
+          ) : null}
         </div>
       </header>
+      {historia.arquivada ? <FaixaArquivada /> : null}
 
       {faixaDaTrava}
       {aviso ? (
