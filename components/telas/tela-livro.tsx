@@ -145,6 +145,20 @@ export function TelaLivro({
         </Link>
       </section>
 
+      {prontas >= 1 ? (
+        <Link
+          href={`${base}/montar`}
+          className="rounded-cartao bg-papel hover:bg-polen-2 flex min-h-20 flex-col justify-center gap-1 px-5 py-4"
+        >
+          <span className="text-ui-20 text-tinta font-medium">
+            Montar o livro
+          </span>
+          <span className="text-ui-15 text-tinta-2">
+            Ordem, capa e os PDFs para a gráfica
+          </span>
+        </Link>
+      ) : null}
+
       {prontas === 1 ? (
         <MarcoPrimeiraHistoria
           livroId={livro.id}

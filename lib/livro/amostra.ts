@@ -1,27 +1,11 @@
 import "server-only";
-// Página de amostra em PDF (seção 5.3, T43). Um compilador por pedido: os arquivos virtuais
-// (dados, foto, QR) nunca se misturam entre dois pedidos ao mesmo tempo.
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { NodeCompiler } from "@myriaddreamin/typst-ts-node-compiler";
-import QRCode from "qrcode";
-import { QR_CORRECAO, QR_LADO_MM, QR_MARGEM_MODULOS } from "@/lib/config";
-import { codigoImpresso, urlDoQr } from "@/lib/qr/codigo";
-
-const PASTA = join(process.cwd(), "lib/livro");
-const RAIZ = "/ecoa";
-const FOTO_MAX_MM = 70;
-const LARGURA_TEXTO_MM = 172;
-
-let fontes: Buffer[] | null = null;
-function lerFontes() {
-  fontes ??= [
-    "Newsreader-Regular.ttf",
-    "Newsreader-SemiBold.ttf",
-    "Newsreader-Italic.ttf",
-  ].map((f) => readFileSync(join(PASTA, "fontes", f)));
-  return fontes;
-}
+// Página de amostra em PDF (seção 5.3 do prompt 10, T43), em A5 e com o capítulo do livro (Q4).
+// Um compilador por pedido: os arquivos virtuais nunca se misturam entre dois pedidos.
+import { APONTE_E_OUCA, geometriaDoMiolo } from "./montar-dados";
+import { caixaDaFoto } from "./fotos";
+import { codigoImpresso } from "@/lib/qr/codigo";
+import { matrizDoQr } from "./qr-matriz";
+import { compilarAmostra, type MarcaQr } from "./render";
 
 export type DadosAmostra = {
   titulo: string;
@@ -32,35 +16,13 @@ export type DadosAmostra = {
   maiuscula?: boolean; // formato da URL do QR (Q4); padrão: QR_URL_MAIUSCULA
 };
 
-export type ResultadoAmostra = { pdf: Buffer; cortado: boolean; url: string };
-
-/** O QR em SVG e o tamanho da caixa (símbolo de QR_LADO_MM + margem de silêncio). */
-export async function qrDoCodigo(url: string) {
-  const qr = QRCode.create(url, { errorCorrectionLevel: QR_CORRECAO });
-  const n = qr.modules.size;
-  const svg = await QRCode.toString(url, {
-    type: "svg",
-    errorCorrectionLevel: QR_CORRECAO,
-    margin: QR_MARGEM_MODULOS,
-    color: { dark: "#000000", light: "#ffffff" },
-  });
-  return {
-    svg,
-    caixaMm: (QR_LADO_MM * (n + 2 * QR_MARGEM_MODULOS)) / n,
-    versao: qr.version,
-  };
-}
-
-function alturaDaFoto(foto: DadosAmostra["foto"]) {
-  if (!foto) return null;
-  if (!foto.largura || !foto.altura) return FOTO_MAX_MM;
-  return (
-    Math.round(
-      Math.min(FOTO_MAX_MM, (LARGURA_TEXTO_MM * foto.altura) / foto.largura) *
-        10,
-    ) / 10
-  );
-}
+export type ResultadoAmostra = {
+  pdf: Buffer;
+  cortado: boolean;
+  url: string;
+  /** Onde o QR caiu no papel: a conferência lê só esse quadrado. */
+  marca: MarcaQr;
+};
 
 function frases(p: string) {
   return (
@@ -69,39 +31,26 @@ function frases(p: string) {
 }
 
 export async function gerarAmostra(d: DadosAmostra): Promise<ResultadoAmostra> {
-  const url = urlDoQr(d.codigo, d.maiuscula);
-  const qr = await qrDoCodigo(url);
-  const compilador = NodeCompiler.create({
-    workspace: RAIZ,
-    fontArgs: [{ fontBlobs: lerFontes() }],
-  });
-  const fonte = readFileSync(join(PASTA, "amostra.typ"), "utf8");
-  compilador.mapShadow(`${RAIZ}/qr.svg`, Buffer.from(qr.svg));
-  if (d.foto) compilador.mapShadow(`${RAIZ}/foto.jpg`, d.foto.bytes);
+  const qr = matrizDoQr(d.codigo, d.maiuscula);
+  const foto = d.foto ? { arquivo: "foto.jpg", ...caixaDaFoto(d.foto) } : null;
   const base = {
-    titulo: d.titulo,
-    ano: d.ano,
-    foto: alturaDaFoto(d.foto),
-    qr: {
-      caixa: qr.caixaMm,
-      aponte: "aponte e ouça",
-      codigo: codigoImpresso(d.codigo),
-    },
+    g: geometriaDoMiolo(),
     continua: "Continua no livro.",
   };
-
-  function compilar(paragrafos: string[], cortado: boolean) {
-    compilador.mapShadow(
-      `${RAIZ}/dados.json`,
-      Buffer.from(JSON.stringify({ ...base, paragrafos, cortado })),
+  const historia = (paragrafos: string[]) => ({
+    titulo: d.titulo,
+    ano: d.ano,
+    paragrafos,
+    fotos: foto ? [foto] : [],
+    qr: { ...qr, impresso: codigoImpresso(d.codigo), aponte: APONTE_E_OUCA },
+  });
+  const compilar = (paragrafos: string[], cortado: boolean) =>
+    compilarAmostra(
+      { ...base, cortado, historia: historia(paragrafos) },
+      d.foto?.bytes ?? null,
     );
-    const r = compilador.compile({ mainFileContent: fonte });
-    const doc = r.result;
-    if (!doc || r.hasError()) throw new Error("amostra:typst");
-    return doc;
-  }
   const cabe = (p: string[], cortado: boolean) =>
-    compilar(p, cortado).numOfPages === 1;
+    compilar(p, cortado).paginas === 1;
 
   // Tudo cabe? Senão, o maior número de parágrafos inteiros (divisão binária); se nem o 1º
   // cabe, as frases dele que couberem.
@@ -124,9 +73,6 @@ export async function gerarAmostra(d: DadosAmostra): Promise<ResultadoAmostra> {
       paragrafos = n ? [f.slice(0, n).join(" ")] : [];
     }
   }
-  const doc = compilar(paragrafos, cortado);
-  const pdf = compilador.pdf(doc, {
-    creationTimestamp: Math.floor(Date.now() / 1000),
-  });
-  return { pdf, cortado, url };
+  const final = compilar(paragrafos, cortado);
+  return { pdf: final.pdf(), cortado, url: qr.url, marca: final.marcas[0] };
 }

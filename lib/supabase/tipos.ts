@@ -9,6 +9,8 @@
 // - servico_iniciar_historia: historia, estado e motivo (um ou outro é null).
 // - servico_qr_audio_pronto: anterior é null quando não havia recorte; servico_ouvir_qr e
 //   servico_qr_trechos: retorno tipado em lib/qr/tipos.ts.
+// - Prompt 13: qr_codes.story_id pode ser nulo (QR de mensagem); book_layouts e book_exports
+//   só leitura; montagem_conteudo e servico_export_conteudo: conteúdo tipado em lib/livro/montagem.ts.
 
 export type Json =
   | string
@@ -884,6 +886,50 @@ export type Database = {
           },
         ];
       };
+      // ── Prompt 13: montar e publicar (sem Insert/Update: escrita só por função) ──
+      book_layouts: {
+        Row: {
+          atualizado_em: string;
+          atualizado_por: string | null;
+          book_id: string;
+          capa_cor: string;
+          capa_foto_id: string | null;
+          dedicatoria: string | null;
+          fora: string[];
+          ordem_historias: string[];
+          ordem_mensagens: string[];
+          rev: number;
+          subtitulo: string | null;
+          titulo: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      // O membro lê todas as colunas menos `conteudo` (grant por coluna).
+      book_exports: {
+        Row: {
+          book_id: string;
+          capa_bytes: number | null;
+          conteudo: Json;
+          criado_em: string;
+          erro: string | null;
+          espec: Json | null;
+          estado: "gerando" | "pronta" | "falhou";
+          id: string;
+          lombada_mm: number | null;
+          miolo_bytes: number | null;
+          paginas: number | null;
+          pasta: string | null;
+          publicado_por: string | null;
+          qr_esperados: number;
+          terminado_em: string | null;
+          versao: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       qr_codes: {
         Row: {
           audio_caminho: string | null;
@@ -897,7 +943,8 @@ export type Database = {
           criado_por: string | null;
           desativado_em: string | null;
           desativado_por: string | null;
-          story_id: string;
+          message_id: string | null;
+          story_id: string | null;
         };
         Insert: {
           audio_caminho?: string | null;
@@ -911,7 +958,8 @@ export type Database = {
           criado_por?: string | null;
           desativado_em?: string | null;
           desativado_por?: string | null;
-          story_id: string;
+          message_id?: string | null;
+          story_id?: string | null;
         };
         Update: {
           audio_caminho?: string | null;
@@ -925,7 +973,8 @@ export type Database = {
           criado_por?: string | null;
           desativado_em?: string | null;
           desativado_por?: string | null;
-          story_id?: string;
+          message_id?: string | null;
+          story_id?: string | null;
         };
         Relationships: [
           {
@@ -1773,6 +1822,55 @@ export type Database = {
         Args: never;
         Returns: number;
       };
+      // ── Prompt 13: montar e publicar ──
+      montagem_conteudo: { Args: { p_book: string }; Returns: Json };
+      montagem_reservar_uso: { Args: { p_book: string }; Returns: boolean };
+      montagem_salvar: {
+        Args: {
+          p_book: string;
+          p_capa_cor: string;
+          p_capa_foto: string | null;
+          p_dedicatoria: string | null;
+          p_fora: string[];
+          p_ordem_historias: string[];
+          p_ordem_mensagens: string[];
+          p_rev: number;
+          p_subtitulo: string | null;
+          p_titulo: string | null;
+        };
+        Returns: number;
+      };
+      publicar_livro: {
+        Args: { p_book: string; p_hash: string };
+        Returns: { export_id: string; pedir_audio: string[]; versao: number }[];
+      };
+      servico_export_conteudo: {
+        Args: { p_id: string };
+        Returns: {
+          book_id: string;
+          conteudo: Json;
+          criado_em: string;
+          estado: "gerando" | "pronta" | "falhou";
+          versao: number;
+        }[];
+      };
+      servico_export_pronto: {
+        Args: {
+          p_capa_bytes: number;
+          p_espec: Json;
+          p_lombada_mm: number;
+          p_miolo_bytes: number;
+          p_paginas: number;
+          p_pasta: string;
+          p_qr_conferidos: number;
+          p_id: string;
+        };
+        Returns: boolean;
+      };
+      servico_export_falhou: {
+        Args: { p_erro: string; p_id: string };
+        Returns: boolean;
+      };
       // ── Prompt 12: mensagens da família ──
       servico_mensagem_pagina: { Args: { p_token: string }; Returns: Json };
       servico_mensagem_criar: {
@@ -1917,6 +2015,7 @@ export type Database = {
       recording_origem: "autor" | "livre" | "conversa" | "upload" | "lote";
       recording_upload: "enviando" | "recebido";
       mensagem_estado: "rascunho" | "enviada" | "arquivada";
+      export_estado: "gerando" | "pronta" | "falhou";
     };
     CompositeTypes: {
       [_ in never]: never;

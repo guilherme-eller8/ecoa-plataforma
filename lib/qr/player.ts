@@ -41,6 +41,15 @@ export async function abrirQr(
     if (r.estado !== "ok") return { estado: r.estado };
     const audioUrl = await urlDaVoz(r.audio_caminho);
     if (!audioUrl) return { estado: "erro" };
+    if (r.tipo === "mensagem") {
+      // O mesmo nome e relação impressos na página; nunca o texto (Q15).
+      return {
+        estado: "ok",
+        titulo: `Mensagem de ${r.nome}, ${r.relacao}`,
+        ano: null,
+        audioUrl,
+      };
+    }
     return {
       estado: "ok",
       titulo: r.titulo?.trim() || "Uma história",

@@ -18,7 +18,7 @@ describe("lib/config", () => {
     expect(PAGINAS_INCLUSAS).toBe(80);
     expect(MAX_COFACILITADORES).toBe(5);
     expect(MAX_ARQUIVOS_LOTE).toBe(30);
-    expect(FORMATO_LIVRO).toBe("21x21");
+    expect(FORMATO_LIVRO).toBe("148x210");
   });
 
   it("deixa os valores extras sem definir até a cotação da gráfica", () => {
