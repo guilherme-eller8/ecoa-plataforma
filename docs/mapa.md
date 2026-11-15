@@ -24,7 +24,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `/m/[token]` | Deixar mensagem para o livro (só escreve; prompt 12) | sem login |
 | `/a/[token]` (+ `/gravar`) | Área do autor | sem login |
 | `/ouvir`, `/ouvir/[codigo]` | Player do QR (host `ouvir.` reescreve `/` e `/{código}`) | público |
-| `/admin` | Admin | `app_metadata.role = admin` |
+| `/admin` (+ `/aderencia`, `/aderencia/[livro]`, `/erros`) | Admin: livros, aderência por livro e erros (prompt 15) | `app_metadata.role = admin` |
 | `/api/inngest` | Funções do Inngest | Inngest |
 | `/styleguide/[tela]` | Telas com dados falsos (gate de design) | dev ou `ECOA_STYLEGUIDE=1` |
 
@@ -37,10 +37,10 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Tela:** `components/telas/tela-*.tsx` recebe dados e ações por props, sem buscar nada; os exemplos ficam em `lib/exemplos/prompt*.ts` e entram em `lib/styleguide.ts` + `app/(dev)/styleguide/[tela]/vitrine.tsx`. UI base em `components/ui/` (`Botao`, `Campo`, `FolhaInferior`, `DicaPrimeiraVez`, `EstadoVazio`, ícones).
 - **Clientes Supabase:** `clienteSessao` (membro, RLS), `clienteAnonimo` (portas sem login: `familia_*`, `autor_*`), `clienteAdmin` (chave secreta: só servidor, só caminhos lidos do banco). Tipos gerados à mão em `lib/supabase/tipos.ts` (acrescente só o que mudou).
 - **Storage:** buckets privados `audios`, `acervo`, `causos`, `qr`, `mensagens`; leitura por `assinarLeitura` (`lib/storage/assinar.ts`); upload por token assinado no servidor e conferência de tamanho e primeiros bytes (`lib/storage/upload.ts`).
-- **Eventos:** `registrarEvento` (`lib/eventos.ts`), ação nova = linha em `lib/eventos-acoes.ts`; detalhes só com ids e números.
+- **Eventos:** `registrarEvento` e `lerEventos` (`lib/eventos.ts`, única porta da tabela; teste confere), ação nova = linha em `lib/eventos-acoes.ts`; detalhes só com ids e números.
 - **Números de negócio:** só em `lib/config.ts`; os conferidos no banco têm função `privado.*()` espelhada e entram em `supabase/tests/config-banco.test.ts`.
 - **Erros do SQL:** `raise exception '<codigo>'` precisa de frase em `lib/erros-banco.ts` (o teste confere).
-- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro); os passos devolvem só ids e tempos (T36).
+- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro), `lib/inngest/falhas.ts` (grava `job_falhou`); `instrumentation.ts` grava `erro_servidor`; os passos devolvem só ids e tempos (T36).
 - **Papel na tela:** `livro.ehResponsavel` esconde o que é só do responsável (P60); o banco confere com `privado.eh_responsavel`. Links novos sem login: tipo em `TipoLink` (`lib/links.ts`), token por HMAC.
 
 ## Domínios em `lib/`
@@ -58,6 +58,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `familia/`, `autor/`, `enquete/`, `perguntas/` | Portas sem login e listas de perguntas |
 | `mensagens/` | Link `/m`: transcrição na hora (Scribe, sem Claude), limpeza, tipo pelos bytes, leitura dos membros |
 | `convite/`, `compartilhar/`, `resumo/` | Co-facilitadores, `/o/` e resumo semanal (prompt 11) |
+| `aderencia/` | Painel do admin: `calculo.ts` e `erros.ts` (puros, testados), `dados.ts` (leitura, só servidor), `rotulos.ts` (prompt 15) |
 | `email/`, `fotos/`, `pwa/`, `ui/`, `storage/`, `supabase/` | Apoio |
 
 ## Banco (`supabase/`)

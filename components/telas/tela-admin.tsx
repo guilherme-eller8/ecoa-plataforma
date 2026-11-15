@@ -1,10 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { CabecalhoAdmin } from "@/components/telas/admin-cabecalho";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
-import { Marca } from "@/components/ui/marca";
 import type { AcaoFormulario, Resultado } from "@/lib/resultado";
 import type { PlanoEstado } from "@/lib/supabase/tipos";
 
@@ -48,10 +48,7 @@ export function TelaAdmin({
 }: Props) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col gap-10 px-5 pt-8 pb-16 md:px-10">
-      <header className="flex items-baseline justify-between gap-4">
-        <Marca />
-        <span className="font-ui text-tinta-2 text-[15px]">Admin</span>
-      </header>
+      <CabecalhoAdmin aba="livros" />
 
       <FormularioAtivar ativar={ativar} />
 

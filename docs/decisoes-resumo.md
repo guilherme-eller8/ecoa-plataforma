@@ -123,3 +123,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T47** `book_invites` e `story_shares` sem porta para `anon`; links `convite`/`compartilhar`/`resumo` por HMAC; `/o` e `/convite` sem cache nem índice.
 - **T48** Mensagem: só Scribe, na ação do servidor com reserva no banco (sem Inngest); duração real pela transcrição; link `/m` só pela chave secreta.
 - **T49** QR de mensagem no prompt 13, com a montagem.
+- **T50** Aderência e erros no admin sem Sentry nem migration: `job_falhou` e `erro_servidor` em `events` (só ids e rota-padrão); link do autor aberto grava `entrou`; `events` só por `lib/eventos.ts` (escrita e `lerEventos`).

@@ -17,7 +17,7 @@ Lacuna encontrada: `entrou` só é gravado para membros (`/livro/[id]`). A abert
 2. **`/admin/aderencia/[livro]`**: acessos por dia por pessoa (últimos 14 dias, papel + e-mail do membro; autor e família sem nome) e a linha do tempo das ações (quem, o quê, quando). É o aceite da M10: "vejo quem acessou o livro X ontem e o que fez".
 3. **Evento `entrou` do autor**: ao abrir `/a/[token]` com link válido, 1 por livro e dia (`umaVezPorDia`), `quem: null`, como `autor_consentiu`.
 4. **Jobs que falharam**: função do Inngest ouvindo `inngest/function.failed` grava `job_falhou` em `events` (ator `sistema`, detalhes `{ funcao, run_id }` e o livro quando o evento original traz o id). Nunca a mensagem do erro (T36). No admin, lista dos últimos 30 dias com o link do run no painel do Inngest.
-5. **Erros do servidor**: `instrumentation.ts` com `onRequestError` grava `erro_servidor` com `{ rota, tipo, digest }` (a rota é o padrão, `/a/[token]`, nunca a URL com token), no máximo 1 por rota por minuto por instância. No admin, contagem das últimas 24 h e 7 dias por rota.
+5. **Erros do servidor**: `instrumentation.ts` com `onRequestError` grava `erro_servidor` com `{ rota, tipo, digest, origem }` (a rota é o padrão, `/a/[token]`, nunca a URL com token), no máximo 1 por rota por minuto por instância. No admin (`/admin/erros`, junto com os jobs), contagem das últimas 24 h e 7 dias por rota.
 
 Os 5 passos (P25/M11), em ordem; o livro está no primeiro que falta:
 
@@ -31,7 +31,8 @@ Os 5 passos (P25/M11), em ordem; o livro está no primeiro que falta:
 
 ## Como
 
-- Leitura pelo `clienteAdmin()` na página, como o admin atual (o proxy já devolve 404 para quem não é admin, e a página confere de novo). Agregação em TypeScript, em `lib/aderencia/` (funções puras, testadas com Vitest). Volume atual: 32 eventos; o teto de leitura é 30 dias e 20 mil eventos.
+- Leitura pelo `clienteAdmin()` na página, como o admin atual (o proxy já devolve 404 para quem não é admin, e a página confere de novo). Agregação em TypeScript, em `lib/aderencia/` (funções puras, testadas com Vitest). Volume atual: 32 eventos. Os passos do onboarding precisam do histórico inteiro, então o teto é de 20 mil eventos (o painel avisa se bater nele), e erros leem 30 dias.
+- A leitura de `events` entra em `lib/eventos.ts` (`lerEventos`): o teste de porta única continua valendo (T50).
 - Números em `lib/config.ts`: `LIVRO_PARADO_DIAS = 7`, `ADERENCIA_SEMANAS = 8`, `ADERENCIA_DIAS_ACESSO = 14`.
 - Ações novas em `lib/eventos-acoes.ts`: `job_falhou`, `erro_servidor`.
 - Telas `components/telas/tela-aderencia.tsx` e `tela-aderencia-livro.tsx`, com exemplos no styleguide e estado vazio. Link "Aderência" no admin atual.
@@ -44,3 +45,7 @@ Sentry ou outro serviço de erros (fornecedor novo, sem necessidade com 2 livros
 ## Aceite
 
 Com os dados de produção: abro `/admin/aderencia`, vejo os 2 livros com o passo de cada um e as semanas sem gravação do autor; abro um livro e vejo quem entrou ontem e o que fez. Abro `/a/{token}` e o `entrou` do autor aparece no livro. Um job forçado a falhar no dev aparece na lista.
+
+## Entregue (15/11/2026)
+
+Tudo acima, com testes (`lib/aderencia`, `lib/erros-servidor`), 5 telas no styleguide e `e2e/aderencia.spec.ts`. Gate de design: `taste:lint` 0 FAIL; `taste:inspect` 0 FAIL nas 5 telas; 3 correções depois de olhar as capturas (zebra da linha do tempo, cabeçalho do livro, legenda das barras). Não testado em produção: o `entrou` do autor e as duas funções de erro só mostram dado depois do deploy; conferir lá.
