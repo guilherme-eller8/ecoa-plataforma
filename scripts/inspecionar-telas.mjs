@@ -48,6 +48,12 @@ const TELAS = {
   "configuracoes-vazia": "/styleguide/configuracoes-vazia",
   "audios-situacao": "/styleguide/audios-situacao",
   "admin-processamento": "/styleguide/admin-processamento",
+  // Prompt 15
+  "admin-aderencia": "/styleguide/admin-aderencia",
+  "admin-aderencia-vazia": "/styleguide/admin-aderencia-vazia",
+  "admin-aderencia-livro": "/styleguide/admin-aderencia-livro",
+  "admin-erros": "/styleguide/admin-erros",
+  "admin-erros-vazio": "/styleguide/admin-erros-vazio",
   // Prompt 7
   dividir: "/styleguide/dividir",
   "dividir-confirmada": "/styleguide/dividir-confirmada",

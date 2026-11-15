@@ -87,3 +87,45 @@ export async function registrarEvento(
     return { ok: false };
   }
 }
+
+export type EventoLido = {
+  criado_em: string;
+  book_id: string | null;
+  ator_tipo: string;
+  ator_id: string | null;
+  acao: string;
+  detalhes: Json;
+};
+
+type FiltroDeLeitura = {
+  /** Só os eventos deste livro. */
+  livro?: string;
+  /** Só os que têm livro (tira erro_servidor e afins). */
+  soDeLivros?: boolean;
+  acoes?: readonly string[];
+  /** ISO; só eventos a partir daqui. */
+  desde?: string;
+  limite: number;
+};
+
+/**
+ * Porta única também de leitura (prompt 15, painel do admin): do mais recente para o mais
+ * antigo. Só para o servidor com chave secreta; quem chama confere que é admin antes.
+ */
+export async function lerEventos(
+  filtro: FiltroDeLeitura,
+  cliente?: ClienteAdmin,
+): Promise<EventoLido[]> {
+  let q = (cliente ?? clienteAdmin())
+    .from("events")
+    .select("criado_em, book_id, ator_tipo, ator_id, acao, detalhes")
+    .order("criado_em", { ascending: false })
+    .limit(filtro.limite);
+  if (filtro.livro) q = q.eq("book_id", filtro.livro);
+  if (filtro.soDeLivros) q = q.not("book_id", "is", null);
+  if (filtro.acoes) q = q.in("acao", [...filtro.acoes]);
+  if (filtro.desde) q = q.gte("criado_em", filtro.desde);
+  const { data, error } = await q;
+  if (error) throw new Error("Não deu para ler os eventos.");
+  return data ?? [];
+}

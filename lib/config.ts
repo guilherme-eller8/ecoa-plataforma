@@ -250,3 +250,13 @@ export const QR_AUDIO_URL_S = 10 * 60; // validade da URL assinada que o player 
 export const QR_URL_MAIUSCULA = true;
 export const AMOSTRA_ESPERA_VOZ_S = 120; // a folha consulta o recorte até isso; depois pede para voltar
 export const AMOSTRA_CONSULTAR_S = 3; // intervalo da consulta do recorte na folha
+
+// ── Aderência (prompt 15, docs/designs/aderencia-erros.md) ───────────────
+export const LIVRO_PARADO_DIAS = 7; // sem ação de pessoa há tanto tempo = "parado" (PRD M10, M11)
+export const ADERENCIA_SEMANAS = 8; // gravações por semana, de trás para a frente
+export const ADERENCIA_DIAS_ACESSO = 14; // acessos por dia por pessoa
+export const ADERENCIA_MAX_EVENTOS = 20000; // teto de leitura de events por consulta do painel
+export const ADERENCIA_LINHA_DO_TEMPO = 100; // ações mostradas na página de um livro
+export const ERROS_DIAS = 30; // jobs que falharam e erros do servidor listados no admin
+// Onde abrir o run de um job que falhou (só o id do run vai para events).
+export const INNGEST_RUN_URL = "https://app.inngest.com/env/production/runs";
