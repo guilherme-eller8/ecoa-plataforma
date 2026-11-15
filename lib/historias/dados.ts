@@ -400,6 +400,7 @@ export async function situacaoDosAudios(
           : MOTIVOS_ESPERA[motivo],
       frase: FRASES_ESPERA[motivo],
       confirmar: motivo === "sem_consentimento",
+      andando: motivo === "nao_recebido" || motivo === "lote_incompleto",
     });
   }
   return mapa;
@@ -435,6 +436,7 @@ export async function gravacoesGuardadas(
       recebidaEm: r.recebido_em ?? "",
       frase: s?.tipo === "espera" ? s.frase : "Guardada.",
       confirmar: s?.tipo === "espera" ? s.confirmar : false,
+      andando: s?.tipo === "espera" ? s.andando : false,
     };
   });
 }

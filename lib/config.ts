@@ -140,7 +140,7 @@ export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
 
 // ── Perguntas e configuração inicial ─────────────────────────────────────
 export const PERGUNTAS_INICIAIS = 8; // marcadas no passo 2: 1 por fase da vida, por parentesco
-export const ATUALIZAR_A_CADA_S = 4; // abas Causos e Enquete abertas na tela
+export const ATUALIZAR_A_CADA_S = 4; // releitura da tela: abas Causos e Enquete, gravações e histórias em andamento
 
 // ── Fotos do acervo ──────────────────────────────────────────────────────
 // Comprimidas no navegador: JPEG, lado maior até 3000 px (a largura do A5, 148 mm a 300 DPI, pede 1748).

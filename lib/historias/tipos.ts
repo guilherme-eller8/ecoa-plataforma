@@ -54,7 +54,14 @@ export type NomeDaTela = {
 /** Situação de um áudio recebido em relação ao pipeline. */
 export type SituacaoDoAudio =
   | { tipo: "historia"; historia: string; estado: EstadoHistoria }
-  | { tipo: "espera"; rotulo: string; frase: string; confirmar: boolean };
+  | {
+      tipo: "espera";
+      rotulo: string;
+      frase: string;
+      confirmar: boolean;
+      /** Vai mudar sozinha em instantes (a tela fica relendo o servidor). */
+      andando?: boolean;
+    };
 
 /** Prompt 7: áudios do mesmo envio aparecem juntos em Áudios recebidos. */
 export type EnvioDaTela = { lote: string; total: number; recebidos: number };
@@ -68,6 +75,7 @@ export type GuardadaDaTela = {
   recebidaEm: string;
   frase: string;
   confirmar: boolean;
+  andando?: boolean;
 };
 
 // ── Editor (prompt 8) ────────────────────────────────────────────────────

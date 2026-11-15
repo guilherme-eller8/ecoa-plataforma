@@ -20,11 +20,14 @@ type Item = {
 export function UploadFotos({
   acoes,
   doAutor = false,
+  uma = false,
   rotulo = "Escolher fotos",
   aoTerminar,
 }: {
   acoes: AcoesFotos;
   doAutor?: boolean;
+  /** Uma foto só (a do autor, a da capa). */
+  uma?: boolean;
   rotulo?: string;
   aoTerminar?: (ids: string[]) => void;
 }) {
@@ -87,7 +90,7 @@ export function UploadFotos({
   function escolher(arquivos: FileList | null) {
     if (!arquivos?.length) return;
     const novos = [...arquivos]
-      .slice(0, doAutor ? 1 : MAX_FOTOS_POR_ENVIO)
+      .slice(0, doAutor || uma ? 1 : MAX_FOTOS_POR_ENVIO)
       .map((arquivo) => ({
         nome: arquivo.name,
         previa: URL.createObjectURL(arquivo),
@@ -111,7 +114,7 @@ export function UploadFotos({
         ref={entrada}
         type="file"
         accept="image/*"
-        multiple={!doAutor}
+        multiple={!doAutor && !uma}
         className="sr-only"
         aria-label={rotulo}
         onChange={(e) => {

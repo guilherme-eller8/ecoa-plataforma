@@ -3,6 +3,7 @@
 // Áudios recebidos: tudo o que já chegou, com player. Nada se apaga nesta fase.
 import Link from "next/link";
 import { useState } from "react";
+import { AtualizarAoVivo } from "@/components/ui/atualizar-ao-vivo";
 import { classesDoBotao } from "@/components/ui/botao";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { IconeMicrofone, IconeSubir } from "@/components/ui/icones";
@@ -98,13 +99,26 @@ function Situacao({ livroId, audio }: { livroId: string; audio: AudioDaTela }) {
 export function TelaAudios({
   livro,
   audios,
+  vitrine = false,
 }: {
   livro: LivroDaTela;
   audios: AudioDaTela[];
+  vitrine?: boolean; // só na vitrine: sem Supabase, sem canal
 }) {
   const nova = `/livro/${livro.id}/historias/nova`;
+  // Algo ainda vai mudar de situação sozinho: a tela relê o servidor e assina o canal do livro.
+  const andando = audios.some((a) => {
+    const s = a.situacao;
+    if (!s) return !a.processado;
+    return s.tipo === "historia"
+      ? s.estado === "ouvindo" ||
+          s.estado === "dividindo" ||
+          s.estado === "escrevendo"
+      : Boolean(s.andando);
+  });
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-3xl lg:max-w-5xl">
+      {vitrine ? null : <AtualizarAoVivo livroId={livro.id} ativo={andando} />}
       <Link
         href={`/livro/${livro.id}`}
         className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
@@ -138,7 +152,7 @@ export function TelaAudios({
         />
       ) : (
         <>
-          <ul className="flex flex-col gap-4">
+          <ul className="grid items-start gap-4 lg:grid-cols-2">
             {audios.map((a, i) => {
               // Prompt 7: o 1º arquivo de um envio abre o grupo ("8 áudios · 13 de nov.").
               const abreEnvio =

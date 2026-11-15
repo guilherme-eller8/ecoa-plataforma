@@ -109,7 +109,7 @@ export function MolduraDaMontagem({
   const base = `/livro/${livroId}/montar`;
   return (
     <>
-      <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-7 px-5 pt-8 pb-36">
+      <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-7 px-5 pt-8 pb-36 md:max-w-2xl lg:max-w-4xl">
         <Link
           href={`/livro/${livroId}`}
           className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
@@ -144,7 +144,7 @@ export function MolduraDaMontagem({
       <div
         className={`bg-papel fixed inset-x-0 bottom-0 z-10 ${SOMBRA_DA_BARRA}`}
       >
-        <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-4 px-5 py-3">
+        <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-4 px-5 py-3 md:max-w-2xl lg:max-w-4xl">
           <div className="flex min-w-0 flex-col">{contador}</div>
           {acao}
         </div>
