@@ -35,6 +35,7 @@ import type {
   VersaoDaTela,
   NomeDaTela,
   GuardadaDaTela,
+  HistoriaArquivada,
   SituacaoDoAudio,
 } from "./tipos";
 
@@ -106,6 +107,7 @@ export async function historiasDoLivro(
     .from("stories")
     .select(COLUNAS_LISTA)
     .eq("book_id", livro)
+    .is("arquivada_em", null) // P71: arquivada sai das listas (fica em "Arquivadas")
     .order("criado_em", { ascending: false })
     .limit(limite);
   // Consulta recusada não pode virar "Nenhuma história ainda" em silêncio.
@@ -278,6 +280,7 @@ export async function historiaParaLer(
     id: s.id,
     titulo: s.titulo,
     estado: s.estado as EstadoHistoria,
+    arquivada: Boolean(s.arquivada_em),
     ...(falha ? { falha } : {}),
     pergunta: p?.texto ?? null,
     paragrafos: edicao?.paragrafos.map((x) => x.texto) ?? [],
@@ -405,6 +408,28 @@ export async function situacaoDosAudios(
     });
   }
   return mapa;
+}
+
+/** P71: histórias arquivadas, as mais recentes primeiro (nada é apagado; dá para desarquivar). */
+export async function historiasArquivadas(
+  livro: string,
+): Promise<HistoriaArquivada[]> {
+  const supabase = await clienteSessao();
+  const { data } = await supabase
+    .from("stories")
+    .select("id, titulo, estado, arquivada_em, criado_em, divisao")
+    .eq("book_id", livro)
+    .not("arquivada_em", "is", null)
+    .order("arquivada_em", { ascending: false })
+    .limit(100);
+  return (data ?? [])
+    .filter((s) => !deixadaForaDoLivro(s))
+    .map((s) => ({
+      id: s.id,
+      titulo: s.titulo,
+      falhou: s.estado === "falhou",
+      arquivadaEm: s.arquivada_em ?? "",
+    }));
 }
 
 /** Gravações que chegaram e ainda não viraram história, para a home (no máximo 5). */
@@ -590,6 +615,7 @@ export async function historiaParaEditar(
     marcacoes: marcacoes ?? [],
     rev: s.texto_rev,
     revisada: Boolean(s.revisada_em),
+    arquivada: Boolean(s.arquivada_em),
     segmentos,
     audios: ler.audios.map((a) => ({ id: a.id, url: a.url })),
     fotos,

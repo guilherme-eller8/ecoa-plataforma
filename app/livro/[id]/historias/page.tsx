@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { TelaHistorias } from "@/components/telas/tela-historias";
-import { historiasDoLivro } from "@/lib/historias/dados";
+import { historiasArquivadas, historiasDoLivro } from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { livroDaTela } from "@/lib/livro/dados";
+import { acoesDoLivro } from "../ligar-acoes";
 import { marcarHistoriaVista } from "./acoes";
 
 export const metadata: Metadata = { title: "Histórias · Ecoa Memórias" };
@@ -22,14 +23,17 @@ export default function PaginaHistorias({
 
 async function Historias({ id }: { id: string }) {
   const { livro, podeEscrever } = await livroDaPagina(id);
-  const [tela, historias] = await Promise.all([
+  const [tela, historias, arquivadas] = await Promise.all([
     livroDaTela(livro, podeEscrever),
     historiasDoLivro(id),
+    historiasArquivadas(id),
   ]);
   return (
     <TelaHistorias
       livro={tela}
       historias={historias}
+      arquivadas={arquivadas}
+      arquivar={acoesDoLivro(id).arquivarHistoria}
       marcarVista={marcarHistoriaVista.bind(null, id)}
     />
   );

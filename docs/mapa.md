@@ -47,6 +47,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Números da gráfica:** só em `ESPEC_GRAFICA` (`lib/config.ts`, com `versao`); a geometria (lombada, capa aberta, múltiplo de 4) sai de `lib/livro/espec.ts` e a das fotos de `lib/livro/fotos.ts`.
 - **Tela ao vivo (T37):** `components/ui/atualizar-ao-vivo.tsx` assina o canal do livro e relê o servidor enquanto algo anda (`ATUALIZAR_A_CADA_S`); home, Áudios e Histórias o usam, para a gravação mudar de estado em todos os aparelhos sem recarregar.
 - **Arquivar áudio (P69):** `public.audio_arquivar` (só por função, `arquivado_em`); ação `arquivarAudio` em `app/livro/[id]/acoes.ts`; listas filtram `arquivado_em is null`.
+- **Arquivar história (P71):** `public.historia_arquivar` (só por função, `stories.arquivada_em`, só pronta ou falhou); ação `arquivarHistoria`; `BotaoArquivar` (`components/ui/`); `historiasDoLivro` filtra e `historiasArquivadas` lista; `privado.conteudo_do_livro` deixa a arquivada fora da montagem.
 - **Papel na tela:** `livro.ehResponsavel` esconde o que é só do responsável (P60); o banco confere com `privado.eh_responsavel`. Links novos sem login: tipo em `TipoLink` (`lib/links.ts`), token por HMAC.
 
 ## Domínios em `lib/`

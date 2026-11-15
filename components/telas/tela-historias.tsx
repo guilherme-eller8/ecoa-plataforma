@@ -5,20 +5,26 @@ import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { HistoriasAoVivo } from "@/components/ui/historias-ao-vivo";
 import { IconeSubir } from "@/components/ui/icones";
 import type { AoVivo } from "@/components/ui/historias-ao-vivo";
-import type { HistoriaDaTela } from "@/lib/historias/tipos";
-import type { LivroDaTela } from "@/lib/livro/tipos";
+import { BotaoArquivar } from "@/components/ui/botao-arquivar";
+import type { HistoriaArquivada, HistoriaDaTela } from "@/lib/historias/tipos";
+import type { AcoesArquivar, LivroDaTela } from "@/lib/livro/tipos";
 
 export function TelaHistorias({
   livro,
   historias,
   marcarVista,
   vitrine,
+  arquivadas = [],
+  arquivar,
 }: {
   livro: LivroDaTela;
   historias: HistoriaDaTela[];
   marcarVista: (historia: string) => Promise<void>;
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
+  arquivadas?: HistoriaArquivada[]; // P71
+  arquivar?: AcoesArquivar;
 }) {
+  const pode = livro.podeEscrever ? arquivar : undefined;
   const nova = `/livro/${livro.id}/historias/nova`;
   const prontas = historias.filter((h) => h.estado === "pronta").length;
   return (
@@ -45,6 +51,7 @@ export function TelaHistorias({
         livroId={livro.id}
         historias={historias}
         colunas={2}
+        arquivar={pode}
         marcarVista={marcarVista}
         canal={!vitrine}
         inicial={vitrine}
@@ -62,6 +69,36 @@ export function TelaHistorias({
           />
         }
       />
+      {arquivadas.length ? (
+        <details className="border-linha border-t pt-6">
+          <summary className="text-ui-17 text-floresta min-h-alvo cursor-pointer font-medium">
+            {arquivadas.length === 1
+              ? "1 história arquivada"
+              : `${arquivadas.length} histórias arquivadas`}
+          </summary>
+          <p className="text-ui-15 text-tinta-2 mt-2">
+            Ficam guardadas, com o áudio e o QR, mas fora do livro.
+          </p>
+          <ul className="mt-4 grid items-start gap-3 lg:grid-cols-2">
+            {arquivadas.map((h) => (
+              <li
+                key={h.id}
+                className="rounded-cartao bg-papel border-linha flex flex-wrap items-center justify-between gap-3 border px-5 py-4"
+              >
+                <Link
+                  href={`/livro/${livro.id}/historias/${h.id}`}
+                  className="font-livro text-livro-20 text-tinta min-w-0 [overflow-wrap:anywhere] underline-offset-4 hover:underline"
+                >
+                  {h.titulo ?? "História sem título"}
+                </Link>
+                {pode ? (
+                  <BotaoArquivar id={h.id} acoes={pode} arquivar={false} />
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
     </main>
   );
 }

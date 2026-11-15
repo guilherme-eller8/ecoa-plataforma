@@ -366,6 +366,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
           historias={HISTORIAS_JAIR.slice(0, 2)}
           linkFamilia="https://app.ecoa-memorias.com.br/f/v1_exemplo"
           guardadas={GUARDADAS_JAIR}
+          arquivarHistoria={{ arquivar: async () => ({ ok: true }) }}
           marcarVista={nada}
           vitrine={AO_VIVO_JAIR}
         />
@@ -378,6 +379,19 @@ export function Vitrine({ tela }: { tela: Tela }) {
           historias={tela === "historias" ? HISTORIAS_JAIR : []}
           marcarVista={nada}
           vitrine={AO_VIVO_JAIR}
+          arquivar={{ arquivar: async () => ({ ok: true }) }}
+          arquivadas={
+            tela === "historias"
+              ? [
+                  {
+                    id: "00000000-0000-4000-8000-000000000a01",
+                    titulo: "A festa de São João",
+                    falhou: false,
+                    arquivadaEm: "2026-11-14T12:00:00Z",
+                  },
+                ]
+              : []
+          }
         />
       );
     case "historia":
@@ -404,6 +418,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
             revisada: tela === "editor-pronta",
           }}
           podeEscrever={tela !== "editor-somente-leitura"}
+          arquivar={{ arquivar: async () => ({ ok: true }) }}
           acoes={{
             ...acoesEditorFalsas(
               tela === "editor-trava"

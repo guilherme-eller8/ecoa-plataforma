@@ -16,6 +16,7 @@ import {
   totalDeAudios,
 } from "@/lib/livro/dados";
 import { contarMensagens } from "@/lib/mensagens/dados";
+import { acoesDoLivro } from "./ligar-acoes";
 
 export default function PaginaLivro({ params }: PageProps<"/livro/[id]">) {
   return (
@@ -74,6 +75,7 @@ async function Livro({ id }: { id: string }) {
       historias={historias}
       linkFamilia={familia}
       guardadas={guardadas}
+      arquivarHistoria={acoesDoLivro(id).arquivarHistoria}
       marcarVista={marcarHistoriaVista.bind(null, id)}
     />
   );

@@ -6,12 +6,14 @@ import Link from "next/link";
 import { Fragment, useState } from "react";
 import { Aviso } from "@/components/ui/aviso";
 import { classesDoBotao } from "@/components/ui/botao";
+import { BotaoArquivar } from "@/components/ui/botao-arquivar";
+import { FaixaArquivada } from "@/components/ui/faixa-arquivada";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { SugestaoDePergunta } from "@/components/ui/sugestao-pergunta";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { HistoriaParaLer } from "@/lib/historias/tipos";
-import type { LivroDaTela, Resposta } from "@/lib/livro/tipos";
+import type { AcoesArquivar, LivroDaTela, Resposta } from "@/lib/livro/tipos";
 import { FRASE_DA_FALHA } from "@/lib/pipeline/regras";
 
 const TIPO: Record<string, string> = {
@@ -49,9 +51,11 @@ export function TelaHistoria({
   livro,
   historia,
   responderSugestao,
+  arquivar,
 }: {
   livro: LivroDaTela;
   historia: HistoriaParaLer;
+  arquivar?: AcoesArquivar; // P71: só história pronta ou que falhou
   /** Prompt 7: Marcar como respondida ou Ignorar a pergunta sugerida. */
   responderSugestao?: (aceitar: boolean) => Promise<Resposta>;
 }) {
@@ -96,7 +100,18 @@ export function TelaHistoria({
             Responde: {historia.pergunta ?? respondida}
           </p>
         ) : null}
+        {livro.podeEscrever &&
+        arquivar &&
+        (pronta || historia.estado === "falhou") ? (
+          <BotaoArquivar
+            id={historia.id}
+            acoes={arquivar}
+            arquivar={!historia.arquivada}
+            className="self-start"
+          />
+        ) : null}
       </header>
+      {historia.arquivada ? <FaixaArquivada /> : null}
 
       {sugestao && responderSugestao && livro.podeEscrever ? (
         <SugestaoDePergunta

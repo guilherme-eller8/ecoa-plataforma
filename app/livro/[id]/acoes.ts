@@ -1037,6 +1037,29 @@ export async function arquivarAudio(
   return { ok: true };
 }
 
+/**
+ * P71: arquivar tira a história das listas e da montagem, nunca a apaga: o texto, as versões, o
+ * áudio e o QR dela continuam. Só história pronta ou que falhou (o banco confere).
+ */
+export async function arquivarHistoria(
+  livroId: string,
+  id: string,
+  arquivar: boolean,
+): Promise<Resposta> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  if (!z.uuid().safeParse(id).success)
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  const { error } = await c.supabase.rpc("historia_arquivar", {
+    p_book: c.livro.id,
+    p_id: id,
+    p_arquivar: arquivar,
+  });
+  if (error) return falhou(error);
+  atualizar(livroId);
+  return { ok: true };
+}
+
 // ── Divisão em histórias (prompt 7) ──────────────────────────────────────
 
 const esquemaDivisao = z

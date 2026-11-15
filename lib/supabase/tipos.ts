@@ -1119,6 +1119,7 @@ export type Database = {
       };
       stories: {
         Row: {
+          arquivada_em: string | null;
           atualizado_em: string;
           book_id: string;
           criado_em: string;
@@ -1843,6 +1844,10 @@ export type Database = {
       servico_qr_limpar_consultas: {
         Args: never;
         Returns: number;
+      };
+      historia_arquivar: {
+        Args: { p_arquivar: boolean; p_book: string; p_id: string };
+        Returns: undefined;
       };
       audio_arquivar: {
         Args: { p_arquivar: boolean; p_book: string; p_id: string };
