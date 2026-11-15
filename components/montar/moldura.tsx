@@ -12,6 +12,9 @@ import type {
   PassoDaMontagem,
 } from "@/lib/livro/montar-tipos";
 
+// A barra fixa de ação é uma sobreposição de verdade: a sombra separa o que passa por baixo.
+const SOMBRA_DA_BARRA = "shadow-[0_-8px_24px_-12px_rgb(0_0_0/0.18)]"; // taste-skill-ignore: barra fixa
+
 const PASSOS: { id: PassoDaMontagem; rotulo: string; caminho: string }[] = [
   { id: "conteudo", rotulo: "Conteúdo", caminho: "" },
   { id: "capa", rotulo: "Capa", caminho: "/capa" },
@@ -138,7 +141,9 @@ export function MolduraDaMontagem({
         </nav>
         {children}
       </main>
-      <div className="bg-papel border-linha fixed inset-x-0 bottom-0 z-10 border-t">
+      <div
+        className={`bg-papel fixed inset-x-0 bottom-0 z-10 ${SOMBRA_DA_BARRA}`}
+      >
         <div className="mx-auto flex w-full max-w-xl items-center justify-between gap-4 px-5 py-3">
           <div className="flex min-w-0 flex-col">{contador}</div>
           {acao}

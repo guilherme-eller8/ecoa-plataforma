@@ -89,7 +89,7 @@ const HASH_EXEMPLO = "a".repeat(64);
 
 /** Uma capa aberta desenhada à mão (SVG em data URL), só para a vitrine. */
 export const PREVIA_CAPA_EXEMPLO = `data:image/svg+xml;utf8,${encodeURIComponent(
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 357 246"><rect width="357" height="246" fill="#b9633f"/><rect x="174" width="9" height="246" fill="#a5562f"/><g fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".5"><path d="M15 0v246M342 0v246M0 15h357M0 231h357"/></g><text x="199" y="150" font-family="Georgia,serif" font-size="22" font-weight="600" fill="#fff">Histórias do Vô Jair</text><text x="199" y="165" font-family="Georgia,serif" font-size="9" font-style="italic" fill="#fff">Do trem de Guarapari à casa da rua Bahia</text></svg>`,
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 357 246"><rect width="357" height="246" fill="#b9633f"/><rect x="174" width="9" height="246" fill="#a5562f"/><g fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".5"><path d="M15 0v246M342 0v246M0 15h357M0 231h357"/></g><text x="199" y="140" font-family="Georgia,serif" font-size="12" font-weight="600" fill="#fff">Histórias do Vô Jair</text><text x="199" y="153" font-family="Georgia,serif" font-size="6" font-style="italic" fill="#fff">Do trem de Guarapari à casa da rua Bahia</text></svg>`,
 )}`;
 
 const pagina = (n: number) =>

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { rpc, eventos } = vi.hoisted(() => ({
   rpc: vi.fn(),
-  eventos: vi.fn(async (..._args: unknown[]) => ({ ok: true })),
+  eventos: vi.fn(async () => ({ ok: true })),
 }));
 vi.mock("@/lib/supabase/admin", () => ({
   clienteAdmin: () => ({

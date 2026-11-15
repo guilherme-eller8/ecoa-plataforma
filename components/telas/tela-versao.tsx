@@ -4,6 +4,7 @@
 // e os dois PDFs) ou que não deu certo. Qualquer membro abre e baixa (Q7).
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PreviaDaCapa } from "@/components/montar/previa-capa";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import {
@@ -78,32 +79,39 @@ function Prévia({ v, acoes }: { v: VersaoPublicada; acoes: AcoesVersao }) {
     garantir(indice + 1);
   }, [indice, garantir]);
 
-  const imagem = (n: number) => (n === 0 ? v.capaUrl : (urls[n] ?? null));
   const par = indice + 1 <= total ? indice + 1 : null;
 
   return (
     <section className="flex flex-col gap-4" aria-label="Prévia do livro">
-      <div className="flex justify-center gap-3">
-        {[indice, par].map((n, k) =>
-          n === null ? null : (
-            <div
-              key={n}
-              className={`bg-polen-2 rounded-interno flex aspect-[154/216] items-center justify-center overflow-hidden shadow-sm ${k === 1 ? "hidden w-1/2 md:flex" : "w-full max-w-sm md:w-1/2"} ${n === 0 ? "!aspect-[357/246] !max-w-none md:!w-full" : ""}`}
-            >
-              {imagem(n) ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={imagem(n) as string}
-                  alt={n === 0 ? "Capa aberta" : `Página ${n} de ${total}`}
-                  className="size-full object-contain"
-                />
-              ) : (
-                <span className="text-ui-15 text-tinta-2">Carregando…</span>
-              )}
-            </div>
-          ),
-        )}
-      </div>
+      {indice === 0 ? (
+        v.capaUrl ? (
+          <PreviaDaCapa src={v.capaUrl} alt="Capa aberta" />
+        ) : (
+          <p className="text-ui-15 text-tinta-2">Carregando…</p>
+        )
+      ) : (
+        <div className="flex justify-center gap-3">
+          {[indice, par].map((n, k) =>
+            n === null ? null : (
+              <div
+                key={n}
+                className={`bg-polen-2 rounded-interno flex aspect-[154/216] items-center justify-center overflow-hidden ${k === 1 ? "hidden w-1/2 md:flex" : "w-full max-w-sm md:w-1/2"}`}
+              >
+                {urls[n] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={urls[n]}
+                    alt={`Página ${n} de ${total}`}
+                    className="size-full object-contain"
+                  />
+                ) : (
+                  <span className="text-ui-15 text-tinta-2">Carregando…</span>
+                )}
+              </div>
+            ),
+          )}
+        </div>
+      )}
       <div className="flex items-center justify-between gap-3">
         <Botao
           variante="secundario"

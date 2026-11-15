@@ -302,3 +302,28 @@ Uma rodada, 2 revisores em Sonnet. Relatórios em `montar-publicar-livro/critic_
 `20261123120000_montar_livro` aplicada no projeto `ecoa-plataforma`. Conferido no banco: bucket `exportacoes` privado com 50 MB; RLS ligada em `book_layouts`, `book_exports` e `montagem_usos`; nenhum grant de tabela para `anon` e `porta_autor`; `authenticated` não lê `book_exports.conteudo` nem executa `privado.conteudo_do_livro`; `anon` não executa `publicar_livro`, `porta_autor` não executa `montagem_conteudo`; `qr_codes.message_id` criado; `palavras_por_pagina()` = 220.
 
 Avisos de segurança: nenhum novo para `anon`. Os 4 novos de `authenticated` (`montagem_conteudo`, `montagem_salvar`, `montagem_reservar_uso`, `publicar_livro`) são intencionais e conferem membro ou responsável dentro da função, como as demais do produto.
+
+## 14. Construção (15/11): o que saiu, o que foi medido e o que falta
+
+**Entregue (etapas A a E do 10):** `ESPEC_GRAFICA` e paleta no `config.ts`; templates Typst (`lib/livro/typst/`: `comum`, `miolo`, `capa`, `amostra`); geração dos PDFs (`exportar.ts`, `pdf.ts`, `armazenar.ts`) e função `livro-exportar` no Inngest; QR de mensagem (recorte no bucket `mensagens`, player com nome e relação); telas Conteúdo, Capa, Conferir e Versão publicada, cartão na home, vitrine, 9 telas de e2e; amostra em A5.
+
+**Medido neste container (Typst 0.14.2, mupdf, sharp):**
+- 6 histórias + 2 mensagens de exemplo: 16 páginas, 7 QR lidos do PDF, geração inteira em ~0,9 s sem fotos e ~1,9 s com 4 fotos. O número de páginas do modo contagem (sem baixar foto) é igual ao do PDF final (teste).
+- Miolo: `TrimBox` a 3 mm, `BleedBox` na página inteira, Newsreader (3 pesos) embutida, **nenhum operador de cor RGB** no conteúdo (só `0 0 0 1 k`). Capa: 357 × 246 mm com 80 páginas (a conta dá 357; o design dizia ≈ 356), `TrimBox` a 15 mm.
+- **Tamanho da função `/api/inngest`: 221 MB com o rastreio padrão**, porque o Next levava também a variante musl do Typst (52 MB). Com `outputFileTracingExcludes` ela sai: **168,6 MB**, abaixo dos 220 MB do gate. A geração fica na rota do Inngest (Q12), sem rota própria.
+- **Palavras por página (A5, 11 pt):** 277 (história de 830 palavras, 3 páginas), 356 (2.490 palavras, 7 páginas) e 383 (4.980 palavras, 13 páginas), só texto, sem foto. A estimativa de 220 do banco e do `config.ts` fica: é conservadora (cobre foto e a última página meio vazia de cada história). Recalibrar com o primeiro livro real, não com texto de exemplo.
+
+**Achados da construção (viraram código ou teste):**
+- `query` por seletor não traz posição: o template grava a marca num `context` com `here().position()`, e a página precisa de papel opaco para o jsQR não ler fundo transparente como preto.
+- `qrcode` expõe `modules.get(linha, coluna)`, não um índice: com índice a matriz saía vazia.
+- Página só com `metadata` colapsa: a página em branco criada para abrir na ímpar leva 1 pt de espaço.
+- Erro do Typst nunca vai para o Inngest nem para o log (teste com texto secreto); `ECOA_TYPST_DEBUG=1` só imprime o diagnóstico fora de produção.
+- Lista de isolamento do autor: `book_layouts`, `book_exports` e o bucket `exportacoes` entraram em `lib/familia/tabelas.ts` e os testes do banco barram.
+
+**Testes novos:** 38 em `lib/livro` (geometria, alertas, dados dos templates, PDFs reais, erro sem texto), 9 do QR de mensagem e do armazenamento, 6 de banco de limites (`montar-livro-limites.test.ts`: co-facilitador monta e não publica, 10 por dia, falhou não conta, presa há 30 min, plano vencido, QR sem áudio aceito) e 22 de e2e.
+
+**O que este ambiente não pôde provar (fica para a prévia da Vercel e para você):**
+1. Publicar de ponta a ponta com Supabase, Storage e Inngest reais: aqui só rodaram as peças (banco no PGlite, PDFs com fotos sintéticas, ações com dublês). O aceite com 6 histórias e 2 mensagens suas só se fecha na prévia.
+2. Abrir os PDFs no Acrobat (`pdffonts` e `pdfinfo -box` do poppler confirmam fontes embutidas e caixas; o Acrobat de verdade, não).
+3. O QR de 2 cm impresso abrindo o player a 20 cm (folha física).
+4. A pergunta para a gráfica: o PDF de 6 + 2 é o gabarito a mandar. Tudo o que ela não confirmou está em `ESPEC_GRAFICA` (versão 1, `confirmada: false`).

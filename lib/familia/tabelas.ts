@@ -8,7 +8,14 @@ export const TABELAS_DA_FAMILIA = [
   "family_access",
   "family_messages",
   "message_access",
+  // Prompt 13: o livro montado e as versões publicadas levam o texto das mensagens (P21, T5).
+  "book_layouts",
+  "book_exports",
 ] as const;
 
 // Buckets da família: as rotas do autor nunca os citam (lib/autor/rotas-autor.test.ts).
-export const BUCKETS_DA_FAMILIA = ["causos", "mensagens"] as const;
+export const BUCKETS_DA_FAMILIA = [
+  "causos",
+  "mensagens",
+  "exportacoes",
+] as const;

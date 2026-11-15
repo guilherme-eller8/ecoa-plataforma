@@ -11,6 +11,7 @@ import {
   useContagem,
   useSalvarMontagem,
 } from "@/components/montar/moldura";
+import { PreviaDaCapa } from "@/components/montar/previa-capa";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import { Campo, CampoTexto } from "@/components/ui/campo";
@@ -279,7 +280,7 @@ export function TelaMontarConteudo({
             dica="Aparece numa página só dela, depois da folha de rosto."
             value={dedicatoria}
             maxLength={DEDICATORIA_MAX}
-            rows={3}
+            rows={2}
             disabled={!pode}
             onChange={(e) => setDedicatoria(e.target.value)}
             onBlur={() => {
@@ -508,21 +509,16 @@ export function TelaMontarCapa({
       {aviso ? <Aviso ok={false}>{aviso}</Aviso> : null}
       {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
 
-      <figure
-        className="rounded-cartao bg-polen-2 flex min-h-40 items-center justify-center overflow-hidden"
-        aria-label="Prévia da capa aberta: contracapa, lombada e capa"
-      >
-        {previa ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={previa}
-            alt="Capa aberta: contracapa, lombada e capa"
-            className="h-auto w-full"
-          />
-        ) : (
-          <p className="text-ui-15 text-tinta-2 p-6">Montando a prévia…</p>
-        )}
-      </figure>
+      {previa ? (
+        <PreviaDaCapa
+          src={previa}
+          alt="Capa aberta: contracapa, lombada e capa"
+        />
+      ) : (
+        <p className="rounded-cartao bg-polen-2 text-ui-15 text-tinta-2 p-6">
+          Montando a prévia…
+        </p>
+      )}
       {previaErro ? (
         <p role="status" className="text-ui-15 text-tinta-2">
           A prévia não atualizou agora. Seus textos estão salvos.

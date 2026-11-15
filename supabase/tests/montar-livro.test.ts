@@ -6,6 +6,16 @@ import type { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
 import { ativarPlano, como, criarBanco, criarUsuario } from "./banco";
 
+// O JSON do banco, tipado só no que os testes leem.
+type Json = any; // eslint-disable-line @typescript-eslint/no-explicit-any
+type ItemDoLivro = {
+  id: string;
+  incluida?: boolean;
+  qr?: { codigo: string; ligado: boolean } | null;
+  com_audio?: boolean;
+};
+type ConteudoBruto = { historias: ItemDoLivro[]; mensagens: ItemDoLivro[] };
+
 const RAIZ = path.resolve(__dirname, "..");
 const up = readFileSync(
   path.join(RAIZ, "migrations/20261123120000_montar_livro.sql"),
@@ -134,7 +144,7 @@ async function conteudo(usuario: string, livro: string) {
     `select public.montagem_conteudo($1) as c`,
     [livro],
   );
-  return (r.linhas?.[0]?.c ?? { erro: r.erro }) as Record<string, any>;
+  return (r.linhas?.[0]?.c ?? { erro: r.erro }) as Record<string, Json>;
 }
 
 async function salvar(
@@ -175,7 +185,7 @@ async function publicar(usuario: string, livro: string, hash?: string) {
     `select export_id, versao, pedir_audio from public.publicar_livro($1, $2)`,
     [livro, h],
   );
-  return r.erro ? { erro: r.erro } : (r.linhas![0] as Record<string, any>);
+  return r.erro ? { erro: r.erro } : (r.linhas![0] as Record<string, Json>);
 }
 
 beforeAll(async () => {
@@ -312,14 +322,14 @@ describe("montagem", () => {
     const h2 = await historia(livroA, { titulo: "A ceia" });
     const c0 = await conteudo(ana, livroA);
     expect(c0.livro.rev).toBe(0);
-    expect(c0.historias.map((h: any) => h.id)).toEqual([h1, h2]);
+    expect(c0.historias.map((h: ItemDoLivro) => h.id)).toEqual([h1, h2]);
     expect(c0.historias[0].paragrafos).toHaveLength(2); // o parágrafo em branco não entra
 
     const s = await salvar(ana, livroA, 0, { ordemH: [h2, h1], fora: [h1] });
     expect(s).toEqual({ rev: 1 });
     const h3 = await historia(livroA, { titulo: "O sítio" });
     const c1 = await conteudo(caio, livroA);
-    expect(c1.historias.map((h: any) => [h.id, h.incluida])).toEqual([
+    expect(c1.historias.map((h: ItemDoLivro) => [h.id, h.incluida])).toEqual([
       [h2, true],
       [h1, false],
       [h3, true],
@@ -397,18 +407,18 @@ describe("publicar", () => {
     expect(p.erro).toBeUndefined();
     expect(p.versao).toBe(1);
 
-    const [e] = await sql<{ conteudo: any; qr_esperados: number }>(
+    const [e] = await sql<{ conteudo: ConteudoBruto; qr_esperados: number }>(
       `select conteudo, qr_esperados from public.book_exports where id = $1`,
       [p.export_id],
     );
-    const hs = e.conteudo.historias as any[];
+    const hs = e.conteudo.historias;
     expect(hs.every((h) => h.incluida)).toBe(true);
-    expect(hs.find((h) => h.id === semAudio).qr).toBeNull(); // sai sem QR
-    const ms = e.conteudo.mensagens as any[];
-    expect(ms.find((m) => m.id === mAudio).qr.codigo).toMatch(
+    expect(hs.find((h) => h.id === semAudio)?.qr).toBeNull(); // sai sem QR
+    const ms = e.conteudo.mensagens;
+    expect(ms.find((m) => m.id === mAudio)?.qr?.codigo).toMatch(
       /^[2-9A-HJKMNP-Z]{8}$/,
     );
-    expect(ms.find((m) => m.id === mTexto).qr).toBeNull();
+    expect(ms.find((m) => m.id === mTexto)?.qr).toBeNull();
     const comQr = [...hs, ...ms].filter((x) => x.qr).length;
     expect(e.qr_esperados).toBe(comQr);
     expect(p.pedir_audio).toHaveLength(comQr);
