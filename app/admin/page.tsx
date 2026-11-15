@@ -94,10 +94,9 @@ async function processamento(autorDe: Map<string, string>) {
       .gt("recebido_em", desde)
       .order("recebido_em", { ascending: false })
       .limit(100),
-    db
-      .from("ai_usage")
-      .select("book_id, custo_usd, minutos_audio, etapa")
-      .limit(10000),
+    // Somado no banco: a API devolve no máximo 1.000 linhas, e a soma no servidor ficava
+    // abaixo do real sem avisar.
+    db.rpc("admin_custos_por_livro"),
     db.from("stories").select("book_id").eq("estado", "pronta").limit(10000),
   ]);
   const ids = (recebidas ?? []).map((r) => r.id);
@@ -111,17 +110,13 @@ async function processamento(autorDe: Map<string, string>) {
   const autor = (livro: string) => autorDe.get(livro) ?? "(livro)";
 
   const porLivro = new Map<string, CustoDoLivro>();
-  for (const u of usos ?? []) {
-    const c = porLivro.get(u.book_id) ?? {
+  for (const u of usos ?? [])
+    porLivro.set(u.book_id, {
       autor: autor(u.book_id),
-      reais: 0,
+      reais: emReais(Number(u.custo_usd)),
       historias: 0,
-      minutos: 0,
-    };
-    c.reais += emReais(Number(u.custo_usd));
-    if (u.etapa === "transcrever") c.minutos += Number(u.minutos_audio ?? 0);
-    porLivro.set(u.book_id, c);
-  }
+      minutos: Number(u.minutos_audio ?? 0),
+    });
   for (const s of prontas ?? []) {
     const c = porLivro.get(s.book_id);
     if (c) c.historias++;

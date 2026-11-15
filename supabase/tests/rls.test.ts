@@ -302,6 +302,7 @@ describe("funções do admin só com a chave secreta", () => {
     `select public.admin_trocar_responsavel('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000')`,
     `select public.admin_usuario_por_email('ana@exemplo.com')`,
     `select * from public.admin_listar_livros()`,
+    `select * from public.admin_custos_por_livro()`,
     `select privado.vencer_planos()`,
   ];
 

@@ -199,6 +199,15 @@ export function bancoPipeline(
       };
     },
 
+    async recebidaEm(gravacao) {
+      const { data } = await db
+        .from("recordings")
+        .select("recebido_em")
+        .eq("id", gravacao)
+        .maybeSingle();
+      return data?.recebido_em ?? null;
+    },
+
     async temTranscricao(gravacao) {
       const { count } = await db
         .from("transcripts")
@@ -423,6 +432,15 @@ export function bancoPipeline(
         ms_primeira_palavra:
           l.msPrimeiraPalavra == null ? null : Math.round(l.msPrimeiraPalavra),
         id_requisicao: l.idRequisicao?.slice(0, 120) ?? null,
+        // Evals (T51). O código só vale na falha; detalhes só leva números (o banco confere).
+        erro_codigo: l.ok ? null : (l.erroCodigo ?? null),
+        ms_desde_envio:
+          l.msDesdeEnvio == null ? null : Math.round(l.msDesdeEnvio),
+        detalhes: l.detalhes
+          ? Object.fromEntries(
+              Object.entries(l.detalhes).filter(([, v]) => Number.isFinite(v)),
+            )
+          : null,
       });
       // Custo é registro, não pode derrubar o passo.
       if (error) console.error("[pipeline] ai_usage", { codigo: error.code });

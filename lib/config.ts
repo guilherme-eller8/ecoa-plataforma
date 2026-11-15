@@ -152,6 +152,8 @@ export const TAMANHO_PADRAO = "medio";
 
 // Segmentação da transcrição.
 export const PAUSA_SEGMENTO_S = 1.5;
+// Evals: palavra com confiança do provedor abaixo disso conta como "duvidosa" (T51).
+export const CONFIANCA_DUVIDOSA = 0.5;
 export const MAX_PALAVRAS_SEGMENTO = 40;
 
 // Metas do PRD.

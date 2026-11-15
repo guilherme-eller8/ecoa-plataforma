@@ -489,3 +489,45 @@ describe("tempo máximo da transcrição", () => {
     expect(timeoutDaTranscricaoMs(null)).toBe(270_000);
   });
 });
+
+describe("evals: o que cada etapa grava em ai_usage", () => {
+  it("só números em detalhes, sinais da transcrição e espera do envio", async () => {
+    const m = montar();
+    const recebida = new Date(Date.now() - 5_000).toISOString();
+    (m.d.banco as { recebidaEm?: () => Promise<string> }).recebidaEm =
+      async () => recebida;
+    await processarGravacao(G, m.d, m.step);
+    const por = (etapa: string) => m.s.usos.find((u) => u.etapa === etapa);
+    for (const u of m.s.usos)
+      for (const v of Object.values(u.detalhes ?? {}))
+        expect(typeof v).toBe("number");
+    expect(por("transcrever")?.detalhes).toMatchObject({
+      palavras: expect.any(Number),
+      duvidosas: expect.any(Number),
+      segmentos: expect.any(Number),
+    });
+    expect(por("estruturar")?.detalhes).toHaveProperty("falantes");
+    expect(por("verificar")?.detalhes).toHaveProperty("nao_localizadas");
+    const editar = por("editar");
+    expect(editar?.detalhes).toHaveProperty("palavras_fala");
+    expect(editar?.tentativas).toBe(1);
+    // Com o cliente falso a 1ª palavra pode não ser detectada; quando é, a espera inclui os 5 s.
+    if (editar?.msDesdeEnvio != null)
+      expect(editar.msDesdeEnvio).toBeGreaterThanOrEqual(5_000);
+  });
+
+  it("falha do Scribe grava o código fixo", async () => {
+    const m = montar(
+      {},
+      {
+        transcrever: async () => {
+          throw new Error("ElevenLabs respondeu 500");
+        },
+      },
+    );
+    await processarGravacao(G, m.d, m.step).catch(() => null);
+    expect(m.s.usos).toMatchObject([
+      { etapa: "transcrever", ok: false, erroCodigo: "scribe_falhou" },
+    ]);
+  });
+});

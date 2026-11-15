@@ -1,6 +1,6 @@
 # Plano: central de Evals no admin (T51, P66)
 
-**Estado:** fase 0 sem banco entregue em 15/11/2026. Migration da fase 0 ensaiada, **esperando o OK do Guilherme**. Fases 1 a 3 ainda sem design.
+**Estado:** fase 0 entregue e no ar em 15/11/2026 (código e migration). Fases 1 a 3 ainda sem design.
 
 ## Por quê
 
@@ -33,9 +33,9 @@ Fica para a fase 1, com motivo: registrar o uso da transcrição das mensagens (
 - **Falha na tela:** `tipoDeFalha` (`lib/pipeline/regras.ts`) devolve `sem_fala` ou `geral`; o servidor lê o código com a chave secreta e entrega só o tipo (P66). Sem fala: "Grave de novo" com botão. Geral: "Já fomos avisados".
 - **E-mail ao admin** a cada falha geral (`lib/email/alerta.ts`), no máximo 1 por livro e hora, só com ids e códigos.
 
-## Fase 0, migration (esperando OK)
+## Fase 0, migration (aplicada)
 
-Arquivo: `supabase/migrations/20261123120000_evals_fase0.sql`. Ensaiada em PGlite com as migrations reais: aceita linha boa, recusa texto em `detalhes`, recusa código com `ok = true`, função só para `service_role`, reversão e nova subida sem erro.
+Arquivo: `supabase/migrations/20261123120000_evals_fase0.sql`. **Aplicada no Supabase em 15/11/2026, com o OK do Guilherme.** Teste: `supabase/tests/evals.test.ts`. `detalhes` aceita lista só de números (o jsonpath em modo lax desembrulha listas) e recusa qualquer texto, inclusive dentro de lista. Ensaiada em PGlite com as migrations reais: aceita linha boa, recusa texto em `detalhes`, recusa código com `ok = true`, função só para `service_role`, reversão e nova subida sem erro.
 
 ```sql
 -- Evals, fase 0 (decisão T51): o que o pipeline já calcula passa a ficar guardado.
