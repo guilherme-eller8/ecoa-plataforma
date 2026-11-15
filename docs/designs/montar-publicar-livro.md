@@ -1,6 +1,6 @@
 # Montar e publicar o livro (prompt 13)
 
-**Estado:** aprovado pelo Guilherme em 14/11/2026 (v2 + Q16: o livro não tem teto de páginas). SQL ensaiado no PGlite (18 testes). Aplicação no Supabase pendente (a confirmação do servidor não foi respondida em 14/11).
+**Estado:** aprovado pelo Guilherme em 14/11/2026 (v2 + Q16: o livro não tem teto de páginas). SQL ensaiado no PGlite (18 testes) e aplicado no Supabase em 15/11 (seção 13).
 
 PRD: *M9* e *Livro pronto para a gráfica*. Decisões tocadas: P3, P7, P21, P56, P60, P65, T5, T19/T43, T20, T22, T36, T44, T45, T49.
 
@@ -296,3 +296,9 @@ Uma rodada, 2 revisores em Sonnet. Relatórios em `montar-publicar-livro/critic_
 | 10 | `rev` sem trava | Coberto pelo hash e pelas travas |
 | 11 | Expirar volta no rollback; sem montagem dava `montagem_mudou` | A tela mostra como falhou a `gerando` vencida; título vazio não existe (CHECK de `stories`) |
 | 12 | QR criado pela amostra contava sem áudio aceito | `ligado` só se toca; teste a fazer |
+
+## 13. Migration aplicada (15/11)
+
+`20261123120000_montar_livro` aplicada no projeto `ecoa-plataforma`. Conferido no banco: bucket `exportacoes` privado com 50 MB; RLS ligada em `book_layouts`, `book_exports` e `montagem_usos`; nenhum grant de tabela para `anon` e `porta_autor`; `authenticated` não lê `book_exports.conteudo` nem executa `privado.conteudo_do_livro`; `anon` não executa `publicar_livro`, `porta_autor` não executa `montagem_conteudo`; `qr_codes.message_id` criado; `palavras_por_pagina()` = 220.
+
+Avisos de segurança: nenhum novo para `anon`. Os 4 novos de `authenticated` (`montagem_conteudo`, `montagem_salvar`, `montagem_reservar_uso`, `publicar_livro`) são intencionais e conferem membro ou responsável dentro da função, como as demais do produto.
