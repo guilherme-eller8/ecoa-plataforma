@@ -5,17 +5,33 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // Os prompts são lidos do disco em tempo de execução (leitura dinâmica: o tracing não vê).
   // Typst (binário nativo) e mupdf (WASM) ficam fora do bundle e vão inteiros para a função.
-  serverExternalPackages: ["@myriaddreamin/typst-ts-node-compiler", "mupdf"],
+  serverExternalPackages: [
+    "@myriaddreamin/typst-ts-node-compiler",
+    "mupdf",
+    "sharp",
+  ],
   outputFileTracingIncludes: {
     // Página de amostra: template e fontes lidos do disco.
     "/livro/[id]/historias/[historiaId]/amostra": [
-      "./lib/livro/amostra.typ",
+      "./lib/livro/typst/**",
       "./lib/livro/fontes/*.ttf",
     ],
     // O ffmpeg do recorte do QR é achado em tempo de execução (o tracing não vê).
+    // Montar o livro: templates e fontes do Typst, lidos do disco (prompt 13).
     "/api/inngest": [
       "./lib/ai/prompts/**/*",
       "./node_modules/ffmpeg-static/ffmpeg",
+      "./lib/livro/typst/**",
+      "./lib/livro/fontes/*.ttf",
+    ],
+  },
+  // A Vercel roda glibc: a variante musl do Typst (52 MB) só engordaria a função (Q12, limite 250 MB).
+  outputFileTracingExcludes: {
+    "/api/inngest": [
+      "./node_modules/@myriaddreamin/typst-ts-node-compiler-linux-x64-musl/**",
+    ],
+    "/livro/[id]/historias/[historiaId]/amostra": [
+      "./node_modules/@myriaddreamin/typst-ts-node-compiler-linux-x64-musl/**",
     ],
   },
   partialPrefetching: true,

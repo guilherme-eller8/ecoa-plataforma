@@ -1,4 +1,4 @@
-# Plano: central de Evals no admin (T51, P66)
+# Plano: central de Evals no admin (T54, P68)
 
 **Estado:** fase 0 entregue e no ar em 15/11/2026 (código e migration). Fases 1 a 3 ainda sem design.
 
@@ -19,7 +19,7 @@ A régua de qualidade escolhida na T31 é comparar o texto da IA com o texto que
 | --- | --- | --- | --- |
 | 0 | Guardar o que já é calculado; parar repetição paga; corte na transcrição; frase de falha por tipo; e-mail ao admin | 1 migration pequena (abaixo) | OK no SQL |
 | 1 | Comparação IA × família ao marcar como pronta; `/admin/evals` com Resumo, Transcrição, Texto fiel, Custo e tempo; alerta no critério de morte | 1 tabela de resultados | Design doc próprio (schema: EGM) |
-| 2 | Fila "histórias para olhar", comparação lado a lado, rastro por história, versões das regras | Consentimento por livro (P66) | Design doc próprio |
+| 2 | Fila "histórias para olhar", comparação lado a lado, rastro por história, versões das regras | Consentimento por livro (P68) | Design doc próprio |
 | 3 | Gabarito de transcrição (12 trechos), juiz calibrado (50 parágrafos), canários | Nenhum | Gatilhos da T31 |
 
 Fica para a fase 1, com motivo: registrar o uso da transcrição das mensagens (`/m`). `ai_usage.minutos_audio` entra na cota diária de T38; gravar as mensagens ali sem mexer nas funções da cota gastaria a cota das histórias.
@@ -30,15 +30,15 @@ Fica para a fase 1, com motivo: registrar o uso da transcrição das mensagens (
 - **Resposta cortada** tenta 1 vez com o dobro do teto (`lib/ai/claude.ts`).
 - **Tempo e tentativas reais:** `ms` e `ms_primeira_palavra` contam do início da 1ª tentativa; `ai_usage.tentativa` passa a ser escrita; a falha também grava o tempo.
 - **Corte no pedido de transcrição** pela duração do áudio (`timeoutDaTranscricaoMs`, números em `lib/config.ts`).
-- **Falha na tela:** `tipoDeFalha` (`lib/pipeline/regras.ts`) devolve `sem_fala` ou `geral`; o servidor lê o código com a chave secreta e entrega só o tipo (P66). Sem fala: "Grave de novo" com botão. Geral: "Já fomos avisados".
+- **Falha na tela:** `tipoDeFalha` (`lib/pipeline/regras.ts`) devolve `sem_fala` ou `geral`; o servidor lê o código com a chave secreta e entrega só o tipo (P68). Sem fala: "Grave de novo" com botão. Geral: "Já fomos avisados".
 - **E-mail ao admin** a cada falha geral (`lib/email/alerta.ts`), no máximo 1 por livro e hora, só com ids e códigos.
 
 ## Fase 0, migration (aplicada)
 
-Arquivo: `supabase/migrations/20261123120000_evals_fase0.sql`. **Aplicada no Supabase em 15/11/2026, com o OK do Guilherme.** Teste: `supabase/tests/evals.test.ts`. `detalhes` aceita lista só de números (o jsonpath em modo lax desembrulha listas) e recusa qualquer texto, inclusive dentro de lista. Ensaiada em PGlite com as migrations reais: aceita linha boa, recusa texto em `detalhes`, recusa código com `ok = true`, função só para `service_role`, reversão e nova subida sem erro.
+Arquivo: `supabase/migrations/20261124120000_evals_fase0.sql`. **Aplicada no Supabase em 15/11/2026, com o OK do Guilherme.** Teste: `supabase/tests/evals.test.ts`. `detalhes` aceita lista só de números (o jsonpath em modo lax desembrulha listas) e recusa qualquer texto, inclusive dentro de lista. Ensaiada em PGlite com as migrations reais: aceita linha boa, recusa texto em `detalhes`, recusa código com `ok = true`, função só para `service_role`, reversão e nova subida sem erro.
 
 ```sql
--- Evals, fase 0 (decisão T51): o que o pipeline já calcula passa a ficar guardado.
+-- Evals, fase 0 (decisão T54): o que o pipeline já calcula passa a ficar guardado.
 -- Mexe só em ai_usage, tabela do admin: RLS ligada, sem política e sem grant para quem está
 -- logado. Nenhuma tela do cliente lê estas colunas.
 
@@ -92,7 +92,7 @@ revoke all on function public.admin_custos_por_livro() from public, anon, authen
 grant execute on function public.admin_custos_por_livro() to service_role;
 ```
 
-Reversão (`supabase/reversao/20261123120000_evals_fase0.down.sql`):
+Reversão (`supabase/reversao/20261124120000_evals_fase0.down.sql`):
 
 ```sql
 -- Reversão de evals_fase0: volta ai_usage ao que era. As colunas novas são só registro;

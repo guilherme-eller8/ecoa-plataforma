@@ -17,6 +17,7 @@ import {
 
 export type PlanoRecorte = {
   livro: string;
+  bucket: "audios" | "mensagens"; // de onde baixar o original (mensagem: bucket próprio)
   fonte: string;
   gravacoes: { caminho: string; demuxer: string; trechos: Trecho[] }[];
 };
@@ -37,8 +38,8 @@ export async function planejarRecorte(
   const t = TrechosQr.parse(data);
   if (t.desativado || !t.gravacoes.length) return null;
   const comTrecho = t.gravacoes
-    .filter((g) => g.segmentos !== null)
-    .map((g) => g.recording_id);
+    .filter((g) => g.segmentos !== null && g.recording_id !== null)
+    .map((g) => g.recording_id as string);
   const tempos = new Map<string, SegmentoTempo[]>();
   if (comTrecho.length) {
     const { data: tr, error: e2 } = await db
@@ -58,18 +59,22 @@ export async function planejarRecorte(
   }
   return {
     livro: t.book_id,
+    bucket: t.bucket,
     fonte: t.fonte,
     gravacoes: t.gravacoes.map((g) => {
       const demuxer = demuxerDoTipo(g.content_type);
       if (!demuxer) throw new Error("recorte:tipo_desconhecido");
-      if (g.segmentos !== null && !tempos.has(g.recording_id))
+      if (
+        g.segmentos !== null &&
+        (g.recording_id === null || !tempos.has(g.recording_id))
+      )
         throw new Error("recorte:sem_transcricao");
       return {
         caminho: g.caminho,
         demuxer,
         trechos: trechosDaGravacao(
           g.segmentos,
-          tempos.get(g.recording_id) ?? [],
+          (g.recording_id && tempos.get(g.recording_id)) || [],
           g.duracao_s,
         ),
       };
@@ -88,7 +93,7 @@ export async function cortarESubir(
     const entradas: EntradaCorte[] = [];
     for (const g of plano.gravacoes) {
       const { data, error } = await db.storage
-        .from("audios")
+        .from(plano.bucket)
         .download(g.caminho);
       if (error || !data) throw new Error("recorte:download");
       if (data.size > MAX_AUDIO_MB * 1024 * 1024)

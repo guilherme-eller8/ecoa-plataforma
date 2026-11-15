@@ -1,4 +1,4 @@
-// Evals, fase 0 (T51): colunas novas de ai_usage e a soma de custo por livro no banco.
+// Evals, fase 0 (T54): colunas novas de ai_usage e a soma de custo por livro no banco.
 // O que importa: nenhum texto da fala cabe em `detalhes`, o código do erro só vale na falha,
 // a soma não depende do teto de 1.000 linhas da API, e só a chave secreta lê.
 import type { PGlite } from "@electric-sql/pglite";

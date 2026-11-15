@@ -8,20 +8,18 @@ import { Aviso } from "@/components/ui/aviso";
 import { Botao } from "@/components/ui/botao";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { IconeCheck } from "@/components/ui/icones";
-import { FOTO_LADO_MIN_IMPRESSAO_PX, MAX_FOTOS_HISTORIA } from "@/lib/config";
+import { MAX_FOTOS_HISTORIA } from "@/lib/config";
 import type { AcoesEditor } from "@/lib/editor/tipos";
 import type { FotoDaHistoria } from "@/lib/historias/tipos";
+import { fotoPequenaParaImprimir } from "@/lib/livro/fotos";
 import type { FotoDaTela } from "@/lib/livro/tipos";
 
+// Abaixo de 300 DPI no tamanho em que a foto vai impressa (A5, Q6).
 export function pequenaParaImprimir(f: {
   largura: number | null;
   altura: number | null;
 }) {
-  return (
-    f.largura != null &&
-    f.altura != null &&
-    Math.min(f.largura, f.altura) < FOTO_LADO_MIN_IMPRESSAO_PX
-  );
+  return fotoPequenaParaImprimir(f);
 }
 
 export function FotosDaHistoria({

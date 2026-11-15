@@ -1,4 +1,4 @@
-// Sinais de qualidade da transcrição que não pedem rótulo de ninguém (evals, T51). Só números:
+// Sinais de qualidade da transcrição que não pedem rótulo de ninguém (evals, T54). Só números:
 // vão para ai_usage.detalhes, que o banco recusa se tiver qualquer texto.
 import { CONFIANCA_DUVIDOSA } from "@/lib/config";
 import type { Palavra } from "./schemas";

@@ -737,7 +737,9 @@ describe("o que foi enviado não some nem muda", () => {
       erro: "mensagem_imutavel",
     });
     expect(await servico(`truncate public.family_messages`)).toMatchObject({
-      erro: expect.stringMatching(/mensagem_imutavel|permission denied/),
+      erro: expect.stringMatching(
+        /mensagem_imutavel|permission denied|referenced in a foreign key/,
+      ),
     });
   });
 

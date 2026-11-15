@@ -1,4 +1,4 @@
--- Evals, fase 0 (decisão T51): o que o pipeline já calcula passa a ficar guardado.
+-- Evals, fase 0 (decisão T54): o que o pipeline já calcula passa a ficar guardado.
 -- Mexe só em ai_usage, tabela do admin: RLS ligada, sem política e sem grant para quem está
 -- logado. Nenhuma tela do cliente lê estas colunas.
 

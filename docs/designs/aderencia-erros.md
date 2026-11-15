@@ -32,7 +32,7 @@ Os 5 passos (P25/M11), em ordem; o livro está no primeiro que falta:
 ## Como
 
 - Leitura pelo `clienteAdmin()` na página, como o admin atual (o proxy já devolve 404 para quem não é admin, e a página confere de novo). Agregação em TypeScript, em `lib/aderencia/` (funções puras, testadas com Vitest). Volume atual: 32 eventos. Os passos do onboarding precisam do histórico inteiro, então o teto é de 20 mil eventos (o painel avisa se bater nele), e erros leem 30 dias.
-- A leitura de `events` entra em `lib/eventos.ts` (`lerEventos`): o teste de porta única continua valendo (T50).
+- A leitura de `events` entra em `lib/eventos.ts` (`lerEventos`): o teste de porta única continua valendo (T53).
 - Números em `lib/config.ts`: `LIVRO_PARADO_DIAS = 7`, `ADERENCIA_SEMANAS = 8`, `ADERENCIA_DIAS_ACESSO = 14`.
 - Ações novas em `lib/eventos-acoes.ts`: `job_falhou`, `erro_servidor`.
 - Telas `components/telas/tela-aderencia.tsx` e `tela-aderencia-livro.tsx`, com exemplos no styleguide e estado vazio. Link "Aderência" no admin atual.

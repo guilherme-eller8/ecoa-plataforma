@@ -103,6 +103,18 @@ export const TELAS = [
   "mensagens",
   "mensagens-vazia",
   "mensagens-cofacilitador",
+  // Prompt 13
+  "montar-conteudo",
+  "montar-conteudo-vazia",
+  "montar-conteudo-riscada",
+  "montar-capa",
+  "montar-conferir",
+  "montar-conferir-vermelho",
+  "montar-conferir-acima-80",
+  "montar-conferir-cofacilitador",
+  "versao-gerando",
+  "versao-pronta",
+  "versao-falhou",
   // Prompt 15
   "admin-aderencia",
   "admin-aderencia-vazia",

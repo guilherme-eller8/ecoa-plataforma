@@ -14,8 +14,84 @@ export const PAGINAS_INCLUSAS = 80;
 // a interface não deve mostrar valor enquanto for null.
 export const VALOR_PAGINA_EXTRA: number | null = null;
 export const VALOR_COPIA_EXTRA: number | null = null;
-export const FORMATO_LIVRO = "21x21"; // em cm; confirmar com a gráfica
-export const SANGRIA_MM = 3; // em cada lado
+// ── Especificação da gráfica (prompt 13, P66, T50) ───────────────────────
+// Tudo o que a gráfica não confirmou fica aqui, num lugar só, com versão. Mudou um número:
+// suba `versao`. Cada publicação grava a especificação usada; o prompt 14 só envia para a
+// impressão a versão feita com a especificação atual (Q3).
+export const ESPEC_GRAFICA = {
+  versao: 1,
+  confirmada: false, // vira true quando a gráfica devolver o gabarito
+  // Miolo (confirmado: formato, páginas, papel e cor).
+  miolo: {
+    larguraMm: 148,
+    alturaMm: 210, // A5 vertical
+    sangriaMm: 3, // em cada lado (provisório, PRD)
+    multiploPaginas: 4, // provisório: capa dura costurada costuma pedir cadernos de 16
+    espessuraFolhaMm: 0.1, // couché fosco 115 g; uma folha = 2 páginas (provisório)
+  },
+  // Capa dura 4x0 com laminação fosca na frente (confirmado); o gabarito é provisório.
+  capa: {
+    papelaoMm: 2, // espessura do papelão
+    projecaoMm: 3, // o papelão passa do miolo na cabeça, no pé e na frente
+    canalMm: 8, // vinco entre a lombada e cada papelão
+    dobraMm: 15, // papel que se dobra para dentro do papelão
+    folgaLombadaMm: 1,
+    lombadaMinTextoMm: 6, // lombada mais estreita não leva texto
+    margemTextoMm: 8, // título e foto a esta distância das bordas do papelão
+  },
+  // Texto e QR em 100% preto (K); cores da capa em CMYK; fotos em RGB (T52, Q13).
+  cor: "texto K, capa CMYK, fotos RGB",
+} as const;
+export const FORMATO_LIVRO = `${ESPEC_GRAFICA.miolo.larguraMm}x${ESPEC_GRAFICA.miolo.alturaMm}`; // em mm
+export const SANGRIA_MM = ESPEC_GRAFICA.miolo.sangriaMm; // em cada lado
+// Capa impressa: 5 cores prontas em CMYK (Q2). `claro` = texto branco sobre a cor.
+export const CAPA_CORES = {
+  terracota: { nome: "Terracota", cmyk: [0, 62, 70, 28], claro: true },
+  oliva: { nome: "Oliva", cmyk: [35, 18, 90, 45], claro: true },
+  azul: { nome: "Azul", cmyk: [85, 55, 20, 40], claro: true },
+  areia: { nome: "Areia", cmyk: [6, 12, 28, 0], claro: false },
+  grafite: { nome: "Grafite", cmyk: [0, 0, 0, 85], claro: true },
+} as const;
+export type CorDaCapa = keyof typeof CAPA_CORES;
+export const COR_CAPA_PADRAO: CorDaCapa = "terracota";
+
+// ── Montar e publicar (prompt 13, docs/designs/montar-publicar-livro.md) ──
+// Os quatro primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).
+export const MAX_ITENS_LIVRO = 150; // histórias ou mensagens na montagem (por lista)
+export const MAX_PUBLICACOES_DIA = 10; // por livro em 24 h; as que falharam não contam
+export const PUBLICACAO_EXPIRA_MIN = 30; // 'gerando' há mais que isso é dada como presa
+export const MAX_USOS_MONTAGEM_MINUTO = 30; // contagem e prévia, por pessoa e livro
+export const TITULO_LIVRO_MAX = 90; // CHECK de book_layouts
+export const SUBTITULO_LIVRO_MAX = 120;
+export const DEDICATORIA_MAX = 600;
+export const TITULO_CAPA_LINHAS = 3; // mais que isso não cabe na capa: bloqueia
+export const HISTORIA_CURTA_PALAVRAS = 120; // abaixo disso: alerta amarelo
+export const FOTO_DPI_ALVO = 300; // fotos reduzidas a isso no PDF; abaixo: alerta amarelo
+export const FOTO_PDF_QUALIDADE_JPEG = 88;
+export const FOTO_PDF_MAX_PIXELS = 40_000_000; // limite de entrada do sharp (foto de quem tem o link)
+export const FOTOS_BAIXADAS_JUNTAS = 4;
+export const PREVIA_PAGINA_DPI = 100; // prévia página a página (JPEG)
+export const CONFERIR_QR_DPI = 150; // rasterização para ler cada QR por software
+export const PREVIA_CAPA_MINIATURA_PX = 600;
+export const CONTAR_APOS_MS = 800; // contagem de páginas depois da última mudança salva
+export const PREVIA_CAPA_APOS_MS = 600; // prévia da capa depois da última tecla
+export const CONSULTAR_PUBLICACAO_S = 3; // versão 'gerando' é conferida nesse intervalo
+export const EXPORT_DOWNLOAD_URL_S = 60; // validade da URL assinada do PDF
+export const EXPORT_PREVIA_URL_S = 10 * 60; // validade da URL assinada das prévias
+export const EXPORT_PREVIAS_POR_PEDIDO = 4;
+export const EXPORT_BUCKET = "exportacoes";
+
+// Página do miolo (A5 com sangria). Margens em mm, corpo em pt. A interna é maior porque a capa
+// dura abre menos. Texto e QR em 100% K (T52).
+export const LAYOUT_MIOLO = {
+  margemInternaMm: 20,
+  margemExternaMm: 15,
+  margemCabecaMm: 18,
+  margemPeMm: 20,
+  corpoPt: 11,
+  fotoAlturaMaxMm: 85, // foto mais alta que isso entra menor, sem cortar
+  fotoMensagemMm: { largura: 36, altura: 36 }, // caixa fixa da foto de uma mensagem
+} as const;
 
 // ── Coleta ───────────────────────────────────────────────────────────────
 export const MAX_GRAVACAO_MIN = 30; // por gravação (espelhado em privado.max_gravacao_s); a conversa segue em partes (P39)
@@ -58,8 +134,8 @@ export const EMAIL_REMETENTE = "Ecoa Memórias <acesso@ecoa-memorias.com.br>";
 // ── Lembretes e estimativas ──────────────────────────────────────────────
 // Pergunta enviada há este número de dias sem resposta mostra "Lembrar com carinho".
 export const LEMBRETE_APOS_DIAS = 3;
-// Estimativa de páginas no 21x21 enquanto o livro não é paginado de verdade.
-export const PALAVRAS_POR_PAGINA_ESTIMADA = 320; // espelhado em privado.palavras_por_pagina
+// Estimativa de páginas no A5 a 11 pt enquanto o livro não é paginado de verdade (era 320 no 21x21).
+export const PALAVRAS_POR_PAGINA_ESTIMADA = 220; // espelhado em privado.palavras_por_pagina
 export const PAGINAS_POR_FOTO_ESTIMADA = 0.5;
 
 // ── Perguntas e configuração inicial ─────────────────────────────────────
@@ -67,7 +143,7 @@ export const PERGUNTAS_INICIAIS = 8; // marcadas no passo 2: 1 por fase da vida,
 export const ATUALIZAR_A_CADA_S = 4; // abas Causos e Enquete abertas na tela
 
 // ── Fotos do acervo ──────────────────────────────────────────────────────
-// Comprimidas no navegador: JPEG, lado maior até 3000 px (21 cm a 300 DPI pede 2480).
+// Comprimidas no navegador: JPEG, lado maior até 3000 px (a largura do A5, 148 mm a 300 DPI, pede 1748).
 export const FOTO_LADO_MAX_PX = 3000;
 export const FOTO_QUALIDADE_JPEG = 0.9;
 export const MAX_FOTO_MB = 5; // igual ao limite do bucket acervo
@@ -152,7 +228,7 @@ export const TAMANHO_PADRAO = "medio";
 
 // Segmentação da transcrição.
 export const PAUSA_SEGMENTO_S = 1.5;
-// Evals: palavra com confiança do provedor abaixo disso conta como "duvidosa" (T51).
+// Evals: palavra com confiança do provedor abaixo disso conta como "duvidosa" (T54).
 export const CONFIANCA_DUVIDOSA = 0.5;
 export const MAX_PALAVRAS_SEGMENTO = 40;
 
@@ -222,7 +298,6 @@ export const RENOVAR_TRAVA_S = 30; // atividade renova a trava no máximo a cada
 export const CONSULTAR_TRAVA_S = 15; // quem está vendo confere se a trava soltou
 export const SALVAR_APOS_MS = 1500; // salvamento automático depois da última tecla
 export const SALVAR_NO_MAXIMO_MS = 5000; // digitando sem parar, salva pelo menos nesse intervalo
-export const FOTO_LADO_MIN_IMPRESSAO_PX = 1200; // abaixo disso no lado menor: alerta
 
 // ── IA sob controle (prompt 9, docs/designs/ia-sob-controle.md) ───────────
 // Os quatro primeiros são espelhados no banco (supabase/tests/config-banco.test.ts confere).

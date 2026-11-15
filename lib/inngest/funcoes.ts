@@ -26,6 +26,7 @@ import { enviarEmail } from "@/lib/email/enviar";
 import { urlDoApp } from "@/lib/env-servidor";
 import { registrarEvento } from "@/lib/eventos";
 import { bancoPipeline } from "@/lib/pipeline/banco";
+import { exportarLivroFn } from "./livro";
 import { recortarQrFn } from "./qr";
 import { publicarNoLivro } from "@/lib/pipeline/canal";
 import { envPipeline } from "@/lib/pipeline/env";
@@ -560,5 +561,6 @@ export const funcoes = [
   recortarQrFn,
   resumoSemanalFn,
   resumoDoLivroFn,
+  exportarLivroFn,
   registrarFalhaFn,
 ];

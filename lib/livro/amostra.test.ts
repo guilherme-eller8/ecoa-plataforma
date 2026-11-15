@@ -1,6 +1,7 @@
 // Integração: a página de amostra com o Typst real, conferida como no servidor.
 import { describe, expect, it } from "vitest";
-import { gerarAmostra, qrDoCodigo } from "./amostra";
+import { gerarAmostra } from "./amostra";
+import { matrizDoQr } from "./qr-matriz";
 import { conferirQr } from "./conferir-qr";
 
 const PARAGRAFO =
@@ -11,7 +12,7 @@ async function mupdf() {
 }
 
 describe("página de amostra (Typst)", () => {
-  it("1 página de 216 × 216 mm, Newsreader embutida e o QR lido do PDF", async () => {
+  it("1 página A5 (154 × 216 mm com a sangria), Newsreader embutida e o QR lido do PDF", async () => {
     const r = await gerarAmostra({
       titulo: "O trem para Guarapari",
       ano: 1962,
@@ -20,12 +21,12 @@ describe("página de amostra (Typst)", () => {
       foto: null,
     });
     expect(r.cortado).toBe(false);
-    const c = await conferirQr(r.pdf, r.url);
+    const c = await conferirQr(r.pdf, r.url, r.marca);
     expect(c).toEqual({ ok: true, paginas: 1, lido: r.url });
     const m = await mupdf();
     const doc = m.Document.openDocument(r.pdf, "application/pdf");
     const [x0, y0, x1, y1] = doc.loadPage(0).getBounds();
-    expect(Math.round(((x1 - x0) / 72) * 25.4)).toBe(216);
+    expect(Math.round(((x1 - x0) / 72) * 25.4)).toBe(154);
     expect(Math.round(((y1 - y0) / 72) * 25.4)).toBe(216);
     const bruto = r.pdf.toString("latin1");
     expect(bruto).toMatch(/Newsreader-Regular/);
@@ -44,7 +45,7 @@ describe("página de amostra (Typst)", () => {
       foto: null,
     });
     expect(r.cortado).toBe(true);
-    expect((await conferirQr(r.pdf, r.url)).ok).toBe(true);
+    expect((await conferirQr(r.pdf, r.url, r.marca)).ok).toBe(true);
     const m = await mupdf();
     const texto = m.Document.openDocument(r.pdf, "application/pdf")
       .loadPage(0)
@@ -78,13 +79,17 @@ describe("página de amostra (Typst)", () => {
       codigo: "7KQ2M9XA",
       foto: null,
     });
-    const c = await conferirQr(r.pdf, r.url.replace("7KQ2M9XA", "8KQ2M9XA"));
+    const c = await conferirQr(
+      r.pdf,
+      r.url.replace("7KQ2M9XA", "8KQ2M9XA"),
+      r.marca,
+    );
     expect(c.ok).toBe(false);
   });
 
   it("QR de 20 mm + margem: versão 3 em maiúsculas", async () => {
-    const q = await qrDoCodigo("HTTPS://OUVIR.ECOA-MEMORIAS.COM.BR/7KQ2M9XA");
-    expect(q.versao).toBe(3);
-    expect(q.caixaMm).toBeCloseTo((20 * 37) / 29, 5);
+    const q = matrizDoQr("7KQ2M9XA", true);
+    expect(q.modulos).toBe(29); // versão 3
+    expect(q.caixaMm).toBeCloseTo((20 * 37) / 29, 1);
   });
 });

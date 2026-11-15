@@ -432,7 +432,7 @@ export function bancoPipeline(
         ms_primeira_palavra:
           l.msPrimeiraPalavra == null ? null : Math.round(l.msPrimeiraPalavra),
         id_requisicao: l.idRequisicao?.slice(0, 120) ?? null,
-        // Evals (T51). O código só vale na falha; detalhes só leva números (o banco confere).
+        // Evals (T54). O código só vale na falha; detalhes só leva números (o banco confere).
         erro_codigo: l.ok ? null : (l.erroCodigo ?? null),
         ms_desde_envio:
           l.msDesdeEnvio == null ? null : Math.round(l.msDesdeEnvio),
