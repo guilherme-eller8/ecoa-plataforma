@@ -71,6 +71,18 @@ export const FRASES_DOS_CODIGOS = {
   qr_nao_encontrado: "Não achamos este QR.",
   chave_invalida: "Não deu certo agora. Tente de novo.",
   reversao_com_qr: "Não deu certo agora. Tente de novo.",
+  // Prompt 13: montar e publicar o livro.
+  montagem_mudou: "O livro mudou enquanto você conferia. Confira de novo.",
+  publicacao_em_andamento:
+    "Já tem uma publicação sendo preparada. Espere ela terminar.",
+  limite_publicacoes: "Muitas publicações hoje. Tente amanhã.",
+  livro_vazio: "Ponha pelo menos uma história ou mensagem no livro.",
+  livro_sem_titulo: "Dê um título ao livro na capa.",
+  historia_sem_titulo: "Uma das histórias está sem título.",
+  qr_nao_conferido: "Não deu certo desta vez. Publique de novo.",
+  export_imutavel: "Esta versão publicada não pode ser mudada.",
+  mensagem_publicada:
+    "Esta mensagem já está num livro publicado. Fale com a Ecoa para tirá-la.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

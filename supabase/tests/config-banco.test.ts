@@ -70,6 +70,10 @@ describe("lib/config.ts x banco", () => {
     ["max_convites_por_email_dia", config.MAX_CONVITES_POR_EMAIL_DIA],
     ["convite_validade_dias", config.CONVITE_VALIDADE_DIAS],
     ["palavras_por_pagina", config.PALAVRAS_POR_PAGINA_ESTIMADA],
+    ["max_itens_livro", config.MAX_ITENS_LIVRO],
+    ["max_publicacoes_dia", config.MAX_PUBLICACOES_DIA],
+    ["publicacao_expira_s", config.PUBLICACAO_EXPIRA_MIN * 60],
+    ["max_usos_montagem_minuto", config.MAX_USOS_MONTAGEM_MINUTO],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);
@@ -88,5 +92,16 @@ describe("códigos de erro do SQL", () => {
     const semFrase = [...codigos].filter((c) => !(c in FRASES_DOS_CODIGOS));
     expect(semFrase).toEqual([]);
     expect(codigos.size).toBeGreaterThan(10);
+  });
+});
+
+describe("capa: paleta do config.ts x banco", () => {
+  it("privado.capa_cores() = chaves de CAPA_CORES", async () => {
+    const r = await db.query<{ v: string[] }>(
+      "select privado.capa_cores() as v",
+    );
+    expect([...r.rows[0].v].sort()).toEqual(
+      Object.keys(config.CAPA_CORES).sort(),
+    );
   });
 });
