@@ -10,7 +10,7 @@ import { MarcoPrimeiraHistoria } from "@/components/ui/marco-primeira-historia";
 import type { AoVivo } from "@/components/ui/historias-ao-vivo";
 import type { GuardadaDaTela, HistoriaDaTela } from "@/lib/historias/tipos";
 import { pendentes, type Passo } from "@/lib/livro/configuracao";
-import type { LivroDaTela } from "@/lib/livro/tipos";
+import type { AcoesArquivar, LivroDaTela } from "@/lib/livro/tipos";
 
 const NOME_DO_PASSO: Record<Passo, string> = {
   quem: "Quem é",
@@ -51,6 +51,7 @@ export function TelaLivro({
   marcarVista,
   vitrine,
   guardadas = [],
+  arquivarHistoria,
 }: {
   livro: LivroDaTela;
   resumo: ResumoDoLivro;
@@ -59,6 +60,7 @@ export function TelaLivro({
   marcarVista?: (historia: string) => Promise<void>;
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
   guardadas?: GuardadaDaTela[]; // gravações que chegaram e ainda não viraram história
+  arquivarHistoria?: AcoesArquivar; // P71
 }) {
   const falta = livro.podeEscrever
     ? pendentes(
@@ -198,6 +200,7 @@ export function TelaLivro({
             <HistoriasAoVivo
               livroId={livro.id}
               historias={recentes}
+              arquivar={livro.podeEscrever ? arquivarHistoria : undefined}
               marcarVista={marcarVista}
               canal={!vitrine}
               inicial={vitrine}

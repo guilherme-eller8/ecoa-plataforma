@@ -24,6 +24,14 @@ export type HistoriaDaTela = {
   falha?: TipoDeFalha; // só em "falhou": o que a pessoa pode fazer (sem o código do erro)
 };
 
+/** P71: história arquivada (só o que a lista de arquivadas mostra). */
+export type HistoriaArquivada = {
+  id: string;
+  titulo: string | null;
+  falhou: boolean;
+  arquivadaEm: string;
+};
+
 export type HistoriaParaLer = {
   id: string;
   titulo: string | null;

@@ -385,6 +385,7 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "public.enquete_encerrar",
       "public.enquete_remover_votos",
       "public.enquete_salvar",
+      "public.historia_arquivar",
       "public.lembrar_pergunta",
       "public.marcar_historia_pronta",
       "public.marcar_historia_vista",

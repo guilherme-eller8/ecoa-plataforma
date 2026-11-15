@@ -3,7 +3,7 @@
 // inteira, e a tela mostra lista vazia. supabase/tests/colunas-sessao.test.ts confere cada uma.
 
 export const COLUNAS_LISTA =
-  "id, titulo, estado, prompt_id, criado_em, vista_em, divisao, divisao_de, texto, revisada_em" as const;
+  "id, titulo, estado, prompt_id, criado_em, vista_em, divisao, divisao_de, texto, revisada_em, arquivada_em" as const;
 export const COLUNAS_LER =
   "id, titulo, estado, prompt_id, pergunta_sugerida" as const;
 export const COLUNAS_SITUACAO = "id, estado, criado_em" as const;

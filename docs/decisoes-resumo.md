@@ -76,6 +76,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P68** Evals no admin: só números e códigos; abrir o texto de uma história pede consentimento do responsável, por livro; a pessoa vê só o tipo da falha, nunca o código.
 - **P69** Arquivar áudio: qualquer membro que escreve, inclusive o que já virou história; só sai das listas e da fila, nunca é apagado; história e QR continuam.
 - **P70** Foto da capa com foco: arrastar a foto no retângulo; o foco (0 a 100%) vai no conteúdo congelado e o PDF enquadra igual à prévia.
+- **P71** Arquivar história: qualquer membro que escreve; sai das listas e da montagem, nada é apagado (texto, áudio, QR e versões publicadas ficam); Desarquivar volta.
 
 ## Técnicas
 

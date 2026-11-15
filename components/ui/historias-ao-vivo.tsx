@@ -9,8 +9,10 @@ import { useEffect, useRef, useState } from "react";
 import { estadoDoCartao } from "@/lib/historias/etapas";
 import { andamento as andamentoPrevisto } from "@/lib/historias/previsao";
 import type { HistoriaDaTela } from "@/lib/historias/tipos";
+import type { AcoesArquivar } from "@/lib/livro/tipos";
 import type { EtapaPublicada, TipoDeFalha } from "@/lib/pipeline/regras";
 import { classesDoBotao } from "./botao";
+import { BotaoArquivar } from "./botao-arquivar";
 import { CartaoHistoria } from "./cartao-historia";
 import { useCanalDoLivro, useRelerEnquanto } from "./atualizar-ao-vivo";
 
@@ -38,6 +40,7 @@ export function HistoriasAoVivo({
   canal = true,
   inicial = {},
   colunas = 1,
+  arquivar,
 }: {
   livroId: string;
   historias: HistoriaDaTela[];
@@ -46,6 +49,7 @@ export function HistoriasAoVivo({
   canal?: boolean; // false na vitrine (sem Supabase)
   inicial?: Record<string, AoVivo>; // vitrine: texto ao vivo de exemplo
   colunas?: 1 | 2; // 2: a lista se divide em duas colunas em tela larga
+  arquivar?: AcoesArquivar; // P71: sem isso, a lista não oferece Arquivar
 }) {
   const router = useRouter();
   const [aoVivo, setAoVivo] = useState<Record<string, AoVivo>>(inicial);
@@ -183,7 +187,22 @@ export function HistoriasAoVivo({
                 estado === "conferir"
               }
               acao={
-                estado === "conferir" ? (
+                arquivar &&
+                (estado === "pronta" ||
+                  estado === "revisar" ||
+                  estado === "falhou") ? (
+                  <span className="flex items-center gap-2">
+                    {estado === "falhou" ? null : (
+                      <Link
+                        href={`/livro/${livroId}/historias/${h.id}`}
+                        className="text-ui-17 text-floresta min-h-alvo inline-flex items-center font-medium underline-offset-4 hover:underline"
+                      >
+                        {estado === "revisar" ? "Revisar" : "Abrir"}
+                      </Link>
+                    )}
+                    <BotaoArquivar id={h.id} acoes={arquivar} />
+                  </span>
+                ) : estado === "conferir" ? (
                   <Link
                     href={`/livro/${livroId}/historias/${h.id}/dividir`}
                     className={classesDoBotao()}

@@ -50,5 +50,16 @@ export function acoesDoLivro(id: string) {
   const arquivar: AcoesArquivar = {
     arquivar: a.arquivarAudio.bind(null, id),
   };
-  return { configuracao, fotos, perguntas, kit, audios, arquivar };
+  const arquivarHistoria: AcoesArquivar = {
+    arquivar: a.arquivarHistoria.bind(null, id),
+  };
+  return {
+    configuracao,
+    fotos,
+    perguntas,
+    kit,
+    audios,
+    arquivar,
+    arquivarHistoria,
+  };
 }
