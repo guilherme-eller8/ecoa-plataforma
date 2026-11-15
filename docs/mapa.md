@@ -40,7 +40,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Eventos:** `registrarEvento` e `lerEventos` (`lib/eventos.ts`, única porta da tabela; teste confere), ação nova = linha em `lib/eventos-acoes.ts`; detalhes só com ids e números.
 - **Números de negócio:** só em `lib/config.ts`; os conferidos no banco têm função `privado.*()` espelhada e entram em `supabase/tests/config-banco.test.ts`.
 - **Erros do SQL:** `raise exception '<codigo>'` precisa de frase em `lib/erros-banco.ts` (o teste confere).
-- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro), `lib/inngest/falhas.ts` (grava `job_falhou`); `instrumentation.ts` grava `erro_servidor`; os passos devolvem só ids e tempos (T36).
+- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro), `lib/inngest/falhas.ts` (grava `job_falhou`); `instrumentation.ts` grava `erro_servidor`; os passos devolvem só ids e tempos (T36). Erro que nova tentativa não muda (`CODIGOS_DEFINITIVOS`, `lib/pipeline/erros.ts`) não repete o passo: `passosDe` troca por `NonRetriableError`. História que falha avisa o admin por e-mail (`lib/email/alerta.ts`) e a tela recebe só o tipo (`tipoDeFalha`, P66).
 - **Papel na tela:** `livro.ehResponsavel` esconde o que é só do responsável (P60); o banco confere com `privado.eh_responsavel`. Links novos sem login: tipo em `TipoLink` (`lib/links.ts`), token por HMAC.
 
 ## Domínios em `lib/`
@@ -77,4 +77,5 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 
 - `docs/decisoes-resumo.md`: uma linha por decisão (ler sempre). `docs/decisoes.md`: detalhe.
 - `docs/prd.md`: produto (ler só as seções citadas). `docs/prompts.md`: sequência de prompts.
+- `docs/designs/evals.md`: plano da central de Evals (T51), por fases.
 - `docs/designs/<prompt>.md`: design aprovado de cada prompt. Ler só o do prompt atual ou o que ele cita.

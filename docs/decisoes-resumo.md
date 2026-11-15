@@ -71,6 +71,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P63** Resumo semanal: domingo 18 h, só números, só se houver algo, descadastro de 1 clique.
 - **P64** Até 5 co-facilitadores por livro (eram 3); pendentes contam no teto.
 - **P65** Link `/m` só de escrita; envio com texto confirmado; entra no livro o que um membro marcar; só o responsável apaga de vez.
+- **P66** Evals no admin: só números e códigos; abrir o texto de uma história pede consentimento do responsável, por livro; a pessoa vê só o tipo da falha, nunca o código.
 
 ## Técnicas
 
@@ -124,3 +125,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T48** Mensagem: só Scribe, na ação do servidor com reserva no banco (sem Inngest); duração real pela transcrição; link `/m` só pela chave secreta.
 - **T49** QR de mensagem no prompt 13, com a montagem.
 - **T50** Aderência e erros no admin sem Sentry nem migration: `job_falhou` e `erro_servidor` em `events` (só ids e rota-padrão); link do autor aberto grava `entrou`; `events` só por `lib/eventos.ts` (escrita e `lerEventos`).
+- **T51** Central de Evals no admin, em fases (`docs/designs/evals.md`): Scribe e Claude medidos separados; fase 0 guarda os sinais e para erro definitivo; gabarito, juiz e canários seguem os gatilhos da T31.
