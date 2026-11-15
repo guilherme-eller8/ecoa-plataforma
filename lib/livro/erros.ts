@@ -23,3 +23,8 @@ export function comoErroLivro(e: unknown, padrao: CodigoErroLivro): ErroLivro {
   console.error(`[livro] ${padrao}`, e instanceof Error ? e.name : typeof e);
   return new ErroLivro(padrao);
 }
+
+/** O que o Inngest vê de um erro: só o código fixo, nunca a mensagem (T36). */
+export function paraFila(e: unknown): Error {
+  return new Error(e instanceof ErroLivro ? e.codigo : "falhou_montar");
+}

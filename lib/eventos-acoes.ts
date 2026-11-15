@@ -73,6 +73,12 @@ export const ACOES = [
   "mensagem_editada", // { mensagem }
   "mensagem_arquivada", // { mensagem, arquivar }
   "mensagem_apagada", // { mensagem }
+  // Prompt 13: montar e publicar (só ids e números; nunca texto).
+  "montou_livro", // salvou a montagem { rev }
+  "livro_publicado", // responsável { export_id, versao, historias, mensagens, qr }
+  "livro_pronto", // sistema { export_id, versao, paginas, qr }
+  "livro_falhou", // sistema { export_id, versao, erro } (código fixo)
+  "livro_baixado", // membro { export_id, versao, arquivo }
 ] as const;
 
 export const PAPEIS = [
