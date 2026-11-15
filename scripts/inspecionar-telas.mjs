@@ -88,6 +88,18 @@ const TELAS = {
   "compartilhada-indisponivel": "/styleguide/compartilhada-indisponivel",
   "perguntas-lembrar": "/styleguide/perguntas-lembrar",
   "resumo-sair": "/styleguide/resumo-sair",
+  // Prompt 13
+  "montar-conteudo": "/styleguide/montar-conteudo",
+  "montar-conteudo-vazia": "/styleguide/montar-conteudo-vazia",
+  "montar-conteudo-riscada": "/styleguide/montar-conteudo-riscada",
+  "montar-capa": "/styleguide/montar-capa",
+  "montar-conferir": "/styleguide/montar-conferir",
+  "montar-conferir-vermelho": "/styleguide/montar-conferir-vermelho",
+  "montar-conferir-acima-80": "/styleguide/montar-conferir-acima-80",
+  "montar-conferir-cofacilitador": "/styleguide/montar-conferir-cofacilitador",
+  "versao-gerando": "/styleguide/versao-gerando",
+  "versao-pronta": "/styleguide/versao-pronta",
+  "versao-falhou": "/styleguide/versao-falhou",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no

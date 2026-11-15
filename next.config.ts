@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
       "./lib/livro/fontes/*.ttf",
     ],
   },
+  // A Vercel roda glibc: a variante musl do Typst (52 MB) só engordaria a função (Q12, limite 250 MB).
+  outputFileTracingExcludes: {
+    "/api/inngest": [
+      "./node_modules/@myriaddreamin/typst-ts-node-compiler-linux-x64-musl/**",
+    ],
+    "/livro/[id]/historias/[historiaId]/amostra": [
+      "./node_modules/@myriaddreamin/typst-ts-node-compiler-linux-x64-musl/**",
+    ],
+  },
   partialPrefetching: true,
   // O service worker nunca fica em cache: uma versão nova vale na próxima abertura.
   async headers() {

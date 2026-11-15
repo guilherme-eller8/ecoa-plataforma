@@ -28,6 +28,20 @@ import {
 } from "@/lib/exemplos/prompt7";
 import { TelaEditor } from "@/components/telas/tela-editor";
 import {
+  TelaMontarCapa,
+  TelaMontarConferir,
+  TelaMontarConteudo,
+} from "@/components/telas/tela-montar";
+import { TelaVersao } from "@/components/telas/tela-versao";
+import {
+  ACOES_VERSAO_FALSAS,
+  PREVIA_CAPA_EXEMPLO,
+  VERSAO_PRONTA,
+  QUEBRAR_LIVRO,
+  acoesDeMontarFalsas,
+  montagemDeExemplo,
+} from "@/lib/exemplos/prompt13";
+import {
   FolhaAmostra,
   type AcoesAmostra,
 } from "@/components/editor/folha-amostra";
@@ -774,5 +788,128 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "player-digitar":
       return <TelaDigitarCodigo />;
+    // Prompt 13: montar e publicar o livro.
+    case "montar-conteudo":
+      return (
+        <TelaMontarConteudo
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo()}
+          acoes={acoesDeMontarFalsas(72)}
+        />
+      );
+    case "montar-conteudo-vazia":
+      return (
+        <TelaMontarConteudo
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo((c) => {
+            c.historias = [];
+            c.mensagens = [];
+          })}
+          acoes={acoesDeMontarFalsas(4, (c) => {
+            c.historias = [];
+            c.mensagens = [];
+          })}
+        />
+      );
+    case "montar-conteudo-riscada":
+      return (
+        <TelaMontarConteudo
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo((c) => {
+            c.historias[2].incluida = false;
+            c.mensagens[1].incluida = false;
+          })}
+          acoes={acoesDeMontarFalsas(60)}
+        />
+      );
+    case "montar-capa":
+      return (
+        <TelaMontarCapa
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo()}
+          acoes={acoesDeMontarFalsas(72)}
+          previaInicial={PREVIA_CAPA_EXEMPLO}
+        />
+      );
+    case "montar-conferir":
+      return (
+        <TelaMontarConferir
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo()}
+          acoes={acoesDeMontarFalsas(72)}
+        />
+      );
+    case "montar-conferir-vermelho":
+      return (
+        <TelaMontarConferir
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo(QUEBRAR_LIVRO)}
+          acoes={acoesDeMontarFalsas(72, QUEBRAR_LIVRO)}
+        />
+      );
+    case "montar-conferir-acima-80":
+      return (
+        <TelaMontarConferir
+          livro={LIVRO_JAIR}
+          montagem={montagemDeExemplo()}
+          acoes={acoesDeMontarFalsas(92)}
+        />
+      );
+    case "montar-conferir-cofacilitador":
+      return (
+        <TelaMontarConferir
+          livro={LIVRO_COFACILITADORA}
+          montagem={montagemDeExemplo()}
+          acoes={acoesDeMontarFalsas(72)}
+        />
+      );
+    case "versao-gerando":
+      return (
+        <TelaVersao
+          livro={LIVRO_JAIR}
+          versao={{
+            ...VERSAO_PRONTA,
+            estado: "gerando",
+            paginas: null,
+            capaUrl: null,
+            previasUrls: [],
+          }}
+          acoes={{
+            ...ACOES_VERSAO_FALSAS,
+            estado: async () => ({
+              ok: true,
+              dados: {
+                ...VERSAO_PRONTA,
+                estado: "gerando",
+                paginas: null,
+                capaUrl: null,
+                previasUrls: [],
+              },
+            }),
+          }}
+        />
+      );
+    case "versao-pronta":
+      return (
+        <TelaVersao
+          livro={LIVRO_JAIR}
+          versao={VERSAO_PRONTA}
+          acoes={ACOES_VERSAO_FALSAS}
+        />
+      );
+    case "versao-falhou":
+      return (
+        <TelaVersao
+          livro={LIVRO_JAIR}
+          versao={{
+            ...VERSAO_PRONTA,
+            estado: "falhou",
+            paginas: null,
+            capaUrl: null,
+            previasUrls: [],
+          }}
+          acoes={ACOES_VERSAO_FALSAS}
+        />
+      );
   }
 }

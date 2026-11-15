@@ -1,6 +1,14 @@
 // Dados falsos do prompt 13 (montar e publicar): 6 histórias e 2 mensagens, o caso do aceite.
 // Nada aqui é real. Usado pelo styleguide, pelos testes dos templates e pela contagem de exemplo.
-import type { ConteudoDoLivro } from "@/lib/livro/montagem";
+import { alertasDoLivro } from "@/lib/livro/alertas";
+import { saiComQr, type ConteudoDoLivro } from "@/lib/livro/montagem";
+import type {
+  AcoesMontar,
+  AcoesVersao,
+  ContagemDoLivro,
+  MontagemDaTela,
+  VersaoPublicada,
+} from "@/lib/livro/montar-tipos";
 
 const P1 =
   "A gente saía de Belo Horizonte ainda de madrugada. Minha mãe acordava todo mundo às quatro, com o café já passado e o pão com manteiga embrulhado no guardanapo de pano. O trem era lento, parava em tudo que era estação, e a gente ia contando as vacas pela janela até o sol aparecer.";
@@ -74,3 +82,113 @@ export function conteudoDeExemplo(
     ],
   };
 }
+
+// ── Vitrine das telas de montagem e da versão publicada ───────────────────
+
+const HASH_EXEMPLO = "a".repeat(64);
+
+/** Uma capa aberta desenhada à mão (SVG em data URL), só para a vitrine. */
+export const PREVIA_CAPA_EXEMPLO = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 357 246"><rect width="357" height="246" fill="#b9633f"/><rect x="174" width="9" height="246" fill="#a5562f"/><g fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".5"><path d="M15 0v246M342 0v246M0 15h357M0 231h357"/></g><text x="199" y="150" font-family="Georgia,serif" font-size="22" font-weight="600" fill="#fff">Histórias do Vô Jair</text><text x="199" y="165" font-family="Georgia,serif" font-size="9" font-style="italic" fill="#fff">Do trem de Guarapari à casa da rua Bahia</text></svg>`,
+)}`;
+
+const pagina = (n: number) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 154 216"><rect width="154" height="216" fill="#fff"/><text x="77" y="206" text-anchor="middle" font-family="Georgia,serif" font-size="7" fill="#777">${n}</text><g fill="#999"><rect x="23" y="40" width="108" height="3"/><rect x="23" y="50" width="108" height="3"/><rect x="23" y="60" width="90" height="3"/><rect x="23" y="80" width="108" height="3"/><rect x="23" y="90" width="100" height="3"/></g></svg>`,
+  )}`;
+
+/** Uma história que falta revisar e outra curtíssima: dois avisos, um vermelho e um amarelo. */
+export const QUEBRAR_LIVRO = (c: ConteudoDoLivro) => {
+  c.historias[0].revisada = false;
+  c.historias[1].palavras = 60;
+};
+
+export function montagemDeExemplo(
+  mudar: (c: ConteudoDoLivro) => void = () => {},
+  extra: Partial<MontagemDaTela> = {},
+): MontagemDaTela {
+  const c = conteudoDeExemplo();
+  mudar(c);
+  return {
+    rev: 3,
+    hash: HASH_EXEMPLO,
+    titulo: c.livro.titulo ?? "Histórias do Vô Jair",
+    tituloEscolhido: Boolean(c.livro.titulo),
+    subtitulo: c.livro.subtitulo ?? "",
+    dedicatoria: c.livro.dedicatoria ?? "",
+    capaCor: "terracota",
+    capaFotoId: null,
+    capaFotoUrl: null,
+    fotos: [],
+    historias: c.historias.map((h) => ({
+      id: h.id,
+      titulo: h.titulo,
+      ano: h.ano,
+      revisada: h.revisada,
+      incluida: h.incluida,
+      palavras: h.palavras,
+      comQr: saiComQr(h),
+    })),
+    mensagens: c.mensagens.map((m) => ({
+      id: m.id,
+      nome: m.nome,
+      relacao: m.relacao,
+      incluida: m.incluida,
+      previa: (m.texto ?? "").slice(0, 120),
+      comQr: saiComQr(m),
+    })),
+    alertas: alertasDoLivro(c),
+    proximaVersao: 1,
+    versoes: [],
+    responsavel: "Ana Souza",
+    paginasIniciais: null,
+    ...extra,
+  };
+}
+
+export function acoesDeMontarFalsas(
+  paginas = 72,
+  mudar: (c: ConteudoDoLivro) => void = () => {},
+): AcoesMontar {
+  const c = conteudoDeExemplo();
+  mudar(c);
+  const contagem: ContagemDoLivro = {
+    paginas,
+    extras: Math.max(0, paginas - 80),
+    hash: HASH_EXEMPLO,
+    linhasDoTitulo: 1,
+    alertas: alertasDoLivro(c, { tituloCapaLinhas: 1 }),
+  };
+  return {
+    salvar: async () => ({ ok: true, dados: { rev: 4 } }),
+    mensagemNoLivro: async () => ({ ok: true }),
+    contar: async () => ({ ok: true, dados: contagem }),
+    previaCapa: async () => ({
+      ok: true,
+      dados: { imagem: PREVIA_CAPA_EXEMPLO },
+    }),
+    publicar: async () => ({ ok: true, dados: { versao: 1 } }),
+  };
+}
+
+export const VERSAO_PRONTA: VersaoPublicada = {
+  id: "00000000-0000-4000-8000-000000001301",
+  versao: 1,
+  estado: "pronta",
+  paginas: 84,
+  lombadaMm: 9.2,
+  criadoEm: "2026-11-15T13:20:00Z",
+  qrEsperados: 8,
+  vozesProntas: 7,
+  capaUrl: PREVIA_CAPA_EXEMPLO,
+  previasUrls: [1, 2, 3, 4].map(pagina),
+};
+
+export const ACOES_VERSAO_FALSAS: AcoesVersao = {
+  estado: async () => ({ ok: true, dados: VERSAO_PRONTA }),
+  previas: async (de) => ({
+    ok: true,
+    dados: { urls: [0, 1, 2, 3].map((i) => pagina(de + i)) },
+  }),
+  baixar: async () => ({ ok: true, dados: { url: "#" } }),
+};
