@@ -72,7 +72,7 @@ export async function GET(
           : null,
       maiuscula,
     });
-    const c = await conferirQr(r.pdf, r.url);
+    const c = await conferirQr(r.pdf, r.url, r.marca);
     if (!c.ok)
       return pagina(422, "Não conseguimos conferir o QR. Tente de novo.");
     after(() =>

@@ -93,7 +93,6 @@ export const LAYOUT_MIOLO = {
   fotoMensagemMm: { largura: 36, altura: 36 }, // caixa fixa da foto de uma mensagem
 } as const;
 
-
 // ── Coleta ───────────────────────────────────────────────────────────────
 export const MAX_GRAVACAO_MIN = 30; // por gravação (espelhado em privado.max_gravacao_s); a conversa segue em partes (P39)
 export const GRAVACAO_KBPS = 48; // voz em Opus/AAC; 30 min ≈ 11 MB
