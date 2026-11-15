@@ -74,6 +74,8 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P66** Livro A5, capa dura 4x0 laminada, miolo 4x4 couché 115 g; história em página nova (qualquer lado); cor da capa impressa; especificação provisória versionada.
 - **P67** Sem teto de páginas (80 no plano, extra pelo orçamento); membro monta e baixa, só o responsável publica; não revisada bloqueia; sem QR que toca, sai sem QR.
 - **P68** Evals no admin: só números e códigos; abrir o texto de uma história pede consentimento do responsável, por livro; a pessoa vê só o tipo da falha, nunca o código.
+- **P69** Arquivar áudio: qualquer membro que escreve, inclusive o que já virou história; só sai das listas e da fila, nunca é apagado; história e QR continuam.
+- **P70** Foto da capa com foco: arrastar a foto no retângulo; o foco (0 a 100%) vai no conteúdo congelado e o PDF enquadra igual à prévia.
 
 ## Técnicas
 

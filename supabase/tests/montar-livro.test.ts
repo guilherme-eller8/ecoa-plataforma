@@ -25,6 +25,15 @@ const down = readFileSync(
   path.join(RAIZ, "reversao/20261123120000_montar_livro.down.sql"),
   "utf8",
 );
+// O foco da capa (20261125) vem depois: a reversão desfaz primeiro ele e o sobe de novo no fim.
+const focoUp = readFileSync(
+  path.join(RAIZ, "migrations/20261125130000_capa_foco.sql"),
+  "utf8",
+);
+const focoDown = readFileSync(
+  path.join(RAIZ, "reversao/20261125130000_capa_foco.down.sql"),
+  "utf8",
+);
 
 let db: PGlite;
 let ana: string; // responsável do livro A
@@ -158,11 +167,13 @@ async function salvar(
     ordemM: string[];
     fora: string[];
     foto: string | null;
+    focoX: number;
+    focoY: number;
   }> = {},
 ) {
   const r = await comoMembro(
     usuario,
-    `select public.montagem_salvar($1, $2, $3, null, null, $4, $5, $6::uuid[], $7::uuid[], $8::uuid[]) as rev`,
+    `select public.montagem_salvar($1, $2, $3, null, null, $4, $5, $6::uuid[], $7::uuid[], $8::uuid[], $9::smallint, $10::smallint) as rev`,
     [
       livro,
       rev,
@@ -172,6 +183,8 @@ async function salvar(
       o.ordemH ?? [],
       o.ordemM ?? [],
       o.fora ?? [],
+      o.focoX ?? 50,
+      o.focoY ?? 50,
     ],
   );
   return r.erro ? { erro: r.erro } : { rev: Number(r.linhas![0].rev) };
@@ -347,6 +360,30 @@ describe("montagem", () => {
     });
     expect(await salvar(beto, livroA, 1)).toEqual({ erro: "sem_permissao" });
     expect(await conteudo(beto, livroA)).toEqual({ erro: "sem_permissao" });
+  });
+
+  it("guarda o foco da foto da capa, leva-o ao conteúdo e recusa o que passa de 0 a 100", async () => {
+    const [{ id: foto }] = await sql<{ id: string }>(
+      `insert into public.photos (book_id, caminho, largura, altura)
+       values ($1::uuid, 'livros/' || $1::text || '/acervo/' || gen_random_uuid()::text || '.jpg', 2000, 1500) returning id`,
+      [livroA],
+    );
+    let rev = (await conteudo(caio, livroA)).livro.rev;
+    expect(
+      await salvar(caio, livroA, rev, { foto, focoX: 20, focoY: 80 }),
+    ).toMatchObject({});
+    rev = (await conteudo(caio, livroA)).livro.rev;
+    const capa = (await conteudo(caio, livroA)).livro.capa_foto;
+    expect(capa).toMatchObject({ foco_x: 20, foco_y: 80, largura: 2000 });
+    expect(await salvar(caio, livroA, rev, { foto, focoX: 101 })).toEqual({
+      erro: "dados_invalidos",
+    });
+    expect(await salvar(caio, livroA, rev, { foto, focoY: -1 })).toEqual({
+      erro: "dados_invalidos",
+    });
+    // Sem foto, não há foco no conteúdo congelado.
+    expect(await salvar(caio, livroA, rev, { foto: null })).toMatchObject({});
+    expect((await conteudo(caio, livroA)).livro.capa_foto).toBeNull();
   });
 });
 
@@ -552,6 +589,7 @@ describe("QR de mensagem no player", () => {
 
 describe("reversão", () => {
   it("trava com publicação; forçada passa e sobe de novo", async () => {
+    await db.exec(focoDown);
     await expect(db.exec(down)).rejects.toThrow(/reversao_com_publicacoes/);
     await db.exec(
       `set ecoa.reversao_destrutiva = 'sim'; ${down}; reset ecoa.reversao_destrutiva;`,
@@ -561,5 +599,6 @@ describe("reversão", () => {
     );
     expect(r.t).toBeNull();
     await db.exec(up);
+    await db.exec(focoUp);
   });
 });

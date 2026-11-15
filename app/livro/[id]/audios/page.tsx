@@ -4,6 +4,7 @@ import { TelaAudios } from "@/components/telas/tela-audios";
 import { situacaoDosAudios } from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { audiosDoLivro, livroDaTela } from "@/lib/livro/dados";
+import { acoesDoLivro } from "../ligar-acoes";
 
 export const metadata: Metadata = { title: "Áudios recebidos · Ecoa Memórias" };
 
@@ -29,6 +30,7 @@ async function Audios({ id }: { id: string }) {
   return (
     <TelaAudios
       livro={tela}
+      acoes={acoesDoLivro(id).arquivar}
       audios={audios.map((a) => ({ ...a, situacao: situacoes.get(a.id) }))}
     />
   );

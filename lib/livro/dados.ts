@@ -216,7 +216,7 @@ export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
   const { data } = await supabase
     .from("recordings")
     .select(
-      "id, origem, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, lote_id, lote_total, lote_ordem, prompts(texto)",
+      "id, origem, titulo, nome_arquivo, caminho, duracao_s, tamanho_bytes, recebido_em, processado_em, arquivado_em, lote_id, lote_total, lote_ordem, prompts(texto)",
     )
     .eq("book_id", livro)
     .eq("upload", "recebido")
@@ -237,6 +237,7 @@ export async function audiosDoLivro(livro: string): Promise<AudioDaTela[]> {
     recebidoEm: a.recebido_em ?? "",
     url: urls.get(a.caminho) ?? null,
     processado: Boolean(a.processado_em),
+    arquivado: Boolean(a.arquivado_em),
     // Prompt 7: arquivos do mesmo envio (lote ou partes da conversa) aparecem juntos.
     envio:
       a.lote_id && (a.lote_total ?? 1) > 1
@@ -252,6 +253,7 @@ export async function totalDeAudios(livro: string): Promise<number> {
     .from("recordings")
     .select("id", { count: "exact", head: true })
     .eq("book_id", livro)
-    .eq("upload", "recebido");
+    .eq("upload", "recebido")
+    .is("arquivado_em", null);
   return count ?? 0;
 }

@@ -33,7 +33,13 @@ function livroCompleto(): ConteudoDoLivro {
     { caminho: foto(1), largura: 2400, altura: 1600 },
     { caminho: foto(2), largura: 1200, altura: 1800 },
   ];
-  c.livro.capa_foto = { caminho: foto(4), largura: 2000, altura: 1500 };
+  c.livro.capa_foto = {
+    caminho: foto(4),
+    largura: 2000,
+    altura: 1500,
+    foco_x: 50,
+    foco_y: 50,
+  };
   c.mensagens[0].foto = `livros/${LIVRO}/mensagens/${c.mensagens[0].id}-foto.jpg`;
   return c;
 }

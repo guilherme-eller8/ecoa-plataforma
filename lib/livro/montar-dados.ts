@@ -24,6 +24,13 @@ export type FotoParaTypst = {
   larguraMm: number;
   alturaMm: number;
 };
+/** A foto da capa: a imagem cobre a caixa (cover) e o foco decide que parte fica à vista. */
+export type FotoDaCapaParaTypst = FotoParaTypst & {
+  imgLarguraMm: number;
+  imgAlturaMm: number;
+  dxMm: number; // deslocamento da imagem dentro da caixa (≤ 0)
+  dyMm: number;
+};
 export type FotoPedida = {
   arquivo: string; // nome local no Typst: nunca o caminho do Storage
   bucket: "acervo" | "mensagens";
@@ -218,7 +225,7 @@ export type DadosCapa = {
   subtitulo: string | null;
   autor: string | null;
   linhasMax: number;
-  foto: FotoParaTypst | null;
+  foto: FotoDaCapaParaTypst | null;
   marca: string;
 };
 
@@ -230,6 +237,32 @@ export function fotoDaCapaMm() {
     ESPEC_GRAFICA.capa.projecaoMm -
     2 * margemTextoMm;
   return { larguraMm: larg, alturaMm: 105 };
+}
+
+/**
+ * A imagem cobre a caixa sem deformar; o que sobra de um lado é cortado conforme o foco
+ * (0 = mostra o começo da foto, 100 = o fim, 50 = centro). Sem proporção conhecida: 4:3.
+ */
+export function enquadrarFoto(
+  caixa: { larguraMm: number; alturaMm: number },
+  foto: { largura: number | null; altura: number | null },
+  foco: { x: number; y: number },
+) {
+  const r =
+    foto.largura && foto.altura && foto.largura > 0 && foto.altura > 0
+      ? foto.largura / foto.altura
+      : 4 / 3;
+  const quadro = caixa.larguraMm / caixa.alturaMm;
+  const imgLarguraMm = r > quadro ? caixa.alturaMm * r : caixa.larguraMm;
+  const imgAlturaMm = r > quadro ? caixa.alturaMm : caixa.larguraMm / r;
+  const pct = (n: number) => Math.min(100, Math.max(0, n)) / 100;
+  const arred = (n: number) => Math.round(n * 100) / 100 + 0; // + 0 troca -0 por 0
+  return {
+    imgLarguraMm: arred(imgLarguraMm),
+    imgAlturaMm: arred(imgAlturaMm),
+    dxMm: arred(-(imgLarguraMm - caixa.larguraMm) * pct(foco.x)),
+    dyMm: arred(-(imgAlturaMm - caixa.alturaMm) * pct(foco.y)),
+  };
 }
 
 export function montarDadosCapa(
@@ -277,7 +310,14 @@ export function montarDadosCapa(
       subtitulo: conteudo.livro.subtitulo?.trim() || null,
       autor: conteudo.livro.autor?.trim() || null,
       linhasMax: TITULO_CAPA_LINHAS,
-      foto: foto ? { arquivo, ...caixa } : null,
+      foto:
+        foto && f
+          ? {
+              arquivo,
+              ...caixa,
+              ...enquadrarFoto(caixa, f, { x: f.foco_x, y: f.foco_y }),
+            }
+          : null,
       marca: MARCA,
     },
   };

@@ -328,7 +328,8 @@ export async function situacaoDosAudios(
     .from("recordings")
     .select("id, lote_id, lote_total, duracao_s, recebido_em, processado_em")
     .eq("book_id", livro)
-    .eq("upload", "recebido");
+    .eq("upload", "recebido")
+    .is("arquivado_em", null); // P69: arquivado não tem situação nem aparece na home
   const ids = (recs ?? []).map((r) => r.id);
   const { data: srs } = ids.length
     ? await supabase

@@ -1,14 +1,20 @@
 "use client";
 
-// Áudios recebidos: tudo o que já chegou, com player. Nada se apaga nesta fase.
+// Áudios recebidos: tudo o que já chegou, com player. Nada se apaga: arquivar tira o áudio da
+// lista (P69), mesmo o que já virou história, e desarquivar o devolve.
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AtualizarAoVivo } from "@/components/ui/atualizar-ao-vivo";
-import { classesDoBotao } from "@/components/ui/botao";
+import { Botao, classesDoBotao } from "@/components/ui/botao";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { IconeMicrofone, IconeSubir } from "@/components/ui/icones";
 import { formatarDuracao } from "@/lib/audios/formatos";
-import type { AudioDaTela, LivroDaTela } from "@/lib/livro/tipos";
+import type {
+  AcoesArquivar,
+  AudioDaTela,
+  LivroDaTela,
+} from "@/lib/livro/tipos";
 
 const DATA = new Intl.DateTimeFormat("pt-BR", {
   day: "numeric",
@@ -99,15 +105,44 @@ function Situacao({ livroId, audio }: { livroId: string; audio: AudioDaTela }) {
 export function TelaAudios({
   livro,
   audios,
+  acoes,
   vitrine = false,
 }: {
   livro: LivroDaTela;
   audios: AudioDaTela[];
+  acoes?: AcoesArquivar;
   vitrine?: boolean; // só na vitrine: sem Supabase, sem canal
 }) {
+  const router = useRouter();
   const nova = `/livro/${livro.id}/historias/nova`;
+  const [ocupado, setOcupado] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const ativos = audios.filter((a) => !a.arquivado);
+  const arquivados = audios.filter((a) => a.arquivado);
+  const pode = livro.podeEscrever && Boolean(acoes);
+
+  async function arquivar(a: AudioDaTela, sim: boolean) {
+    if (!acoes) return;
+    setOcupado(a.id);
+    setAviso(null);
+    const r = await acoes.arquivar(a.id, sim);
+    setOcupado(null);
+    if (!r.ok) {
+      setAviso(r.mensagem);
+      return;
+    }
+    setAviso(
+      !sim
+        ? "O áudio voltou para a lista."
+        : a.situacao?.tipo === "historia"
+          ? "Arquivado. A história e o QR dele continuam no livro."
+          : "Arquivado. Dá para desarquivar quando quiser.",
+    );
+    router.refresh();
+  }
+
   // Algo ainda vai mudar de situação sozinho: a tela relê o servidor e assina o canal do livro.
-  const andando = audios.some((a) => {
+  const andando = ativos.some((a) => {
     const s = a.situacao;
     if (!s) return !a.processado;
     return s.tipo === "historia"
@@ -116,6 +151,27 @@ export function TelaAudios({
           s.estado === "escrevendo"
       : Boolean(s.andando);
   });
+
+  // Nome de arquivo ("PTT-2026…opus") não é título de livro: sem título nem pergunta, o
+  // cartão mostra a data, e o arquivo vai para a linha de apoio.
+  function textos(a: AudioDaTela) {
+    const quando = a.recebidoEm ? DATA.format(new Date(a.recebidoEm)) : null;
+    const gravadoAqui = a.origem !== "upload" && a.origem !== "lote";
+    const tipo = a.origem === "conversa" ? "Conversa" : "Áudio";
+    const nome =
+      a.titulo ??
+      a.pergunta ??
+      (quando ? `${tipo} de ${quando.split(",")[0]}` : tipo);
+    const apoio = [
+      ORIGEM[a.origem]?.(livro.autor),
+      a.titulo || a.pergunta || gravadoAqui ? quando : a.nomeArquivo,
+      formatarDuracao(a.duracaoS),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return { quando, nome, apoio };
+  }
+
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-3xl lg:max-w-5xl">
       {vitrine ? null : <AtualizarAoVivo livroId={livro.id} ativo={andando} />}
@@ -129,11 +185,16 @@ export function TelaAudios({
         <h1 className="font-livro text-livro-28 text-tinta leading-tight">
           Áudios recebidos
         </h1>
-        {audios.length ? (
+        {ativos.length ? (
           <p className="text-ui-17 text-tinta-2">
-            {audios.length === 1
+            {ativos.length === 1
               ? "1 áudio guardado"
-              : `${audios.length} áudios guardados`}
+              : `${ativos.length} áudios guardados`}
+          </p>
+        ) : null}
+        {aviso ? (
+          <p role="status" className="text-ui-15 text-floresta">
+            {aviso}
           </p>
         ) : null}
       </div>
@@ -152,63 +213,62 @@ export function TelaAudios({
         />
       ) : (
         <>
-          <ul className="grid items-start gap-4 lg:grid-cols-2">
-            {audios.map((a, i) => {
-              // Prompt 7: o 1º arquivo de um envio abre o grupo ("8 áudios · 13 de nov.").
-              const abreEnvio =
-                a.envio && audios[i - 1]?.envio?.id !== a.envio.id;
-              const doEnvio = a.envio
-                ? audios.filter((x) => x.envio?.id === a.envio!.id).length
-                : 0;
-              // Nome de arquivo ("PTT-2026…opus") não é título de livro: sem título nem
-              // pergunta, o cartão mostra a data, e o arquivo vai para a linha de apoio.
-              const quando = a.recebidoEm
-                ? DATA.format(new Date(a.recebidoEm))
-                : null;
-              const gravadoAqui = a.origem !== "upload" && a.origem !== "lote";
-              const tipo = a.origem === "conversa" ? "Conversa" : "Áudio";
-              const nome =
-                a.titulo ??
-                a.pergunta ??
-                (quando ? `${tipo} de ${quando.split(",")[0]}` : tipo);
-              const apoio = [
-                ORIGEM[a.origem]?.(livro.autor),
-                a.titulo || a.pergunta || gravadoAqui ? quando : a.nomeArquivo,
-                formatarDuracao(a.duracaoS),
-              ]
-                .filter(Boolean)
-                .join(" · ");
-              return (
-                <li key={a.id} className="flex flex-col gap-3">
-                  {abreEnvio ? (
-                    <p className="text-ui-15 text-tinta-2 pt-2 font-medium">
-                      {a.envio!.total === doEnvio
-                        ? `${doEnvio} áudios enviados juntos`
-                        : `${doEnvio} de ${a.envio!.total} áudios enviados juntos`}
-                      {quando ? ` · ${quando.split(",")[0]}` : ""}
-                    </p>
-                  ) : null}
-                  <div className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
-                    <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
-                      {nome}
-                    </p>
-                    {a.titulo && a.pergunta ? (
-                      <p className="text-ui-15 text-tinta-2">
-                        Responde: {a.pergunta}
+          {ativos.length === 0 ? (
+            <p className="text-ui-17 text-tinta-2">
+              Todos os áudios estão arquivados.
+            </p>
+          ) : (
+            <ul className="grid items-start gap-4 lg:grid-cols-2">
+              {ativos.map((a, i) => {
+                // Prompt 7: o 1º arquivo de um envio abre o grupo ("8 áudios · 13 de nov.").
+                const abreEnvio =
+                  a.envio && ativos[i - 1]?.envio?.id !== a.envio.id;
+                const doEnvio = a.envio
+                  ? ativos.filter((x) => x.envio?.id === a.envio!.id).length
+                  : 0;
+                const { quando, nome, apoio } = textos(a);
+                return (
+                  <li key={a.id} className="flex flex-col gap-3">
+                    {abreEnvio ? (
+                      <p className="text-ui-15 text-tinta-2 pt-2 font-medium">
+                        {a.envio!.total === doEnvio
+                          ? `${doEnvio} áudios enviados juntos`
+                          : `${doEnvio} de ${a.envio!.total} áudios enviados juntos`}
+                        {quando ? ` · ${quando.split(",")[0]}` : ""}
                       </p>
                     ) : null}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                      <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
-                        {apoio}
+                    <div className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
+                      <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
+                        {nome}
                       </p>
-                      <Situacao livroId={livro.id} audio={a} />
+                      {a.titulo && a.pergunta ? (
+                        <p className="text-ui-15 text-tinta-2">
+                          Responde: {a.pergunta}
+                        </p>
+                      ) : null}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                          {apoio}
+                        </p>
+                        <Situacao livroId={livro.id} audio={a} />
+                      </div>
+                      <Player url={a.url} nome={nome} />
+                      {pode ? (
+                        <Botao
+                          variante="texto"
+                          className="self-start"
+                          carregando={ocupado === a.id}
+                          onClick={() => void arquivar(a, true)}
+                        >
+                          Arquivar
+                        </Botao>
+                      ) : null}
                     </div>
-                    <Player url={a.url} nome={nome} />
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           {livro.podeEscrever ? (
             <Link
               href={nova}
@@ -220,6 +280,45 @@ export function TelaAudios({
               <IconeMicrofone tamanho={20} />
               <span>Nova história</span>
             </Link>
+          ) : null}
+
+          {arquivados.length ? (
+            <details className="border-linha border-t pt-6">
+              <summary className="text-ui-17 text-floresta min-h-alvo cursor-pointer font-medium">
+                {arquivados.length === 1
+                  ? "1 áudio arquivado"
+                  : `${arquivados.length} áudios arquivados`}
+              </summary>
+              <ul className="mt-4 grid items-start gap-4 lg:grid-cols-2">
+                {arquivados.map((a) => {
+                  const { nome, apoio } = textos(a);
+                  return (
+                    <li
+                      key={a.id}
+                      className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5"
+                    >
+                      <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
+                        {nome}
+                      </p>
+                      <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                        {apoio}
+                      </p>
+                      <Player url={a.url} nome={nome} />
+                      {pode ? (
+                        <Botao
+                          variante="secundario"
+                          className="self-start"
+                          carregando={ocupado === a.id}
+                          onClick={() => void arquivar(a, false)}
+                        >
+                          Desarquivar
+                        </Botao>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </details>
           ) : null}
         </>
       )}

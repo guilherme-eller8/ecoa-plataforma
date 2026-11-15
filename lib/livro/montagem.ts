@@ -9,6 +9,11 @@ const Foto = z.object({
   largura: z.number().int().positive().nullable(),
   altura: z.number().int().positive().nullable(),
 });
+const FotoDaCapa = Foto.extend({
+  // Onde a foto "foca" no retângulo da capa, em % da foto (50/50 = centro). Versões antigas não têm.
+  foco_x: z.number().int().min(0).max(100).default(50),
+  foco_y: z.number().int().min(0).max(100).default(50),
+});
 const Qr = z.object({ codigo: z.string(), ligado: z.boolean() }).nullable();
 
 export const HistoriaDoLivro = z.object({
@@ -42,7 +47,7 @@ export const ConteudoDoLivro = z.object({
     autor: z.string().nullable(),
     capa_cor: z.string(),
     rev: z.number().int(),
-    capa_foto: Foto.nullable(),
+    capa_foto: FotoDaCapa.nullable(),
   }),
   historias: z.array(HistoriaDoLivro),
   mensagens: z.array(MensagemDoLivro),

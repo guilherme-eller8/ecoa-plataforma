@@ -12,6 +12,7 @@ import {
   useSalvarMontagem,
 } from "@/components/montar/moldura";
 import { UploadFotos } from "@/components/fotos/upload-fotos";
+import { FocoDaFoto } from "@/components/montar/foco-da-foto";
 import { PreviaDaCapa } from "@/components/montar/previa-capa";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
@@ -189,6 +190,8 @@ export function TelaMontarConteudo({
       dedicatoria: ded,
       capaFotoId: montagem.capaFotoId,
       capaCor: montagem.capaCor,
+      capaFocoX: montagem.capaFocoX,
+      capaFocoY: montagem.capaFocoY,
       ordemHistorias: h.map((x) => x.id),
       ordemMensagens: m.map((x) => x.id),
       fora: h.filter((x) => !x.incluida).map((x) => x.id),
@@ -407,6 +410,8 @@ export function TelaMontarCapa({
   const [subtitulo, setSubtitulo] = useState(montagem.subtitulo);
   const [fotoId, setFotoId] = useState(montagem.capaFotoId);
   const [cor, setCor] = useState<CorDaCapa>(montagem.capaCor);
+  const [focoX, setFocoX] = useState(montagem.capaFocoX);
+  const [focoY, setFocoY] = useState(montagem.capaFocoY);
   const [escolherFoto, setEscolherFoto] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [previa, setPrevia] = useState<string | null>(previaInicial);
@@ -425,7 +430,13 @@ export function TelaMontarCapa({
   const contagem = useContagem(acoes.contar, versaoSalva);
   const paginas = contagem.contagem?.paginas ?? 80;
 
-  const salvar = (t: string, s: string, f: string | null, c: CorDaCapa) =>
+  const salvar = (
+    t: string,
+    s: string,
+    f: string | null,
+    c: CorDaCapa,
+    foco: { x: number; y: number } = { x: focoX, y: focoY },
+  ) =>
     void salvarMontagem((rev) => ({
       rev,
       titulo: t,
@@ -433,6 +444,8 @@ export function TelaMontarCapa({
       dedicatoria: montagem.dedicatoria,
       capaFotoId: f,
       capaCor: c,
+      capaFocoX: foco.x,
+      capaFocoY: foco.y,
       ordemHistorias: montagem.historias.map((h) => h.id),
       ordemMensagens: montagem.mensagens.map((m) => m.id),
       fora: montagem.historias.filter((h) => !h.incluida).map((h) => h.id),
@@ -464,7 +477,7 @@ export function TelaMontarCapa({
     let vivo = true;
     const t = setTimeout(() => {
       void acoes
-        .previaCapa({ titulo, subtitulo, fotoId, cor, paginas })
+        .previaCapa({ titulo, subtitulo, fotoId, focoX, focoY, cor, paginas })
         .then((r) => {
           if (!vivo) return;
           setPreviaErro(!r.ok);
@@ -475,7 +488,7 @@ export function TelaMontarCapa({
       vivo = false;
       clearTimeout(t);
     };
-  }, [titulo, subtitulo, fotoId, cor, paginas, acoes]);
+  }, [titulo, subtitulo, fotoId, focoX, focoY, cor, paginas, acoes]);
 
   const longo = (contagem.contagem?.linhasDoTitulo ?? 0) > TITULO_CAPA_LINHAS;
   const fotoEscolhida = montagem.fotos.find((f) => f.id === fotoId);
@@ -562,15 +575,25 @@ export function TelaMontarCapa({
             <span className="text-ui-15 text-tinta font-medium">
               Foto da capa
             </span>
+            {fotoEscolhida ? (
+              <FocoDaFoto
+                url={fotoEscolhida.url}
+                largura={fotoEscolhida.largura}
+                altura={fotoEscolhida.altura}
+                x={focoX}
+                y={focoY}
+                desabilitado={!pode}
+                aoMudar={(nx, ny) => {
+                  setFocoX(nx);
+                  setFocoY(ny);
+                }}
+                aoSoltar={(nx, ny) => {
+                  if (titulo.trim())
+                    salvar(titulo, subtitulo, fotoId, cor, { x: nx, y: ny });
+                }}
+              />
+            ) : null}
             <div className="flex items-center gap-4">
-              {fotoEscolhida ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={fotoEscolhida.url}
-                  alt="Foto da capa"
-                  className="rounded-interno size-20 object-cover"
-                />
-              ) : null}
               <Botao
                 variante="secundario"
                 disabled={!pode}
@@ -622,8 +645,11 @@ export function TelaMontarCapa({
                 const nova = ids[0];
                 if (!nova) return;
                 setFotoId(nova);
+                setFocoX(50);
+                setFocoY(50);
                 setEscolherFoto(false);
-                if (titulo.trim()) salvar(titulo, subtitulo, nova, cor);
+                if (titulo.trim())
+                  salvar(titulo, subtitulo, nova, cor, { x: 50, y: 50 });
                 // A lista do acervo (com a foto nova) vem do servidor, depois de salvar.
                 void esperar().then(() => router.refresh());
               }}
@@ -647,8 +673,11 @@ export function TelaMontarCapa({
                   className={`rounded-interno block aspect-square w-full overflow-hidden border-2 ${f.id === fotoId ? "border-floresta" : "border-transparent"}`}
                   onClick={() => {
                     setFotoId(f.id);
+                    setFocoX(50);
+                    setFocoY(50);
                     setEscolherFoto(false);
-                    if (titulo.trim()) salvar(titulo, subtitulo, f.id, cor);
+                    if (titulo.trim())
+                      salvar(titulo, subtitulo, f.id, cor, { x: 50, y: 50 });
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}

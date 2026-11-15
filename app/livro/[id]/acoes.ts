@@ -6,7 +6,11 @@
 // 3. registra o evento depois da resposta.
 // A chave secreta só assina URLs do Storage, depois de conferir o caminho com a regex do banco.
 
-import { dispararEscrita, dispararSeRecebida } from "@/lib/pipeline/disparo";
+import {
+  dispararEscrita,
+  dispararGravacao,
+  dispararSeRecebida,
+} from "@/lib/pipeline/disparo";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
@@ -1005,6 +1009,30 @@ export async function confirmarAudio(
       com_pergunta: Boolean(a.prompt_id),
     });
   after(() => dispararSeRecebida(a));
+  atualizar(livroId);
+  return { ok: true };
+}
+
+/**
+ * P69: arquivar tira o áudio das listas, nunca o apaga; a história e o QR dele continuam.
+ * Desarquivar um áudio que o arquivar tirou da fila (ainda sem história) o põe na fila de novo.
+ */
+export async function arquivarAudio(
+  livroId: string,
+  id: string,
+  arquivar: boolean,
+): Promise<Resposta> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  if (!z.uuid().safeParse(id).success)
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  const { data, error } = await c.supabase.rpc("audio_arquivar", {
+    p_book: c.livro.id,
+    p_id: id,
+    p_arquivar: arquivar,
+  });
+  if (error) return falhou(error);
+  if (data) after(() => dispararGravacao(id, `desarquivou:${Date.now()}`));
   atualizar(livroId);
   return { ok: true };
 }

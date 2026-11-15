@@ -371,6 +371,7 @@ describe("regras genéricas (pegam tabela ou função nova esquecida)", () => {
       "privado.livro_editavel",
       "public.aceitar_convite",
       "public.aplicar_proposta",
+      "public.audio_arquivar",
       "public.cancelar_convite",
       "public.confirmar_divisao",
       "public.consentir_processamento_ia",

@@ -103,7 +103,7 @@ const salvarMontagem = (
 ) =>
   comoMembro(
     usuario,
-    `select public.montagem_salvar($1, $2, $3, null, null, null, 'terracota', '{}'::uuid[], '{}'::uuid[], '{}'::uuid[]) as rev`,
+    `select public.montagem_salvar($1, $2, $3, null, null, null, 'terracota', '{}'::uuid[], '{}'::uuid[], '{}'::uuid[], 50::smallint, 50::smallint) as rev`,
     [l, rev, titulo],
   );
 

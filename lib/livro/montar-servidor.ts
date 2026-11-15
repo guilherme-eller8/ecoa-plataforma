@@ -52,7 +52,7 @@ export async function montagemDaTela(
     lerMontagem(livro),
     db
       .from("book_layouts")
-      .select("capa_foto_id, titulo")
+      .select("capa_foto_id, capa_foco_x, capa_foco_y, titulo")
       .eq("book_id", livro)
       .maybeSingle(),
     versoesDoLivro(livro),
@@ -82,6 +82,8 @@ export async function montagemDaTela(
     dedicatoria: conteudo.livro.dedicatoria ?? "",
     capaCor: corDaCapa(conteudo.livro.capa_cor || COR_CAPA_PADRAO),
     capaFotoId: layout.data?.capa_foto_id ?? null,
+    capaFocoX: layout.data?.capa_foco_x ?? 50,
+    capaFocoY: layout.data?.capa_foco_y ?? 50,
     capaFotoUrl,
     fotos: fotos.map((f) => ({
       id: f.id,

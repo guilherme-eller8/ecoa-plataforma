@@ -600,7 +600,14 @@ export function Vitrine({ tela }: { tela: Tela }) {
         />
       );
     case "audios":
-      return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_JAIR} vitrine />;
+      return (
+        <TelaAudios
+          livro={LIVRO_JAIR}
+          audios={AUDIOS_JAIR}
+          acoes={{ arquivar: async () => ({ ok: true }) }}
+          vitrine
+        />
+      );
     case "gravar-conversa":
     case "gravar-conversa-pergunta":
     case "gravar-conversa-partes":

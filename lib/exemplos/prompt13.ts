@@ -118,6 +118,8 @@ export function montagemDeExemplo(
     dedicatoria: c.livro.dedicatoria ?? "",
     capaCor: "terracota",
     capaFotoId: null,
+    capaFocoX: 50,
+    capaFocoY: 50,
     capaFotoUrl: null,
     fotos: [],
     historias: c.historias.map((h) => ({
