@@ -1,0 +1,66 @@
+// Frase curta de cada ação, para o admin ler a linha do tempo de um livro.
+import type { Acao } from "@/lib/eventos-acoes";
+
+const FRASES: Partial<Record<Acao, string>> = {
+  entrou: "Entrou",
+  plano_ativado: "Plano ativado",
+  plano_renovado: "Plano renovado",
+  acesso_reenviado: "Acesso reenviado",
+  plano_vencido: "Plano venceu",
+  gravou: "Gravou",
+  editou: "Editou uma história",
+  sugeriu: "Sugeriu um causo",
+  configurou: "Configurou o livro",
+  subiu_fotos: "Subiu fotos",
+  adicionou_pergunta: "Adicionou uma pergunta",
+  enviou_pergunta: "Enviou uma pergunta",
+  gerou_link_familia: "Gerou o link da família",
+  trocou_link_familia: "Trocou o link da família",
+  abriu_enquete: "Abriu a enquete",
+  encerrou_enquete: "Encerrou a enquete",
+  enquete_salvou: "Salvou a enquete",
+  votou: "Votou na enquete",
+  subiu_audio: "Subiu um áudio",
+  autor_consentiu: "O autor deu o consentimento",
+  gerou_link_autor: "Gerou o link do autor",
+  trocou_link_autor: "Trocou o link do autor",
+  historia_pronta: "Uma história ficou pronta",
+  memoria_falhou: "A memória da história falhou",
+  consentiu_ia: "Confirmou o uso de IA",
+  processamento_refeito: "Processamento refeito pelo admin",
+  divisao_proposta: "Divisão em histórias proposta",
+  divisao_confirmada: "Divisão em histórias confirmada",
+  historia_revisada: "Marcou uma história como pronta",
+  historia_reaberta: "Voltou uma história para rascunho",
+  restaurou_versao: "Restaurou uma versão",
+  pediu_proposta: "Pediu ajuda da IA",
+  aplicou_proposta: "Aceitou uma proposta da IA",
+  descartou_proposta: "Descartou uma proposta da IA",
+  qr_criado: "QR criado",
+  amostra_gerada: "Baixou a página de amostra",
+  qr_tocou: "Alguém ouviu pelo QR",
+  convidou: "Convidou um co-facilitador",
+  convite_aceito: "Convite aceito",
+  removeu_membro: "Removeu um membro",
+  saiu_do_livro: "Saiu do livro",
+  compartilhou_historia: "Compartilhou uma história",
+  compartilhada_tocada: "Alguém ouviu uma história compartilhada",
+  lembrou_pergunta: "Lembrou uma pergunta",
+  resumo_enviado: "Resumo semanal enviado",
+  deixou_mensagem: "Deixou uma mensagem",
+  mensagem_no_livro: "Mensagem marcada para o livro",
+  job_falhou: "Um job falhou",
+};
+
+export function frase(acao: string): string {
+  return (FRASES as Record<string, string>)[acao] ?? acao.replaceAll("_", " ");
+}
+
+export const PAPEL_ROTULO: Record<string, string> = {
+  responsavel: "Responsável",
+  cofacilitador: "Co-facilitador",
+  autor: "Autor",
+  familia: "Família",
+  admin: "Admin",
+  sistema: "Sistema",
+};

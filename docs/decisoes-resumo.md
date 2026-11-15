@@ -128,3 +128,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T50** `book_layouts` + `book_exports` congelada pelo banco com hash do que foi conferido; PDFs no Inngest com QR conferido por posição; QR vivo, papel congelado.
 - **T51** QR de mensagem: só com áudio transcrito, teto do link, arquivada para de tocar, publicada não se apaga.
 - **T52** Texto e QR em 100% K; capa em CMYK; fotos RGB até a gráfica pedir.
+- **T53** Aderência e erros no admin sem Sentry nem migration: `job_falhou` e `erro_servidor` em `events` (só ids e rota-padrão); link do autor aberto grava `entrou`; `events` só por `lib/eventos.ts` (escrita e `lerEventos`).

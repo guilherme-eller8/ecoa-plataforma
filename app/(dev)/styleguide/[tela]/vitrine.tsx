@@ -1,6 +1,17 @@
 "use client";
 
 import { AdminProcessamento } from "@/components/telas/admin-processamento";
+import { TelaAderencia } from "@/components/telas/tela-aderencia";
+import { TelaAderenciaLivro } from "@/components/telas/tela-aderencia-livro";
+import { TelaErros } from "@/components/telas/tela-erros";
+import {
+  FUNIL_ADERENCIA,
+  JOBS_FALSOS,
+  LINHA_DO_TEMPO_JAIR,
+  LINHAS_ADERENCIA,
+  PESSOAS_JAIR,
+  ROTAS_COM_ERRO,
+} from "@/lib/exemplos/prompt15";
 import { TelaAdmin } from "@/components/telas/tela-admin";
 import { TelaConfiguracoes } from "@/components/telas/tela-configuracoes";
 import { TelaHistoria } from "@/components/telas/tela-historia";
@@ -498,6 +509,37 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "audios-situacao":
       return <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_COM_SITUACAO} />;
+    case "admin-aderencia":
+      return (
+        <TelaAderencia linhas={LINHAS_ADERENCIA} funil={FUNIL_ADERENCIA} />
+      );
+    case "admin-aderencia-vazia":
+      return (
+        <TelaAderencia
+          linhas={[]}
+          funil={{
+            ...FUNIL_ADERENCIA,
+            livros: 0,
+            configurou: 0,
+            primeiraHistoria: 0,
+            cincoHistorias: 0,
+          }}
+        />
+      );
+    case "admin-aderencia-livro":
+      return (
+        <TelaAderenciaLivro
+          autorNome="Jair"
+          email="ana.souza@gmail.com"
+          linha={LINHAS_ADERENCIA[1]}
+          pessoas={PESSOAS_JAIR}
+          linhaDoTempo={LINHA_DO_TEMPO_JAIR}
+        />
+      );
+    case "admin-erros":
+      return <TelaErros jobs={JOBS_FALSOS} rotas={ROTAS_COM_ERRO} />;
+    case "admin-erros-vazio":
+      return <TelaErros jobs={[]} rotas={[]} />;
     case "admin-processamento":
       return (
         <TelaAdmin

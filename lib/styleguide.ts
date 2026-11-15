@@ -114,6 +114,12 @@ export const TELAS = [
   "versao-gerando",
   "versao-pronta",
   "versao-falhou",
+  // Prompt 15
+  "admin-aderencia",
+  "admin-aderencia-vazia",
+  "admin-aderencia-livro",
+  "admin-erros",
+  "admin-erros-vazio",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 
