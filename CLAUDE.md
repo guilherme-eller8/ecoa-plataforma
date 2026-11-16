@@ -56,7 +56,7 @@ EGM artifact directory: docs/designs
 1. `npm run build`, `npm run lint` e `npm test` sem erro (e `npm run test:e2e` quando houver tela).
 2. `npm run format`.
 3. Commit em português, no padrão Conventional Commits (`feat:`, `fix:`, `chore:`…).
-4. Depois do push, quando o deploy de prévia ficar pronto: consulte os erros de runtime da Vercel e confira cada rota nova no deploy de verdade. O EGM revisa o design, não pega bug de código nem de integração (T28).
+4. Depois do push, quando o deploy de prévia ficar pronto: consulte os erros de runtime da Vercel e confira as telas sem banco na prévia. A prévia não tem segredos de produção nem Inngest (T56): rota com banco se confere em produção depois do merge. O EGM revisa o design, não pega bug de código nem de integração (T28).
 5. Ao final, um resumo em 5 linhas, sem jargão: o que foi construído e como testar no celular.
 
 Um prompt por sessão: rode `/clear` entre prompts (e entre o design e a construção, nos prompts com [EGM]). O contexto vem deste arquivo, de `docs/mapa.md`, de `docs/decisoes-resumo.md` e das seções do PRD citadas, não da conversa anterior.
