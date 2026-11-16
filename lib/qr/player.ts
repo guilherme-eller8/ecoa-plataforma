@@ -1,6 +1,7 @@
 import "server-only";
 import { QR_AUDIO_URL_S } from "@/lib/config";
 import { segredoDaRede } from "@/lib/env-qr";
+import { registrarEvento } from "@/lib/eventos";
 import { inngest } from "@/lib/inngest/cliente";
 import { EVENTO_QR_RECORTAR } from "@/lib/qr/eventos";
 import { assinarLeitura } from "@/lib/storage/assinar";
@@ -8,11 +9,33 @@ import { clienteAdmin } from "@/lib/supabase/admin";
 import { chaveDeRede, ipDaRequisicao } from "./rede";
 import { OuvirQr, type EstadoPlayer } from "./tipos";
 
-/** Pede o recorte da voz ao Inngest. A reserva vence em 10 min e o próximo acesso pede de novo. */
-export async function pedirRecorte(codigo: string): Promise<void> {
-  await inngest
-    .send({ name: EVENTO_QR_RECORTAR, data: { codigo } })
-    .catch(() => undefined);
+/**
+ * Pede o recorte da voz ao Inngest, com uma nova tentativa. A reserva vence em 10 min e o próximo
+ * acesso pede de novo. Falhou: devolve false, loga e grava `erro_servidor` (a fila não aceitou o
+ * evento, por exemplo com a chave do Inngest trocada sem novo deploy). Nunca lança.
+ */
+export async function pedirRecorte(codigo: string): Promise<boolean> {
+  for (let tentativa = 0; tentativa < 2; tentativa++) {
+    try {
+      await inngest.send({ name: EVENTO_QR_RECORTAR, data: { codigo } });
+      return true;
+    } catch {
+      // tenta mais uma vez
+    }
+  }
+  console.error("[qr] a fila recusou o pedido do recorte da voz");
+  try {
+    await registrarEvento({
+      quem: null,
+      papel: "sistema",
+      acao: "erro_servidor",
+      livro: null,
+      detalhes: { rota: "fila:qr/recortar", tipo: "envio_recusado" },
+    });
+  } catch {
+    // Registrar o erro nunca pode causar outro.
+  }
+  return false;
 }
 
 /** URL assinada do recorte da voz (bucket qr), curta como a do player. */

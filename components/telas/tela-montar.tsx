@@ -792,6 +792,12 @@ export function TelaMontarConferir({
             Montando o livro de verdade para contar as páginas.
           </p>
         )}
+        <Link
+          href={`/livro/${livro.id}/montar/folhear`}
+          className={`${classesDoBotao({ variante: "secundario" })} mt-2 self-start`}
+        >
+          Folhear antes de publicar
+        </Link>
       </div>
 
       {erro ? <Aviso ok={false}>{erro}</Aviso> : null}

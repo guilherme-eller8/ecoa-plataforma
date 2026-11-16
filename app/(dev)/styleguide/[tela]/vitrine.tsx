@@ -160,6 +160,10 @@ import {
   PERGUNTAS_JAIR,
 } from "@/lib/exemplos/prompt4";
 import { TelaSemAcesso } from "@/components/telas/tela-sem-acesso";
+import {
+  TelaFolhear,
+  type AcoesFolhear,
+} from "@/components/telas/tela-folhear";
 import type { Resultado } from "@/lib/resultado";
 import { LIVROS_FALSOS, type Tela } from "@/lib/styleguide";
 
@@ -172,15 +176,29 @@ const lerDeExemplo = async () => [
 const acaoFalsa = async (): Promise<Resultado | null> => null;
 const nada = async () => {};
 
-// Prompt 10: folha da página de amostra, com a voz pronta ou ainda preparando.
-const AMOSTRA_FALSA = (pronta: boolean): AcoesAmostra => ({
+// Prompt 10 (refeita no P72): folha da página de amostra, com a voz pronta, preparando ou com a
+// fila recusando o pedido. A página é uma renderização de verdade do template, com texto falso.
+const AMOSTRA_FALSA = (
+  voz: "pronta" | "preparando" | "falhou",
+): AcoesAmostra => ({
   preparar: async () => ({
     ok: true,
     dados: {
       codigo: "7KQ2M9XA",
-      vozPronta: pronta,
+      vozPronta: voz === "pronta",
       desligado: false,
       responsavel: true,
+      envioFalhou: voz === "falhou",
+    },
+  }),
+  previa: async () => ({
+    ok: true,
+    dados: {
+      imagem:
+        voz === "pronta"
+          ? "/exemplo/amostra-com-qr.jpg"
+          : "/exemplo/amostra-sem-qr.jpg",
+      cortada: true,
     },
   }),
   desligar: async () => ({ ok: true }),
@@ -328,7 +346,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
             acoes={{
               ...acoesEditorFalsas("livre"),
               grupo: ACOES_GRUPO_FALSAS,
-              amostra: AMOSTRA_FALSA(true),
+              amostra: AMOSTRA_FALSA("pronta"),
             }}
           />
           <FolhaGrupo aberta aoFechar={() => {}} acoes={ACOES_GRUPO_FALSAS} />
@@ -438,12 +456,13 @@ export function Vitrine({ tela }: { tela: Tela }) {
                   ? "outra-tela"
                   : "livre",
             ),
-            amostra: AMOSTRA_FALSA(true),
+            amostra: AMOSTRA_FALSA("pronta"),
           }}
         />
       );
     case "editor-amostra":
     case "editor-amostra-preparando":
+    case "editor-amostra-falhou":
       return (
         <>
           <TelaEditor
@@ -455,7 +474,13 @@ export function Vitrine({ tela }: { tela: Tela }) {
             aberta
             aoFechar={() => {}}
             urlPdf="#"
-            acoes={AMOSTRA_FALSA(tela === "editor-amostra")}
+            acoes={AMOSTRA_FALSA(
+              tela === "editor-amostra"
+                ? "pronta"
+                : tela === "editor-amostra-falhou"
+                  ? "falhou"
+                  : "preparando",
+            )}
           />
         </>
       );
@@ -1002,5 +1027,35 @@ export function Vitrine({ tela }: { tela: Tela }) {
           acoes={ACOES_VERSAO_FALSAS}
         />
       );
+    // ── P72: folhear antes de publicar ──
+    case "folhear":
+    case "folhear-vazio":
+      return (
+        <TelaFolhear
+          livroId={LIVRO_JAIR.id}
+          autor={LIVRO_JAIR.autor}
+          acoes={acoesFolhearFalsas(tela === "folhear" ? 8 : 0)}
+        />
+      );
   }
+}
+
+// P72: as páginas são renderizações de verdade do template, com um livro de texto falso.
+function acoesFolhearFalsas(total: number): AcoesFolhear {
+  return {
+    folhear: async (de) => ({
+      ok: true,
+      dados: {
+        hash: "exemplo",
+        total,
+        capa: de === 1 && total ? "/exemplo/folhear-capa.svg" : null,
+        de,
+        urls: Array.from(
+          { length: Math.max(0, Math.min(4, total - de + 1)) },
+          (_, i) => `/exemplo/folhear-${de + i}.jpg`,
+        ),
+        provisorio: total > 0,
+      },
+    }),
+  };
 }

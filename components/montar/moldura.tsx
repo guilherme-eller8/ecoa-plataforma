@@ -110,12 +110,20 @@ export function MolduraDaMontagem({
   return (
     <>
       <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-7 px-5 pt-8 pb-36 md:max-w-2xl lg:max-w-4xl">
-        <Link
-          href={`/livro/${livroId}`}
-          className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-        >
-          ← Livro do {autor}
-        </Link>
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            href={`/livro/${livroId}`}
+            className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center"
+          >
+            ← Livro do {autor}
+          </Link>
+          <Link
+            href={`${base}/folhear`}
+            className="text-ui-15 text-floresta inline-flex min-h-11 items-center font-medium underline-offset-4 hover:underline"
+          >
+            Folhear o livro
+          </Link>
+        </div>
         <nav aria-label="Passos da montagem">
           <ol className="flex items-center gap-2">
             {PASSOS.map((p, i) => {

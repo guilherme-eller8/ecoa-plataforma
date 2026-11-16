@@ -8,7 +8,13 @@ import { z } from "zod";
 import { codigoDoErro, fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import type { Acao } from "@/lib/eventos-acoes";
+import { AMOSTRA_PREVIA_DPI } from "@/lib/config";
 import { livroDaAcao, type LivroComAcesso } from "@/lib/livro/acesso";
+import {
+  dadosDaAmostra,
+  gerarAmostraDaHistoria,
+} from "@/lib/livro/dados-amostra";
+import { rasterizarPaginas } from "@/lib/livro/pdf";
 import type { Resposta } from "@/lib/livro/tipos";
 import { codigoValido } from "@/lib/qr/codigo";
 import { pedirRecorte } from "@/lib/qr/player";
@@ -70,6 +76,7 @@ export async function prepararAmostra(
           vozPronta: false,
           desligado: true,
           responsavel,
+          envioFalhou: false,
         },
       };
     return { ok: false, mensagem: fraseDoErro(error) };
@@ -77,7 +84,8 @@ export async function prepararAmostra(
   const r = data?.[0];
   if (!r || !codigoValido(r.codigo)) return ERRO;
   if (!antes) evento(a, "qr_criado", historiaId);
-  if (r.pedir_audio) await pedirRecorte(r.codigo);
+  // A fila recusou: a folha diz na hora, em vez de esperar 2 min por uma voz que não vem.
+  const envioFalhou = r.pedir_audio ? !(await pedirRecorte(r.codigo)) : false;
   return {
     ok: true,
     dados: {
@@ -85,8 +93,51 @@ export async function prepararAmostra(
       vozPronta: r.audio_pronto,
       desligado: false,
       responsavel,
+      envioFalhou,
     },
   };
+}
+
+/**
+ * A página de amostra na tela (JPEG), antes da voz ficar pronta: a pessoa vê o resultado na hora.
+ * O PDF continua só com a voz pronta (P56). Na imagem o QR sai tracejado, para ninguém escanear
+ * da tela um código que ainda não toca.
+ */
+export async function previaAmostra(
+  livroId: string,
+  historiaId: string,
+): Promise<Resposta<{ imagem: string; cortada: boolean }>> {
+  if (!uuid.safeParse(historiaId).success) return ERRO;
+  const a = await livroDaAcao(livroId);
+  if (!a) return SEM_ACESSO;
+  const d = await dadosDaAmostra(a.livro.id, historiaId);
+  if (!d)
+    return {
+      ok: false,
+      mensagem: "Marque a história como pronta para ver a página.",
+    };
+  if (!d.codigo) return ERRO;
+  try {
+    const r = await gerarAmostraDaHistoria({ ...d, codigo: d.codigo });
+    const cobrir = d.vozPronta && !d.desligado ? [] : [r.marca];
+    const [jpeg] = await rasterizarPaginas(
+      r.pdf,
+      1,
+      1,
+      AMOSTRA_PREVIA_DPI,
+      cobrir,
+    );
+    if (!jpeg) return ERRO;
+    return {
+      ok: true,
+      dados: {
+        imagem: `data:image/jpeg;base64,${jpeg.toString("base64")}`,
+        cortada: r.cortado,
+      },
+    };
+  } catch {
+    return ERRO;
+  }
 }
 
 /** Só o responsável (o banco confere de novo). Vale com o plano vencido. */
