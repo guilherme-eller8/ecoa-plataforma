@@ -2,10 +2,15 @@ import "server-only";
 // Leituras das telas de histórias (prompt 6). Sempre com a sessão: a RLS decide, e as colunas
 // são listadas (stories tem grant por coluna: rascunho e erro ficam de fora).
 import type { Edicao, Estrutura, Marcacao, Segmento } from "@/lib/ai/schemas";
-import { ESPERA_LOTE_H, MAX_ARQUIVO_MIN } from "@/lib/config";
+import {
+  ESPERA_COMECAR_MIN,
+  ESPERA_LOTE_H,
+  MAX_ARQUIVO_MIN,
+} from "@/lib/config";
 import {
   FRASES_ESPERA,
   MOTIVOS_ESPERA,
+  motivoDaEspera,
   tipoDeFalha,
   type EstadoHistoria,
   type MotivoEspera,
@@ -379,17 +384,20 @@ export async function situacaoDosAudios(
       r.lote_total !== null &&
       (recebidasNoLote.get(r.lote_id) ?? 0) < r.lote_total &&
       agora - new Date(r.recebido_em ?? 0).getTime() < ESPERA_LOTE_H * 3600_000;
-    const motivo: MotivoEspera = r.processado_em
-      ? "descartada"
-      : r.duracao_s == null
-        ? "sem_duracao"
-        : r.duracao_s > MAX_ARQUIVO_MIN * 60
-          ? "longa"
-          : !iaConfirmada
-            ? "sem_consentimento"
-            : loteIncompleto
-              ? "lote_incompleto"
-              : "nao_recebido";
+    const motivo: MotivoEspera = motivoDaEspera(
+      {
+        processado: Boolean(r.processado_em),
+        duracaoS: r.duracao_s,
+        loteIncompleto,
+        recebidoEm: r.recebido_em,
+      },
+      {
+        iaConfirmada,
+        agora,
+        maxArquivoS: MAX_ARQUIVO_MIN * 60,
+        esperaComecarMin: ESPERA_COMECAR_MIN,
+      },
+    );
     const faltam =
       motivo === "lote_incompleto" && r.lote_id && r.lote_total
         ? r.lote_total - (recebidasNoLote.get(r.lote_id) ?? 0)
@@ -404,7 +412,12 @@ export async function situacaoDosAudios(
           : MOTIVOS_ESPERA[motivo],
       frase: FRASES_ESPERA[motivo],
       confirmar: motivo === "sem_consentimento",
-      andando: motivo === "nao_recebido" || motivo === "lote_incompleto",
+      tentar: motivo === "demorando",
+      // Demorando continua "andando": a tela segue relendo e muda sozinha quando começar.
+      andando:
+        motivo === "nao_recebido" ||
+        motivo === "lote_incompleto" ||
+        motivo === "demorando",
     });
   }
   return mapa;
@@ -462,6 +475,7 @@ export async function gravacoesGuardadas(
       recebidaEm: r.recebido_em ?? "",
       frase: s?.tipo === "espera" ? s.frase : "Guardada.",
       confirmar: s?.tipo === "espera" ? s.confirmar : false,
+      tentar: s?.tipo === "espera" ? Boolean(s.tentar) : false,
       andando: s?.tipo === "espera" ? s.andando : false,
     };
   });

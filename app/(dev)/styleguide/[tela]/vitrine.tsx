@@ -378,6 +378,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
           linkFamilia="https://app.ecoa-memorias.com.br/f/v1_exemplo"
           guardadas={GUARDADAS_JAIR}
           arquivarHistoria={{ arquivar: async () => ({ ok: true }) }}
+          tentarDeNovo={async () => ({ ok: true })}
           marcarVista={nada}
           vitrine={AO_VIVO_JAIR}
         />
@@ -538,7 +539,12 @@ export function Vitrine({ tela }: { tela: Tela }) {
       );
     case "audios-situacao":
       return (
-        <TelaAudios livro={LIVRO_JAIR} audios={AUDIOS_COM_SITUACAO} vitrine />
+        <TelaAudios
+          livro={LIVRO_JAIR}
+          audios={AUDIOS_COM_SITUACAO}
+          tentarDeNovo={async () => ({ ok: true })}
+          vitrine
+        />
       );
     case "admin-aderencia":
       return (

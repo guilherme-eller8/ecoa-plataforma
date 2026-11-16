@@ -28,7 +28,7 @@ export async function gravacoesOrfas(
   idadeMin: number,
 ): Promise<GravacaoOrfa[]> {
   // Prompt 7: toda origem; 48 h (cobre a cota diária adiada; áudio de teste antigo não volta).
-  const { data: candidatas } = await db
+  const { data: candidatas, error: erroCandidatas } = await db
     .from("recordings")
     .select(
       "id, book_id, lote_id, lote_total, recebido_em, para_historia, duracao_s",
@@ -43,33 +43,43 @@ export async function gravacoesOrfas(
     )
     .order("recebido_em")
     .limit(200);
+  // Consulta que falha não pode virar "nada a fazer": a execução da varredura acabaria
+  // "concluída" e a gravação ficaria parada sem ninguém saber (16/11). Falha alto.
+  if (erroCandidatas) throw new Error("fila:consulta");
   const lista = candidatas ?? [];
   if (lista.length === 0) return [];
   const lotes = [
     ...new Set(lista.flatMap((g) => (g.lote_id ? [g.lote_id] : []))),
   ];
-  const [{ data: comHistoria }, { data: livros }, { data: doLote }] =
-    await Promise.all([
-      db
-        .from("story_recordings")
-        .select("recording_id")
-        .in(
-          "recording_id",
-          lista.map((g) => g.id),
-        ),
-      db
-        .from("books")
-        .select("id")
-        .in("id", [...new Set(lista.map((g) => g.book_id))])
-        .not("ia_consentimento_em", "is", null),
-      lotes.length
-        ? db
-            .from("recordings")
-            .select("lote_id")
-            .in("lote_id", lotes)
-            .eq("upload", "recebido")
-        : Promise.resolve({ data: [] as { lote_id: string | null }[] }),
-    ]);
+  const [historias, consentimento, loteRecebido] = await Promise.all([
+    db
+      .from("story_recordings")
+      .select("recording_id")
+      .in(
+        "recording_id",
+        lista.map((g) => g.id),
+      ),
+    db
+      .from("books")
+      .select("id")
+      .in("id", [...new Set(lista.map((g) => g.book_id))])
+      .not("ia_consentimento_em", "is", null),
+    lotes.length
+      ? db
+          .from("recordings")
+          .select("lote_id")
+          .in("lote_id", lotes)
+          .eq("upload", "recebido")
+      : Promise.resolve({
+          data: [] as { lote_id: string | null }[],
+          error: null,
+        }),
+  ]);
+  if (historias.error || consentimento.error || loteRecebido.error)
+    throw new Error("fila:consulta");
+  const comHistoria = historias.data;
+  const livros = consentimento.data;
+  const doLote = loteRecebido.data;
   const ja = new Set((comHistoria ?? []).map((s) => s.recording_id));
   const consentidos = new Set((livros ?? []).map((b) => b.id));
   const recebidas = new Map<string, number>();

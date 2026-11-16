@@ -77,6 +77,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P69** Arquivar áudio: qualquer membro que escreve, inclusive o que já virou história; só sai das listas e da fila, nunca é apagado; história e QR continuam.
 - **P70** Foto da capa com foco: arrastar a foto no retângulo; o foco (0 a 100%) vai no conteúdo congelado e o PDF enquadra igual à prévia.
 - **P71** Arquivar história: qualquer membro que escreve; sai das listas e da montagem, nada é apagado (texto, áudio, QR e versões publicadas ficam); Desarquivar volta.
+- **P72** Gravação sem começar há 10 min: a tela admite a demora e oferece *Tentar de novo*; envio e varredura não falham mais em silêncio.
 
 ## Técnicas
 
