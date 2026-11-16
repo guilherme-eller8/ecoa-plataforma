@@ -17,10 +17,13 @@ import { clienteSessao } from "@/lib/supabase/servidor";
 import { normalizarTexto } from "@/lib/editor/conteudo";
 import type { PropostaDaTela } from "@/lib/editor/tipos";
 import { CHAVES_TAMANHO, type ChaveTamanho } from "@/lib/ui/tamanho";
+import { contarHistorias, type ResumoDasHistorias } from "@/lib/livro/agora";
+import { paginasEstimadas } from "@/lib/livro/paginas";
 import {
   COLUNAS_EDITAR,
   COLUNAS_LER,
   COLUNAS_LISTA,
+  COLUNAS_RESUMO,
   COLUNAS_SITUACAO,
   COLUNAS_VERSOES,
   deixadaForaDoLivro,
@@ -96,6 +99,35 @@ async function falhasDe(
     .eq("book_id", livro)
     .in("id", ids);
   return new Map((data ?? []).map((s) => [s.id, tipoDeFalha(s.erro)]));
+}
+
+/**
+ * Home (P72): páginas estimadas e quantas histórias estão prontas, para revisar e andando.
+ * Todas as histórias do livro, fora as arquivadas e as deixadas fora do livro.
+ */
+export async function resumoDasHistorias(
+  livro: string,
+): Promise<ResumoDasHistorias> {
+  const supabase = await clienteSessao();
+  const { data, error } = await supabase
+    .from("stories")
+    .select(COLUNAS_RESUMO)
+    .eq("book_id", livro)
+    .is("arquivada_em", null);
+  if (error)
+    console.error("[historias] resumo recusado", { codigo: error.code });
+  const linhas = (data ?? []).filter((s) => !deixadaForaDoLivro(s));
+  return {
+    paginas: paginasEstimadas(
+      linhas.map((s) => s.texto as Parameters<typeof paginasEstimadas>[0][0]),
+    ),
+    ...contarHistorias(
+      linhas.map((s) => ({
+        estado: s.estado,
+        revisada: Boolean(s.revisada_em),
+      })),
+    ),
+  };
 }
 
 export async function historiasDoLivro(
@@ -470,7 +502,7 @@ export async function gravacoesGuardadas(
 // ── Editor (prompt 8) ────────────────────────────────────────────────────
 
 const PAPEL_DO_FALANTE = {
-  entrevistador: "Entrevistador",
+  entrevistador: "Quem perguntou",
   outro: "Outra voz",
 } as const;
 

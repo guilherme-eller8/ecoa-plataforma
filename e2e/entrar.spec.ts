@@ -12,6 +12,20 @@ test("/entrar tem uma ação principal: Entrar com Google", async ({ page }) => 
   await expect(page.getByRole("button")).toHaveCount(2); // Google + "prefiro link por e-mail"
 });
 
+test("o logo do Google fica ao lado do texto, não em cima", async ({
+  page,
+}) => {
+  await page.goto("/entrar");
+  const botao = page.getByRole("button", { name: "Entrar com Google" });
+  const logo = await botao.locator("svg").boundingBox();
+  const texto = await botao.getByText("Entrar com Google").boundingBox();
+  // Mesma linha: o centro vertical do logo cai dentro da altura do texto.
+  const centro = logo!.y + logo!.height / 2;
+  expect(centro).toBeGreaterThan(texto!.y);
+  expect(centro).toBeLessThan(texto!.y + texto!.height);
+  expect(logo!.x + logo!.width).toBeLessThanOrEqual(texto!.x);
+});
+
 test("a marca usa a fonte do livro (Newsreader)", async ({ page }) => {
   await page.goto("/entrar");
   const marca = page.getByText("Ecoa Memórias").first();

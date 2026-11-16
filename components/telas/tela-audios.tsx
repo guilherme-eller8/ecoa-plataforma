@@ -9,7 +9,9 @@ import { AtualizarAoVivo } from "@/components/ui/atualizar-ao-vivo";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { IconeMicrofone, IconeSubir } from "@/components/ui/icones";
+import { PlayerVoz } from "@/components/ui/player-voz";
 import { formatarDuracao } from "@/lib/audios/formatos";
+import { CabecalhoLivro } from "@/components/livro/cabecalho-livro";
 import type {
   AcoesArquivar,
   AudioDaTela,
@@ -33,29 +35,27 @@ const ORIGEM: Partial<
   livre: (autor) => `Gravado por ${autor}`,
 };
 
-function Player({ url, nome }: { url: string | null; nome: string }) {
-  const [falhou, setFalhou] = useState(false);
+function Player({
+  url,
+  nome,
+  duracaoS,
+}: {
+  url: string | null;
+  nome: string;
+  duracaoS: number | null;
+}) {
   if (!url)
     return (
       <p className="text-ui-15 text-tinta-2">
         Não deu para carregar agora. Atualize a página.
       </p>
     );
-  if (falhou)
-    return (
-      <p className="text-ui-15 text-tinta-2">
-        Este celular não toca este formato. Ouça no computador ou atualize o
-        iPhone.
-      </p>
-    );
   return (
-    <audio
-      controls
-      preload="none"
+    <PlayerVoz
       src={url}
-      aria-label={`Ouvir ${nome}`}
-      onError={() => setFalhou(true)}
-      className="w-full"
+      nome={nome}
+      duracaoS={duracaoS}
+      mensagemDeFalha="Este celular não toca este formato. Ouça no computador ou atualize o iPhone."
     />
   );
 }
@@ -152,11 +152,10 @@ export function TelaAudios({
       : Boolean(s.andando);
   });
 
-  // Nome de arquivo ("PTT-2026…opus") não é título de livro: sem título nem pergunta, o
-  // cartão mostra a data, e o arquivo vai para a linha de apoio.
+  // Nome de arquivo ("PTT-2026…opus") não é título de livro nem linha de apoio: sem título
+  // nem pergunta, o cartão mostra o tipo e a data.
   function textos(a: AudioDaTela) {
     const quando = a.recebidoEm ? DATA.format(new Date(a.recebidoEm)) : null;
-    const gravadoAqui = a.origem !== "upload" && a.origem !== "lote";
     const tipo = a.origem === "conversa" ? "Conversa" : "Áudio";
     const nome =
       a.titulo ??
@@ -164,7 +163,7 @@ export function TelaAudios({
       (quando ? `${tipo} de ${quando.split(",")[0]}` : tipo);
     const apoio = [
       ORIGEM[a.origem]?.(livro.autor),
-      a.titulo || a.pergunta || gravadoAqui ? quando : a.nomeArquivo,
+      quando,
       formatarDuracao(a.duracaoS),
     ]
       .filter(Boolean)
@@ -173,155 +172,156 @@ export function TelaAudios({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-3xl lg:max-w-5xl">
-      {vitrine ? null : <AtualizarAoVivo livroId={livro.id} ativo={andando} />}
-      <Link
-        href={`/livro/${livro.id}`}
-        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-      >
-        ← Livro do {livro.autor}
-      </Link>
-      <div className="flex flex-col gap-2">
-        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-          Áudios recebidos
-        </h1>
-        {ativos.length ? (
-          <p className="text-ui-17 text-tinta-2">
-            {ativos.length === 1
-              ? "1 áudio guardado"
-              : `${ativos.length} áudios guardados`}
-          </p>
-        ) : null}
-        {aviso ? (
-          <p role="status" className="text-ui-15 text-floresta">
-            {aviso}
-          </p>
-        ) : null}
-      </div>
-
-      {audios.length === 0 ? (
-        <EstadoVazio
-          frase="Nenhum áudio ainda."
-          acao={
-            livro.podeEscrever ? (
-              <Link href={nova} className={classesDoBotao()}>
-                <IconeSubir tamanho={20} />
-                <span>Subir áudios</span>
-              </Link>
-            ) : null
-          }
-        />
-      ) : (
-        <>
-          {ativos.length === 0 ? (
+    <>
+      <CabecalhoLivro livroId={livro.id} secao="audios" />
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-5 pt-6 pb-12 md:max-w-3xl md:pt-10 lg:max-w-5xl">
+        {vitrine ? null : (
+          <AtualizarAoVivo livroId={livro.id} ativo={andando} />
+        )}
+        <div className="flex flex-col gap-2">
+          <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+            Áudios recebidos
+          </h1>
+          {ativos.length ? (
             <p className="text-ui-17 text-tinta-2">
-              Todos os áudios estão arquivados.
+              {ativos.length === 1
+                ? "1 áudio guardado"
+                : `${ativos.length} áudios guardados`}
             </p>
-          ) : (
-            <ul className="grid items-start gap-4 lg:grid-cols-2">
-              {ativos.map((a, i) => {
-                // Prompt 7: o 1º arquivo de um envio abre o grupo ("8 áudios · 13 de nov.").
-                const abreEnvio =
-                  a.envio && ativos[i - 1]?.envio?.id !== a.envio.id;
-                const doEnvio = a.envio
-                  ? ativos.filter((x) => x.envio?.id === a.envio!.id).length
-                  : 0;
-                const { quando, nome, apoio } = textos(a);
-                return (
-                  <li key={a.id} className="flex flex-col gap-3">
-                    {abreEnvio ? (
-                      <p className="text-ui-15 text-tinta-2 pt-2 font-medium">
-                        {a.envio!.total === doEnvio
-                          ? `${doEnvio} áudios enviados juntos`
-                          : `${doEnvio} de ${a.envio!.total} áudios enviados juntos`}
-                        {quando ? ` · ${quando.split(",")[0]}` : ""}
-                      </p>
-                    ) : null}
-                    <div className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
-                      <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
-                        {nome}
-                      </p>
-                      {a.titulo && a.pergunta ? (
-                        <p className="text-ui-15 text-tinta-2">
-                          Responde: {a.pergunta}
-                        </p>
-                      ) : null}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                        <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
-                          {apoio}
-                        </p>
-                        <Situacao livroId={livro.id} audio={a} />
-                      </div>
-                      <Player url={a.url} nome={nome} />
-                      {pode ? (
-                        <Botao
-                          variante="texto"
-                          className="self-start"
-                          carregando={ocupado === a.id}
-                          onClick={() => void arquivar(a, true)}
-                        >
-                          Arquivar
-                        </Botao>
-                      ) : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {livro.podeEscrever ? (
-            <Link
-              href={nova}
-              className={
-                classesDoBotao({ variante: "secundario", larguraTotal: true }) +
-                " sm:w-auto sm:self-start"
-              }
-            >
-              <IconeMicrofone tamanho={20} />
-              <span>Nova história</span>
-            </Link>
           ) : null}
+          {aviso ? (
+            <p role="status" className="text-ui-15 text-floresta">
+              {aviso}
+            </p>
+          ) : null}
+        </div>
 
-          {arquivados.length ? (
-            <details className="border-linha border-t pt-6">
-              <summary className="text-ui-17 text-floresta min-h-alvo cursor-pointer font-medium">
-                {arquivados.length === 1
-                  ? "1 áudio arquivado"
-                  : `${arquivados.length} áudios arquivados`}
-              </summary>
-              <ul className="mt-4 grid items-start gap-4 lg:grid-cols-2">
-                {arquivados.map((a) => {
-                  const { nome, apoio } = textos(a);
+        {audios.length === 0 ? (
+          <EstadoVazio
+            frase="Nenhum áudio ainda."
+            acao={
+              livro.podeEscrever ? (
+                <Link href={nova} className={classesDoBotao()}>
+                  <IconeSubir tamanho={20} />
+                  <span>Subir áudios</span>
+                </Link>
+              ) : null
+            }
+          />
+        ) : (
+          <>
+            {ativos.length === 0 ? (
+              <p className="text-ui-17 text-tinta-2">
+                Todos os áudios estão arquivados.
+              </p>
+            ) : (
+              <ul className="grid items-start gap-4 lg:grid-cols-2">
+                {ativos.map((a, i) => {
+                  // Prompt 7: o 1º arquivo de um envio abre o grupo ("8 áudios · 13 de nov.").
+                  const abreEnvio =
+                    a.envio && ativos[i - 1]?.envio?.id !== a.envio.id;
+                  const doEnvio = a.envio
+                    ? ativos.filter((x) => x.envio?.id === a.envio!.id).length
+                    : 0;
+                  const { quando, nome, apoio } = textos(a);
                   return (
-                    <li
-                      key={a.id}
-                      className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5"
-                    >
-                      <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
-                        {nome}
-                      </p>
-                      <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
-                        {apoio}
-                      </p>
-                      <Player url={a.url} nome={nome} />
-                      {pode ? (
-                        <Botao
-                          variante="secundario"
-                          className="self-start"
-                          carregando={ocupado === a.id}
-                          onClick={() => void arquivar(a, false)}
-                        >
-                          Desarquivar
-                        </Botao>
+                    <li key={a.id} className="flex flex-col gap-3">
+                      {abreEnvio ? (
+                        <p className="text-ui-15 text-tinta-2 pt-2 font-medium">
+                          {a.envio!.total === doEnvio
+                            ? `${doEnvio} áudios enviados juntos`
+                            : `${doEnvio} de ${a.envio!.total} áudios enviados juntos`}
+                          {quando ? ` · ${quando.split(",")[0]}` : ""}
+                        </p>
                       ) : null}
+                      <div className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
+                        <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
+                          {nome}
+                        </p>
+                        {a.titulo && a.pergunta ? (
+                          <p className="text-ui-15 text-tinta-2">
+                            Responde: {a.pergunta}
+                          </p>
+                        ) : null}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                          <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                            {apoio}
+                          </p>
+                          <Situacao livroId={livro.id} audio={a} />
+                        </div>
+                        <Player url={a.url} nome={nome} duracaoS={a.duracaoS} />
+                        {pode ? (
+                          <Botao
+                            variante="texto"
+                            className="self-start"
+                            carregando={ocupado === a.id}
+                            onClick={() => void arquivar(a, true)}
+                          >
+                            Arquivar
+                          </Botao>
+                        ) : null}
+                      </div>
                     </li>
                   );
                 })}
               </ul>
-            </details>
-          ) : null}
-        </>
-      )}
-    </main>
+            )}
+            {livro.podeEscrever ? (
+              <Link
+                href={nova}
+                className={
+                  classesDoBotao({
+                    variante: "secundario",
+                    larguraTotal: true,
+                  }) + " sm:w-auto sm:self-start"
+                }
+              >
+                <IconeMicrofone tamanho={20} />
+                <span>Nova história</span>
+              </Link>
+            ) : null}
+
+            {arquivados.length ? (
+              <details className="pt-6">
+                <summary className="text-ui-17 text-floresta min-h-alvo cursor-pointer font-medium">
+                  {arquivados.length === 1
+                    ? "1 áudio arquivado"
+                    : `${arquivados.length} áudios arquivados`}
+                </summary>
+                <ul className="mt-4 grid items-start gap-4 lg:grid-cols-2">
+                  {arquivados.map((a) => {
+                    const { nome, apoio } = textos(a);
+                    return (
+                      <li
+                        key={a.id}
+                        className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5"
+                      >
+                        <p className="font-livro text-livro-24 text-tinta leading-snug [overflow-wrap:anywhere]">
+                          {nome}
+                        </p>
+                        <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+                          {apoio}
+                        </p>
+                        <Player url={a.url} nome={nome} duracaoS={a.duracaoS} />
+                        {pode ? (
+                          <Botao
+                            variante="secundario"
+                            className="self-start"
+                            carregando={ocupado === a.id}
+                            onClick={() => void arquivar(a, false)}
+                          >
+                            Desarquivar
+                          </Botao>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            ) : null}
+          </>
+        )}
+      </main>
+    </>
   );
 }

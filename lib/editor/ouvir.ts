@@ -8,7 +8,7 @@ export type SegmentoDaTela = {
   inicio: number; // segundos dentro da gravação
   fim: number;
   texto: string;
-  falante: string; // rótulo para a tela: nome do autor, "Entrevistador"…
+  falante: string; // rótulo para a tela: nome do autor, "Quem perguntou"…
 };
 
 /** Frase que contém a posição `pos` do texto (início e fim em caracteres). */

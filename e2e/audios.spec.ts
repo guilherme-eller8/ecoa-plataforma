@@ -98,10 +98,29 @@ test.describe("Áudios recebidos (exemplo)", () => {
   });
 });
 
-test("a home tem Nova história como ação principal", async ({ page }) => {
+test("a home diz o que fazer agora (P72)", async ({ page }) => {
   await page.goto("/styleguide/livro");
+  await expect(
+    page.getByRole("heading", { name: "Próxima pergunta" }),
+  ).toBeVisible();
+  const gravar = page.getByRole("link", { name: "Gravar agora" });
+  await expect(gravar).toBeVisible();
+  await expect(gravar).toHaveAttribute(
+    "href",
+    /\/historias\/gravar\?pergunta=/,
+  );
+  await expect(page.getByText("37")).toBeVisible();
   await expect(page.getByRole("link", { name: "Nova história" })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "3 áudios recebidos" }),
   ).toBeVisible();
+});
+
+test("cabeçalho do livro: navegação, menu e Sair", async ({ page }) => {
+  await page.goto("/styleguide/livro");
+  await page.getByRole("button", { name: "Menu" }).click();
+  await expect(page.getByRole("button", { name: "Sair" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Configurações" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Sair" })).toBeHidden();
 });

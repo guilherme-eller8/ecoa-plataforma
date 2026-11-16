@@ -218,16 +218,19 @@ export function TelaVersao({
           carregando={baixando === "miolo"}
           onClick={() => baixar("miolo")}
         >
-          Baixar miolo
+          Baixar as páginas
         </Botao>
         <Botao
           variante="secundario"
           carregando={baixando === "capa"}
           onClick={() => baixar("capa")}
         >
-          Baixar capa
+          Baixar a capa
         </Botao>
       </div>
+      <p className="text-ui-15 text-tinta-2">
+        A gráfica precisa dos dois arquivos.
+      </p>
       {v.qrEsperados > 0 ? (
         <p className="text-ui-15 text-tinta-2">
           Vozes prontas: {v.vozesProntas} de {v.qrEsperados}

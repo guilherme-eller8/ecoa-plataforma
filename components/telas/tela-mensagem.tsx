@@ -18,6 +18,7 @@ import type {
   Upload,
 } from "@/lib/mensagens/tipos";
 import { clienteNavegador } from "@/lib/supabase/navegador";
+import { PlayerVoz } from "@/components/ui/player-voz";
 
 const CHAVE_NOME = "ecoa_nome";
 const ESPERA_MS = 4000;
@@ -359,7 +360,11 @@ export function TelaMensagem({
         <section className="flex flex-col gap-6" aria-label="Confira o texto">
           <h2 className="text-ui-24 text-tinta font-medium">Confira o texto</h2>
           {ouvirUrl ? (
-            <audio controls src={ouvirUrl} className="w-full" />
+            <PlayerVoz
+              src={ouvirUrl}
+              nome="a sua mensagem"
+              preload="metadata"
+            />
           ) : null}
           {aviso ? <p className="text-ui-15 text-tinta-2">{aviso}</p> : null}
           <CampoTexto

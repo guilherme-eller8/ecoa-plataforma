@@ -47,6 +47,8 @@ import {
 } from "@/lib/whatsapp";
 
 import type { AbaPerguntas } from "@/lib/perguntas/abas";
+import { PlayerVoz } from "@/components/ui/player-voz";
+import { CabecalhoLivro } from "@/components/livro/cabecalho-livro";
 export type { AbaPerguntas };
 
 type Props = {
@@ -97,7 +99,7 @@ function Etiqueta({ children }: { children: ReactNode }) {
 function origemDa(p: PerguntaDaTela): string {
   if (p.causoId) return p.sugeridoPor ? `Causo de ${p.sugeridoPor}` : "Causo";
   if (p.origem === "enquete") return "Da enquete";
-  if (p.origem === "banco") return "Do banco";
+  if (p.origem === "banco") return "Sugestão da Ecoa";
   return p.tipo === "causo" ? "Seu causo" : "Sua";
 }
 
@@ -317,7 +319,7 @@ function FolhaAdicionar({
 
   const titulo = {
     menu: "Adicionar",
-    banco: "Do banco",
+    banco: "Sugestões da Ecoa",
     escrever: "Escrever",
     foto: "Com foto",
   }[modo];
@@ -331,7 +333,7 @@ function FolhaAdicionar({
             larguraTotal
             onClick={() => setModo("banco")}
           >
-            Do banco de perguntas
+            Escolher entre as sugestões
           </Botao>
           <Botao
             variante="secundario"
@@ -507,14 +509,13 @@ function CartaoCauso({
       ) : null}
       {c.temAudio ? (
         url ? (
-          <audio
-            controls
-            autoPlay
+          <PlayerVoz
             src={url}
-            className="w-full"
-            onPlay={() => aoTocar(true)}
-            onPause={() => aoTocar(false)}
-            onEnded={() => aoTocar(false)}
+            nome={`o áudio de ${c.nome}`}
+            duracaoS={c.duracaoS}
+            autoPlay
+            preload="metadata"
+            aoTocar={aoTocar}
           />
         ) : (
           <Botao
@@ -857,183 +858,181 @@ export function TelaPerguntas({
   );
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-6 px-4 pt-8 pb-12 lg:max-w-3xl">
-      <AtualizarSozinho
-        ativo={aba === "causos" || aba === "enquete"}
-        pausado={tocando || adicionar}
-      />
-      <Link
-        href={`/livro/${livro.id}`}
-        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-      >
-        ← Livro do {livro.autor}
-      </Link>
-      <div className="flex items-end justify-between gap-4">
-        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-          Perguntas
-        </h1>
-        {/* Uma ação principal por tela: Adicionar só na lista; Sugestões e Enquete têm a sua. */}
-        {escrever && aba === "perguntar" && paraPerguntar.length > 0 ? (
-          <Botao onClick={() => setAdicionar(true)}>Adicionar</Botao>
-        ) : null}
-      </div>
-      <Erro mensagem={erro} />
+    <>
+      <CabecalhoLivro livroId={livro.id} secao="perguntas" />
+      <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-6 pb-12 md:pt-10 lg:max-w-3xl">
+        <AtualizarSozinho
+          ativo={aba === "causos" || aba === "enquete"}
+          pausado={tocando || adicionar}
+        />
+        <div className="flex items-end justify-between gap-4">
+          <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+            Perguntas
+          </h1>
+          {/* Uma ação principal por tela: Adicionar só na lista; Sugestões e Enquete têm a sua. */}
+          {escrever && aba === "perguntar" && paraPerguntar.length > 0 ? (
+            <Botao onClick={() => setAdicionar(true)}>Adicionar</Botao>
+          ) : null}
+        </div>
+        <Erro mensagem={erro} />
 
-      <Abas
-        rotulo="Perguntas"
-        quebrar
-        ativa={aba}
-        aoMudar={mudarAba}
-        abas={[
-          {
-            id: "perguntar",
-            rotulo: "Para perguntar",
-            contagem: paraPerguntar.length,
-            conteudo: (
-              <div className="flex flex-col gap-6">
-                {paraPerguntar.length ? (
-                  lista(paraPerguntar)
-                ) : (
-                  <EstadoVazio
-                    frase={`Escolha o que perguntar ao ${livro.autor}.`}
-                    acao={
-                      escrever ? (
-                        <Botao onClick={() => setAdicionar(true)}>
-                          Adicionar
-                        </Botao>
-                      ) : null
-                    }
-                  />
-                )}
-                {puladas.length ? (
-                  <details className="flex flex-col gap-3">
-                    <summary className="text-ui-17 text-tinta-2 min-h-alvo cursor-pointer">
-                      Puladas ({puladas.length})
-                    </summary>
-                    <div className="pt-3">{lista(puladas)}</div>
-                  </details>
-                ) : null}
-              </div>
-            ),
-          },
-          {
-            id: "enviadas",
-            rotulo: "Enviadas",
-            contagem: enviadas.length,
-            conteudo: enviadas.length ? (
-              <div className="flex flex-col gap-4">
-                {escrever &&
-                linkDoAutorAtual &&
-                enviadas.some((p) => p.podeLembrar) ? (
-                  <DicaPrimeiraVez chave="perguntas-lembrar">
-                    Faz {LEMBRETE_APOS_DIAS} dias? Mande um lembrete gentil.
-                  </DicaPrimeiraVez>
-                ) : null}
-                {lista(enviadas)}
-              </div>
-            ) : (
-              <p className="text-ui-17 text-tinta-2">Nada enviado ainda.</p>
-            ),
-          },
-          {
-            id: "respondidas",
-            rotulo: "Respondidas",
-            contagem: respondidas.length,
-            conteudo: respondidas.length ? (
-              lista(respondidas)
-            ) : (
-              <p className="text-ui-17 text-tinta-2">
-                As respostas do {livro.autor} aparecem aqui.
-              </p>
-            ),
-          },
-          {
-            id: "causos",
-            rotulo: "Sugestões",
-            contagem: causosNovos || undefined,
-            conteudo: causos.length ? (
-              <ul className="flex flex-col gap-3">
-                {causos.map((c) => (
-                  <CartaoCauso
-                    key={c.id}
-                    c={c}
-                    livro={livro}
-                    acoes={acoes}
-                    aoTocar={setTocando}
-                    aoPorNaEnquete={porNaEnquete}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <EstadoVazio
-                frase="As perguntas e os causos que a família sugerir chegam aqui."
-                acao={
-                  <Link
-                    href={`/livro/${livro.id}/kit`}
-                    className={classesDoBotao({ variante: "secundario" })}
-                  >
-                    <span>Convidar a família</span>
-                  </Link>
-                }
-              />
-            ),
-          },
-          {
-            id: "enquete",
-            rotulo: "Enquete",
-            conteudo: (
-              <div className="flex flex-col gap-6">
-                {enquete ? (
-                  <Resultados
-                    key={enquete.id}
-                    enquete={enquete}
-                    livro={livro}
-                    acoes={acoes}
-                  />
-                ) : (
-                  <EstadoVazio
-                    frase="Deixe a família votar no que perguntar."
-                    acao={
-                      escrever ? (
-                        <Link href={novaEnquete} className={classesDoBotao()}>
-                          <span>Nova enquete</span>
-                        </Link>
-                      ) : null
-                    }
-                  />
-                )}
-                {enquete?.estado === "encerrada" && escrever ? (
-                  <Link
-                    href={novaEnquete}
-                    className={
-                      classesDoBotao({ variante: "secundario" }) + " self-start"
-                    }
-                  >
-                    <span>Nova enquete</span>
-                  </Link>
-                ) : null}
-                {enquete?.estado === "aberta" ? (
-                  <Link
-                    href={`/livro/${livro.id}/kit`}
-                    className="text-ui-15 text-floresta inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
-                  >
-                    Mandar o link da família no grupo
-                  </Link>
-                ) : null}
-              </div>
-            ),
-          },
-        ]}
-      />
+        <Abas
+          rotulo="Perguntas"
+          quebrar
+          ativa={aba}
+          aoMudar={mudarAba}
+          abas={[
+            {
+              id: "perguntar",
+              rotulo: "Para perguntar",
+              contagem: paraPerguntar.length,
+              conteudo: (
+                <div className="flex flex-col gap-6">
+                  {paraPerguntar.length ? (
+                    lista(paraPerguntar)
+                  ) : (
+                    <EstadoVazio
+                      frase={`Escolha o que perguntar ao ${livro.autor}.`}
+                      acao={
+                        escrever ? (
+                          <Botao onClick={() => setAdicionar(true)}>
+                            Adicionar
+                          </Botao>
+                        ) : null
+                      }
+                    />
+                  )}
+                  {puladas.length ? (
+                    <details className="flex flex-col gap-3">
+                      <summary className="text-ui-17 text-tinta-2 min-h-alvo cursor-pointer">
+                        Puladas ({puladas.length})
+                      </summary>
+                      <div className="pt-3">{lista(puladas)}</div>
+                    </details>
+                  ) : null}
+                </div>
+              ),
+            },
+            {
+              id: "enviadas",
+              rotulo: "Enviadas",
+              contagem: enviadas.length,
+              conteudo: enviadas.length ? (
+                <div className="flex flex-col gap-4">
+                  {escrever &&
+                  linkDoAutorAtual &&
+                  enviadas.some((p) => p.podeLembrar) ? (
+                    <DicaPrimeiraVez chave="perguntas-lembrar">
+                      Faz {LEMBRETE_APOS_DIAS} dias? Mande um lembrete gentil.
+                    </DicaPrimeiraVez>
+                  ) : null}
+                  {lista(enviadas)}
+                </div>
+              ) : (
+                <p className="text-ui-17 text-tinta-2">Nada enviado ainda.</p>
+              ),
+            },
+            {
+              id: "respondidas",
+              rotulo: "Respondidas",
+              contagem: respondidas.length,
+              conteudo: respondidas.length ? (
+                lista(respondidas)
+              ) : (
+                <p className="text-ui-17 text-tinta-2">
+                  As respostas do {livro.autor} aparecem aqui.
+                </p>
+              ),
+            },
+            {
+              id: "causos",
+              rotulo: "Sugestões",
+              contagem: causosNovos || undefined,
+              conteudo: causos.length ? (
+                <ul className="flex flex-col gap-3">
+                  {causos.map((c) => (
+                    <CartaoCauso
+                      key={c.id}
+                      c={c}
+                      livro={livro}
+                      acoes={acoes}
+                      aoTocar={setTocando}
+                      aoPorNaEnquete={porNaEnquete}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <EstadoVazio
+                  frase="As perguntas e os causos que a família sugerir chegam aqui."
+                  acao={
+                    <Link
+                      href={`/livro/${livro.id}/kit`}
+                      className={classesDoBotao({ variante: "secundario" })}
+                    >
+                      <span>Convidar a família</span>
+                    </Link>
+                  }
+                />
+              ),
+            },
+            {
+              id: "enquete",
+              rotulo: "Enquete",
+              conteudo: (
+                <div className="flex flex-col gap-6">
+                  {enquete ? (
+                    <Resultados
+                      key={enquete.id}
+                      enquete={enquete}
+                      livro={livro}
+                      acoes={acoes}
+                    />
+                  ) : (
+                    <EstadoVazio
+                      frase="Deixe a família votar no que perguntar."
+                      acao={
+                        escrever ? (
+                          <Link href={novaEnquete} className={classesDoBotao()}>
+                            <span>Nova enquete</span>
+                          </Link>
+                        ) : null
+                      }
+                    />
+                  )}
+                  {enquete?.estado === "encerrada" && escrever ? (
+                    <Link
+                      href={novaEnquete}
+                      className={
+                        classesDoBotao({ variante: "secundario" }) +
+                        " self-start"
+                      }
+                    >
+                      <span>Nova enquete</span>
+                    </Link>
+                  ) : null}
+                  {enquete?.estado === "aberta" ? (
+                    <Link
+                      href={`/livro/${livro.id}/kit`}
+                      className="text-ui-15 text-floresta inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
+                    >
+                      Mandar o link da família no grupo
+                    </Link>
+                  ) : null}
+                </div>
+              ),
+            },
+          ]}
+        />
 
-      <FolhaAdicionar
-        aberta={adicionar}
-        aoFechar={() => setAdicionar(false)}
-        perguntas={perguntas}
-        fotos={fotos}
-        acoes={acoes}
-        acoesFotos={acoesFotos}
-      />
-    </main>
+        <FolhaAdicionar
+          aberta={adicionar}
+          aoFechar={() => setAdicionar(false)}
+          perguntas={perguntas}
+          fotos={fotos}
+          acoes={acoes}
+          acoesFotos={acoesFotos}
+        />
+      </main>
+    </>
   );
 }

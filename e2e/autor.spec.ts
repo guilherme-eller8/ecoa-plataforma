@@ -35,6 +35,18 @@ test("primeira abertura: uma frase, o consentimento e um botão", async ({
   ).toBeVisible();
 });
 
+test("primeira abertura: dá para recusar e voltar atrás", async ({ page }) => {
+  await page.goto("/styleguide/autor-primeira");
+  await page.getByRole("button", { name: "Agora não" }).click();
+  await expect(
+    page.getByText("Nada foi gravado.", { exact: false }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Mudei de ideia" }).click();
+  await expect(
+    page.getByRole("button", { name: "Sim, pode guardar" }),
+  ).toBeVisible();
+});
+
 test("início: perguntas enviadas com quem pediu; vazio tem uma frase", async ({
   page,
 }) => {

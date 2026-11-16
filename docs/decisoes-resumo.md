@@ -31,7 +31,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P23** Design minimalista: uma ação principal por tela; régua do avô de 80 anos e do filho com pressa.
 - **P24** Onda 1 até o Natal de 2026 (coleta, IA, editor, autor, amostra); onda 2 até mar/2027.
 - **P25** Onboarding embutido: "Seu livro em 5 passos", dicas de 1 linha, marco da 1ª história; sem tour.
-- **P26** Pergunta opcional em toda porta de coleta; botão principal da home é "Nova história".
+- ~~**P26**~~ → P72 (a pergunta segue opcional em toda porta de coleta).
 - **P27** A IA decide o formato pelo conteúdo: conversa longa passa pela divisão em histórias.
 - **P28** Mínimo para gravar na ceia: prompts 0 a 7.
 - **P29** História sem pergunta que responde a uma pendente sugere "Marcar como respondida".
@@ -77,6 +77,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P69** Arquivar áudio: qualquer membro que escreve, inclusive o que já virou história; só sai das listas e da fila, nunca é apagado; história e QR continuam.
 - **P70** Foto da capa com foco: arrastar a foto no retângulo; o foco (0 a 100%) vai no conteúdo congelado e o PDF enquadra igual à prévia.
 - **P71** Arquivar história: qualquer membro que escreve; sai das listas e da montagem, nada é apagado (texto, áudio, QR e versões publicadas ficam); Desarquivar volta.
+- **P72** Home abre com o cartão "Agora": 1 ação que muda com o estado (confirmar IA → próxima pergunta → primeiras perguntas → Nova história); Nova história sempre à vista; "O livro" em páginas de 80.
 
 ## Técnicas
 

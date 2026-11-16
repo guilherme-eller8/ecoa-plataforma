@@ -20,6 +20,7 @@ import type {
   MembroDaTela,
 } from "@/lib/livro/tipos";
 import { linkWhatsApp } from "@/lib/whatsapp";
+import { CabecalhoLivro } from "@/components/livro/cabecalho-livro";
 
 function nomeDe(m: MembroDaTela) {
   return m.nome || m.email || "Sem nome";
@@ -145,199 +146,202 @@ export function TelaPessoas({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-2xl lg:max-w-3xl">
-      <Link
-        href={`/livro/${livro.id}/configuracoes`}
-        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-      >
-        ← Configurações
-      </Link>
-      <div className="flex flex-col gap-2">
-        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-          Quem ajuda
-        </h1>
-        <p className="text-ui-17 text-tinta-2">
-          {livro.ehResponsavel
-            ? `Até ${MAX_COFACILITADORES} pessoas editam o livro com você.`
-            : "Quem faz o livro do " + livro.autor + "."}
-        </p>
-      </div>
-
-      {aviso ? <Aviso ok={aviso.ok}>{aviso.texto}</Aviso> : null}
-
-      {trocarDepois ? (
-        <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
-          <p className="text-ui-17 text-tinta">
-            {trocarDepois} conhecia o link do {livro.autor} e o da família.
-            Trocar os dois agora?
+    <>
+      <CabecalhoLivro livroId={livro.id} secao="pessoas" />
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-5 pt-6 pb-12 md:max-w-2xl md:pt-10 lg:max-w-3xl">
+        <Link
+          href={`/livro/${livro.id}/configuracoes`}
+          className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
+        >
+          ← Configurações
+        </Link>
+        <div className="flex flex-col gap-2">
+          <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+            Quem ajuda
+          </h1>
+          <p className="text-ui-17 text-tinta-2">
+            {livro.ehResponsavel
+              ? `Até ${MAX_COFACILITADORES} pessoas editam o livro com você.`
+              : "Quem faz o livro do " + livro.autor + "."}
           </p>
-          <p className="text-ui-15 text-tinta-2">
-            Depois, mande os links novos ao {livro.autor} e ao grupo.
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Botao
-              variante="secundario"
-              carregando={pendente}
-              onClick={() =>
-                executar(acoes.trocarLinks, () => {
-                  setTrocarDepois(null);
-                  setAviso({ ok: true, texto: "Links trocados." });
-                })
-              }
-            >
-              Trocar os links
-            </Botao>
-            <Link
-              href={`/livro/${livro.id}/kit`}
-              className={classesDoBotao({ variante: "texto" })}
-            >
-              Ver os links
-            </Link>
-            <Botao variante="texto" onClick={() => setTrocarDepois(null)}>
-              Agora não
-            </Botao>
-          </div>
-        </section>
-      ) : null}
+        </div>
 
-      <ul className="flex flex-col gap-3">
-        {membros.map((m) => (
-          <li
-            key={m.userId}
-            className="rounded-cartao bg-papel border-linha flex flex-wrap items-center justify-between gap-3 border p-5"
-          >
-            <div className="flex min-w-0 flex-col gap-1">
-              <p className="text-ui-17 text-tinta [overflow-wrap:anywhere]">
-                {nomeDe(m)}
-                {m.ehVoce ? " (você)" : ""}
-              </p>
-              <p className="text-ui-15 text-tinta-2">
-                {m.papel === "responsavel"
-                  ? "Cuida do livro"
-                  : "Ajuda a editar"}
-              </p>
+        {aviso ? <Aviso ok={aviso.ok}>{aviso.texto}</Aviso> : null}
+
+        {trocarDepois ? (
+          <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
+            <p className="text-ui-17 text-tinta">
+              {trocarDepois} conhecia o link do {livro.autor} e o da família.
+              Trocar os dois agora?
+            </p>
+            <p className="text-ui-15 text-tinta-2">
+              Depois, mande os links novos ao {livro.autor} e ao grupo.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Botao
+                variante="secundario"
+                carregando={pendente}
+                onClick={() =>
+                  executar(acoes.trocarLinks, () => {
+                    setTrocarDepois(null);
+                    setAviso({ ok: true, texto: "Links trocados." });
+                  })
+                }
+              >
+                Trocar os links
+              </Botao>
+              <Link
+                href={`/livro/${livro.id}/kit`}
+                className={classesDoBotao({ variante: "texto" })}
+              >
+                Ver os links
+              </Link>
+              <Botao variante="texto" onClick={() => setTrocarDepois(null)}>
+                Agora não
+              </Botao>
             </div>
-            {livro.ehResponsavel && m.papel === "cofacilitador" ? (
-              <Botao variante="texto" onClick={() => setRemovendo(m)}>
-                Remover
-              </Botao>
-            ) : null}
-            {!livro.ehResponsavel && m.ehVoce ? (
-              <Botao variante="texto" onClick={() => setSaindo(true)}>
-                Sair do livro
-              </Botao>
-            ) : null}
-          </li>
-        ))}
-        {convites.map((c) => (
-          <ConvitePendente
-            key={c.id}
-            convite={c}
-            cancelar={
-              livro.ehResponsavel
-                ? () =>
-                    executar(
-                      () => acoes.cancelarConvite(c.id),
-                      () =>
-                        setConvites((cs) => cs.filter((x) => x.id !== c.id)),
-                    )
-                : undefined
+          </section>
+        ) : null}
+
+        <ul className="flex flex-col gap-3">
+          {membros.map((m) => (
+            <li
+              key={m.userId}
+              className="rounded-cartao bg-papel border-linha flex flex-wrap items-center justify-between gap-3 border p-5"
+            >
+              <div className="flex min-w-0 flex-col gap-1">
+                <p className="text-ui-17 text-tinta [overflow-wrap:anywhere]">
+                  {nomeDe(m)}
+                  {m.ehVoce ? " (você)" : ""}
+                </p>
+                <p className="text-ui-15 text-tinta-2">
+                  {m.papel === "responsavel"
+                    ? "Cuida do livro"
+                    : "Ajuda a editar"}
+                </p>
+              </div>
+              {livro.ehResponsavel && m.papel === "cofacilitador" ? (
+                <Botao variante="texto" onClick={() => setRemovendo(m)}>
+                  Remover
+                </Botao>
+              ) : null}
+              {!livro.ehResponsavel && m.ehVoce ? (
+                <Botao variante="texto" onClick={() => setSaindo(true)}>
+                  Sair do livro
+                </Botao>
+              ) : null}
+            </li>
+          ))}
+          {convites.map((c) => (
+            <ConvitePendente
+              key={c.id}
+              convite={c}
+              cancelar={
+                livro.ehResponsavel
+                  ? () =>
+                      executar(
+                        () => acoes.cancelarConvite(c.id),
+                        () =>
+                          setConvites((cs) => cs.filter((x) => x.id !== c.id)),
+                      )
+                  : undefined
+              }
+            />
+          ))}
+        </ul>
+
+        {livro.ehResponsavel &&
+        ajudantes.length === 0 &&
+        convites.length === 0 ? (
+          <EstadoVazio
+            frase="Só você por enquanto. Chame um irmão para ajudar."
+            acao={
+              podeConvidar ? (
+                <Botao onClick={() => setConvidando(true)}>Convidar</Botao>
+              ) : null
             }
           />
-        ))}
-      </ul>
+        ) : podeConvidar ? (
+          <Botao larguraTotal onClick={() => setConvidando(true)}>
+            Convidar
+          </Botao>
+        ) : livro.ehResponsavel && vagas <= 0 ? (
+          <p className="text-ui-15 text-tinta-2">
+            O livro já tem {MAX_COFACILITADORES} pessoas ajudando. Cancele um
+            convite para abrir vaga.
+          </p>
+        ) : null}
 
-      {livro.ehResponsavel &&
-      ajudantes.length === 0 &&
-      convites.length === 0 ? (
-        <EstadoVazio
-          frase="Só você por enquanto. Chame um irmão para ajudar."
-          acao={
-            podeConvidar ? (
-              <Botao onClick={() => setConvidando(true)}>Convidar</Botao>
-            ) : null
-          }
-        />
-      ) : podeConvidar ? (
-        <Botao larguraTotal onClick={() => setConvidando(true)}>
-          Convidar
-        </Botao>
-      ) : livro.ehResponsavel && vagas <= 0 ? (
-        <p className="text-ui-15 text-tinta-2">
-          O livro já tem {MAX_COFACILITADORES} pessoas ajudando. Cancele um
-          convite para abrir vaga.
-        </p>
-      ) : null}
-
-      <FolhaInferior
-        aberta={convidando}
-        aoFechar={() => setConvidando(false)}
-        titulo="Convidar"
-      >
-        <FormConvite
-          convidar={acoes.convidar}
-          aoConvidar={(convite) => {
-            setConvidando(false);
-            if (convite) setConvites((cs) => [...cs, convite]);
-            setAviso({
-              ok: true,
-              texto: "Convite enviado. Mande também pelo WhatsApp.",
-            });
-          }}
-        />
-      </FolhaInferior>
-
-      <FolhaInferior
-        aberta={removendo !== null}
-        aoFechar={() => setRemovendo(null)}
-        titulo="Remover"
-      >
-        <p className="text-ui-17 text-tinta">
-          {removendo ? nomeDe(removendo) : ""} deixa de ver e editar o livro na
-          hora. O que já fez fica no livro.
-        </p>
-        <Botao
-          larguraTotal
-          carregando={pendente}
-          onClick={() => {
-            const m = removendo;
-            if (!m) return;
-            executar(
-              () => acoes.remover(m.userId),
-              () => {
-                setRemovendo(null);
-                if (temLinks) setTrocarDepois(nomeDe(m));
-                router.refresh();
-              },
-            );
-          }}
+        <FolhaInferior
+          aberta={convidando}
+          aoFechar={() => setConvidando(false)}
+          titulo="Convidar"
         >
-          Remover
-        </Botao>
-      </FolhaInferior>
+          <FormConvite
+            convidar={acoes.convidar}
+            aoConvidar={(convite) => {
+              setConvidando(false);
+              if (convite) setConvites((cs) => [...cs, convite]);
+              setAviso({
+                ok: true,
+                texto: "Convite enviado. Mande também pelo WhatsApp.",
+              });
+            }}
+          />
+        </FolhaInferior>
 
-      <FolhaInferior
-        aberta={saindo}
-        aoFechar={() => setSaindo(false)}
-        titulo="Sair do livro"
-      >
-        <p className="text-ui-17 text-tinta">
-          Você deixa de ver o livro do {livro.autor}. Para voltar, precisa de um
-          novo convite.
-        </p>
-        <Botao
-          larguraTotal
-          carregando={pendente}
-          onClick={() =>
-            executar(acoes.sair, () => {
-              setSaindo(false);
-              router.push("/");
-            })
-          }
+        <FolhaInferior
+          aberta={removendo !== null}
+          aoFechar={() => setRemovendo(null)}
+          titulo="Remover"
         >
-          Sair do livro
-        </Botao>
-      </FolhaInferior>
-    </main>
+          <p className="text-ui-17 text-tinta">
+            {removendo ? nomeDe(removendo) : ""} deixa de ver e editar o livro
+            na hora. O que já fez fica no livro.
+          </p>
+          <Botao
+            larguraTotal
+            carregando={pendente}
+            onClick={() => {
+              const m = removendo;
+              if (!m) return;
+              executar(
+                () => acoes.remover(m.userId),
+                () => {
+                  setRemovendo(null);
+                  if (temLinks) setTrocarDepois(nomeDe(m));
+                  router.refresh();
+                },
+              );
+            }}
+          >
+            Remover
+          </Botao>
+        </FolhaInferior>
+
+        <FolhaInferior
+          aberta={saindo}
+          aoFechar={() => setSaindo(false)}
+          titulo="Sair do livro"
+        >
+          <p className="text-ui-17 text-tinta">
+            Você deixa de ver o livro do {livro.autor}. Para voltar, precisa de
+            um novo convite.
+          </p>
+          <Botao
+            larguraTotal
+            carregando={pendente}
+            onClick={() =>
+              executar(acoes.sair, () => {
+                setSaindo(false);
+                router.push("/");
+              })
+            }
+          >
+            Sair do livro
+          </Botao>
+        </FolhaInferior>
+      </main>
+    </>
   );
 }

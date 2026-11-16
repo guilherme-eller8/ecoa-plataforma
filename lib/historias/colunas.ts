@@ -12,6 +12,8 @@ export const COLUNAS_EDITAR =
 export const COLUNAS_VERSOES =
   "id, estado, titulo, texto, texto_rev, versao_rev, texto_por, texto_origem, texto_em" as const;
 export const COLUNAS_DIVISAO = "id, estado, divisao" as const;
+// Home (P72): contagem e páginas estimadas.
+export const COLUNAS_RESUMO = "estado, divisao, texto, revisada_em" as const;
 
 export const TODAS_AS_COLUNAS_DA_SESSAO = [
   COLUNAS_LISTA,
@@ -20,6 +22,7 @@ export const TODAS_AS_COLUNAS_DA_SESSAO = [
   COLUNAS_EDITAR,
   COLUNAS_VERSOES,
   COLUNAS_DIVISAO,
+  COLUNAS_RESUMO,
 ];
 
 /**

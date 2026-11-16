@@ -58,6 +58,28 @@ function PrimeiraAbertura({
 }) {
   const [pendente, iniciar] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
+  const [recusou, setRecusou] = useState(false);
+  // Recusar não grava nada no banco: o pedido volta na próxima vez que o link abrir.
+  if (recusou)
+    return (
+      <Moldura>
+        <MarcaEcoa />
+        <h1 className="font-livro text-livro-36 text-tinta leading-tight">
+          Tudo bem{nome ? `, ${nome}` : ""}.
+        </h1>
+        <p className="text-ui-20 text-tinta">
+          Nada foi gravado. Se mudar de ideia, é só abrir este link de novo.
+        </p>
+        <Botao
+          tamanho="autor"
+          variante="secundario"
+          larguraTotal
+          onClick={() => setRecusou(false)}
+        >
+          Mudei de ideia
+        </Botao>
+      </Moldura>
+    );
   return (
     <Moldura>
       <MarcaEcoa />
@@ -84,6 +106,15 @@ function PrimeiraAbertura({
         }
       >
         Sim, pode guardar
+      </Botao>
+      <Botao
+        tamanho="autor"
+        variante="secundario"
+        larguraTotal
+        disabled={pendente}
+        onClick={() => setRecusou(true)}
+      >
+        Agora não
       </Botao>
       {erro ? <Aviso ok={false}>{erro}</Aviso> : null}
     </Moldura>

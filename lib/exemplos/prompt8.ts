@@ -26,7 +26,7 @@ export const SEGMENTOS_TREM: SegmentoDaTela[] = [
     1,
     0,
     9.5,
-    "Entrevistador",
+    "Quem perguntou",
     "Pai, conta aquela vez que o senhor foi pra Vitória.",
   ],
   [
@@ -58,7 +58,7 @@ export const SEGMENTOS_TREM: SegmentoDaTela[] = [
     "Aí cheguei na oficina e o homem falou que a vaga já era de outro. Não deu certo.",
   ],
   [6, 49.5, 57, "Vô Jair", "Dormi na rodoviária mesmo, no banco."],
-  [7, 57, 63, "Entrevistador", "E o Tião?"],
+  [7, 57, 63, "Quem perguntou", "E o Tião?"],
   [
     8,
     63,

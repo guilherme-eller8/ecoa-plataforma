@@ -178,10 +178,10 @@ test.describe("Versão publicada", () => {
     ).toBeVisible();
     await expect(page.getByText("Vozes prontas: 7 de 8")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Baixar miolo" }),
+      page.getByRole("button", { name: "Baixar as páginas" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Baixar capa" }),
+      page.getByRole("button", { name: "Baixar a capa" }),
     ).toBeVisible();
     await expect(page.getByText("Capa", { exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Próxima →" }).click();

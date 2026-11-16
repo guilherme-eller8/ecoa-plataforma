@@ -2,7 +2,6 @@
 
 // Mensagens da família (P65): ouvir, ler, ajustar o texto e pôr ou tirar do livro. Uma ação
 // principal: convidar pelo WhatsApp. Só entra no livro o que um membro marcar.
-import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import { CampoTexto } from "@/components/ui/campo";
@@ -16,6 +15,8 @@ import { MAX_MENSAGEM_CARACTERES } from "@/lib/config";
 import type { LivroDaTela } from "@/lib/livro/tipos";
 import type { AcoesMensagens, MensagemDoLivro } from "@/lib/mensagens/tipos";
 import { conviteMensagem, linkWhatsApp } from "@/lib/whatsapp";
+import { PlayerVoz } from "@/components/ui/player-voz";
+import { CabecalhoLivro } from "@/components/livro/cabecalho-livro";
 
 const DATA = new Intl.DateTimeFormat("pt-BR", {
   day: "numeric",
@@ -97,159 +98,161 @@ export function TelaMensagens({
   );
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-2xl lg:max-w-3xl">
-      <Link
-        href={`/livro/${livro.id}`}
-        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-      >
-        ← Livro do {livro.autor}
-      </Link>
-      <div className="flex flex-col gap-2">
-        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-          Mensagens da família
-        </h1>
-        {ativas.length ? (
-          <p className="text-ui-17 text-tinta-2">
-            {ativas.length === 1 ? "1 mensagem" : `${ativas.length} mensagens`}
-            {" · "}
-            {noLivro} no livro
+    <>
+      <CabecalhoLivro livroId={livro.id} secao="mensagens" />
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-5 pt-6 pb-12 md:max-w-2xl md:pt-10 lg:max-w-3xl">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+            Mensagens da família
+          </h1>
+          {ativas.length ? (
+            <p className="text-ui-17 text-tinta-2">
+              {ativas.length === 1
+                ? "1 mensagem"
+                : `${ativas.length} mensagens`}
+              {" · "}
+              {noLivro} no livro
+            </p>
+          ) : null}
+        </div>
+
+        {erro ? (
+          <p role="alert" className="text-ui-15 text-erro">
+            {erro}
           </p>
         ) : null}
-      </div>
 
-      {erro ? (
-        <p role="alert" className="text-ui-15 text-erro">
-          {erro}
-        </p>
-      ) : null}
-
-      {ativas.length === 0 && !verArquivadas ? (
-        <EstadoVazio
-          frase="Ninguém deixou mensagem ainda."
-          acao={botaoConvidar}
-        />
-      ) : (
-        <>
-          {!verArquivadas ? (
-            <div className="flex flex-wrap items-center gap-3">
-              {botaoConvidar}
-            </div>
-          ) : null}
-          {!verArquivadas ? (
-            <DicaPrimeiraVez chave="mensagens-no-livro">
-              Só entra no livro o que você marcar.
-            </DicaPrimeiraVez>
-          ) : null}
-          <ul className="flex flex-col gap-3">
-            {lista.map((m) => (
-              <li
-                key={m.id}
-                className="rounded-cartao bg-papel flex items-start gap-3 p-4"
-              >
-                <button
-                  type="button"
-                  onClick={() => setAberta(m.id)}
-                  className="flex min-w-0 flex-1 flex-col gap-1 text-left"
-                >
-                  <span className="text-ui-17 text-tinta font-medium">
-                    {m.nome}
-                    <span className="text-tinta-2 font-normal">
-                      {" "}
-                      · {m.relacao}
-                    </span>
-                  </span>
-                  <span className="text-ui-13 text-tinta-2">
-                    {DATA.format(new Date(m.enviadaEm))}
-                    {m.duracaoS ? ` · ▶ ${formatarDuracao(m.duracaoS)}` : ""}
-                    {m.fotoUrl ? " · com foto" : ""}
-                  </span>
-                  <span className="font-livro text-ui-17 text-tinta line-clamp-2">
-                    {m.texto}
-                  </span>
-                </button>
-                {m.estado === "enviada" ? (
-                  <ChaveNoLivro
-                    mensagem={m}
-                    acoes={acoes}
-                    pode={livro.podeEscrever}
-                    aoErrar={setErro}
-                  />
-                ) : null}
-              </li>
-            ))}
-          </ul>
-          {verArquivadas ? (
-            <Botao
-              variante="texto"
-              className="self-start"
-              onClick={() => setVerArquivadas(false)}
-            >
-              ← Voltar às mensagens
-            </Botao>
-          ) : arquivadas.length ? (
-            <Botao
-              variante="texto"
-              className="self-start"
-              onClick={() => setVerArquivadas(true)}
-            >
-              {arquivadas.length === 1
-                ? "1 arquivada"
-                : `${arquivadas.length} arquivadas`}
-            </Botao>
-          ) : null}
-        </>
-      )}
-
-      {link && !verArquivadas ? (
-        <Copiar texto={link} rotulo="Copiar o link" variante="texto" />
-      ) : null}
-      {link && livro.ehResponsavel && livro.podeEscrever && !verArquivadas ? (
-        confirmarTroca ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-ui-15 text-tinta-2">
-              O link antigo para de funcionar. Quem estiver escrevendo agora
-              perde a mensagem.
-            </p>
-            <div className="flex gap-3">
-              <Botao
-                variante="secundario"
-                carregando={pendente}
-                onClick={trocar}
-              >
-                Trocar o link
-              </Botao>
-              <Botao variante="texto" onClick={() => setConfirmarTroca(false)}>
-                Cancelar
-              </Botao>
-            </div>
-          </div>
-        ) : (
-          <Botao
-            variante="texto"
-            className="self-start"
-            onClick={() => setConfirmarTroca(true)}
-          >
-            Trocar o link
-          </Botao>
-        )
-      ) : null}
-
-      <FolhaInferior
-        aberta={Boolean(atual)}
-        aoFechar={() => setAberta(null)}
-        titulo={atual ? `${atual.nome} · ${atual.relacao}` : ""}
-      >
-        {atual ? (
-          <Detalhe
-            key={atual.id}
-            mensagem={atual}
-            livro={livro}
-            acoes={acoes}
-            aoFechar={() => setAberta(null)}
+        {ativas.length === 0 && !verArquivadas ? (
+          <EstadoVazio
+            frase="Ninguém deixou mensagem ainda."
+            acao={botaoConvidar}
           />
+        ) : (
+          <>
+            {!verArquivadas ? (
+              <div className="flex flex-wrap items-center gap-3">
+                {botaoConvidar}
+              </div>
+            ) : null}
+            {!verArquivadas ? (
+              <DicaPrimeiraVez chave="mensagens-no-livro">
+                Só entra no livro o que você marcar.
+              </DicaPrimeiraVez>
+            ) : null}
+            <ul className="flex flex-col gap-3">
+              {lista.map((m) => (
+                <li
+                  key={m.id}
+                  className="rounded-cartao bg-papel flex items-start gap-3 p-4"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setAberta(m.id)}
+                    className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+                  >
+                    <span className="text-ui-17 text-tinta font-medium">
+                      {m.nome}
+                      <span className="text-tinta-2 font-normal">
+                        {" "}
+                        · {m.relacao}
+                      </span>
+                    </span>
+                    <span className="text-ui-13 text-tinta-2">
+                      {DATA.format(new Date(m.enviadaEm))}
+                      {m.duracaoS ? ` · ▶ ${formatarDuracao(m.duracaoS)}` : ""}
+                      {m.fotoUrl ? " · com foto" : ""}
+                    </span>
+                    <span className="font-livro text-ui-17 text-tinta line-clamp-2">
+                      {m.texto}
+                    </span>
+                  </button>
+                  {m.estado === "enviada" ? (
+                    <ChaveNoLivro
+                      mensagem={m}
+                      acoes={acoes}
+                      pode={livro.podeEscrever}
+                      aoErrar={setErro}
+                    />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+            {verArquivadas ? (
+              <Botao
+                variante="texto"
+                className="self-start"
+                onClick={() => setVerArquivadas(false)}
+              >
+                ← Voltar às mensagens
+              </Botao>
+            ) : arquivadas.length ? (
+              <Botao
+                variante="texto"
+                className="self-start"
+                onClick={() => setVerArquivadas(true)}
+              >
+                {arquivadas.length === 1
+                  ? "1 arquivada"
+                  : `${arquivadas.length} arquivadas`}
+              </Botao>
+            ) : null}
+          </>
+        )}
+
+        {link && !verArquivadas ? (
+          <Copiar texto={link} rotulo="Copiar o link" variante="texto" />
         ) : null}
-      </FolhaInferior>
-    </main>
+        {link && livro.ehResponsavel && livro.podeEscrever && !verArquivadas ? (
+          confirmarTroca ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-ui-15 text-tinta-2">
+                O link antigo para de funcionar. Quem estiver escrevendo agora
+                perde a mensagem.
+              </p>
+              <div className="flex gap-3">
+                <Botao
+                  variante="secundario"
+                  carregando={pendente}
+                  onClick={trocar}
+                >
+                  Trocar o link
+                </Botao>
+                <Botao
+                  variante="texto"
+                  onClick={() => setConfirmarTroca(false)}
+                >
+                  Cancelar
+                </Botao>
+              </div>
+            </div>
+          ) : (
+            <Botao
+              variante="texto"
+              className="self-start"
+              onClick={() => setConfirmarTroca(true)}
+            >
+              Trocar o link
+            </Botao>
+          )
+        ) : null}
+
+        <FolhaInferior
+          aberta={Boolean(atual)}
+          aoFechar={() => setAberta(null)}
+          titulo={atual ? `${atual.nome} · ${atual.relacao}` : ""}
+        >
+          {atual ? (
+            <Detalhe
+              key={atual.id}
+              mensagem={atual}
+              livro={livro}
+              acoes={acoes}
+              aoFechar={() => setAberta(null)}
+            />
+          ) : null}
+        </FolhaInferior>
+      </main>
+    </>
   );
 }
 
@@ -341,12 +344,10 @@ function Detalhe({
         />
       ) : null}
       {m.audioUrl ? (
-        <audio
-          controls
-          preload="none"
+        <PlayerVoz
           src={m.audioUrl}
-          aria-label={`Ouvir ${m.nome}`}
-          className="w-full"
+          nome={`a mensagem de ${m.nome}`}
+          duracaoS={m.duracaoS}
         />
       ) : null}
       {m.estado === "enviada" && livro.podeEscrever ? (

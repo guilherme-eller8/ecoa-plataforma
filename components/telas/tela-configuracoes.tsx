@@ -11,6 +11,7 @@ import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { Seletor } from "@/components/ui/seletor";
 import type { NomeDaTela } from "@/lib/historias/tipos";
 import type { LivroDaTela, Resposta } from "@/lib/livro/tipos";
+import { CabecalhoLivro } from "@/components/livro/cabecalho-livro";
 
 export type AcoesConfiguracoes = {
   confirmarIA: () => Promise<Resposta>;
@@ -290,98 +291,99 @@ export function TelaConfiguracoes({
   const sugeridos = nomes.filter((n) => n.estado === "sugerido");
   const aceitos = nomes.filter((n) => n.estado === "aceito");
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-2xl lg:max-w-3xl">
-      <Link
-        href={`/livro/${livro.id}`}
-        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-      >
-        ← Livro do {livro.autor}
-      </Link>
-      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-        Configurações
-      </h1>
+    <>
+      <CabecalhoLivro livroId={livro.id} secao="configuracoes" />
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-5 pt-6 pb-12 md:max-w-2xl md:pt-10 lg:max-w-3xl">
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+          Configurações
+        </h1>
 
-      {!livro.iaConfirmada && livro.podeEscrever ? (
-        <ConfirmarIA livro={livro} confirmar={acoes.confirmarIA} />
-      ) : null}
+        {!livro.iaConfirmada && livro.podeEscrever ? (
+          <ConfirmarIA livro={livro} confirmar={acoes.confirmarIA} />
+        ) : null}
 
-      <Link
-        href={`/livro/${livro.id}/pessoas`}
-        className="rounded-cartao bg-papel border-linha hover:border-linha-forte min-h-alvo flex items-center justify-between gap-4 border p-5"
-      >
-        <span className="flex flex-col gap-1">
-          <span className="text-ui-20 text-tinta font-medium">Quem ajuda</span>
-          <span className="text-ui-15 text-tinta-2">
-            {livro.ehResponsavel
-              ? "Chame um irmão para editar com você."
-              : "Quem faz o livro com você."}
+        <Link
+          href={`/livro/${livro.id}/pessoas`}
+          className="rounded-cartao bg-papel border-linha hover:border-linha-forte min-h-alvo flex items-center justify-between gap-4 border p-5"
+        >
+          <span className="flex flex-col gap-1">
+            <span className="text-ui-20 text-tinta font-medium">
+              Quem ajuda
+            </span>
+            <span className="text-ui-15 text-tinta-2">
+              {livro.ehResponsavel
+                ? "Chame um irmão para editar com você."
+                : "Quem faz o livro com você."}
+            </span>
           </span>
-        </span>
-        <span aria-hidden="true" className="text-tinta-2 text-ui-20">
-          →
-        </span>
-      </Link>
+          <span aria-hidden="true" className="text-tinta-2 text-ui-20">
+            →
+          </span>
+        </Link>
 
-      <ResumoSemanal ligado={resumoLigado} definir={acoes.definirResumo} />
+        <ResumoSemanal ligado={resumoLigado} definir={acoes.definirResumo} />
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-ui-20 text-tinta font-medium">Nomes do livro</h2>
-          <p className="text-ui-15 text-tinta-2">
-            A IA escreve estes nomes do jeito que estão aqui.
-          </p>
-        </div>
-        {nomes.length === 0 ? (
-          <EstadoVazio
-            frase="Os nomes aparecem aqui depois da primeira história."
-            acao={
-              livro.podeEscrever ? (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-ui-20 text-tinta font-medium">
+              Nomes do livro
+            </h2>
+            <p className="text-ui-15 text-tinta-2">
+              A IA escreve estes nomes do jeito que estão aqui.
+            </p>
+          </div>
+          {nomes.length === 0 ? (
+            <EstadoVazio
+              frase="Os nomes aparecem aqui depois da primeira história."
+              acao={
+                livro.podeEscrever ? (
+                  <Acrescentar acrescentar={acoes.acrescentar} />
+                ) : null
+              }
+            />
+          ) : (
+            <>
+              {sugeridos.length ? (
+                <div className="flex flex-col">
+                  <h3 className="text-ui-15 text-tinta-2 font-medium">
+                    Sugeridos pela IA
+                  </h3>
+                  <ul className="flex flex-col gap-2">
+                    {sugeridos.map((n) => (
+                      <LinhaNome
+                        key={n.id}
+                        n={n}
+                        acoes={acoes}
+                        podeEscrever={livro.podeEscrever}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {aceitos.length ? (
+                <div className="flex flex-col">
+                  <h3 className="text-ui-15 text-tinta-2 font-medium">
+                    Confirmados
+                  </h3>
+                  <ul className="flex flex-col gap-2">
+                    {aceitos.map((n) => (
+                      <LinhaNome
+                        key={n.id}
+                        n={n}
+                        acoes={acoes}
+                        podeEscrever={livro.podeEscrever}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {livro.podeEscrever ? (
                 <Acrescentar acrescentar={acoes.acrescentar} />
-              ) : null
-            }
-          />
-        ) : (
-          <>
-            {sugeridos.length ? (
-              <div className="flex flex-col">
-                <h3 className="text-ui-15 text-tinta-2 font-medium">
-                  Sugeridos pela IA
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {sugeridos.map((n) => (
-                    <LinhaNome
-                      key={n.id}
-                      n={n}
-                      acoes={acoes}
-                      podeEscrever={livro.podeEscrever}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {aceitos.length ? (
-              <div className="flex flex-col">
-                <h3 className="text-ui-15 text-tinta-2 font-medium">
-                  Confirmados
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {aceitos.map((n) => (
-                    <LinhaNome
-                      key={n.id}
-                      n={n}
-                      acoes={acoes}
-                      podeEscrever={livro.podeEscrever}
-                    />
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {livro.podeEscrever ? (
-              <Acrescentar acrescentar={acoes.acrescentar} />
-            ) : null}
-          </>
-        )}
-      </section>
-    </main>
+              ) : null}
+            </>
+          )}
+        </section>
+      </main>
+    </>
   );
 }

@@ -4,13 +4,18 @@ import { Suspense } from "react";
 import { TelaLivro } from "@/components/telas/tela-livro";
 import { marcarHistoriaVista } from "./historias/acoes";
 import { registrarEvento } from "@/lib/eventos";
-import { gravacoesGuardadas, historiasDoLivro } from "@/lib/historias/dados";
+import {
+  gravacoesGuardadas,
+  historiasDoLivro,
+  resumoDasHistorias,
+} from "@/lib/historias/dados";
 import { livroDaPagina } from "@/lib/livro/acesso";
 import { precisaConfigurar } from "@/lib/livro/configuracao";
 import {
   causosDoLivro,
   enqueteDoLivro,
   linkDaFamilia,
+  linkDoAutor,
   livroDaTela,
   perguntasDoLivro,
   totalDeAudios,
@@ -51,6 +56,8 @@ async function Livro({ id }: { id: string }) {
     familia,
     guardadas,
     mensagens,
+    resumoHistorias,
+    linkAutor,
   ] = await Promise.all([
     perguntasDoLivro(id),
     causosDoLivro(id),
@@ -60,7 +67,10 @@ async function Livro({ id }: { id: string }) {
     linkDaFamilia(id),
     gravacoesGuardadas(id, Boolean(livro.ia_consentimento_em)),
     contarMensagens(id),
+    resumoDasHistorias(id),
+    podeEscrever ? linkDoAutor(id) : Promise.resolve(null),
   ]);
+  const acoes = acoesDoLivro(id);
   return (
     <TelaLivro
       livro={tela}
@@ -71,11 +81,15 @@ async function Livro({ id }: { id: string }) {
         enqueteAberta: enquete?.estado === "aberta",
         audios,
         mensagens,
+        historias: resumoHistorias,
       }}
       historias={historias}
+      perguntas={perguntas}
+      linkAutor={linkAutor}
+      mudarEstado={acoes.perguntas.mudarEstado}
       linkFamilia={familia}
       guardadas={guardadas}
-      arquivarHistoria={acoesDoLivro(id).arquivarHistoria}
+      arquivarHistoria={acoes.arquivarHistoria}
       marcarVista={marcarHistoriaVista.bind(null, id)}
       ehAdmin={usuario.ehAdmin}
     />

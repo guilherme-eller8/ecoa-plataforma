@@ -15,6 +15,7 @@ import type { Marcacao } from "@/lib/ai/schemas";
 import type { HistoriaParaLer } from "@/lib/historias/tipos";
 import type { AcoesArquivar, LivroDaTela, Resposta } from "@/lib/livro/tipos";
 import { FRASE_DA_FALHA } from "@/lib/pipeline/regras";
+import { PlayerVoz } from "@/components/ui/player-voz";
 
 const TIPO: Record<string, string> = {
   fato: "Fato",
@@ -125,18 +126,15 @@ export function TelaHistoria({
 
       {historia.audios.map((a) =>
         a.url ? (
-          <audio
+          <PlayerVoz
             key={a.id}
-            controls
-            preload="none"
+            src={a.url}
+            nome="o áudio original"
             // Prompt 7: a história usa só um pedaço da gravação original.
-            src={
-              a.inicioS != null && a.fimS != null
-                ? `${a.url}#t=${Math.floor(a.inicioS)},${Math.ceil(a.fimS)}`
-                : a.url
-            }
-            aria-label="Ouvir o áudio original"
-            className="w-full"
+            inicioS={a.inicioS}
+            fimS={a.fimS}
+            duracaoS={a.duracaoS}
+            preload="metadata"
           />
         ) : null,
       )}

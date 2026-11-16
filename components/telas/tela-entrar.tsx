@@ -44,9 +44,9 @@ export function TelaEntrar({
             setIndoAoGoogle(true);
             await entrarComGoogle();
           }}
+          icone={<LogoGoogle />}
           className="w-full"
         >
-          <LogoGoogle />
           Entrar com Google
         </Botao>
 
@@ -91,7 +91,7 @@ function LogoGoogle() {
       width="22"
       height="22"
       viewBox="0 0 48 48"
-      className="rounded-full bg-white p-0.5"
+      className="shrink-0 rounded-full bg-white p-0.5"
     >
       <path
         fill="#EA4335"

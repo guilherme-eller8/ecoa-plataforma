@@ -86,7 +86,9 @@ export function Botao({
       ) : (
         icone
       )}
-      <span>{children}</span>
+      {/* inline-flex: o preflight do Tailwind deixa todo <svg> em display:block, então um
+          ícone passado como filho empilhava em cima do texto (bug do "Entrar com Google"). */}
+      <span className="inline-flex items-center gap-2">{children}</span>
     </button>
   );
 }

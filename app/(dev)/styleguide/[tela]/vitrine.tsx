@@ -375,6 +375,9 @@ export function Vitrine({ tela }: { tela: Tela }) {
             audios: 3,
           }}
           historias={HISTORIAS_JAIR.slice(0, 2)}
+          perguntas={PERGUNTAS_JAIR}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          mudarEstado={ACOES_FALSAS.perguntas.mudarEstado}
           linkFamilia="https://app.ecoa-memorias.com.br/f/v1_exemplo"
           guardadas={GUARDADAS_JAIR}
           arquivarHistoria={{ arquivar: async () => ({ ok: true }) }}
@@ -734,7 +737,12 @@ export function Vitrine({ tela }: { tela: Tela }) {
             causosNovos: 1,
             enqueteAberta: true,
             audios: 3,
+            mensagens: { total: 2, noLivro: 1 },
+            historias: { paginas: 37, prontas: 5, paraRevisar: 2, andando: 1 },
           }}
+          perguntas={PERGUNTAS_JAIR}
+          linkAutor={LINK_AUTOR_EXEMPLO}
+          mudarEstado={ACOES_FALSAS.perguntas.mudarEstado}
         />
       );
     case "livro-somente-leitura":

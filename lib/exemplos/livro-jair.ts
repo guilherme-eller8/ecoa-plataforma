@@ -83,7 +83,7 @@ export const historias: Historia[] = [
     duracaoSeg: 1130,
     palavras: 1820,
     fotos: 2,
-    origem: "Pergunta do banco",
+    origem: "Sugestão da Ecoa",
     trecho:
       "Foi num baile no clube da estação, em 1964. Ela estava de vestido azul e não quis dançar comigo na primeira vez.",
   },
@@ -94,7 +94,7 @@ export const historias: Historia[] = [
     duracaoSeg: 840,
     palavras: 1460,
     fotos: 1,
-    origem: "Pergunta do banco",
+    origem: "Sugestão da Ecoa",
     trecho:
       "Eu tinha quinze anos quando o seu Antônio me chamou para varrer a plataforma. Ganhava pouco e achava muito.",
   },

@@ -10,6 +10,7 @@ import { Gravador, type EstadoGravador } from "@/components/ui/gravador";
 import { MAX_CAUSO_AUDIO_MIN } from "@/lib/config";
 import { Gravador as Nucleo, pedirMicrofone } from "@/lib/gravacao/gravador";
 import { falarDuracao } from "@/lib/ui/tempo";
+import { PlayerVoz } from "@/components/ui/player-voz";
 
 export type AudioGravado = { blob: Blob; mime: string; segundos: number };
 
@@ -113,7 +114,12 @@ export function GravadorCauso({
   if (audio)
     return (
       <div className="flex flex-col gap-3">
-        <audio controls src={audio.url} className="w-full" />
+        <PlayerVoz
+          src={audio.url}
+          nome="o que você gravou"
+          duracaoS={audio.segundos}
+          preload="metadata"
+        />
         <p className="text-ui-15 text-tinta-2">
           {falarDuracao(audio.segundos)} gravados
         </p>

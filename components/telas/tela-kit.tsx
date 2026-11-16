@@ -9,6 +9,7 @@ import { Copiar } from "@/components/ui/copiar";
 import { IconeEnviar } from "@/components/ui/icones";
 import { useLinkDoAutor } from "@/components/livro/link-do-autor";
 import type { AcoesKit, LivroDaTela } from "@/lib/livro/tipos";
+import { CabecalhoLivro } from "@/components/livro/cabecalho-livro";
 import {
   conviteDoGrupo,
   linkWhatsApp,
@@ -105,170 +106,170 @@ export function TelaKit({
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-8 px-5 pt-8 pb-12 md:max-w-2xl lg:max-w-3xl">
-      <Link
-        href={`/livro/${livro.id}`}
-        className="text-ui-15 text-tinta-2 hover:text-tinta inline-flex min-h-11 items-center self-start"
-      >
-        ← Livro do {livro.autor}
-      </Link>
-      <h1 className="font-livro text-livro-28 text-tinta leading-tight">
-        Chame a família
-      </h1>
+    <>
+      <CabecalhoLivro livroId={livro.id} secao="kit" />
+      <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-5 pt-6 pb-12 md:max-w-2xl md:pt-10 lg:max-w-3xl">
+        <h1 className="font-livro text-livro-28 text-tinta leading-tight">
+          Chame a família
+        </h1>
 
-      {link ? (
-        <Cartao
-          titulo="Para o grupo da família"
-          texto={conviteDoGrupo({ autor: livro.autor, link })}
-          enviar="Enviar ao grupo"
-        />
-      ) : (
-        <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
-          <h2 className="text-ui-20 text-tinta font-medium">
-            Para o grupo da família
-          </h2>
-          <p className="text-ui-17 text-tinta-2">
-            Um link só, para fixar no grupo: votar nas perguntas e sugerir
-            causos.
-          </p>
-          <Botao
-            carregando={pendente}
-            disabled={!livro.podeEscrever}
-            onClick={() => pegar(false)}
-            className="self-start"
-          >
-            Pegar o link do grupo
-          </Botao>
-        </section>
-      )}
-
-      {autor.link ? (
-        <Cartao
-          titulo={`Para o ${livro.autor}`}
-          texto={mensagemAoAutor({ autor: livro.autor, link: autor.link })}
-          enviar={`Enviar ao ${livro.autor}`}
-          secundario
-          celular={livro.autorCelular}
-          rodape={
-            <>
-              {livro.autorCelular ? null : (
-                <Link
-                  href={`/livro/${livro.id}/configurar/quem`}
-                  className="text-ui-15 text-tinta-2 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
-                >
-                  Sem o celular, o WhatsApp pede o contato. Pôr o celular
-                </Link>
-              )}
-              {!livro.podeEscrever ||
-              !livro.ehResponsavel ? null : confirmarTrocaAutor ? (
-                <div className="flex flex-col gap-3">
-                  <p className="text-ui-15 text-tinta">
-                    O link antigo para de funcionar. Você vai precisar mandar o
-                    novo ao {livro.autor}.
-                  </p>
-                  <div className="flex gap-3">
-                    <Botao
-                      variante="secundario"
-                      carregando={pendente}
-                      onClick={() =>
-                        iniciar(async () => {
-                          const r = await acoes.trocarLinkDoAutor();
-                          if (!r.ok) return setErro(r.mensagem);
-                          setErro(null);
-                          setConfirmarTrocaAutor(false);
-                          autor.setLink(r.dados.url);
-                        })
-                      }
-                    >
-                      Trocar o link
-                    </Botao>
-                    <Botao
-                      variante="texto"
-                      onClick={() => setConfirmarTrocaAutor(false)}
-                    >
-                      Manter
-                    </Botao>
-                  </div>
-                </div>
-              ) : (
-                <Botao
-                  variante="texto"
-                  className="self-start"
-                  onClick={() => setConfirmarTrocaAutor(true)}
-                >
-                  Trocar o link do {livro.autor}
-                </Botao>
-              )}
-            </>
-          }
-        />
-      ) : (
-        <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
-          <h2 className="text-ui-20 text-tinta font-medium">
-            Para o {livro.autor}
-          </h2>
-          {autor.falhou ? (
-            <Botao
-              variante="secundario"
-              className="self-start"
-              onClick={autor.tentarDeNovo}
-            >
-              Pegar o link do {livro.autor}
-            </Botao>
-          ) : (
+        {link ? (
+          <Cartao
+            titulo="Para o grupo da família"
+            texto={conviteDoGrupo({ autor: livro.autor, link })}
+            enviar="Enviar ao grupo"
+          />
+        ) : (
+          <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
+            <h2 className="text-ui-20 text-tinta font-medium">
+              Para o grupo da família
+            </h2>
             <p className="text-ui-17 text-tinta-2">
-              {livro.podeEscrever
-                ? "Preparando o link pessoal…"
-                : "Este livro está em somente leitura."}
+              Um link só, para fixar no grupo: votar nas perguntas e sugerir
+              causos.
             </p>
-          )}
-        </section>
-      )}
+            <Botao
+              carregando={pendente}
+              disabled={!livro.podeEscrever}
+              onClick={() => pegar(false)}
+              className="self-start"
+            >
+              Pegar o link do grupo
+            </Botao>
+          </section>
+        )}
 
-      {erro ? (
-        <p role="alert" className="text-ui-15 text-erro">
-          {erro}
-        </p>
-      ) : null}
-
-      {/* Trocar um link que já existe: só o responsável (P60). */}
-      {link && livro.podeEscrever && livro.ehResponsavel ? (
-        confirmarTroca ? (
-          <div className="flex flex-col gap-3">
-            <p className="text-ui-15 text-tinta">
-              O link antigo para de funcionar. Você vai precisar mandar o novo
-              no grupo.
-            </p>
-            <div className="flex gap-3">
+        {autor.link ? (
+          <Cartao
+            titulo={`Para o ${livro.autor}`}
+            texto={mensagemAoAutor({ autor: livro.autor, link: autor.link })}
+            enviar={`Enviar ao ${livro.autor}`}
+            secundario
+            celular={livro.autorCelular}
+            rodape={
+              <>
+                {livro.autorCelular ? null : (
+                  <Link
+                    href={`/livro/${livro.id}/configurar/quem`}
+                    className="text-ui-15 text-tinta-2 inline-flex min-h-11 items-center self-start underline-offset-4 hover:underline"
+                  >
+                    Sem o celular, o WhatsApp pede o contato. Pôr o celular
+                  </Link>
+                )}
+                {!livro.podeEscrever ||
+                !livro.ehResponsavel ? null : confirmarTrocaAutor ? (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-ui-15 text-tinta">
+                      O link antigo para de funcionar. Você vai precisar mandar
+                      o novo ao {livro.autor}.
+                    </p>
+                    <div className="flex gap-3">
+                      <Botao
+                        variante="secundario"
+                        carregando={pendente}
+                        onClick={() =>
+                          iniciar(async () => {
+                            const r = await acoes.trocarLinkDoAutor();
+                            if (!r.ok) return setErro(r.mensagem);
+                            setErro(null);
+                            setConfirmarTrocaAutor(false);
+                            autor.setLink(r.dados.url);
+                          })
+                        }
+                      >
+                        Trocar o link
+                      </Botao>
+                      <Botao
+                        variante="texto"
+                        onClick={() => setConfirmarTrocaAutor(false)}
+                      >
+                        Manter
+                      </Botao>
+                    </div>
+                  </div>
+                ) : (
+                  <Botao
+                    variante="texto"
+                    className="self-start"
+                    onClick={() => setConfirmarTrocaAutor(true)}
+                  >
+                    Trocar o link do {livro.autor}
+                  </Botao>
+                )}
+              </>
+            }
+          />
+        ) : (
+          <section className="rounded-cartao bg-papel border-linha flex flex-col gap-4 border p-5">
+            <h2 className="text-ui-20 text-tinta font-medium">
+              Para o {livro.autor}
+            </h2>
+            {autor.falhou ? (
               <Botao
                 variante="secundario"
-                carregando={pendente}
-                onClick={() => pegar(true)}
+                className="self-start"
+                onClick={autor.tentarDeNovo}
               >
-                Trocar o link
+                Pegar o link do {livro.autor}
               </Botao>
-              <Botao variante="texto" onClick={() => setConfirmarTroca(false)}>
-                Manter
-              </Botao>
-            </div>
-          </div>
-        ) : (
-          <Botao
-            variante="texto"
-            className="self-start"
-            onClick={() => setConfirmarTroca(true)}
-          >
-            Trocar o link da família
-          </Botao>
-        )
-      ) : null}
+            ) : (
+              <p className="text-ui-17 text-tinta-2">
+                {livro.podeEscrever
+                  ? "Preparando o link pessoal…"
+                  : "Este livro está em somente leitura."}
+              </p>
+            )}
+          </section>
+        )}
 
-      <Link
-        href={`/livro/${livro.id}/perguntas`}
-        className="text-ui-17 text-floresta min-h-alvo inline-flex items-center self-start font-medium underline-offset-4 hover:underline"
-      >
-        Ir para as perguntas
-      </Link>
-    </main>
+        {erro ? (
+          <p role="alert" className="text-ui-15 text-erro">
+            {erro}
+          </p>
+        ) : null}
+
+        {/* Trocar um link que já existe: só o responsável (P60). */}
+        {link && livro.podeEscrever && livro.ehResponsavel ? (
+          confirmarTroca ? (
+            <div className="flex flex-col gap-3">
+              <p className="text-ui-15 text-tinta">
+                O link antigo para de funcionar. Você vai precisar mandar o novo
+                no grupo.
+              </p>
+              <div className="flex gap-3">
+                <Botao
+                  variante="secundario"
+                  carregando={pendente}
+                  onClick={() => pegar(true)}
+                >
+                  Trocar o link
+                </Botao>
+                <Botao
+                  variante="texto"
+                  onClick={() => setConfirmarTroca(false)}
+                >
+                  Manter
+                </Botao>
+              </div>
+            </div>
+          ) : (
+            <Botao
+              variante="texto"
+              className="self-start"
+              onClick={() => setConfirmarTroca(true)}
+            >
+              Trocar o link da família
+            </Botao>
+          )
+        ) : null}
+
+        <Link
+          href={`/livro/${livro.id}/perguntas`}
+          className="text-ui-17 text-floresta min-h-alvo inline-flex items-center self-start font-medium underline-offset-4 hover:underline"
+        >
+          Ir para as perguntas
+        </Link>
+      </main>
+    </>
   );
 }

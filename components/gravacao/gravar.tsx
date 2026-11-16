@@ -17,6 +17,7 @@ import {
   type SubirBlob,
 } from "@/lib/gravacao/envio";
 import { extDoMime, Gravador, pedirMicrofone } from "@/lib/gravacao/gravador";
+import { PlayerVoz } from "@/components/ui/player-voz";
 import {
   juntar,
   pedirPersistencia,
@@ -485,7 +486,12 @@ export function Gravar({
                   Parte {i + 1} de {urls.length}
                 </p>
               ) : null}
-              <audio controls src={u} className="w-full" />
+              <PlayerVoz
+                src={u}
+                nome={urls.length > 1 ? `a parte ${i + 1}` : "a gravação"}
+                tamanho={tamanho}
+                preload="metadata"
+              />
             </div>
           ))}
           <Botao

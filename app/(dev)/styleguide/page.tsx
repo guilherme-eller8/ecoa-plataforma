@@ -421,7 +421,7 @@ export default function Styleguide() {
             <CartaoHistoria
               titulo="Quando conheci a Lurdes"
               estado="pronta"
-              origem="Pergunta do banco"
+              origem="Sugestão da Ecoa"
               duracaoSeg={1130}
               paginas={7}
               trecho="Foi num baile no clube da estação, em 1964. Ela estava de vestido azul e não quis dançar comigo na primeira vez."
