@@ -32,7 +32,7 @@ export function TelaInicioAdmin({ livros }: { livros: LivroDaEscolha[] }) {
             Você não participa de nenhum livro.
           </p>
         ) : (
-          <ul className="flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl">
+          <ul className="*:bg-papel flex flex-col gap-1 *:overflow-hidden *:rounded-xl">
             {livros.map((l) => (
               <li key={l.id}>
                 <Link

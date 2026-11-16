@@ -13,7 +13,7 @@ export const pct = (f: number) => `${Math.round(f * 100)}%`;
 export function textoDaTaxa(t: Taxa): { valor: string; detalhe: string } {
   return t.fracao === null
     ? {
-        valor: `${t.n} de ${t.de}`,
+        valor: t.de === 0 ? "—" : `${t.n} de ${t.de}`,
         detalhe: t.de === 0 ? "sem dados" : "amostra pequena",
       }
     : { valor: pct(t.fracao), detalhe: `${t.n} de ${t.de}` };

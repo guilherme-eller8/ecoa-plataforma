@@ -75,7 +75,11 @@ function BlocoDoCliente({ c }: { c: DadosDoCliente }) {
         <Numero
           rotulo="Áudio processado"
           valor={`${Math.round(c.minutos)} min`}
-          detalhe={`${c.membros} pessoa(s) com login`}
+          detalhe={
+            c.membros === 1
+              ? "1 pessoa com login"
+              : `${c.membros} pessoas com login`
+          }
         />
         <Numero
           rotulo="Custo de IA"

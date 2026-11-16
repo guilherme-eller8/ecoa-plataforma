@@ -203,7 +203,7 @@ export function TelaEvals({ dados }: { dados: DadosCusto }) {
             {dados.projecao === null ? (
               <p className={apoio}>Sem minutos de áudio medidos ainda.</p>
             ) : (
-              <ul className="flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl">
+              <ul className="*:bg-papel flex flex-col gap-1 *:overflow-hidden *:rounded-xl">
                 {dados.projecao.map((p) => {
                   const brl = emReais(p.livroUSD);
                   return (
@@ -232,8 +232,8 @@ export function TelaEvals({ dados }: { dados: DadosCusto }) {
             )}
             {pequena ? (
               <p className={apoio}>
-                Amostra pequena: parte do custo é fixa por história; com
-                cerca de 10 histórias a projeção fica confiável.
+                Amostra pequena: parte do custo é fixa por história; com cerca
+                de 10 histórias a projeção fica confiável.
               </p>
             ) : null}
           </section>
@@ -242,7 +242,7 @@ export function TelaEvals({ dados }: { dados: DadosCusto }) {
             <h2 id="t-palavra" className={tituloSecao}>
               Primeira palavra na tela
             </h2>
-            <ul className="flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl">
+            <ul className="*:bg-papel flex flex-col gap-1 *:overflow-hidden *:rounded-xl">
               {dados.faixas.map((f) => (
                 <li
                   key={f.faixa}
@@ -277,7 +277,7 @@ export function TelaEvals({ dados }: { dados: DadosCusto }) {
             {dados.falhas.length === 0 ? (
               <p className={apoio}>Nenhuma falha em {dados.dias} dias.</p>
             ) : (
-              <ul className="flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl">
+              <ul className="*:bg-papel flex flex-col gap-1 *:overflow-hidden *:rounded-xl">
                 {dados.falhas.map((f) => (
                   <li
                     key={`${f.etapa}:${f.codigo}`}

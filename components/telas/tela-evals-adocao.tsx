@@ -90,7 +90,10 @@ export function TelaEvalsAdocao({ dados }: { dados: DadosAdocao }) {
         />
       ) : (
         <>
-          <section aria-labelledby="t-conversar" className="flex flex-col gap-3">
+          <section
+            aria-labelledby="t-conversar"
+            className="flex flex-col gap-3"
+          >
             <h2 id="t-conversar" className={tituloSecao}>
               Livros para conversar{" "}
               <span className="text-tinta-2 font-normal tabular-nums">
@@ -100,7 +103,7 @@ export function TelaEvalsAdocao({ dados }: { dados: DadosAdocao }) {
             {dados.conversar.length === 0 ? (
               <p className={apoio}>Todos os livros andando.</p>
             ) : (
-              <ul className="flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl">
+              <ul className="*:bg-papel flex flex-col gap-1 *:overflow-hidden *:rounded-xl">
                 {dados.conversar.map((l) => (
                   <li key={l.id}>
                     <Link
@@ -149,8 +152,10 @@ export function TelaEvalsAdocao({ dados }: { dados: DadosAdocao }) {
             </div>
             {dados.ativacao.emAndamento ? (
               <p className={apoio}>
-                {dados.ativacao.emAndamento} livro(s) ainda dentro dos{" "}
-                {ATIVACAO_DIAS} dias de ativação.
+                {dados.ativacao.emAndamento === 1
+                  ? "1 livro ainda está"
+                  : `${dados.ativacao.emAndamento} livros ainda estão`}{" "}
+                dentro dos {ATIVACAO_DIAS} dias de ativação.
               </p>
             ) : null}
           </section>
@@ -159,7 +164,7 @@ export function TelaEvalsAdocao({ dados }: { dados: DadosAdocao }) {
             <h2 id="t-funil" className={tituloSecao}>
               Funil até publicar
             </h2>
-            <ol className="font-ui flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl text-[16px]">
+            <ol className="font-ui *:bg-papel flex flex-col gap-1 text-[16px] *:overflow-hidden *:rounded-xl">
               {[
                 ["Livros", dados.funil.livros],
                 ["Configurou", dados.funil.configurou],
@@ -206,7 +211,10 @@ export function TelaEvalsAdocao({ dados }: { dados: DadosAdocao }) {
                 <tbody>
                   {dados.coortes.map((c) => (
                     <tr key={c.semana} className="text-tinta">
-                      <th scope="row" className="px-4 py-3 text-left font-normal">
+                      <th
+                        scope="row"
+                        className="px-4 py-3 text-left font-normal"
+                      >
                         {diaMes(c.semana)}
                       </th>
                       <td className="px-2 py-3">{c.livros}</td>
@@ -234,7 +242,7 @@ export function TelaEvalsAdocao({ dados }: { dados: DadosAdocao }) {
             <h2 id="t-quem" className={tituloSecao}>
               Quem mantém o livro vivo (30 dias)
             </h2>
-            <ul className="font-ui flex flex-col gap-1 *:bg-papel *:overflow-hidden *:rounded-xl text-[16px]">
+            <ul className="font-ui *:bg-papel flex flex-col gap-1 text-[16px] *:overflow-hidden *:rounded-xl">
               {dados.quem.map((q) => (
                 <li
                   key={q.papel}

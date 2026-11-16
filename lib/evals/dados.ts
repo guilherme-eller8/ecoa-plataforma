@@ -19,7 +19,10 @@ import {
 import { lerEventos } from "@/lib/eventos";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { lerEmBlocos } from "@/lib/supabase/paginar";
-import type { DadosAdocao, LivroParaConversar } from "@/components/telas/tela-evals-adocao";
+import type {
+  DadosAdocao,
+  LivroParaConversar,
+} from "@/components/telas/tela-evals-adocao";
 import type { DadosCusto } from "@/components/telas/tela-evals";
 import {
   ativacao,
@@ -49,11 +52,15 @@ export async function carregarCusto(
 ): Promise<DadosCusto> {
   const db = clienteAdmin();
   const hoje = diaBrasilia(agora);
-  const desde30 = diaBrasilia(new Date(agora.getTime() - (EVALS_DIAS - 1) * DIA_MS));
+  const desde30 = diaBrasilia(
+    new Date(agora.getTime() - (EVALS_DIAS - 1) * DIA_MS),
+  );
   const desdeSemanas = segundaDe(
     diaBrasilia(new Date(agora.getTime() - (EVALS_SEMANAS - 1) * 7 * DIA_MS)),
   );
-  const desdeIso = new Date(agora.getTime() - EVALS_DIAS * DIA_MS).toISOString();
+  const desdeIso = new Date(
+    agora.getTime() - EVALS_DIAS * DIA_MS,
+  ).toISOString();
 
   const [uso, palavra, historias, falhas] = await Promise.all([
     db.rpc("admin_uso_por_dia", {

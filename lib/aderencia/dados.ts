@@ -27,19 +27,19 @@ import { errosPorRota, jobsQueFalharam, type EventoDeErro } from "./erros";
 async function historiasPorLivro(livro?: string) {
   const db = clienteAdmin();
   // Em blocos: a API corta cada pedido em max_rows (Evals 1A).
-  const data = await lerEmBlocos<{ book_id: string; revisada_em: string | null }>(
-    (de, ate) => {
-      let q = db
-        .from("stories")
-        .select("book_id, revisada_em")
-        .eq("estado", "pronta")
-        .order("id")
-        .range(de, ate);
-      if (livro) q = q.eq("book_id", livro);
-      return q;
-    },
-    ADERENCIA_MAX_HISTORIAS,
-  ).catch(() => {
+  const data = await lerEmBlocos<{
+    book_id: string;
+    revisada_em: string | null;
+  }>((de, ate) => {
+    let q = db
+      .from("stories")
+      .select("book_id, revisada_em")
+      .eq("estado", "pronta")
+      .order("id")
+      .range(de, ate);
+    if (livro) q = q.eq("book_id", livro);
+    return q;
+  }, ADERENCIA_MAX_HISTORIAS).catch(() => {
     throw new Error("Não deu para ler as histórias.");
   });
   const mapa = new Map<string, { prontas: number; revisadas: number }>();
@@ -135,21 +135,23 @@ export type AcaoDaLinhaDoTempo = EventoLinha & { nome: string };
 
 export async function carregarLivro(id: string, agora: Date = new Date()) {
   const db = clienteAdmin();
-  const [livros, historias, eventos, membros, plano, custo] = await Promise.all([
-    livrosDoAdmin(),
-    historiasPorLivro(id),
-    lerEventos({ livro: id, limite: ADERENCIA_MAX_EVENTOS }, db),
-    db.from("book_members").select("user_id, papel").eq("book_id", id),
-    db
-      .from("books")
-      .select(
-        "criado_em, plano_estado, plano_vence_em, plano_ativado_em, ia_consentimento_em",
-      )
-      .eq("id", id)
-      .maybeSingle(),
-    // Somado no banco (Evals 1A); o filtro vai para a API, não para o servidor.
-    db.rpc("admin_custos_por_livro").eq("book_id", id).maybeSingle(),
-  ]);
+  const [livros, historias, eventos, membros, plano, custo] = await Promise.all(
+    [
+      livrosDoAdmin(),
+      historiasPorLivro(id),
+      lerEventos({ livro: id, limite: ADERENCIA_MAX_EVENTOS }, db),
+      db.from("book_members").select("user_id, papel").eq("book_id", id),
+      db
+        .from("books")
+        .select(
+          "criado_em, plano_estado, plano_vence_em, plano_ativado_em, ia_consentimento_em",
+        )
+        .eq("id", id)
+        .maybeSingle(),
+      // Somado no banco (Evals 1A); o filtro vai para a API, não para o servidor.
+      db.rpc("admin_custos_por_livro").eq("book_id", id).maybeSingle(),
+    ],
+  );
   const livro = livros.find((l) => l.id === id);
   if (!livro) return null;
   const lista: EventoLinha[] = eventos;

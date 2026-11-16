@@ -10,7 +10,9 @@ test.describe("Admin: Evals 1A (exemplo)", () => {
       "page",
     );
     await expect(page.getByText("Por minuto de áudio")).toBeVisible();
-    await expect(page.getByText("meta R$ 0,20", { exact: false })).toBeVisible();
+    await expect(
+      page.getByText("meta R$ 0,20", { exact: false }),
+    ).toBeVisible();
     await expect(page.getByText("Sem trocar o tamanho")).toBeVisible();
     await expect(page.getByText("2 trocas por história")).toBeVisible();
     await expect(page.getByText("Áudio até 5 min")).toBeVisible();
@@ -23,7 +25,9 @@ test.describe("Admin: Evals 1A (exemplo)", () => {
     await expect(
       page.getByText("Nenhum uso de IA nos últimos 30 dias."),
     ).toBeVisible();
-    await expect(page.getByRole("link", { name: "Ver os livros" })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Ver os livros" }),
+    ).toBeVisible();
   });
 
   test("adoção: amostra pequena em vez de percentual e quem precisa de conversa", async ({
@@ -33,15 +37,13 @@ test.describe("Admin: Evals 1A (exemplo)", () => {
     const conversar = page.getByRole("link", { name: /Dona Lurdes/ });
     await expect(conversar).toHaveAttribute(
       "href",
-      "/admin/aderencia/1df99541-1bf8-402d-b4ae-658cfb163808",
+      "/admin/aderencia/00000000-0000-4000-8000-0000000000a1",
     );
     await expect(page.getByText("1 de 3")).toBeVisible();
     await expect(page.getByText(/amostra pequena/).first()).toBeVisible();
     // Com menos de 5 livros, nenhuma taxa vira percentual.
     await expect(page.getByText(/^\d+%$/)).toHaveCount(0);
-    await expect(
-      page.getByRole("columnheader", { name: "S4" }),
-    ).toBeVisible();
+    await expect(page.getByRole("columnheader", { name: "S4" })).toBeVisible();
   });
 
   test("adoção sem livro: uma frase e um botão", async ({ page }) => {
@@ -66,13 +68,12 @@ test.describe("Admin: Evals 1A (exemplo)", () => {
     page,
   }) => {
     await page.goto("/styleguide/inicio-admin");
-    await expect(page.getByRole("link", { name: "Abrir o admin" })).toHaveAttribute(
-      "href",
-      "/admin",
-    );
+    await expect(
+      page.getByRole("link", { name: "Abrir o admin" }),
+    ).toHaveAttribute("href", "/admin");
     await expect(page.getByRole("link", { name: /Jair/ })).toHaveAttribute(
       "href",
-      "/livro/f3a99a94",
+      "/livro/00000000-0000-4000-8000-0000000000a2",
     );
     await expect(page.getByText("Você é o responsável")).toBeVisible();
   });

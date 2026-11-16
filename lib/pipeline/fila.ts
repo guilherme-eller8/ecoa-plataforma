@@ -36,10 +36,7 @@ export async function gravacoesOrfas(
     .eq("upload", "recebido")
     .is("processado_em", null)
     .lte("duracao_s", MAX_ARQUIVO_MIN * 60)
-    .lt(
-      "recebido_em",
-      new Date(agora - idadeMin * 60_000).toISOString(),
-    )
+    .lt("recebido_em", new Date(agora - idadeMin * 60_000).toISOString())
     .gt(
       "recebido_em",
       new Date(agora - VARREDURA_JANELA_H * 3600_000).toISOString(),
@@ -84,8 +81,7 @@ export async function gravacoesOrfas(
     g.lote_id !== null &&
     g.lote_total !== null &&
     (recebidas.get(g.lote_id) ?? 0) < g.lote_total &&
-    agora - new Date(g.recebido_em ?? 0).getTime() <
-      ESPERA_LOTE_H * 3600_000;
+    agora - new Date(g.recebido_em ?? 0).getTime() < ESPERA_LOTE_H * 3600_000;
   return lista.filter(
     (g) => !ja.has(g.id) && consentidos.has(g.book_id) && !esperando(g),
   );

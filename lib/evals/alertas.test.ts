@@ -6,7 +6,7 @@ import {
 } from "@/lib/config";
 import { alertasDe, chaveDoAlerta, type FotoDosAlertas } from "./alertas";
 
-const LIVRO = "1df99541-1bf8-402d-b4ae-658cfb163808";
+const LIVRO = "00000000-0000-4000-8000-0000000000a1";
 const usd = (brl: number) => brl / COTACAO_USD_BRL;
 const calma: FotoDosAlertas = {
   filaParada: [],
@@ -75,11 +75,16 @@ describe("alertasDe", () => {
       alertasDe({ ...calma, semana: { gastoUSD: 0.01, perdaUSD: 0.01 } }),
     ).toEqual([]);
     expect(
-      alertasDe({ ...calma, semana: { gastoUSD: usd(10), perdaUSD: usd(0.4) } }),
+      alertasDe({
+        ...calma,
+        semana: { gastoUSD: usd(10), perdaUSD: usd(0.4) },
+      }),
     ).toEqual([]);
     expect(
-      alertasDe({ ...calma, semana: { gastoUSD: usd(10), perdaUSD: usd(1) } })[0]
-        .condicao,
+      alertasDe({
+        ...calma,
+        semana: { gastoUSD: usd(10), perdaUSD: usd(1) },
+      })[0].condicao,
     ).toBe("perda");
   });
 

@@ -189,9 +189,7 @@ export type FaixaDeEspera = {
 export function rotulosDasFaixas(limites: readonly number[]): string[] {
   return [
     `até ${limites[0]} min`,
-    ...limites
-      .slice(1)
-      .map((l, i) => `${limites[i]} a ${l} min`),
+    ...limites.slice(1).map((l, i) => `${limites[i]} a ${l} min`),
     `${limites[limites.length - 1]} min ou mais`,
   ];
 }
@@ -220,7 +218,10 @@ export type FalhaLida = { etapa: string; erro_codigo: string | null };
 export function falhasPorCodigo(
   falhas: readonly FalhaLida[],
 ): { codigo: string; etapa: string; vezes: number }[] {
-  const mapa = new Map<string, { codigo: string; etapa: string; vezes: number }>();
+  const mapa = new Map<
+    string,
+    { codigo: string; etapa: string; vezes: number }
+  >();
   for (const f of falhas) {
     const codigo = f.erro_codigo ?? "sem_codigo";
     const chave = `${f.etapa}:${codigo}`;

@@ -6,7 +6,12 @@ import type { LivroDaEscolha } from "@/components/telas/tela-inicio-admin";
 import type { DadosDoCliente } from "@/lib/aderencia/dados";
 import { FUNIL_ADERENCIA } from "./prompt15";
 
-const semana = (s: string, escrita: number, transcricao: number, pedidos = 0) => ({
+const semana = (
+  s: string,
+  escrita: number,
+  transcricao: number,
+  pedidos = 0,
+) => ({
   semana: s,
   transcricao,
   escrita,
@@ -117,7 +122,7 @@ export const DADOS_ADOCAO: DadosAdocao = {
   valor: { revisadas: 1, publicados: 0, qrTocados: 2, compartilhadas: 0 },
   conversar: [
     {
-      id: "1df99541-1bf8-402d-b4ae-658cfb163808",
+      id: "00000000-0000-4000-8000-0000000000a1",
       autorNome: "Dona Lurdes",
       motivo: "Parado há 7 dias (7 ou mais sem ação)",
     },
@@ -147,6 +152,10 @@ export const CLIENTE_JAIR: DadosDoCliente = {
 };
 
 export const LIVROS_DA_ESCOLHA: LivroDaEscolha[] = [
-  { id: "f3a99a94", nome: "Jair", papel: "responsavel" },
+  {
+    id: "00000000-0000-4000-8000-0000000000a2",
+    nome: "Jair",
+    papel: "responsavel",
+  },
   { id: "aa11bb22", nome: "Dona Lurdes", papel: "cofacilitador" },
 ];

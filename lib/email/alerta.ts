@@ -12,7 +12,9 @@ export function chaveDoAviso(livro: string, admin: string, agora: Date) {
 }
 
 /** Usuários com `app_metadata.role = admin` e e-mail. Vazio se o Auth falhar (nunca lança). */
-export async function adminsParaAvisar(): Promise<{ id: string; email: string }[]> {
+export async function adminsParaAvisar(): Promise<
+  { id: string; email: string }[]
+> {
   const { data, error } = await clienteAdmin().auth.admin.listUsers({
     page: 1,
     perPage: 200,
