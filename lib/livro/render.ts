@@ -90,9 +90,37 @@ function lerMarcas(
   }));
 }
 
+/** Onde uma foto caiu no papel (P76): página (de 1) e caixa, em pt, a partir do canto da página. */
+export type MarcaFoto = {
+  arquivo: string;
+  pagina: number;
+  x: number;
+  y: number;
+  l: number;
+  a: number;
+};
+
+function lerFotos(
+  c: NodeCompiler,
+  doc: ReturnType<typeof compilar>,
+): MarcaFoto[] {
+  const itens = c.query(doc, { selector: "<foto>" }) as {
+    value: MarcaFoto;
+  }[];
+  return itens.map((i) => ({
+    arquivo: String(i.value.arquivo),
+    pagina: Number(i.value.pagina),
+    x: Number(i.value.x),
+    y: Number(i.value.y),
+    l: Number(i.value.l),
+    a: Number(i.value.a),
+  }));
+}
+
 export type MioloCompilado = {
   paginas: number;
   marcas: MarcaQr[];
+  fotos: () => MarcaFoto[];
   pdf: () => Buffer;
 };
 
@@ -109,6 +137,7 @@ export function compilarMiolo(
     return {
       paginas: doc.numOfPages,
       marcas: lerMarcas(c, doc),
+      fotos: () => lerFotos(c, doc),
       pdf: () =>
         c.pdf(doc, { creationTimestamp: Math.floor(Date.now() / 1000) }),
     };

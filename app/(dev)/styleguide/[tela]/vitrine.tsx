@@ -1096,7 +1096,27 @@ function acoesFolhearFalsas(total: number): AcoesFolhear {
           (_, i) => `/exemplo/folhear-${de + i}.jpg`,
         ),
         provisorio: total > 0,
+        // A foto da 1ª história, onde o Typst a pôs (página 6), para tocar e ajustar (P76).
+        toques: total
+          ? [
+              {
+                historiaId: "00000000-0000-4000-8000-000000000000",
+                fotoId: FOTO_ALTA.id,
+                primeira: true,
+                pagina: 6,
+                x: 35.62,
+                y: 9.72,
+                l: 25.52,
+                a: 39.35,
+              },
+            ]
+          : [],
       },
     }),
+    fotoParaAjustar: async () => ({
+      ok: true,
+      dados: { foto: FOTO_ALTA, primeira: true },
+    }),
+    ajustarFoto: async () => ({ ok: true }),
   };
 }

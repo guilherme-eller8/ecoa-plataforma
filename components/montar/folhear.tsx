@@ -10,6 +10,16 @@ import { PreviaDaCapa } from "@/components/montar/previa-capa";
 import { Botao } from "@/components/ui/botao";
 import type { Resposta } from "@/lib/livro/tipos";
 
+/** Um lugar tocável numa página (P76: a foto que abre "Ajustar a foto"), em % da página. */
+export type AreaTocavel = {
+  chave: string;
+  x: number;
+  y: number;
+  l: number;
+  a: number;
+  rotulo: string;
+};
+
 function useLivroAberto(): boolean {
   const [largo, setLargo] = useState(false);
   useEffect(() => {
@@ -35,11 +45,15 @@ function Pagina({
   total,
   url,
   lado,
+  areas = [],
+  aoTocar,
 }: {
   n: number | null;
   total: number;
   url: string | undefined;
   lado: "esquerda" | "direita" | "unica";
+  areas?: AreaTocavel[];
+  aoTocar?: (a: AreaTocavel) => void;
 }) {
   const largura =
     // A altura manda: as setas ficam sempre na primeira tela, no celular e no computador.
@@ -50,7 +64,7 @@ function Pagina({
     return <div aria-hidden="true" className={`${largura} aspect-[154/216]`} />;
   return (
     <div
-      className={`bg-polen-2 flex aspect-[154/216] items-center justify-center overflow-hidden ${largura} ${
+      className={`bg-polen-2 relative flex aspect-[154/216] items-center justify-center overflow-hidden ${largura} ${
         lado === "esquerda"
           ? "rounded-l-interno"
           : lado === "direita"
@@ -68,6 +82,27 @@ function Pagina({
       ) : (
         <span className="text-ui-15 text-tinta-2">Carregando…</span>
       )}
+      {url && aoTocar
+        ? areas.map((a) => (
+            <button
+              key={a.chave}
+              type="button"
+              aria-label={a.rotulo}
+              onClick={() => aoTocar(a)}
+              className="group hover:ring-floresta focus-visible:ring-floresta absolute rounded-sm ring-inset hover:ring-2 focus-visible:ring-2 focus-visible:outline-none"
+              style={{
+                left: `${a.x}%`,
+                top: `${a.y}%`,
+                width: `${a.l}%`,
+                height: `${a.a}%`,
+              }}
+            >
+              <span className="bg-papel/90 text-tinta text-ui-13 absolute right-1.5 bottom-1.5 rounded-full px-2.5 py-1 font-medium shadow-sm">
+                Ajustar
+              </span>
+            </button>
+          ))
+        : null}
     </div>
   );
 }
@@ -78,6 +113,10 @@ export function Folhear({
   urlsIniciais,
   porPedido,
   pedir,
+  areas = {},
+  aoTocar,
+  paginaInicial = 0,
+  aoMudarPagina,
 }: {
   total: number;
   /** A capa aberta (imagem); null enquanto não chegou. */
@@ -86,10 +125,19 @@ export function Folhear({
   urlsIniciais: Record<number, string>;
   porPedido: number;
   pedir: (de: number) => Promise<Resposta<{ urls: string[] }>>;
+  /** P76: lugares tocáveis por página (número da página → áreas). */
+  areas?: Record<number, AreaTocavel[]>;
+  aoTocar?: (a: AreaTocavel) => void;
+  /** Volta para esta página ao recarregar (depois de ajustar uma foto). */
+  paginaInicial?: number;
+  aoMudarPagina?: (p: number) => void;
 }) {
   const largo = useLivroAberto();
   // 0 = a capa; 1..total = as páginas do miolo.
-  const [pagina, setPagina] = useState(0);
+  const [pagina, setPagina] = useState(Math.min(paginaInicial, total));
+  useEffect(() => {
+    aoMudarPagina?.(pagina);
+  }, [pagina, aoMudarPagina]);
   const [urls, setUrls] = useState<Record<number, string>>(urlsIniciais);
   const secao = useRef<HTMLElement>(null);
   const pedidas = useRef(
@@ -187,17 +235,28 @@ export function Folhear({
             total={total}
             url={esq ? urls[esq] : undefined}
             lado="esquerda"
+            areas={esq ? areas[esq] : []}
+            aoTocar={aoTocar}
           />
           <Pagina
             n={dir}
             total={total}
             url={dir ? urls[dir] : undefined}
             lado="direita"
+            areas={dir ? areas[dir] : []}
+            aoTocar={aoTocar}
           />
         </div>
       ) : (
         <div className="flex justify-center">
-          <Pagina n={pagina} total={total} url={urls[pagina]} lado="unica" />
+          <Pagina
+            n={pagina}
+            total={total}
+            url={urls[pagina]}
+            lado="unica"
+            areas={areas[pagina]}
+            aoTocar={aoTocar}
+          />
         </div>
       )}
       {/* Celular: o número da página numa linha e os dois botões, lado a lado, na de baixo. */}

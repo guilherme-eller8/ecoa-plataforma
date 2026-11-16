@@ -53,3 +53,36 @@ export function dadosDoFolheio(conteudo: ConteudoDoLivro, data: Date) {
     historias: c.historias.length,
   };
 }
+
+/** Uma foto tocável no Folhear (P76): de que história e foto ela é, e se é a 1ª da história. */
+export type FotoDoFolheio = {
+  historiaId: string;
+  fotoId: string;
+  primeira: boolean;
+};
+
+const ID_DA_FOTO = /\/acervo\/([0-9a-f-]{36})\.jpg$/;
+
+/**
+ * De nome local no Typst ("foto-h2-1.jpg") para a história e a foto. O id da foto sai do caminho
+ * do Storage (livros/{livro}/acervo/{id}.jpg). Fotos das mensagens não são ajustáveis aqui.
+ */
+export function fotosDoFolheio(
+  conteudo: ConteudoDoLivro,
+): Map<string, FotoDoFolheio> {
+  const c = soIncluidas(conteudo);
+  const mapa = new Map<string, FotoDoFolheio>();
+  c.historias.forEach((h, i) =>
+    h.fotos.forEach((f, j) => {
+      const id = f.caminho.match(ID_DA_FOTO)?.[1];
+      // O mesmo nome que montarDadosMiolo dá à foto (o teste confere que batem).
+      if (id)
+        mapa.set(`foto-h${i + 1}-${j + 1}.jpg`, {
+          historiaId: h.id,
+          fotoId: id,
+          primeira: j === 0,
+        });
+    }),
+  );
+  return mapa;
+}

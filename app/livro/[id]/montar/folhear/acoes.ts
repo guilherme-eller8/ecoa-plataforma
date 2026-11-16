@@ -14,7 +14,10 @@ import {
   folheioDoLivro,
   folheioGuardado,
   paginasDoFolheio,
+  type ToqueNaFoto,
 } from "@/lib/livro/folhear";
+import { fotosDaHistoria } from "@/lib/historias/dados";
+import type { FotoDaHistoria } from "@/lib/historias/tipos";
 import { soIncluidas } from "@/lib/livro/montagem";
 import { lerMontagem } from "@/lib/livro/montar-servidor";
 import type { Resposta } from "@/lib/livro/tipos";
@@ -31,6 +34,8 @@ export type PaginasDoFolheio = {
   urls: string[];
   /** Alguma história vai ganhar o QR só ao publicar (o quadrado tracejado). */
   provisorio: boolean;
+  /** P76: as fotos do livro inteiro, em % da página, para tocar e ajustar. */
+  toques: ToqueNaFoto[];
 };
 
 const SEM_ACESSO = {
@@ -67,6 +72,7 @@ export async function folhear(
         de,
         urls: [],
         provisorio: false,
+        toques: [],
       },
     };
 
@@ -91,11 +97,8 @@ export async function folhear(
         return Buffer.from(await r.data.arrayBuffer());
       },
     );
-    const urls = await paginasDoFolheio(
-      f,
-      de,
-      de + FOLHEAR_PAGINAS_POR_PEDIDO - 1,
-    );
+    const ate = de + FOLHEAR_PAGINAS_POR_PEDIDO - 1;
+    const urls = await paginasDoFolheio(f, de, ate);
     if (de === 1)
       after(() =>
         registrarEvento({
@@ -115,9 +118,31 @@ export async function folhear(
         de,
         urls,
         provisorio: f.cobrir.length > 0,
+        // Todas as fotos do livro (poucos números): a dica e o toque valem antes da página chegar.
+        toques: f.toques,
       },
     };
   } catch {
     return GENERICO;
   }
+}
+
+/**
+ * P76: a foto tocada no Folhear, com a URL assinada, para abrir "Ajustar a foto". Pela sessão
+ * (RLS de membro); salvar usa a mesma ação do editor (ajustarFoto).
+ */
+export async function fotoParaAjustar(
+  livroId: string,
+  historiaId: string,
+  fotoId: string,
+): Promise<Resposta<{ foto: FotoDaHistoria; primeira: boolean }>> {
+  const uuid = z.uuid();
+  if (!uuid.safeParse(historiaId).success || !uuid.safeParse(fotoId).success)
+    return GENERICO;
+  const a = await livroDaAcao(livroId);
+  if (!a) return SEM_ACESSO;
+  const fotos = await fotosDaHistoria(a.livro.id, historiaId);
+  const i = fotos.findIndex((f) => f.id === fotoId);
+  if (i < 0) return GENERICO;
+  return { ok: true, dados: { foto: fotos[i], primeira: i === 0 } };
 }
