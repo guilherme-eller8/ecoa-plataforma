@@ -68,7 +68,7 @@ describe("tocar na foto no Folhear (P76)", () => {
     const [a, b] = doMiolo.map((f) => mapa.get(f.arquivo)!);
     expect(a).toEqual({
       historiaId: c.historias[0].id,
-      fotoId: "00000000-0000-4000-8000-000000000001",
+      indice: 0,
       primeira: true,
     });
     expect(b.primeira).toBe(false);

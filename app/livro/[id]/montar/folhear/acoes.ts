@@ -128,21 +128,28 @@ export async function folhear(
 }
 
 /**
- * P76: a foto tocada no Folhear, com a URL assinada, para abrir "Ajustar a foto". Pela sessão
+ * P76: a foto tocada no Folhear (pela posição na história), com a URL assinada, para abrir "Ajustar a foto". Pela sessão
  * (RLS de membro); salvar usa a mesma ação do editor (ajustarFoto).
  */
 export async function fotoParaAjustar(
   livroId: string,
   historiaId: string,
-  fotoId: string,
+  indice: number,
 ): Promise<Resposta<{ foto: FotoDaHistoria; primeira: boolean }>> {
   const uuid = z.uuid();
-  if (!uuid.safeParse(historiaId).success || !uuid.safeParse(fotoId).success)
+  if (
+    !uuid.safeParse(historiaId).success ||
+    !z.number().int().min(0).max(10).safeParse(indice).success
+  )
     return GENERICO;
   const a = await livroDaAcao(livroId);
   if (!a) return SEM_ACESSO;
   const fotos = await fotosDaHistoria(a.livro.id, historiaId);
-  const i = fotos.findIndex((f) => f.id === fotoId);
-  if (i < 0) return GENERICO;
-  return { ok: true, dados: { foto: fotos[i], primeira: i === 0 } };
+  const foto = fotos[indice];
+  if (!foto)
+    return {
+      ok: false,
+      mensagem: "Não achamos esta foto. Atualize a página e tente de novo.",
+    };
+  return { ok: true, dados: { foto, primeira: indice === 0 } };
 }

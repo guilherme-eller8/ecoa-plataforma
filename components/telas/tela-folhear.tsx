@@ -19,7 +19,8 @@ import type { Resposta } from "@/lib/livro/tipos";
 /** Uma foto de história no papel, em % da página (P76). */
 export type ToqueDaTela = {
   historiaId: string;
-  fotoId: string;
+  /** Posição da foto na história (0 = a 1ª). */
+  indice: number;
   primeira: boolean;
   pagina: number;
   x: number;
@@ -42,7 +43,7 @@ export type AcoesFolhear = {
   folhear: (de: number) => Promise<Resposta<FolheioDaTela>>;
   fotoParaAjustar: (
     historiaId: string,
-    fotoId: string,
+    indice: number,
   ) => Promise<Resposta<{ foto: FotoDaHistoria; primeira: boolean }>>;
   ajustarFoto: (
     historiaId: string,
@@ -58,7 +59,7 @@ type Estado =
 
 type EmAjuste = { historiaId: string; foto: FotoDaHistoria; primeira: boolean };
 
-const chaveDo = (t: ToqueDaTela) => `${t.historiaId}:${t.fotoId}`;
+const chaveDo = (t: ToqueDaTela) => `${t.historiaId}:${t.indice}`;
 
 function areasDe(toques: ToqueDaTela[]): Record<number, AreaTocavel[]> {
   const r: Record<number, AreaTocavel[]> = {};
@@ -132,7 +133,7 @@ export function TelaFolhear({
     if (!t || abrindo) return;
     setAbrindo(true);
     setAviso(null);
-    const r = await acoes.fotoParaAjustar(t.historiaId, t.fotoId);
+    const r = await acoes.fotoParaAjustar(t.historiaId, t.indice);
     setAbrindo(false);
     if (!r.ok) return setAviso(r.mensagem);
     setEmAjuste({ historiaId: t.historiaId, ...r.dados });
