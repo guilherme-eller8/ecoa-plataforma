@@ -3,12 +3,15 @@
 // Folha "Página de amostra" (prompt 10, seção 5.1). criar_qr confere membro, plano, história
 // pronta e sorteia o código no banco; aqui só o formato, o evento e o pedido do recorte.
 import { after } from "next/server";
-import type { EstadoAmostra } from "@/components/editor/folha-amostra";
+import type {
+  EstadoAmostra,
+  EstadoDoBotaoAmostra,
+} from "@/components/editor/folha-amostra";
 import { z } from "zod";
 import { codigoDoErro, fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
 import type { Acao } from "@/lib/eventos-acoes";
-import { AMOSTRA_PREVIA_DPI } from "@/lib/config";
+import { AMOSTRA_ESPERA_VOZ_S, AMOSTRA_PREVIA_DPI } from "@/lib/config";
 import { livroDaAcao, type LivroComAcesso } from "@/lib/livro/acesso";
 import {
   dadosDaAmostra,
@@ -46,7 +49,7 @@ async function qrAtual(livro: string, historia: string) {
   const supabase = await clienteSessao();
   const { data } = await supabase
     .from("qr_codes")
-    .select("codigo, desativado_em")
+    .select("codigo, desativado_em, audio_pedido_em, audio_pronto_em")
     .eq("book_id", livro)
     .eq("story_id", historia)
     .maybeSingle();
@@ -86,6 +89,30 @@ export async function prepararAmostra(
   if (!antes) evento(a, "qr_criado", historiaId);
   // A fila recusou: a folha diz na hora, em vez de esperar 2 min por uma voz que não vem.
   const envioFalhou = r.pedir_audio ? !(await pedirRecorte(r.codigo)) : false;
+  // Pedida há mais que a espera da folha e ainda sem voz: algo travou do nosso lado (a fila
+  // aceitou e não rodou). O admin fica sabendo uma vez por dia (T56).
+  const pedida = antes?.audio_pedido_em
+    ? Date.parse(antes.audio_pedido_em)
+    : null;
+  if (
+    !r.audio_pronto &&
+    !envioFalhou &&
+    pedida !== null &&
+    Date.now() - pedida > AMOSTRA_ESPERA_VOZ_S * 1000
+  )
+    after(() =>
+      registrarEvento(
+        {
+          quem: null,
+          papel: "sistema",
+          acao: "erro_servidor",
+          // Com o livro: a deduplicação do dia é por livro e não colide com outros erros.
+          livro: a.livro.id,
+          detalhes: { rota: "fila:qr/recortar", tipo: "voz_atrasada" },
+        },
+        { umaVezPorDia: true },
+      ),
+    );
   return {
     ok: true,
     dados: {
@@ -106,7 +133,7 @@ export async function prepararAmostra(
 export async function previaAmostra(
   livroId: string,
   historiaId: string,
-): Promise<Resposta<{ imagem: string; cortada: boolean }>> {
+): Promise<Resposta<{ imagens: string[]; cortada: boolean }>> {
   if (!uuid.safeParse(historiaId).success) return ERRO;
   const a = await livroDaAcao(livroId);
   if (!a) return SEM_ACESSO;
@@ -120,24 +147,48 @@ export async function previaAmostra(
   try {
     const r = await gerarAmostraDaHistoria({ ...d, codigo: d.codigo });
     const cobrir = d.vozPronta && !d.desligado ? [] : [r.marca];
-    const [jpeg] = await rasterizarPaginas(
+    const jpegs = await rasterizarPaginas(
       r.pdf,
       1,
-      1,
+      r.paginas,
       AMOSTRA_PREVIA_DPI,
       cobrir,
     );
-    if (!jpeg) return ERRO;
+    if (!jpegs.length) return ERRO;
     return {
       ok: true,
       dados: {
-        imagem: `data:image/jpeg;base64,${jpeg.toString("base64")}`,
+        imagens: jpegs.map(
+          (j) => `data:image/jpeg;base64,${j.toString("base64")}`,
+        ),
         cortada: r.cortado,
       },
     };
   } catch {
     return ERRO;
   }
+}
+
+/**
+ * O estado da amostra para o botão do editor, sem criar nada nem pedir a voz: a pessoa que fechou
+ * a folha vê no botão que a voz continua sendo preparada (e não toca de novo achando que sumiu).
+ */
+export async function estadoAmostra(
+  livroId: string,
+  historiaId: string,
+): Promise<Resposta<{ estado: EstadoDoBotaoAmostra }>> {
+  if (!uuid.safeParse(historiaId).success) return ERRO;
+  const a = await livroDaAcao(livroId);
+  if (!a) return SEM_ACESSO;
+  const qr = await qrAtual(a.livro.id, historiaId);
+  const estado: EstadoDoBotaoAmostra = !qr
+    ? "nenhuma"
+    : qr.desativado_em
+      ? "desligada"
+      : qr.audio_pronto_em
+        ? "pronta"
+        : "preparando";
+  return { ok: true, dados: { estado } };
 }
 
 /** Só o responsável (o banco confere de novo). Vale com o plano vencido. */

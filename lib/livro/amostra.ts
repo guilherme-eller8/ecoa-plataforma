@@ -1,6 +1,8 @@
 import "server-only";
-// Página de amostra em PDF (seção 5.3 do prompt 10, T43), em A5 e com o capítulo do livro (Q4).
+// Amostra em PDF (seção 5.3 do prompt 10, T43), em A5 e com o capítulo do livro (Q4): o começo
+// da história em até AMOSTRA_PAGINAS páginas (P74), como o livro aberto.
 // Um compilador por pedido: os arquivos virtuais nunca se misturam entre dois pedidos.
+import { AMOSTRA_PAGINAS } from "@/lib/config";
 import { APONTE_E_OUCA, geometriaDoMiolo } from "./montar-dados";
 import { caixaDaFoto } from "./fotos";
 import { codigoImpresso } from "@/lib/qr/codigo";
@@ -18,6 +20,7 @@ export type DadosAmostra = {
 
 export type ResultadoAmostra = {
   pdf: Buffer;
+  paginas: number;
   cortado: boolean;
   url: string;
   /** Onde o QR caiu no papel: a conferência lê só esse quadrado. */
@@ -50,7 +53,7 @@ export async function gerarAmostra(d: DadosAmostra): Promise<ResultadoAmostra> {
       d.foto?.bytes ?? null,
     );
   const cabe = (p: string[], cortado: boolean) =>
-    compilar(p, cortado).paginas === 1;
+    compilar(p, cortado).paginas <= AMOSTRA_PAGINAS;
 
   // Tudo cabe? Senão, o maior número de parágrafos inteiros (divisão binária); se nem o 1º
   // cabe, as frases dele que couberem.
@@ -74,5 +77,11 @@ export async function gerarAmostra(d: DadosAmostra): Promise<ResultadoAmostra> {
     }
   }
   const final = compilar(paragrafos, cortado);
-  return { pdf: final.pdf(), cortado, url: qr.url, marca: final.marcas[0] };
+  return {
+    pdf: final.pdf(),
+    paginas: final.paginas,
+    cortado,
+    url: qr.url,
+    marca: final.marcas[0],
+  };
 }

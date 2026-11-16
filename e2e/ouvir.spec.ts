@@ -95,10 +95,12 @@ test.describe("Página de amostra (exemplo)", () => {
     await expect(
       page.getByRole("button", { name: "Página de amostra" }),
     ).toBeVisible();
+    // Com a folha fechada, o botão diz o andamento (P74): ninguém toca de novo achando que sumiu.
+    await expect(page.getByText("PDF pronto para imprimir")).toBeVisible();
     await page.goto("/styleguide/editor-amostra");
     const folha = page.getByRole("dialog", { name: "Página de amostra" });
     await expect(
-      folha.getByRole("img", { name: /página da história/ }),
+      folha.getByRole("img", { name: /Página 2 da história/ }),
     ).toBeVisible();
     await expect(
       folha.getByRole("link", { name: "Baixar PDF para imprimir" }),
@@ -115,7 +117,7 @@ test.describe("Página de amostra (exemplo)", () => {
     await page.goto("/styleguide/editor-amostra-preparando");
     const folha = page.getByRole("dialog", { name: "Página de amostra" });
     await expect(
-      folha.getByRole("img", { name: /página da história/ }),
+      folha.getByRole("img", { name: /Página 2 da história/ }),
     ).toBeVisible();
     await expect(folha.getByText("Preparando a voz do QR")).toBeVisible();
     await expect(folha.getByRole("progressbar")).toBeVisible();

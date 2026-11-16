@@ -31,3 +31,11 @@ Sem tabela, sem RLS nova, sem link sem login. O conteúdo vem de `montagem_conte
 ## Como medir
 
 `livro_folheado` (membro, `{ paginas, historias }`) e `amostra_gerada`. A hipótese: ver o livro cedo faz a família gravar mais. Olhar, nas 2 famílias da ceia, se quem folheia volta a gravar em 7 dias.
+
+## Ajustes depois do 1º teste real (P74)
+
+- A amostra virou o livro aberto: até 2 páginas, lado a lado. Com foto, a página única mostrava foto, título e 1 parágrafo.
+- O botão *Página de amostra* mostra "Preparando a voz do QR" ou "PDF pronto para imprimir" (consulta `estadoAmostra`, só leitura, a cada 10 s enquanto prepara).
+- Voz pedida há mais de 2 min: a folha diz "atrasada do nosso lado" e grava `erro_servidor` `voz_atrasada` (1 por livro e dia).
+- Título do capítulo sem justificar (o bug também estava no livro).
+- Em aberto: foto muito alta (739 × 1600) vira uma faixa estreita, porque a regra é não cortar. Decisão do Guilherme.
