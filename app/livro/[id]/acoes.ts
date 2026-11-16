@@ -1124,7 +1124,7 @@ export async function confirmarDivisao(
   for (const x of v.data)
     if (x.ignorada)
       evento(c, "pergunta_sugerida_ignorada", { story: historiaId });
-  after(() => dispararEscrita(ids));
+  after(() => dispararEscrita(ids, c.livro.id));
   atualizar(livroId);
   return { ok: true, dados: { historias: ids } };
 }

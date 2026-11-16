@@ -62,12 +62,16 @@ export async function dispararSeRecebida(g: {
 }
 
 /** Prompt 9: tamanho ou "usar este áudio no texto" (o trecho roda na própria ação). */
-export async function dispararProposta(propostaId: string, historiaId: string) {
+export async function dispararProposta(
+  propostaId: string,
+  historiaId: string,
+  livro: string,
+) {
   try {
     await inngest.send({
       name: EVENTO_PROPOSTA,
       id: `proposta:${propostaId}`,
-      data: { propostaId, historiaId },
+      data: { propostaId, historiaId, livro },
     });
   } catch (e) {
     logarSemTexto("disparo proposta", e);
@@ -75,7 +79,11 @@ export async function dispararProposta(propostaId: string, historiaId: string) {
 }
 
 /** Depois de confirmar uma divisão: cada história vai para a escrita (prompt 7). */
-export async function dispararEscrita(historias: string[], sufixo?: string) {
+export async function dispararEscrita(
+  historias: string[],
+  livro: string,
+  sufixo?: string,
+) {
   if (historias.length === 0) return;
   try {
     await inngest.send(
@@ -84,7 +92,7 @@ export async function dispararEscrita(historias: string[], sufixo?: string) {
         id: sufixo
           ? `historia:${historiaId}:${sufixo}`
           : `historia:${historiaId}`,
-        data: { historiaId },
+        data: { historiaId, livro },
       })),
     );
   } catch (e) {

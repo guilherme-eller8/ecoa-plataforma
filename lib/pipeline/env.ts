@@ -29,6 +29,19 @@ export function travarModoDev(env: EnvInngest = process.env as EnvInngest) {
     throw new Error(
       "INNGEST_DEV não pode estar definido em produção ou prévia",
     );
-  if (nuvem && !env.INNGEST_SIGNING_KEY)
+  if (env.VERCEL_ENV === "production" && !env.INNGEST_SIGNING_KEY)
     throw new Error("Falta INNGEST_SIGNING_KEY");
+}
+
+/**
+ * T56: a prévia nunca serve as funções do Inngest. Em 14 e 15/11 o Inngest sincronizou 5 vezes
+ * com URLs de prévia e os jobs de produção rodaram código de branch. Com a rota fora do ar na
+ * prévia, a sincronização falha e a URL de produção continua valendo.
+ */
+export function servirInngest(
+  env: Partial<Record<"VERCEL_ENV", string>> = process.env as Partial<
+    Record<"VERCEL_ENV", string>
+  >,
+): boolean {
+  return env.VERCEL_ENV !== "preview";
 }

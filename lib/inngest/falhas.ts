@@ -2,11 +2,15 @@ import "server-only";
 // Prompt 15: todo job que esgota as tentativas vira um evento `job_falhou` em events, para o
 // admin listar. Guarda só ids (função, run, livro): nunca a mensagem do erro nem o payload (T36).
 import { z } from "zod";
+import { avisarAdminsDoJob } from "@/lib/email/alerta";
 import { registrarEvento } from "@/lib/eventos";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { inngest } from "./cliente";
 
 const ID_DESTA_FUNCAO = "registrar-falha";
+// Estas já avisam quando a história falha (marcarFalha, com o tipo da falha: áudio sem fala é
+// a pessoa quem resolve e não vira e-mail). As outras avisam aqui (T56).
+const JA_AVISAM = ["processar-gravacao", "escrever-historia"];
 
 const falha = z.object({
   function_id: z.string().max(120),
@@ -72,6 +76,14 @@ export const registrarFalhaFn = inngest.createFunction(
         run_id: dados.data.run_id,
       },
     });
-    return { registrado: ok };
+    const funcao = dados.data.function_id;
+    const avisados = JA_AVISAM.some((id) => funcao.endsWith(id))
+      ? 0
+      : await avisarAdminsDoJob({
+          funcao,
+          runId: dados.data.run_id,
+          livro,
+        }).catch(() => 0);
+    return { registrado: ok, avisados };
   },
 );

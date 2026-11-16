@@ -204,7 +204,7 @@ export async function pedirTamanho(
   if (ehErro(c)) return c;
   const r = await pedir(c, historiaId, aba, "tamanho", tamanho, {});
   if (!r.ok) return r;
-  after(() => dispararProposta(r.dados, historiaId));
+  after(() => dispararProposta(r.dados, historiaId, livroId));
   const p = await lerProposta(c, historiaId, r.dados);
   return p ? { ok: true, dados: p } : ERRO;
 }
@@ -219,7 +219,7 @@ export async function usarAudio(
   if (ehErro(c)) return c;
   const r = await pedir(c, historiaId, aba, "audio", null, {});
   if (!r.ok) return r;
-  after(() => dispararProposta(r.dados, historiaId));
+  after(() => dispararProposta(r.dados, historiaId, livroId));
   const p = await lerProposta(c, historiaId, r.dados);
   return p ? { ok: true, dados: p } : ERRO;
 }

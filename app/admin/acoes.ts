@@ -162,13 +162,14 @@ export async function tentarDeNovo(historiaId: string): Promise<Resultado> {
   // pela gravação (o banco devolve "dividida" se mandássemos a gravação).
   const { data: h } = await db
     .from("stories")
-    .select("divisao_de, divisao")
+    .select("divisao_de, divisao, book_id")
     .eq("id", historiaId)
     .maybeSingle();
   const dividida =
     Boolean(h?.divisao_de) ||
     Boolean((h?.divisao as { final?: unknown } | null)?.final);
-  if (dividida) await dispararEscrita([historiaId], `admin:${Date.now()}`);
+  if (dividida && h)
+    await dispararEscrita([historiaId], h.book_id, `admin:${Date.now()}`);
   else await dispararGravacao(sr.recording_id, `admin:${Date.now()}`);
   await registrarEvento({
     quem: quem.id,

@@ -14,6 +14,7 @@ const calma: FotoDosAlertas = {
   livrosNoTeto: [],
   semana: { gastoUSD: 0, perdaUSD: 0 },
   cotas: [],
+  errosServidor: [],
 };
 
 describe("alertasDe", () => {
@@ -104,8 +105,9 @@ describe("alertasDe", () => {
       livrosNoTeto: [{ book_id: LIVRO, totalUSD: 100, hojeUSD: 100 }],
       semana: { gastoUSD: 100, perdaUSD: 50 },
       cotas: [{ book_id: LIVRO, pedidos: 40, minutos: 240 }],
+      errosServidor: [{ rota: "/livro/[id]", n: 1 }],
     });
-    expect(todos).toHaveLength(5);
+    expect(todos).toHaveLength(6);
     const texto = JSON.stringify(todos.map((a) => [a.titulo, a.linhas]));
     expect(texto).not.toContain(LIVRO);
   });
@@ -117,5 +119,21 @@ describe("chaveDoAlerta", () => {
     expect(chaveDoAlerta(a, "2026-12-24", "adm")).toBe(
       "alerta:gasto_dia:todos:2026-12-24:adm",
     );
+  });
+});
+
+describe("erros do servidor (T56)", () => {
+  it("um alerta com o total e as rotas, sem URL nem livro", () => {
+    const [a] = alertasDe({
+      ...calma,
+      errosServidor: [
+        { rota: "/livro/[id]/montar", n: 3 },
+        { rota: "/api/inngest", n: 1 },
+      ],
+    });
+    expect(a.condicao).toBe("erros_servidor");
+    expect(a.livro).toBeNull();
+    expect(a.titulo).toContain("4");
+    expect(a.linhas[0]).toBe("/livro/[id]/montar: 3");
   });
 });

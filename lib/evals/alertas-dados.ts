@@ -6,11 +6,12 @@ import { diaBrasilia } from "@/lib/aderencia/calculo";
 import { emReais } from "@/lib/ai/custo";
 import {
   ALERTA_COTA_FRACAO,
+  ALERTA_ERROS_JANELA_MIN,
   ALERTA_GASTO_LIVRO_BRL,
   FILA_PARADA_MIN,
   MAX_MINUTOS_IA_DIA,
 } from "@/lib/config";
-import { inicioDoDiaBrasilia } from "@/lib/eventos";
+import { inicioDoDiaBrasilia, lerEventos } from "@/lib/eventos";
 import { gravacoesOrfas } from "@/lib/pipeline/fila";
 import { clienteAdmin, type ClienteAdmin } from "@/lib/supabase/admin";
 import { lerEmBlocos } from "@/lib/supabase/paginar";
@@ -74,12 +75,25 @@ async function filaParada(db: ClienteAdmin, agora: Date) {
     }));
 }
 
+/** erro_servidor contado por rota-padrão (a rota nunca leva token: instrumentation.ts). */
+function porRota(eventos: { detalhes: unknown }[]) {
+  const n = new Map<string, number>();
+  for (const e of eventos) {
+    const rota = (e.detalhes as { rota?: unknown } | null)?.rota;
+    const chave = typeof rota === "string" ? rota.slice(0, 80) : "?";
+    n.set(chave, (n.get(chave) ?? 0) + 1);
+  }
+  return [...n]
+    .map(([rota, total]) => ({ rota, n: total }))
+    .sort((a, b) => b.n - a.n);
+}
+
 export async function fotoDosAlertas(
   agora: Date = new Date(),
 ): Promise<FotoDosAlertas> {
   const db = clienteAdmin();
   const hoje = diaBrasilia(agora);
-  const [fila, uso, custos, cotas] = await Promise.all([
+  const [fila, uso, custos, cotas, erros] = await Promise.all([
     filaParada(db, agora),
     db.rpc("admin_uso_por_dia", {
       p_desde: diaBrasilia(new Date(agora.getTime() - 6 * DIA_MS)),
@@ -87,6 +101,16 @@ export async function fotoDosAlertas(
     }),
     db.rpc("admin_custos_por_livro"),
     db.rpc("admin_cotas_24h", { p_fracao: ALERTA_COTA_FRACAO }),
+    lerEventos(
+      {
+        acoes: ["erro_servidor"],
+        desde: new Date(
+          agora.getTime() - ALERTA_ERROS_JANELA_MIN * 60_000,
+        ).toISOString(),
+        limite: 1000,
+      },
+      db,
+    ),
   ]);
   if (uso.error || custos.error || cotas.error)
     throw new Error("Não deu para somar o uso de IA.");
@@ -116,6 +140,7 @@ export async function fotoDosAlertas(
       gastoUSD: linhas.reduce((t, l) => t + Number(l.custo_usd), 0),
       perdaUSD: linhas.reduce((t, l) => t + Number(l.custo_falhas_usd), 0),
     },
+    errosServidor: porRota(erros),
     cotas: (cotas.data ?? []).map((c) => ({
       book_id: c.book_id,
       pedidos: Number(c.pedidos),

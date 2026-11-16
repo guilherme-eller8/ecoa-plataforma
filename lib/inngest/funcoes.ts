@@ -11,7 +11,8 @@ import { leitorDeDiretorio } from "@/lib/ai/carregar-prompt";
 import { ClienteAnthropic } from "@/lib/ai/claude";
 import { TRANSCRITORES } from "@/lib/ai/transcricao";
 import {
-  EDICOES_SIMULTANEAS,
+  ESCRITAS_POR_LIVRO,
+  ESPERA_FILA_ESCRITA_H,
   MODELOS_TRANSCRICAO,
   PROVEDOR_PADRAO,
   TENTATIVAS_POR_PASSO,
@@ -25,6 +26,7 @@ import { urlDoApp } from "@/lib/env-servidor";
 import { registrarEvento } from "@/lib/eventos";
 import { bancoPipeline } from "@/lib/pipeline/banco";
 import { gravacoesOrfas } from "@/lib/pipeline/fila";
+import { medirSeFaltar } from "@/lib/pipeline/medir";
 import { exportarLivroFn } from "./livro";
 import { recortarQrFn } from "./qr";
 import { publicarNoLivro } from "@/lib/pipeline/canal";
@@ -62,6 +64,13 @@ const dadosDoEvento = z.object({
   chave: z.uuid().optional(),
 });
 const dadosDaEscrita = z.object({ historiaId: z.uuid() });
+
+/**
+ * T56: a fila de escrita e a de propostas são por livro. Eventos enviados antes de levarem o
+ * livro caem no id da história (fila própria, como uma família pequena).
+ */
+const POR_LIVRO =
+  "has(event.data.livro) ? event.data.livro : event.data.historiaId";
 const dadosDaProposta = z.object({
   propostaId: z.uuid(),
   historiaId: z.uuid(),
@@ -174,6 +183,14 @@ export function passosDe(step: unknown): Passos {
   };
 }
 
+/** Saiu de uma divisão confirmada: espera a escrita, não a gravação (prompt 7). */
+function confirmada(s: { divisao_de: string | null; divisao: unknown }) {
+  return (
+    Boolean(s.divisao_de) ||
+    Boolean((s.divisao as { final?: unknown } | null)?.final)
+  );
+}
+
 /** onFailure das duas funções: só muda quem está em andamento (nada desfaz o "pronta"). */
 async function marcarFalha(historia: string, livro: string, erro?: string) {
   const { etapa, codigo } = lerErroPipeline(erro);
@@ -252,6 +269,8 @@ export const processarGravacaoFn = inngest.createFunction(
   async ({ event, step }) => {
     const dados = dadosDoEvento.safeParse(event.data);
     if (!dados.success) throw new NonRetriableError("evento:dados_invalidos");
+    // T56: sem duração o banco não começa a história ("Guardada" para sempre). Mede antes.
+    await step.run("medir", () => medirSeFaltar(dados.data.recordingId));
     return processarGravacao(
       dados.data.recordingId,
       dependencias(),
@@ -269,7 +288,7 @@ export const escreverHistoriaFn = inngest.createFunction(
     retries: (TENTATIVAS_POR_PASSO - 1) as 2,
     concurrency: [
       { limit: 1, key: "event.data.historiaId" },
-      { limit: EDICOES_SIMULTANEAS }, // uma divisão de 30 histórias não abre 30 edições de uma vez
+      { limit: ESCRITAS_POR_LIVRO, key: POR_LIVRO },
     ],
     checkpointing: false,
     onFailure: async ({ event, error }) => {
@@ -316,7 +335,7 @@ export const proporFn = inngest.createFunction(
     retries: (TENTATIVAS_POR_PASSO - 1) as 2,
     concurrency: [
       { limit: 1, key: "event.data.historiaId" },
-      { limit: EDICOES_SIMULTANEAS },
+      { limit: ESCRITAS_POR_LIVRO, key: POR_LIVRO },
     ],
     checkpointing: false,
     onFailure: async ({ event, error }) => {
@@ -374,14 +393,15 @@ export const varreduraFn = inngest.createFunction(
       return orfas.length;
     });
 
-    // Prompt 7: história que saiu de uma divisão confirmada e não começou a ser escrita
-    // (evento perdido): reenvia antes de qualquer "parada".
+    // Prompt 7: história que saiu de uma divisão confirmada e não começou a ser escrita. Pode
+    // ser evento perdido ou só a vez dela na fila (T56): reenvia no máximo 1 vez por hora (o
+    // id do evento leva a hora) e a fila por história descarta o repetido ("ja_estava").
     const retomadas = await step.run("confirmadas", async () => {
       const db = clienteAdmin();
       const agora = Date.now();
       const { data } = await db
         .from("stories")
-        .select("id, divisao_de, divisao")
+        .select("id, book_id, divisao_de, divisao")
         .eq("estado", "ouvindo")
         .lt(
           "atualizado_em",
@@ -389,42 +409,49 @@ export const varreduraFn = inngest.createFunction(
         )
         .gt(
           "atualizado_em",
-          new Date(agora - VARREDURA_PARADA_MIN * 60_000).toISOString(),
+          new Date(agora - ESPERA_FILA_ESCRITA_H * 3600_000).toISOString(),
         )
-        .limit(50);
-      const ids = (data ?? [])
-        .filter(
-          (s) =>
-            s.divisao_de ||
-            Boolean((s.divisao as { final?: unknown } | null)?.final),
-        )
-        .map((s) => s.id);
-      const janela = Math.floor(agora / (15 * 60_000));
-      if (ids.length)
+        .order("atualizado_em")
+        .limit(200);
+      const confirmadas = (data ?? []).filter(confirmada);
+      const hora = Math.floor(agora / 3600_000);
+      if (confirmadas.length)
         await inngest.send(
-          ids.map((historiaId) => ({
+          confirmadas.map((s) => ({
             name: EVENTO_HISTORIA_CONFIRMADA,
-            id: `historia:${historiaId}:varredura:${janela}`,
-            data: { historiaId },
+            id: `historia:${s.id}:varredura:h${hora}`,
+            data: { historiaId: s.id, livro: s.book_id },
           })),
         );
-      return ids.length;
+      return confirmadas.length;
     });
 
+    // T56: "parada" é quem começou e não andou. A confirmada que ainda espera a vez na fila
+    // de escrita (estado "ouvindo") só desiste depois de ESPERA_FILA_ESCRITA_H.
     const paradas = await step.run("paradas", async () => {
       const db = clienteAdmin();
-      const limite = new Date(
-        Date.now() - VARREDURA_PARADA_MIN * 60_000,
-      ).toISOString();
+      const agora = Date.now();
       const { data } = await db
         .from("stories")
-        .select("id, book_id")
+        .select("id, book_id, estado, atualizado_em, divisao_de, divisao")
         .in("estado", ["ouvindo", "escrevendo", "dividindo"])
-        .lt("atualizado_em", limite)
-        .limit(50);
+        .lt(
+          "atualizado_em",
+          new Date(agora - VARREDURA_PARADA_MIN * 60_000).toISOString(),
+        )
+        .order("atualizado_em")
+        .limit(200);
+      const vencidas = (data ?? [])
+        .filter(
+          (s) =>
+            !(s.estado === "ouvindo" && confirmada(s)) ||
+            Date.parse(s.atualizado_em) <
+              agora - ESPERA_FILA_ESCRITA_H * 3600_000,
+        )
+        .slice(0, 50);
       const banco = bancoPipeline(db);
       let n = 0;
-      for (const s of data ?? []) {
+      for (const s of vencidas) {
         if (
           await banco.mudarEtapa(s.id, "falhou", {
             etapa: "varredura",

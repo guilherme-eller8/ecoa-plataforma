@@ -5,6 +5,7 @@ import {
   ALERTA_GASTO_DIA_BRL,
   ALERTA_GASTO_LIVRO_BRL,
   ALERTA_PERDA_FALHAS,
+  ALERTA_ERROS_JANELA_MIN,
   ALERTA_PERDA_GASTO_MIN_BRL,
   MAX_MINUTOS_IA_DIA,
   MAX_PROPOSTAS_DIA,
@@ -16,6 +17,7 @@ export const CONDICOES = [
   "gasto_livro",
   "perda",
   "cota",
+  "erros_servidor",
 ] as const;
 export type Condicao = (typeof CONDICOES)[number];
 
@@ -28,6 +30,8 @@ export type FotoDosAlertas = {
   semana: { gastoUSD: number; perdaUSD: number };
   /** Livros em ALERTA_COTA_FRACAO ou mais do teto diário de IA (admin_cotas_24h). */
   cotas: { book_id: string; pedidos: number; minutos: number }[];
+  /** T56: erro_servidor na janela do ciclo, por rota-padrão (nunca a URL com token). */
+  errosServidor: { rota: string; n: number }[];
 };
 
 export type Alerta = {
@@ -107,6 +111,19 @@ export function alertasDe(f: FotoDosAlertas): Alerta[] {
         `Áudio processado em 24 h: ${Math.round(c.minutos)} de ${MAX_MINUTOS_IA_DIA} min.`,
       ],
     });
+
+  if (f.errosServidor.length) {
+    const total = f.errosServidor.reduce((t, e) => t + e.n, 0);
+    alertas.push({
+      condicao: "erros_servidor",
+      livro: null,
+      titulo: `Erro no servidor: ${total} nos últimos ${ALERTA_ERROS_JANELA_MIN} min`,
+      linhas: [
+        ...f.errosServidor.slice(0, 10).map((e) => `${e.rota}: ${e.n}`),
+        "A lista completa fica em Erros, no admin. Chega no máximo 1 aviso por dia.",
+      ],
+    });
+  }
 
   return alertas;
 }

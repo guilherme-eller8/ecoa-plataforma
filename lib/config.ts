@@ -277,12 +277,18 @@ export const MAX_ARQUIVO_MIN = 120; // arquivo único processado inteiro, sem co
 export const MAX_HISTORIA_ESCRITA_MIN = 60; // fala de uma história: cabe numa escrita só
 export const ESPERA_EMAIL_DIVISAO_MIN = 10; // divisão esperando confirmação: e-mail depois disso
 export const TRECHO_ALVO_S = 60; // tamanho de um trecho na tela de divisão
-export const EDICOES_SIMULTANEAS = 4; // escrever-historia: no máximo isso ao mesmo tempo
+// T56: escrita e propostas por livro, não globais. Uma divisão de 30 histórias não abre 30
+// edições de uma vez e não segura a fila das outras famílias.
+export const ESCRITAS_POR_LIVRO = 2;
+// História confirmada esperando a vez na fila de escrita não é "parada" (a varredura reenvia).
+// Só depois disso vira "Não deu certo".
+export const ESPERA_FILA_ESCRITA_H = 6;
 export const MAX_PERGUNTAS_SUGESTAO = 100; // perguntas pendentes mostradas à IA
 export const VARREDURA_CONFIRMADA_MIN = 5; // filha parada em "ouvindo" há mais que isso: reenvia
-// A varredura só olha o que chegou nessas horas: cobre a cota diária adiada (24 h) e nunca
-// reprocessa áudios de teste antigos (D3 do prompt 6).
-export const VARREDURA_JANELA_H = 48;
+// A varredura só olha o que chegou nesses dias. Era 48 h (D3 do prompt 6): quem subia mais
+// de ~8 h de áudio esbarrava na cota diária e o resto ficava preso em "Vira texto amanhã".
+// 30 dias de cota cobrem 120 h de áudio (T56).
+export const VARREDURA_JANELA_DIAS = 30;
 export const MIN_PALAVRAS_HISTORIA = 8; // menos que isso do autor: "audio_sem_fala", sem chamar a escrita
 export const PREVISAO_DIVIDIR_BASE_S = 20;
 export const PREVISAO_DIVIDIR_POR_S = 0.02;
@@ -374,3 +380,5 @@ export const ALERTA_GASTO_LIVRO_BRL = 30;
 export const ALERTA_PERDA_FALHAS = 0.05; // fração do gasto da semana
 export const ALERTA_PERDA_GASTO_MIN_BRL = 1; // abaixo desse gasto na semana, 1 falha não vira alerta
 export const ALERTA_COTA_FRACAO = 0.8; // do teto diário de IA de um livro (P54, T38)
+// T56: erro_servidor nos últimos minutos (o ciclo dos alertas) vira e-mail; 1 por dia.
+export const ALERTA_ERROS_JANELA_MIN = 30;
