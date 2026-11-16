@@ -144,3 +144,43 @@ Correção: no ramo `fonte_velha`, não apagar se o caminho for igual ao `audio_
 9. S1: a voz entra como dado pessoal sensível (biométrico) na LGPD neste uso? Isso muda a base legal.
 10. S3/S4: trocar os links automaticamente ao remover um co-facilitador conflita com P10 (link permanente do grupo)? Precisa de decisão nova.
 11. D5: o envio automático ao parar contraria P38/T30; vale propor uma decisão nova?
+
+## 7. Revisão EGM (16/11/2026, uma rodada, 2 revisores em Sonnet)
+
+Revisores: `egm-design` (crítico, foco em segurança) e `egm-codebase-details` (precisão e reuso). O orquestrador conferiu D2 e N1 direto no código.
+
+### Vereditos consolidados
+
+| Id | Veredito | Severidade final | Nota |
+| --- | --- | --- | --- |
+| D1 | Confirmado | **Crítica** | Supabase Free (confirmado pelo `get_organization`), sem PITR; Storage sem cópia em lugar nenhum. |
+| D2 | Confirmado e ampliado | **Alta** | Três caminhos apagam a pasta de uma versão já `pronta`: `data=false` na retentativa (`armazenar.ts:115-118`), `error` do RPC depois do commit (`armazenar.ts:111-113`) e o `catch` do passo `gravar` (`lib/inngest/livro.ts:50`) quando `registrarEvento` falha depois do commit. A linha é imutável: os PDFs da versão somem sem conserto. |
+| S1 | Confirmado | **Alta** | Consentimento só no caminho do autor; versão vem do cliente e nunca renova. "Autor nunca vê a v2" vira suspeita (depende da UI). |
+| S2 | Confirmado | Média | Mais barato que o descrito: 1 host com /48 IPv6 derruba o QR de todos os livros a ~5 req/s. |
+| S3 | Confirmado | Média | `/a` de co-facilitador removido grava áudio no livro. A troca precisa de passo em TS (token nasce no TS). |
+| S4 | Confirmado | Média | Rotação em massa via `servico_trocar_link_*` existentes. |
+| S5 | Confirmado (ajuste) | Média | "Nenhuma CSP global" (há CSP só em `/sw.js`). |
+| S7 | Confirmado e ampliado | Média | Linha de foto para objeto inexistente trava a publicação (`falhou_foto`). Reusar `conferirArquivo` ampliando `BucketDeUpload` para `acervo`. |
+| S8 | Correção proposta **não funciona** | Baixa | `using (true)` é deliberado (a busca por hash é a autenticação). Filtrar por `livro_do_autor_atual()` quebra o login; o caminho é filtrar por `ecoa.token_hash` ou mover a busca para função `security definer`. |
+| D3 | Ajustado | Média | Risco real é a falta de sha256 antes de apagar a cópia local, não a sobrescrita (`reassinarAudio` recusa linha recebida). Não usar `upsert:false` sem testar a retomada TUS; descartar trigger em `storage.objects`. Trigger de imutabilidade em `recordings` no padrão de `privado.qr_imutavel`. |
+| D4 | Confirmado (ajuste) | Média | 7 `.remove(` conferidos. FK `restrict` não protege a linha de `recordings` contra `service_role`. Porta única `lib/storage/apagar.ts` com teste no modelo de `lib/eventos-porta-unica.test.ts`. |
+| D5 | Confirmado | Média | `pedirPersistencia()` ignora o resultado (`gravar.tsx:278`). |
+| D6 | Ajustado | Baixa | Não fica "mudo de vez"; o dano real é `audio_caminho` apontar para arquivo apagado se a fonte voltar à anterior. |
+| N1 | Novo, **rebaixado** | Baixa | Apagar gravação local com `blob.size = 0`: o orquestrador conferiu que erro do IndexedDB rejeita (`local.ts:88,95-96`), então só apaga quando de fato não há pedaços. |
+| S6, S9, S10 | Sem veredito independente | — | Fora do escopo lido; S10 confirmado pelo Jorge (produção) via `list_migrations`. |
+
+### O que a auditoria não tinha visto
+
+- Co-facilitador malicioso **ativo**: falta teste de RLS que lhe negue destruir conteúdo (`photos`, `prompts`, `books`).
+- Conta Google do responsável comprometida: controle total sem alerta por e-mail de ações críticas (remover membro, trocar link, publicar).
+- `mensagem_apagar` corre contra `publicar_livro` sem travar o livro (risco baixo).
+- Pastas órfãs de tentativas do passo `montar` mortas por timeout: custo, não perda.
+- Prévia da Vercel e o Inngest usam o banco e as chaves de produção (achado do Jorge, produção).
+
+### Ordem de correção recomendada
+
+1. D1: Supabase Pro + PITR e cópia diária dos buckets para cofre externo com versionamento (antes do 1º cliente).
+2. D2: `servico_export_pronto` idempotente (`estado='pronta' and pasta=p_pasta` → `true`) e reler `book_exports` antes de qualquer `apagarPasta` (SQL antes do OK).
+3. Separar prévia de produção (Supabase e Inngest).
+4. S1: termos, privacidade, consentimento com versão fixada no servidor e runbook de exportar/excluir.
+5. S2, S3, S7, D3 (sha256), D4 (porta única de remoção).
