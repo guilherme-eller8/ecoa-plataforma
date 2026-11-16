@@ -12,6 +12,7 @@ import { IconeCheck } from "@/components/ui/icones";
 import {
   AMOSTRA_CONSULTAR_S,
   AMOSTRA_ESPERA_VOZ_S,
+  AMOSTRA_ESTADO_CONSULTAR_S,
   AMOSTRA_VOZ_TIPICA_S,
   QR_AUDIO_ESPERA_MIN,
 } from "@/lib/config";
@@ -27,9 +28,14 @@ export type EstadoAmostra = {
   envioFalhou: boolean;
 };
 
+/** O que o botão do editor mostra com a folha fechada. */
+export type EstadoDoBotaoAmostra =
+  "nenhuma" | "preparando" | "pronta" | "desligada";
+
 export type AcoesAmostra = {
   preparar: () => Promise<Resposta<EstadoAmostra>>;
-  previa: () => Promise<Resposta<{ imagem: string; cortada: boolean }>>;
+  previa: () => Promise<Resposta<{ imagens: string[]; cortada: boolean }>>;
+  estado: () => Promise<Resposta<{ estado: EstadoDoBotaoAmostra }>>;
   desligar: (desligar: boolean) => Promise<Resposta>;
 };
 
@@ -43,7 +49,7 @@ type Fase =
 
 type Previa =
   | { tipo: "carregando" }
-  | { tipo: "pronta"; imagem: string; comQr: boolean }
+  | { tipo: "pronta"; imagens: string[]; comQr: boolean }
   | { tipo: "erro" };
 
 function Passo({
@@ -97,6 +103,82 @@ function Progresso({ inicio }: { inicio: number | null }) {
   );
 }
 
+/**
+ * O botão "Página de amostra" com o andamento embaixo: depois de fechar a folha, a pessoa vê que a
+ * voz continua sendo preparada (e quando ficou pronta), em vez de achar que sumiu e tocar de novo.
+ * Consulta só leitura, a cada AMOSTRA_ESTADO_CONSULTAR_S, só enquanto prepara e com a folha fechada.
+ */
+export function BotaoAmostra({
+  acoes,
+  aberta,
+  aoAbrir,
+  className = "",
+}: {
+  acoes: AcoesAmostra;
+  aberta: boolean;
+  aoAbrir: () => void;
+  className?: string;
+}) {
+  const [estado, setEstado] = useState<EstadoDoBotaoAmostra>("nenhuma");
+
+  useEffect(() => {
+    if (aberta) return;
+    let vivo = true;
+    let espera: ReturnType<typeof setTimeout> | undefined;
+    async function consultar() {
+      const r = await acoes.estado();
+      if (!vivo || !r.ok) return;
+      setEstado(r.dados.estado);
+      if (r.dados.estado === "preparando")
+        espera = setTimeout(
+          () => void consultar(),
+          AMOSTRA_ESTADO_CONSULTAR_S * 1000,
+        );
+    }
+    void consultar();
+    return () => {
+      vivo = false;
+      clearTimeout(espera);
+    };
+  }, [acoes, aberta]);
+
+  return (
+    <div
+      className={`flex flex-col items-stretch gap-1 sm:items-start ${className}`}
+    >
+      <Botao
+        variante="secundario"
+        larguraTotal
+        onClick={aoAbrir}
+        className="sm:w-auto"
+      >
+        Página de amostra
+      </Botao>
+      {estado === "preparando" ? (
+        <p
+          className="text-ui-13 text-tinta-2 flex items-center gap-1.5 px-1"
+          role="status"
+        >
+          <span
+            aria-hidden="true"
+            className="border-linha-forte border-t-floresta inline-block size-3 animate-spin rounded-full border-2"
+          />
+          Preparando a voz do QR
+        </p>
+      ) : null}
+      {estado === "pronta" ? (
+        <p
+          className="text-ui-13 text-floresta flex items-center gap-1 px-1"
+          role="status"
+        >
+          <IconeCheck tamanho={14} />
+          PDF pronto para imprimir
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function FolhaAmostra({
   aberta,
   aoFechar,
@@ -130,7 +212,7 @@ export function FolhaAmostra({
       if (!vivo) return;
       setPrevia(
         r.ok
-          ? { tipo: "pronta", imagem: r.dados.imagem, comQr }
+          ? { tipo: "pronta", imagens: r.dados.imagens, comQr }
           : { tipo: "erro" },
       );
     }
@@ -185,23 +267,29 @@ export function FolhaAmostra({
   return (
     <FolhaInferior aberta={aberta} aoFechar={fechar} titulo="Página de amostra">
       <div className="flex flex-col gap-5">
+        {/* O começo da história como o livro aberto: até 2 páginas lado a lado (P74). */}
         <figure className="flex flex-col items-center gap-2">
-          <div className="bg-polen-2 rounded-interno shadow-flutuante flex aspect-[154/216] w-full max-w-[15rem] items-center justify-center overflow-hidden">
-            {previa.tipo === "pronta" ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={previa.imagem}
-                alt="A página da história no tamanho do livro"
-                className="size-full object-contain"
-              />
-            ) : (
+          {previa.tipo === "pronta" ? (
+            <div className="shadow-flutuante rounded-interno flex w-full justify-center overflow-hidden bg-white sm:w-auto">
+              {previa.imagens.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={src.slice(-32)}
+                  src={src}
+                  alt={`Página ${i + 1} da história, no tamanho do livro`}
+                  className={`aspect-[154/216] object-contain ${previa.imagens.length > 1 ? "w-1/2 sm:w-52" : "w-2/3 sm:w-60"}`}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-polen-2 rounded-interno flex aspect-[308/216] w-full items-center justify-center sm:w-[26rem]">
               <span className="text-ui-15 text-tinta-2 px-4 text-center">
                 {previa.tipo === "erro"
                   ? "Não deu para mostrar a página agora."
                   : "Montando a página…"}
               </span>
-            )}
-          </div>
+            </div>
+          )}
           <figcaption className="text-ui-13 text-tinta-2">
             Tamanho do livro (A5)
           </figcaption>
@@ -234,8 +322,8 @@ export function FolhaAmostra({
               inicio={fase.tipo === "esperando" ? fase.inicio : null}
             />
             <p className="text-ui-15 text-tinta-2">
-              Leva até 1 minuto. Pode fechar: a voz continua sendo preparada e o
-              PDF fica aqui.
+              Leva até 1 minuto. Pode fechar: o botão Página de amostra avisa
+              quando o PDF ficar pronto.
             </p>
           </div>
         ) : null}
@@ -243,8 +331,8 @@ export function FolhaAmostra({
         {fase.tipo === "demorou" ? (
           <div className="flex flex-col gap-3" role="status">
             <p className="text-ui-17 text-tinta">
-              A voz está demorando mais que o normal. Pode fechar e voltar
-              depois: a página fica aqui.
+              A voz está atrasada do nosso lado, e já fomos avisados. Pode
+              fechar: o botão Página de amostra avisa quando ficar pronta.
             </p>
             <Botao variante="secundario" onClick={tentarDeNovo}>
               Tentar de novo

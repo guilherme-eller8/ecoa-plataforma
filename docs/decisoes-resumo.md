@@ -79,6 +79,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P71** Arquivar história: qualquer membro que escreve; sai das listas e da montagem, nada é apagado (texto, áudio, QR e versões publicadas ficam); Desarquivar volta.
 - **P72** Ver o livro antes de imprimir: a amostra mostra a página na hora (QR tracejado até a voz) com progresso e "pode fechar"; *Folhear o livro* na montagem, do mesmo Typst, sem gravar nada.
 - **P73** Gravação sem começar há 10 min: a tela admite a demora e oferece *Tentar de novo*; envio e varredura não falham mais em silêncio.
+- **P74** Amostra = começo da história em até 2 páginas (livro aberto); o botão mostra o andamento da voz com a folha fechada; voz atrasada avisa o admin; título do capítulo sem justificar.
 
 ## Técnicas
 

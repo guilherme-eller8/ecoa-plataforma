@@ -121,7 +121,11 @@
       text(size: 9pt, tracking: 0.12em, fill: suave)[#str(h.ano)]
       v(1mm, weak: true)
     }
-    block(text(size: 22pt, weight: "semibold", hyphenate: false)[#h.titulo])
+    // Título nunca justificado: em 2 linhas a justificação abria buracos entre as palavras.
+    block({
+      set par(justify: false)
+      text(size: 22pt, weight: "semibold", hyphenate: false)[#h.titulo]
+    })
   }
   if h.qr != none {
     grid(

@@ -4,7 +4,7 @@
 // transcrição à esquerda, texto à direita. Salvamento automático com cópia no aparelho até o
 // servidor confirmar; trava "Ana está editando" conferida no banco. Uma ação principal:
 // Marcar como pronta. Design: docs/designs/editor-historias.md.
-import { FolhaAmostra } from "@/components/editor/folha-amostra";
+import { BotaoAmostra, FolhaAmostra } from "@/components/editor/folha-amostra";
 import { FolhaGrupo } from "@/components/editor/folha-grupo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -891,14 +891,11 @@ export function TelaEditor({
                   </Botao>
                 ) : null}
                 {acoes.amostra ? (
-                  <Botao
-                    variante="secundario"
-                    larguraTotal
-                    onClick={() => setAmostraAberta(true)}
-                    className="sm:w-auto"
-                  >
-                    Página de amostra
-                  </Botao>
+                  <BotaoAmostra
+                    acoes={acoes.amostra}
+                    aberta={amostraAberta}
+                    aoAbrir={() => setAmostraAberta(true)}
+                  />
                 ) : null}
               </div>
             </div>

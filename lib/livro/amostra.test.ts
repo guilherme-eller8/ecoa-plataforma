@@ -33,7 +33,7 @@ describe("página de amostra (Typst)", () => {
     expect(bruto).toMatch(/FontFile2/);
   });
 
-  it("história longa: corta em parágrafo inteiro e diz que continua", async () => {
+  it("história longa: até 2 páginas (o livro aberto, P74), corta em parágrafo inteiro e diz que continua", async () => {
     const r = await gerarAmostra({
       titulo: "Uma história comprida",
       ano: null,
@@ -45,10 +45,11 @@ describe("página de amostra (Typst)", () => {
       foto: null,
     });
     expect(r.cortado).toBe(true);
+    expect(r.paginas).toBe(2);
     expect((await conferirQr(r.pdf, r.url, r.marca)).ok).toBe(true);
     const m = await mupdf();
     const texto = m.Document.openDocument(r.pdf, "application/pdf")
-      .loadPage(0)
+      .loadPage(1)
       .toStructuredText("preserve-whitespace")
       .asText();
     expect(texto).toContain("Continua no livro.");

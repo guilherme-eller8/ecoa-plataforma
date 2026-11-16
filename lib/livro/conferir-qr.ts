@@ -2,7 +2,7 @@ import "server-only";
 // Conferência do QR (prompt 10, generalizada no 13): lê o QR por software, no quadrado onde o
 // template o pôs. Recebe a imagem da página e o retângulo; serve à amostra e ao livro inteiro.
 import jsQR from "jsqr";
-import { CONFERIR_QR_DPI } from "@/lib/config";
+import { AMOSTRA_PAGINAS, CONFERIR_QR_DPI } from "@/lib/config";
 import { urlDoQr } from "@/lib/qr/codigo";
 import type { MarcaQr } from "./render";
 
@@ -44,7 +44,8 @@ export function lerQr(img: Imagem, recorte?: Recorte): string | null {
 export type Conferencia = { ok: boolean; paginas: number; lido: string | null };
 
 /**
- * Amostra: 1 página, 1 QR. Se a marca não vier, lê a página inteira (como no prompt 10).
+ * Amostra: até AMOSTRA_PAGINAS páginas (P74), 1 QR na página da marca (a 1ª se a marca não vier;
+ * sem marca, lê a página inteira, como no prompt 10).
  */
 export async function conferirQr(
   pdf: Buffer,
@@ -56,7 +57,7 @@ export async function conferirQr(
   const doc = mupdf.Document.openDocument(pdf, "application/pdf");
   try {
     const paginas = doc.countPages();
-    const pagina = doc.loadPage(0);
+    const pagina = doc.loadPage(Math.max(0, (marca?.pagina ?? 1) - 1));
     const pix = pagina.toPixmap(
       mupdf.Matrix.scale(dpi / 72, dpi / 72),
       mupdf.ColorSpace.DeviceRGB,
@@ -70,7 +71,11 @@ export async function conferirQr(
       },
       marca ? recorteDaMarca(marca, dpi) : undefined,
     );
-    return { ok: paginas === 1 && lido === urlEsperada, paginas, lido };
+    return {
+      ok: paginas >= 1 && paginas <= AMOSTRA_PAGINAS && lido === urlEsperada,
+      paginas,
+      lido,
+    };
   } finally {
     doc.destroy?.();
   }

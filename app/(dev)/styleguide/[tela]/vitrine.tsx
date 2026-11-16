@@ -194,12 +194,16 @@ const AMOSTRA_FALSA = (
   previa: async () => ({
     ok: true,
     dados: {
-      imagem:
-        voz === "pronta"
-          ? "/exemplo/amostra-com-qr.jpg"
-          : "/exemplo/amostra-sem-qr.jpg",
+      imagens: [1, 2].map(
+        (n) =>
+          `/exemplo/amostra-${voz === "pronta" ? "com" : "sem"}-qr-${n}.jpg`,
+      ),
       cortada: true,
     },
+  }),
+  estado: async () => ({
+    ok: true,
+    dados: { estado: voz === "pronta" ? "pronta" : "preparando" },
   }),
   desligar: async () => ({ ok: true }),
 });
