@@ -1,4 +1,5 @@
 import "server-only";
+import { alertasAdminFn } from "./alertas";
 import { registrarFalhaFn } from "./falhas";
 import { resumoDoLivroFn, resumoSemanalFn } from "./resumo";
 // Funções do Inngest (T34). O Inngest só orquestra: o código roda aqui, na Vercel, e cada
@@ -11,14 +12,11 @@ import { ClienteAnthropic } from "@/lib/ai/claude";
 import { TRANSCRITORES } from "@/lib/ai/transcricao";
 import {
   EDICOES_SIMULTANEAS,
-  ESPERA_LOTE_H,
-  MAX_ARQUIVO_MIN,
   MODELOS_TRANSCRICAO,
   PROVEDOR_PADRAO,
   TENTATIVAS_POR_PASSO,
   VARREDURA_CONFIRMADA_MIN,
   VARREDURA_GRAVACAO_MIN,
-  VARREDURA_JANELA_H,
   VARREDURA_PARADA_MIN,
 } from "@/lib/config";
 import { emailDivisaoPronta, emailHistoriaPronta } from "@/lib/email/modelos";
@@ -26,6 +24,7 @@ import { enviarEmail } from "@/lib/email/enviar";
 import { urlDoApp } from "@/lib/env-servidor";
 import { registrarEvento } from "@/lib/eventos";
 import { bancoPipeline } from "@/lib/pipeline/banco";
+import { gravacoesOrfas } from "@/lib/pipeline/fila";
 import { exportarLivroFn } from "./livro";
 import { recortarQrFn } from "./qr";
 import { publicarNoLivro } from "@/lib/pipeline/canal";
@@ -356,70 +355,10 @@ export const varreduraFn = inngest.createFunction(
   },
   async ({ step }) => {
     const reenviadas = await step.run("orfas", async () => {
-      const db = clienteAdmin();
       const agora = Date.now();
-      // Prompt 7: toda origem; 48 h (cobre a cota diária adiada; áudio de teste antigo não volta).
-      const { data: candidatas } = await db
-        .from("recordings")
-        .select("id, book_id, lote_id, lote_total, recebido_em, para_historia")
-        .eq("upload", "recebido")
-        .is("processado_em", null)
-        .lte("duracao_s", MAX_ARQUIVO_MIN * 60)
-        .lt(
-          "recebido_em",
-          new Date(agora - VARREDURA_GRAVACAO_MIN * 60_000).toISOString(),
-        )
-        .gt(
-          "recebido_em",
-          new Date(agora - VARREDURA_JANELA_H * 3600_000).toISOString(),
-        )
-        .order("recebido_em")
-        .limit(200);
-      const lista = candidatas ?? [];
-      if (lista.length === 0) return 0;
-      const lotes = [
-        ...new Set(lista.flatMap((g) => (g.lote_id ? [g.lote_id] : []))),
-      ];
-      const [{ data: comHistoria }, { data: livros }, { data: doLote }] =
-        await Promise.all([
-          db
-            .from("story_recordings")
-            .select("recording_id")
-            .in(
-              "recording_id",
-              lista.map((g) => g.id),
-            ),
-          db
-            .from("books")
-            .select("id")
-            .in("id", [...new Set(lista.map((g) => g.book_id))])
-            .not("ia_consentimento_em", "is", null),
-          lotes.length
-            ? db
-                .from("recordings")
-                .select("lote_id")
-                .in("lote_id", lotes)
-                .eq("upload", "recebido")
-            : Promise.resolve({ data: [] as { lote_id: string | null }[] }),
-        ]);
-      const ja = new Set((comHistoria ?? []).map((s) => s.recording_id));
-      const consentidos = new Set((livros ?? []).map((b) => b.id));
-      const recebidas = new Map<string, number>();
-      for (const r of doLote ?? [])
-        if (r.lote_id)
-          recebidas.set(r.lote_id, (recebidas.get(r.lote_id) ?? 0) + 1);
-      // Lote ainda incompleto e com menos de 6 h: o banco diria "espere"; não gasta execução.
-      const esperando = (g: (typeof lista)[number]) =>
-        g.lote_id !== null &&
-        g.lote_total !== null &&
-        (recebidas.get(g.lote_id) ?? 0) < g.lote_total &&
-        agora - new Date(g.recebido_em ?? 0).getTime() <
-          ESPERA_LOTE_H * 3600_000;
-      const orfas = lista
-        .filter(
-          (g) => !ja.has(g.id) && consentidos.has(g.book_id) && !esperando(g),
-        )
-        .slice(0, 50);
+      const orfas = (
+        await gravacoesOrfas(clienteAdmin(), agora, VARREDURA_GRAVACAO_MIN)
+      ).slice(0, 50);
       const janela = Math.floor(agora / (15 * 60_000));
       if (orfas.length)
         await inngest.send(
@@ -563,4 +502,5 @@ export const funcoes = [
   resumoDoLivroFn,
   exportarLivroFn,
   registrarFalhaFn,
+  alertasAdminFn,
 ];

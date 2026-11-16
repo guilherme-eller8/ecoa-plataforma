@@ -7,7 +7,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | Caminho | O que é | Quem entra |
 | --- | --- | --- |
 | `/entrar`, `/auth/*` | Login (Google, link por e-mail) | público |
-| `/` | Lista de livros do membro | sessão |
+| `/` | Abre o livro mais recente; admin escolhe entre o admin e os próprios livros (Evals 1A) | sessão |
 | `/livro/[id]` | Home do livro | membro |
 | `/livro/[id]/configurar/[passo]`, `/kit`, `/configuracoes` | Configuração inicial, kit de início, ajustes | membro |
 | `/livro/[id]/perguntas`, `/enquete/nova` | Perguntas, causos, enquete | membro |
@@ -26,7 +26,8 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `/m/[token]` | Deixar mensagem para o livro (só escreve; prompt 12) | sem login |
 | `/a/[token]` (+ `/gravar`) | Área do autor | sem login |
 | `/ouvir`, `/ouvir/[codigo]` | Player do QR (host `ouvir.` reescreve `/` e `/{código}`) | público |
-| `/admin` (+ `/aderencia`, `/aderencia/[livro]`, `/erros`) | Admin: livros, aderência por livro e erros (prompt 15) | `app_metadata.role = admin` |
+| `/admin` (+ `/aderencia`, `/aderencia/[livro]`, `/erros`) | Admin: livros, aderência e página do cliente por livro (plano, uso, custo), erros (prompt 15, Evals 1A) | `app_metadata.role = admin` |
+| `/admin/evals` (+ `/adocao`) | Evals 1A: custo e tempo; adoção e livros para conversar | `app_metadata.role = admin` |
 | `/api/inngest` | Funções do Inngest (inclui `livro-exportar`, que gera os PDFs) | Inngest |
 | `/styleguide/[tela]` | Telas com dados falsos (gate de design) | dev ou `ECOA_STYLEGUIDE=1` |
 
@@ -39,10 +40,11 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Tela:** `components/telas/tela-*.tsx` recebe dados e ações por props, sem buscar nada; os exemplos ficam em `lib/exemplos/prompt*.ts` e entram em `lib/styleguide.ts` + `app/(dev)/styleguide/[tela]/vitrine.tsx`. UI base em `components/ui/` (`Botao`, `Campo`, `FolhaInferior`, `DicaPrimeiraVez`, `EstadoVazio`, ícones).
 - **Clientes Supabase:** `clienteSessao` (membro, RLS), `clienteAnonimo` (portas sem login: `familia_*`, `autor_*`), `clienteAdmin` (chave secreta: só servidor, só caminhos lidos do banco). Tipos gerados à mão em `lib/supabase/tipos.ts` (acrescente só o que mudou).
 - **Storage:** buckets privados `audios`, `acervo`, `causos`, `qr`, `mensagens`; leitura por `assinarLeitura` (`lib/storage/assinar.ts`); upload por token assinado no servidor e conferência de tamanho e primeiros bytes (`lib/storage/upload.ts`).
+- **Leitura de muitas linhas:** a API corta cada pedido em `max_rows` (1.000) sem avisar. Somar no banco (funções `admin_*`); quando precisar das linhas, `lerEmBlocos` (`lib/supabase/paginar.ts`) com ordem estável.
 - **Eventos:** `registrarEvento` e `lerEventos` (`lib/eventos.ts`, única porta da tabela; teste confere), ação nova = linha em `lib/eventos-acoes.ts`; detalhes só com ids e números.
 - **Números de negócio:** só em `lib/config.ts`; os conferidos no banco têm função `privado.*()` espelhada e entram em `supabase/tests/config-banco.test.ts`.
 - **Erros do SQL:** `raise exception '<codigo>'` precisa de frase em `lib/erros-banco.ts` (o teste confere).
-- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro), `lib/inngest/falhas.ts` (grava `job_falhou`), `lib/inngest/livro.ts` (PDFs do livro); `instrumentation.ts` grava `erro_servidor`; os passos devolvem só ids e tempos (T36). Erro que nova tentativa não muda (`CODIGOS_DEFINITIVOS`, `lib/pipeline/erros.ts`) não repete o passo: `passosDe` troca por `NonRetriableError`. História que falha avisa o admin por e-mail (`lib/email/alerta.ts`) e a tela recebe só o tipo (`tipoDeFalha`, P68).
+- **Jobs:** `lib/inngest/funcoes.ts` (pipeline, propostas, varredura), `lib/inngest/qr.ts` e `lib/inngest/resumo.ts` (resumo semanal, 1 passo por membro), `lib/inngest/falhas.ts` (grava `job_falhou`), `lib/inngest/livro.ts` (PDFs do livro), `lib/inngest/alertas.ts` (Evals 1A: fila parada, gasto e cotas por e-mail a cada 30 min; órfãs em `lib/pipeline/fila.ts`, o mesmo critério da varredura); `instrumentation.ts` grava `erro_servidor`; os passos devolvem só ids e tempos (T36). Erro que nova tentativa não muda (`CODIGOS_DEFINITIVOS`, `lib/pipeline/erros.ts`) não repete o passo: `passosDe` troca por `NonRetriableError`. História que falha avisa o admin por e-mail (`lib/email/alerta.ts`) e a tela recebe só o tipo (`tipoDeFalha`, P68).
 - **PDF do livro (prompt 13):** o conteúdo sai de `privado.conteudo_do_livro` (a mesma função serve à contagem e à publicação, T50); `lib/livro/montar-dados.ts` o transforma no JSON dos templates `lib/livro/typst/*.typ` (texto como dado, T43); `render.ts` compila; `pdf.ts` grava `TrimBox`/`BleedBox`, rasteriza uma vez e lê cada QR no quadrado marcado pelo template (`conferir-qr.ts`); `exportar.ts` orquestra e `armazenar.ts` é o único que fala com Storage e banco. Texto e QR em K puro (T52); o QR é desenhado no Typst (`qr-matriz.ts`), nunca um SVG importado. O QR só nasce ao publicar: a Conferir usa `vaiComQr` (história com `voz`, mensagem com `com_audio`); o PDF usa `saiComQr`, que exige o código.
 - **Números da gráfica:** só em `ESPEC_GRAFICA` (`lib/config.ts`, com `versao`); a geometria (lombada, capa aberta, múltiplo de 4) sai de `lib/livro/espec.ts` e a das fotos de `lib/livro/fotos.ts`.
 - **Tela ao vivo (T37):** `components/ui/atualizar-ao-vivo.tsx` assina o canal do livro e relê o servidor enquanto algo anda (`ATUALIZAR_A_CADA_S`); home, Áudios e Histórias o usam, para a gravação mudar de estado em todos os aparelhos sem recarregar.
@@ -65,6 +67,7 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `familia/`, `autor/`, `enquete/`, `perguntas/` | Portas sem login e listas de perguntas |
 | `mensagens/` | Link `/m`: transcrição na hora (Scribe, sem Claude), limpeza, tipo pelos bytes, leitura dos membros |
 | `convite/`, `compartilhar/`, `resumo/` | Co-facilitadores, `/o/` e resumo semanal (prompt 11) |
+| `evals/` | Evals 1A: `custo.ts`, `adocao.ts` e `alertas.ts` (puros, testados), `dados.ts` e `alertas-dados.ts` (leitura, só servidor) |
 | `aderencia/` | Painel do admin: `calculo.ts` e `erros.ts` (puros, testados), `dados.ts` (leitura, só servidor), `rotulos.ts` (prompt 15) |
 | `email/`, `fotos/`, `pwa/`, `ui/`, `storage/`, `supabase/` | Apoio |
 

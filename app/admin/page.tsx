@@ -9,10 +9,15 @@ import {
 } from "@/components/telas/admin-processamento";
 import { TelaAdmin, type LinhaAdmin } from "@/components/telas/tela-admin";
 import { emReais } from "@/lib/ai/custo";
-import { MAX_ARQUIVO_MIN } from "@/lib/config";
+import {
+  ADERENCIA_MAX_HISTORIAS,
+  FILA_PARADA_MIN,
+  MAX_ARQUIVO_MIN,
+} from "@/lib/config";
 import { estadoEfetivo } from "@/lib/plano";
 import { usuarioAtual } from "@/lib/sessao";
 import { clienteAdmin } from "@/lib/supabase/admin";
+import { lerEmBlocos } from "@/lib/supabase/paginar";
 import {
   ativarPlano,
   processarAgora,
@@ -97,7 +102,17 @@ async function processamento(autorDe: Map<string, string>) {
     // Somado no banco: a API devolve no máximo 1.000 linhas, e a soma no servidor ficava
     // abaixo do real sem avisar.
     db.rpc("admin_custos_por_livro"),
-    db.from("stories").select("book_id").eq("estado", "pronta").limit(10000),
+    // Em blocos: a API corta cada pedido em max_rows (Evals 1A).
+    lerEmBlocos<{ book_id: string }>(
+      (de, ate) =>
+        db
+          .from("stories")
+          .select("book_id")
+          .eq("estado", "pronta")
+          .order("id")
+          .range(de, ate),
+      ADERENCIA_MAX_HISTORIAS,
+    ).then((data) => ({ data })),
   ]);
   const ids = (recebidas ?? []).map((r) => r.id);
   const { data: comHistoria } = ids.length
@@ -145,7 +160,12 @@ async function processamento(autorDe: Map<string, string>) {
               ? "passa de 2 h"
               : r.lote_id
                 ? "lote: espera os outros (até 6 h)"
-                : "na fila",
+                : // Evals 1A: a varredura já reenviou e nada começou (o alerta por e-mail
+                  // roda no Inngest; esta é a defesa se o próprio Inngest parar).
+                  Date.now() - Date.parse(r.recebido_em ?? "") >
+                    FILA_PARADA_MIN * 60_000
+                  ? "fila parada: confira o sync do Inngest"
+                  : "na fila",
         quando: r.recebido_em ?? new Date().toISOString(),
       })),
     custos: [...porLivro.values()].sort((a, b) => b.reais - a.reais),

@@ -1,4 +1,5 @@
-// Cabeçalho comum das telas do admin: marca e três abas (Livros, Aderência, Erros).
+// Cabeçalho comum das telas do admin: marca, "Meus livros" (volta à escolha de / para quem é
+// admin e também responsável) e as abas (Livros, Aderência, Erros, Evals).
 import Link from "next/link";
 import { Marca } from "@/components/ui/marca";
 
@@ -6,6 +7,7 @@ const ABAS = [
   { id: "livros", rotulo: "Livros", href: "/admin" },
   { id: "aderencia", rotulo: "Aderência", href: "/admin/aderencia" },
   { id: "erros", rotulo: "Erros", href: "/admin/erros" },
+  { id: "evals", rotulo: "Evals", href: "/admin/evals" },
 ] as const;
 
 export type AbaAdmin = (typeof ABAS)[number]["id"];
@@ -21,15 +23,20 @@ export function CabecalhoAdmin({
     <header className="flex flex-col gap-4">
       <div className="flex items-baseline justify-between gap-4">
         <Marca />
-        <span className="font-ui text-tinta-2 text-[15px]">Admin</span>
+        <Link
+          href="/"
+          className="font-ui text-floresta min-h-alvo inline-flex items-center text-[15px] font-medium underline-offset-4 hover:underline"
+        >
+          Meus livros
+        </Link>
       </div>
-      <nav aria-label="Admin" className="flex gap-2">
+      <nav aria-label="Admin" className="-mx-1 flex gap-1 overflow-x-auto px-1">
         {ABAS.map((a) => (
           <Link
             key={a.id}
             href={a.href}
             aria-current={a.id === aba ? "page" : undefined}
-            className={`font-ui rounded-controle flex min-h-11 items-center px-4 text-[16px] ${
+            className={`font-ui rounded-controle flex min-h-11 shrink-0 items-center px-3 text-[16px] ${
               a.id === aba
                 ? "bg-floresta-claro text-floresta font-semibold"
                 : "text-tinta-2 hover:bg-polen-2"

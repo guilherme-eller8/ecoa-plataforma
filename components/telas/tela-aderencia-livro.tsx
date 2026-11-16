@@ -1,12 +1,20 @@
-// Admin → Aderência → um livro (prompt 15, aceite da M10): quem entrou por dia nos últimos
-// 14 dias e a linha do tempo do que cada um fez. Sem texto de pessoa, só ações e ids.
+// Admin → Aderência → um livro (prompt 15, aceite da M10): o cliente (plano, uso e custo de IA,
+// Evals 1A), quem entrou por dia nos últimos 14 dias e a linha do tempo do que cada um fez.
+// Sem texto de pessoa, só ações, datas e números.
 import Link from "next/link";
 import { frase, PAPEL_ROTULO } from "@/lib/aderencia/rotulos";
 import {
   PASSOS_ONBOARDING,
   type LinhaDeAderencia,
 } from "@/lib/aderencia/calculo";
-import type { AcaoDaLinhaDoTempo, PessoaDoLivro } from "@/lib/aderencia/dados";
+import type {
+  AcaoDaLinhaDoTempo,
+  DadosDoCliente,
+  PessoaDoLivro,
+} from "@/lib/aderencia/dados";
+import { emReais, formatarReais } from "@/lib/ai/custo";
+import { ROTULO_PLANO } from "@/lib/plano";
+import { Numero } from "./admin-numero";
 import { ADERENCIA_DIAS_ACESSO } from "@/lib/config";
 import {
   BarrasDeGravacao,
@@ -32,15 +40,78 @@ const diaCurto = (dia: string) =>
     new Date(`${dia}T12:00:00-03:00`),
   );
 
+const data = (iso: string | null) =>
+  iso
+    ? new Intl.DateTimeFormat("pt-BR", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "America/Sao_Paulo",
+      }).format(new Date(iso))
+    : "—";
+
+function BlocoDoCliente({ c }: { c: DadosDoCliente }) {
+  const reais = emReais(c.custoUSD);
+  return (
+    <section aria-labelledby="titulo-cliente" className="flex flex-col gap-3">
+      <h2
+        id="titulo-cliente"
+        className="font-ui text-tinta text-[17px] font-semibold"
+      >
+        Cliente
+      </h2>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Numero
+          rotulo="Plano"
+          valor={ROTULO_PLANO[c.plano]}
+          detalhe={c.venceEm ? `vence ${data(c.venceEm)}` : "sem vencimento"}
+          alerta={c.plano !== "ativo"}
+        />
+        <Numero
+          rotulo="Histórias prontas"
+          valor={String(c.prontas)}
+          detalhe={`${c.revisadas} revisadas`}
+        />
+        <Numero
+          rotulo="Áudio processado"
+          valor={`${Math.round(c.minutos)} min`}
+          detalhe={
+            c.membros === 1
+              ? "1 pessoa com login"
+              : `${c.membros} pessoas com login`
+          }
+        />
+        <Numero
+          rotulo="Custo de IA"
+          valor={formatarReais(reais)}
+          detalhe={
+            c.minutos > 0
+              ? `${formatarReais(reais / c.minutos)}/min · ${c.falhas} falhas`
+              : `${c.falhas} falhas`
+          }
+        />
+      </div>
+      <p className={apoio}>
+        Criado em {data(c.criadoEm)} · Plano ativado em {data(c.ativadoEm)} ·{" "}
+        {c.consentiuIaEm
+          ? `IA confirmada em ${data(c.consentiuIaEm)}`
+          : "IA ainda não confirmada"}
+      </p>
+    </section>
+  );
+}
+
 export function TelaAderenciaLivro({
   autorNome,
   email,
+  cliente,
   linha,
   pessoas,
   linhaDoTempo,
 }: {
   autorNome: string | null;
   email: string | null;
+  cliente?: DadosDoCliente;
   linha: LinhaDeAderencia;
   pessoas: PessoaDoLivro[];
   linhaDoTempo: AcaoDaLinhaDoTempo[];
@@ -71,6 +142,8 @@ export function TelaAderenciaLivro({
         </p>
         <BarrasDeGravacao semanas={linha.semanas} />
       </div>
+
+      {cliente ? <BlocoDoCliente c={cliente} /> : null}
 
       <section aria-labelledby="titulo-acessos" className="flex flex-col gap-3">
         <h2

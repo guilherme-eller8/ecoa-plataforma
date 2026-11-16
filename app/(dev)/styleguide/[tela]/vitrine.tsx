@@ -3,6 +3,17 @@
 import { AdminProcessamento } from "@/components/telas/admin-processamento";
 import { TelaAderencia } from "@/components/telas/tela-aderencia";
 import { TelaAderenciaLivro } from "@/components/telas/tela-aderencia-livro";
+import { TelaEvals } from "@/components/telas/tela-evals";
+import { TelaEvalsAdocao } from "@/components/telas/tela-evals-adocao";
+import { TelaInicioAdmin } from "@/components/telas/tela-inicio-admin";
+import {
+  CLIENTE_JAIR,
+  DADOS_ADOCAO,
+  DADOS_ADOCAO_VAZIA,
+  DADOS_CUSTO,
+  DADOS_CUSTO_VAZIO,
+  LIVROS_DA_ESCOLHA,
+} from "@/lib/exemplos/evals";
 import { TelaErros } from "@/components/telas/tela-erros";
 import {
   FUNIL_ADERENCIA,
@@ -551,6 +562,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
         <TelaAderenciaLivro
           autorNome="Jair"
           email="ana.souza@gmail.com"
+          cliente={CLIENTE_JAIR}
           linha={LINHAS_ADERENCIA[1]}
           pessoas={PESSOAS_JAIR}
           linhaDoTempo={LINHA_DO_TEMPO_JAIR}
@@ -560,6 +572,16 @@ export function Vitrine({ tela }: { tela: Tela }) {
       return <TelaErros jobs={JOBS_FALSOS} rotas={ROTAS_COM_ERRO} />;
     case "admin-erros-vazio":
       return <TelaErros jobs={[]} rotas={[]} />;
+    case "admin-evals":
+      return <TelaEvals dados={DADOS_CUSTO} />;
+    case "admin-evals-vazio":
+      return <TelaEvals dados={DADOS_CUSTO_VAZIO} />;
+    case "admin-evals-adocao":
+      return <TelaEvalsAdocao dados={DADOS_ADOCAO} />;
+    case "admin-evals-adocao-vazia":
+      return <TelaEvalsAdocao dados={DADOS_ADOCAO_VAZIA} />;
+    case "inicio-admin":
+      return <TelaInicioAdmin livros={LIVROS_DA_ESCOLHA} />;
     case "admin-processamento":
       return (
         <TelaAdmin

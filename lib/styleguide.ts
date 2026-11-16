@@ -121,6 +121,12 @@ export const TELAS = [
   "admin-aderencia-livro",
   "admin-erros",
   "admin-erros-vazio",
+  // Evals 1A
+  "admin-evals",
+  "admin-evals-vazio",
+  "admin-evals-adocao",
+  "admin-evals-adocao-vazia",
+  "inicio-admin",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

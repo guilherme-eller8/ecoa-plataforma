@@ -303,6 +303,9 @@ describe("funções do admin só com a chave secreta", () => {
     `select public.admin_usuario_por_email('ana@exemplo.com')`,
     `select * from public.admin_listar_livros()`,
     `select * from public.admin_custos_por_livro()`,
+    `select * from public.admin_uso_por_dia('2026-12-01', '2026-12-10')`,
+    `select * from public.admin_primeira_palavra(now(), array[5], 1000)`,
+    `select * from public.admin_cotas_24h(0.8)`,
     `select privado.vencer_planos()`,
   ];
 

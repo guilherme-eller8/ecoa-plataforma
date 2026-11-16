@@ -16,3 +16,10 @@ export function estadoEfetivo(
 export function podeEscrever(plano: Plano, agora: Date = new Date()) {
   return estadoEfetivo(plano, agora) === "ativo";
 }
+
+/** Rótulo do estado do plano nas telas do admin. */
+export const ROTULO_PLANO: Record<PlanoEstado, string> = {
+  ativo: "Ativo",
+  somente_leitura: "Somente leitura",
+  pendente: "Pendente",
+};

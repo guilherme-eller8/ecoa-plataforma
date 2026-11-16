@@ -338,7 +338,39 @@ export const LIVRO_PARADO_DIAS = 7; // sem ação de pessoa há tanto tempo = "p
 export const ADERENCIA_SEMANAS = 8; // gravações por semana, de trás para a frente
 export const ADERENCIA_DIAS_ACESSO = 14; // acessos por dia por pessoa
 export const ADERENCIA_MAX_EVENTOS = 20000; // teto de leitura de events por consulta do painel
+export const ADERENCIA_MAX_HISTORIAS = 20000; // teto de leitura de histórias prontas, idem
 export const ADERENCIA_LINHA_DO_TEMPO = 100; // ações mostradas na página de um livro
 export const ERROS_DIAS = 30; // jobs que falharam e erros do servidor listados no admin
 // Onde abrir o run de um job que falhou (só o id do run vai para events).
 export const INNGEST_RUN_URL = "https://app.inngest.com/env/production/runs";
+
+// ── Evals, fase 1A (docs/designs/evals.md): custo, tempo, adoção e alertas ──
+export const EVALS_DIAS = 30; // janela dos números principais de custo
+export const EVALS_SEMANAS = 8; // barras de gasto por semana
+export const EVALS_AMOSTRA_MIN = 5; // abaixo disso a taxa vira "amostra pequena"
+export const META_CUSTO_MIN_BRL = 0.2; // R$ por minuto de áudio (R$ 30 por 150 min), provisória
+export const EVALS_TROCAS_PROJECAO = [0, 0.5, 1, 2] as const; // trocas de tamanho por história
+export const EVALS_FAIXAS_AUDIO_MIN = [5, 20] as const; // faixas da primeira palavra: <5, 5–20, 20+
+export const FILA_PARADA_MIN = 30; // espera acima disso é "fila parada": sai dos percentis e alerta
+// Ações de criação que fazem um livro contar como ativo na semana (entrou e família não contam).
+export const ACOES_DE_CRIACAO = [
+  "gravou",
+  "subiu_audio",
+  "editou",
+  "enviou_pergunta",
+  "historia_revisada",
+  "montou_livro",
+] as const;
+export const ATIVACAO_DIAS = 7; // 1ª história revisada até tantos dias do plano ativado
+export const RETENCAO_SEMANAS = 4; // colunas da retenção por coorte (semana 1 a 4)
+// Metas provisórias de adoção (a decidir com o uso real).
+export const META_LIVROS_ATIVOS = 0.6;
+export const META_ATIVACAO = 0.7;
+export const META_RETENCAO_S4 = 0.5;
+export const META_HORAS_PRIMEIRA_PRONTA = 48;
+// Alertas por e-mail ao admin (lib/inngest/alertas.ts): no máximo 1 por condição e por dia.
+export const ALERTA_GASTO_DIA_BRL = 25;
+export const ALERTA_GASTO_LIVRO_BRL = 30;
+export const ALERTA_PERDA_FALHAS = 0.05; // fração do gasto da semana
+export const ALERTA_PERDA_GASTO_MIN_BRL = 1; // abaixo desse gasto na semana, 1 falha não vira alerta
+export const ALERTA_COTA_FRACAO = 0.8; // do teto diário de IA de um livro (P54, T38)

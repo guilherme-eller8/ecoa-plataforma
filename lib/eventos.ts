@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { clienteAdmin, type ClienteAdmin } from "@/lib/supabase/admin";
+import { lerEmBlocos } from "@/lib/supabase/paginar";
 import type { Json } from "@/lib/supabase/tipos";
 import { ACOES, PAPEIS } from "./eventos-acoes";
 
@@ -116,16 +117,21 @@ export async function lerEventos(
   filtro: FiltroDeLeitura,
   cliente?: ClienteAdmin,
 ): Promise<EventoLido[]> {
-  let q = (cliente ?? clienteAdmin())
-    .from("events")
-    .select("criado_em, book_id, ator_tipo, ator_id, acao, detalhes")
-    .order("criado_em", { ascending: false })
-    .limit(filtro.limite);
-  if (filtro.livro) q = q.eq("book_id", filtro.livro);
-  if (filtro.soDeLivros) q = q.not("book_id", "is", null);
-  if (filtro.acoes) q = q.in("acao", [...filtro.acoes]);
-  if (filtro.desde) q = q.gte("criado_em", filtro.desde);
-  const { data, error } = await q;
-  if (error) throw new Error("Não deu para ler os eventos.");
-  return data ?? [];
+  const db = cliente ?? clienteAdmin();
+  // Em blocos: a API corta cada pedido em max_rows (Evals 1A); ordem estável por id.
+  return lerEmBlocos<EventoLido>((de, ate) => {
+    let q = db
+      .from("events")
+      .select("criado_em, book_id, ator_tipo, ator_id, acao, detalhes")
+      .order("criado_em", { ascending: false })
+      .order("id", { ascending: false })
+      .range(de, ate);
+    if (filtro.livro) q = q.eq("book_id", filtro.livro);
+    if (filtro.soDeLivros) q = q.not("book_id", "is", null);
+    if (filtro.acoes) q = q.in("acao", [...filtro.acoes]);
+    if (filtro.desde) q = q.gte("criado_em", filtro.desde);
+    return q;
+  }, filtro.limite).catch(() => {
+    throw new Error("Não deu para ler os eventos.");
+  });
 }

@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import { CabecalhoAdmin } from "@/components/telas/admin-cabecalho";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao } from "@/components/ui/botao";
 import { Campo } from "@/components/ui/campo";
+import { ROTULO_PLANO } from "@/lib/plano";
 import type { AcaoFormulario, Resultado } from "@/lib/resultado";
 import type { PlanoEstado } from "@/lib/supabase/tipos";
 
@@ -24,11 +26,7 @@ type Props = {
   processamento?: React.ReactNode;
 };
 
-const ROTULO_ESTADO: Record<PlanoEstado, string> = {
-  ativo: "Ativo",
-  somente_leitura: "Somente leitura",
-  pendente: "Pendente",
-};
+const ROTULO_ESTADO = ROTULO_PLANO;
 
 const data = (iso: string | null) =>
   iso
@@ -204,9 +202,12 @@ function LinhaLivro({
   return (
     <li className="bg-papel flex flex-col gap-4 rounded-2xl p-5 md:grid md:grid-cols-[1.4fr_1fr_auto] md:items-center md:gap-6">
       <div className="flex min-w-0 flex-col gap-1">
-        <span className="font-livro text-tinta truncate text-[20px]">
+        <Link
+          href={`/admin/aderencia/${livro.id}`}
+          className="font-livro text-tinta decoration-linha-forte truncate text-[20px] underline underline-offset-4"
+        >
           {livro.autorNome ?? "Autor sem nome"}
-        </span>
+        </Link>
         <span className="font-ui text-tinta-2 truncate text-[15px]">
           {livro.email ?? "—"}
         </span>
