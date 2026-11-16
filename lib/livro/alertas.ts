@@ -80,7 +80,7 @@ export function alertasDoLivro(
         item: h.id,
       });
     }
-    if (h.fotos.some((f) => fotoPequenaParaImprimir(f))) {
+    if (h.fotos.some((f, i) => fotoPequenaParaImprimir(f, i === 0))) {
       amarelos.push({
         nivel: "amarelo",
         codigo: "foto_pequena",

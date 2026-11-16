@@ -4,7 +4,8 @@ import "server-only";
 // Um compilador por pedido: os arquivos virtuais nunca se misturam entre dois pedidos.
 import { AMOSTRA_PAGINAS } from "@/lib/config";
 import { APONTE_E_OUCA, geometriaDoMiolo } from "./montar-dados";
-import { caixaDaFoto } from "./fotos";
+import { caixaImpressa } from "./fotos";
+import type { Recorte } from "./recorte";
 import { codigoImpresso } from "@/lib/qr/codigo";
 import { matrizDoQr } from "./qr-matriz";
 import { compilarAmostra, type MarcaQr } from "./render";
@@ -14,7 +15,13 @@ export type DadosAmostra = {
   ano: number | null;
   paragrafos: string[];
   codigo: string;
-  foto: { bytes: Buffer; largura: number | null; altura: number | null } | null;
+  foto: {
+    bytes: Buffer; // já recortada (P75)
+    largura: number | null; // da original; com o recorte, as contas usam o tamanho recortado
+    altura: number | null;
+    recorte?: Recorte | null;
+    ao_lado?: boolean;
+  } | null;
   maiuscula?: boolean; // formato da URL do QR (Q4); padrão: QR_URL_MAIUSCULA
 };
 
@@ -35,7 +42,11 @@ function frases(p: string) {
 
 export async function gerarAmostra(d: DadosAmostra): Promise<ResultadoAmostra> {
   const qr = matrizDoQr(d.codigo, d.maiuscula);
-  const foto = d.foto ? { arquivo: "foto.jpg", ...caixaDaFoto(d.foto) } : null;
+  const foto = d.foto
+    ? { arquivo: "foto.jpg", ...caixaImpressa(d.foto, true) }
+    : null;
+  // P75: a foto na página inteira é a 1ª página; a história abre na 2ª (o livro aberto).
+  const lado = d.foto?.ao_lado ? foto : null;
   const base = {
     g: geometriaDoMiolo(),
     continua: "Continua no livro.",
@@ -44,7 +55,8 @@ export async function gerarAmostra(d: DadosAmostra): Promise<ResultadoAmostra> {
     titulo: d.titulo,
     ano: d.ano,
     paragrafos,
-    fotos: foto ? [foto] : [],
+    fotos: foto && !lado ? [foto] : [],
+    lado,
     qr: { ...qr, impresso: codigoImpresso(d.codigo), aponte: APONTE_E_OUCA },
   });
   const compilar = (paragrafos: string[], cortado: boolean) =>

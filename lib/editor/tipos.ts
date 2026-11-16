@@ -9,6 +9,7 @@ import type {
   FotoDaTela,
   Resposta,
 } from "@/lib/livro/tipos";
+import type { Recorte } from "@/lib/livro/recorte";
 import type { ChaveTamanho } from "@/lib/ui/tamanho";
 import type { Paragrafo, TextoDaHistoria } from "./conteudo";
 import type { EstadoProposta, Proposta } from "./propostas";
@@ -42,6 +43,11 @@ export type AcoesEditor = AcoesFotos & {
   ligarFotos: (ids: string[]) => Promise<Resposta<{ fotos: FotoDaHistoria[] }>>;
   tirarFoto: (id: string) => Promise<Resposta>;
   legendar: (id: string, legenda: string) => Promise<Resposta>;
+  /** P75: recorte e página inteira ao lado (só a 1ª foto). */
+  ajustarFoto: (
+    id: string,
+    ajuste: { recorte: Recorte | null; aoLado: boolean },
+  ) => Promise<Resposta>;
   responderSugestao?: (aceitar: boolean) => Promise<Resposta>;
   /** Prompt 9: sem elas (styleguide antigo), as ferramentas da IA não aparecem. */
   propostas?: AcoesPropostas;

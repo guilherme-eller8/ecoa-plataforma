@@ -160,6 +160,7 @@ import {
   PERGUNTAS_JAIR,
 } from "@/lib/exemplos/prompt4";
 import { TelaSemAcesso } from "@/components/telas/tela-sem-acesso";
+import { FolhaAjustarFoto } from "@/components/editor/ajustar-foto";
 import {
   TelaFolhear,
   type AcoesFolhear,
@@ -175,6 +176,19 @@ const lerDeExemplo = async () => [
 
 const acaoFalsa = async (): Promise<Resultado | null> => null;
 const nada = async () => {};
+
+// P75: uma foto em pé e bem alta, como a do 1º teste real.
+const FOTO_ALTA = {
+  id: "00000000-0000-4000-8000-0000000000f1",
+  url: `data:image/svg+xml;utf8,${encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="739" height="1600"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9c7a7"/><stop offset="1" stop-color="#5a4a3a"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="370" cy="520" r="150" fill="#e8d2b8"/><rect x="200" y="700" width="340" height="600" rx="60" fill="#3d5a80"/></svg>',
+  )}`,
+  largura: 739,
+  altura: 1600,
+  legenda: "Pai e neto na sala",
+  recorte: null,
+  aoLado: false,
+};
 
 // Prompt 10 (refeita no P72): folha da página de amostra, com a voz pronta, preparando ou com a
 // fila recusando o pedido. A página é uma renderização de verdade do template, com texto falso.
@@ -486,6 +500,23 @@ export function Vitrine({ tela }: { tela: Tela }) {
                   ? "falhou"
                   : "preparando",
             )}
+          />
+        </>
+      );
+    // P75: ajustar a foto (a foto alta do teste real, 739 × 1600).
+    case "editor-ajustar-foto":
+      return (
+        <>
+          <TelaEditor
+            historia={{ ...HISTORIA_PARA_EDITAR, revisada: true }}
+            podeEscrever
+            acoes={acoesEditorFalsas("livre")}
+          />
+          <FolhaAjustarFoto
+            foto={FOTO_ALTA}
+            primeira
+            aoFechar={() => {}}
+            aoSalvar={async () => null}
           />
         </>
       );

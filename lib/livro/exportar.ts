@@ -27,6 +27,7 @@ import {
 } from "./montagem";
 import { conferirTodosOsQr, gravarCaixas, rasterizarEConferir } from "./pdf";
 import { compilarCapa, compilarMiolo } from "./render";
+import { aplicarRecorte } from "./recortar-foto";
 
 export type BaixarFoto = (
   bucket: "acervo" | "mensagens",
@@ -126,7 +127,10 @@ export async function gerarPdfsDaVersao(args: {
     ...(capaDados.foto ? [{ ...capaDados.foto, cortar: true }] : []),
   ];
   const prontas = await emLotes(pedidas, FOTOS_BAIXADAS_JUNTAS, async (f) => {
-    const bruta = await args.baixar(f.bucket, f.caminho);
+    const bruta = await aplicarRecorte(
+      await args.baixar(f.bucket, f.caminho),
+      f.recorte,
+    );
     return [f.arquivo, await prepararFoto(bruta, f, f.cortar)] as const;
   });
   const fotos = new Map<string, Buffer>(prontas);

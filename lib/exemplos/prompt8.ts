@@ -136,6 +136,8 @@ export const HISTORIA_PARA_EDITAR: HistoriaParaEditar = {
       largura: 2400,
       altura: 1800,
       legenda: "Estação de Cachoeiro, anos 60",
+      recorte: null,
+      aoLado: false,
     },
     {
       id: id(21),
@@ -143,6 +145,8 @@ export const HISTORIA_PARA_EDITAR: HistoriaParaEditar = {
       largura: 900,
       altura: 640,
       legenda: null,
+      recorte: null,
+      aoLado: false,
     },
   ],
   versoes: 3,
@@ -206,12 +210,20 @@ export function acoesEditorFalsas(
         dados: {
           fotos: [
             ...HISTORIA_PARA_EDITAR.fotos,
-            ...ACERVO.filter((f) => ids.includes(f.id)),
+            ...ACERVO.filter((f) => ids.includes(f.id)).map((f) => ({
+              ...f,
+              recorte: null,
+              aoLado: false,
+            })),
           ],
         },
       };
     },
     async tirarFoto() {
+      return { ok: true };
+    },
+    async ajustarFoto() {
+      await espera(150);
       return { ok: true };
     },
     async legendar() {

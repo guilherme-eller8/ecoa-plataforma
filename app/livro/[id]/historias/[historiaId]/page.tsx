@@ -66,6 +66,7 @@ async function Historia({
           ligarFotos: editor.ligarFotos.bind(null, id, historiaId),
           tirarFoto: editor.tirarFoto.bind(null, id, historiaId),
           legendar: editor.legendar.bind(null, id, historiaId),
+          ajustarFoto: editor.ajustarFoto.bind(null, id, historiaId),
           prepararFotos: prepararFotos.bind(null, id),
           registrarFotos: registrarFotos.bind(null, id),
           responderSugestao: responderSugestao.bind(null, id, historiaId),

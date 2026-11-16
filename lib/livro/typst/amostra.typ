@@ -5,4 +5,4 @@
 
 #show: doc => configurar(d.g, d.historia.titulo, doc)
 #set page(footer: none)
-#historia(d.historia, "final", cortado: d.cortado, continua: d.continua)
+#historia(d.historia, "final", cortado: d.cortado, continua: d.continua, paridade: false)

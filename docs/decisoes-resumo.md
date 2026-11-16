@@ -80,6 +80,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P72** Ver o livro antes de imprimir: a amostra mostra a página na hora (QR tracejado até a voz) com progresso e "pode fechar"; *Folhear o livro* na montagem, do mesmo Typst, sem gravar nada.
 - **P73** Gravação sem começar há 10 min: a tela admite a demora e oferece *Tentar de novo*; envio e varredura não falham mais em silêncio.
 - **P74** Amostra = começo da história em até 2 páginas (livro aberto); o botão mostra o andamento da voz com a folha fechada; voz atrasada avisa o admin; título do capítulo sem justificar.
+- **P75** Ajustar a foto da história: cortar (formato, aproximar, arrastar) e, na 1ª foto, junto da história ou página inteira ao lado; recorte e posição em `story_photos`, por uso.
 
 ## Técnicas
 

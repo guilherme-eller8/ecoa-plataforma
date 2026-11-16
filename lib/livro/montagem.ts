@@ -3,11 +3,17 @@
 // zod confere na entrada: a fonte é o banco, mas o PDF nunca deve quebrar por um campo estranho.
 import { z } from "zod";
 import { CAPA_CORES, type CorDaCapa } from "@/lib/config";
+import { Recorte } from "./recorte";
 
 const Foto = z.object({
   caminho: z.string(),
   largura: z.number().int().positive().nullable(),
   altura: z.number().int().positive().nullable(),
+});
+// Foto da história: recorte e página ao lado (P75). Versões congeladas antes não têm.
+const FotoDaHistoria = Foto.extend({
+  recorte: Recorte.nullable().optional(),
+  ao_lado: z.boolean().optional(),
 });
 const FotoDaCapa = Foto.extend({
   // Onde a foto "foca" no retângulo da capa, em % da foto (50/50 = centro). Versões antigas não têm.
@@ -24,7 +30,7 @@ export const HistoriaDoLivro = z.object({
   incluida: z.boolean(),
   palavras: z.number().int().nonnegative(),
   paragrafos: z.array(z.string()),
-  fotos: z.array(Foto),
+  fotos: z.array(FotoDaHistoria),
   qr: Qr,
   // Tem voz que o QR toca (privado.historia_aceita_qr). Versões congeladas antes não têm.
   voz: z.boolean().optional(),
