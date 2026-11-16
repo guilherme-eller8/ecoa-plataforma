@@ -68,6 +68,8 @@ export type SituacaoDoAudio =
       rotulo: string;
       frase: string;
       confirmar: boolean;
+      /** Recebida há tempo demais sem começar: oferece Tentar de novo. */
+      tentar?: boolean;
       /** Vai mudar sozinha em instantes (a tela fica relendo o servidor). */
       andando?: boolean;
     };
@@ -84,6 +86,7 @@ export type GuardadaDaTela = {
   recebidaEm: string;
   frase: string;
   confirmar: boolean;
+  tentar?: boolean; // recebida há tempo demais sem começar: Tentar de novo
   andando?: boolean;
 };
 

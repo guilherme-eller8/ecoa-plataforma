@@ -4,13 +4,14 @@ import Link from "next/link";
 import { classesDoBotao } from "@/components/ui/botao";
 import { IconePerguntas, IconeSubir } from "@/components/ui/icones";
 import { AtualizarAoVivo } from "@/components/ui/atualizar-ao-vivo";
+import { BotaoTentarDeNovo } from "@/components/ui/botao-tentar-de-novo";
 import { HistoriasAoVivo } from "@/components/ui/historias-ao-vivo";
 import { Marca } from "@/components/ui/marca";
 import { MarcoPrimeiraHistoria } from "@/components/ui/marco-primeira-historia";
 import type { AoVivo } from "@/components/ui/historias-ao-vivo";
 import type { GuardadaDaTela, HistoriaDaTela } from "@/lib/historias/tipos";
 import { pendentes, type Passo } from "@/lib/livro/configuracao";
-import type { AcoesArquivar, LivroDaTela } from "@/lib/livro/tipos";
+import type { AcoesArquivar, LivroDaTela, Resposta } from "@/lib/livro/tipos";
 
 const NOME_DO_PASSO: Record<Passo, string> = {
   quem: "Quem é",
@@ -52,6 +53,7 @@ export function TelaLivro({
   vitrine,
   guardadas = [],
   arquivarHistoria,
+  tentarDeNovo,
   ehAdmin = false,
 }: {
   livro: LivroDaTela;
@@ -62,6 +64,7 @@ export function TelaLivro({
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
   guardadas?: GuardadaDaTela[]; // gravações que chegaram e ainda não viraram história
   arquivarHistoria?: AcoesArquivar; // P71
+  tentarDeNovo?: (id: string) => Promise<Resposta>; // gravação parada sem começar
   ehAdmin?: boolean; // Evals 1A: atalho de volta ao admin, só para quem é admin
 }) {
   const falta = livro.podeEscrever
@@ -245,6 +248,13 @@ export function TelaLivro({
                       </Link>
                     ) : null}
                   </p>
+                  {g.tentar && tentarDeNovo && livro.podeEscrever ? (
+                    <BotaoTentarDeNovo
+                      id={g.id}
+                      tentar={tentarDeNovo}
+                      className="mt-1"
+                    />
+                  ) : null}
                 </li>
               ))}
             </ul>

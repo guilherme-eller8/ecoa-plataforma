@@ -1,7 +1,10 @@
 import "server-only";
 // Envia os eventos que começam o pipeline. Chamado dentro de after(): o upload nunca fica lento
-// nem falha por causa do Inngest. Em falha, a varredura de 15 min reenvia.
+// nem falha por causa do Inngest. Em falha, tenta mais uma vez; se ainda falhar, registra
+// `erro_servidor` (o admin vê em /admin/erros) e a varredura de 15 min reenvia.
 import { inngest } from "@/lib/inngest/cliente";
+import { registrarEvento } from "@/lib/eventos";
+import { tipoDoErro } from "@/lib/erros-servidor";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { logarSemTexto } from "./erros";
 import {
@@ -11,43 +14,74 @@ import {
   chaveDoEvento,
 } from "./regras";
 
+const PAUSA_ENTRE_TENTATIVAS_MS = 1_000;
+
+/** O envio que some sem deixar rastro foi o que travou uma gravação por 12 h (16/11). */
+async function registrarFalhaDoEnvio(onde: string, e: unknown) {
+  logarSemTexto(onde, e);
+  await registrarEvento({
+    quem: null,
+    papel: "sistema",
+    acao: "erro_servidor",
+    livro: null,
+    detalhes: { rota: "/pipeline/disparo", tipo: tipoDoErro(e), origem: onde },
+  }).catch(() => {
+    // Registrar o erro nunca pode causar outro.
+  });
+}
+
 /**
  * `loteId` undefined = ler da gravação (admin, consentimento). O id do evento junta a chave e
  * a gravação: o mesmo id em 24 h é ignorado pelo Inngest, então reenviar não duplica.
+ * Devolve se o evento chegou ao Inngest.
  */
 export async function dispararGravacao(
   recordingId: string,
   sufixo?: string,
   loteId?: string | null,
   historiaId?: string | null,
-): Promise<void> {
+): Promise<boolean> {
+  let lote = loteId;
+  let paraHistoria = historiaId;
   try {
-    let lote = loteId;
-    let paraHistoria = historiaId;
     if (lote === undefined || paraHistoria === undefined) {
-      const { data } = await clienteAdmin()
+      const { data, error } = await clienteAdmin()
         .from("recordings")
         .select("lote_id, para_historia")
         .eq("id", recordingId)
         .maybeSingle();
+      if (error) throw error;
       lote = data?.lote_id ?? null;
       paraHistoria = data?.para_historia ?? null;
     }
-    const chave = chaveDoEvento({
-      id: recordingId,
-      lote_id: lote,
-      para_historia: paraHistoria,
-    });
-    const base =
-      chave === recordingId ? recordingId : `${chave}:${recordingId}`;
-    await inngest.send({
-      name: EVENTO_GRAVACAO,
-      id: sufixo ? `${base}:${sufixo}` : base,
-      data: { recordingId, chave },
-    });
   } catch (e) {
-    logarSemTexto("disparo", e);
+    await registrarFalhaDoEnvio("disparo:leitura", e);
+    return false;
   }
+  const chave = chaveDoEvento({
+    id: recordingId,
+    lote_id: lote ?? null,
+    para_historia: paraHistoria ?? null,
+  });
+  const base = chave === recordingId ? recordingId : `${chave}:${recordingId}`;
+  const evento = {
+    name: EVENTO_GRAVACAO,
+    id: sufixo ? `${base}:${sufixo}` : base,
+    data: { recordingId, chave },
+  };
+  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+    try {
+      await inngest.send(evento);
+      return true;
+    } catch (e) {
+      if (tentativa === 2) {
+        await registrarFalhaDoEnvio("disparo", e);
+        return false;
+      }
+      await new Promise((r) => setTimeout(r, PAUSA_ENTRE_TENTATIVAS_MS));
+    }
+  }
+  return false;
 }
 
 /** Depois de confirmar o upload (ou de saber que ele já tinha chegado sem virar história). */

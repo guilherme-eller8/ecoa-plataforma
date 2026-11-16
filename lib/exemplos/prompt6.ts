@@ -150,7 +150,11 @@ export const NOMES_JAIR: NomeDaTela[] = [
   },
 ];
 
-export const AUDIOS_COM_SITUACAO: AudioDaTela[] = AUDIOS_JAIR.map((a, i) => ({
+// O 4º (cópia do 3º) mostra a gravação parada sem começar, com Tentar de novo.
+export const AUDIOS_COM_SITUACAO: AudioDaTela[] = [
+  ...AUDIOS_JAIR,
+  { ...AUDIOS_JAIR[2]!, id: id(41) },
+].map((a, i) => ({
   ...a,
   situacao:
     i === 0
@@ -162,12 +166,21 @@ export const AUDIOS_COM_SITUACAO: AudioDaTela[] = AUDIOS_JAIR.map((a, i) => ({
             frase: "Guardada. Esperando os outros áudios do envio.",
             confirmar: false,
           }
-        : {
-            tipo: "espera",
-            rotulo: "Confirme o uso da IA",
-            frase: "Guardada. Confirme o uso da IA para virar texto.",
-            confirmar: true,
-          },
+        : i === 2
+          ? {
+              tipo: "espera",
+              rotulo: "Confirme o uso da IA",
+              frase: "Guardada. Confirme o uso da IA para virar texto.",
+              confirmar: true,
+            }
+          : {
+              tipo: "espera",
+              rotulo: "Demorando",
+              frase: "Está demorando mais que o normal para começar.",
+              confirmar: false,
+              tentar: true,
+              andando: true,
+            },
 }));
 
 const ok = async (): Promise<Resposta> => ({ ok: true });
@@ -209,5 +222,16 @@ export const GUARDADAS_JAIR: GuardadaDaTela[] = [
     recebidaEm: "2026-11-11T22:10:00Z",
     frase: "Guardada. Esperando os outros áudios do envio.",
     confirmar: false,
+  },
+  {
+    id: id(32),
+    origem: "upload",
+    titulo: null,
+    duracaoS: 51,
+    recebidaEm: "2026-11-15T21:06:00Z",
+    frase: "Está demorando mais que o normal para começar.",
+    confirmar: false,
+    tentar: true,
+    andando: true,
   },
 ];

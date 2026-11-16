@@ -52,6 +52,8 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Tela ao vivo (T37):** `components/ui/atualizar-ao-vivo.tsx` assina o canal do livro e relê o servidor enquanto algo anda (`ATUALIZAR_A_CADA_S`); home, Áudios e Histórias o usam, para a gravação mudar de estado em todos os aparelhos sem recarregar.
 - **Arquivar áudio (P69):** `public.audio_arquivar` (só por função, `arquivado_em`); ação `arquivarAudio` em `app/livro/[id]/acoes.ts`; listas filtram `arquivado_em is null`.
 - **Arquivar história (P71):** `public.historia_arquivar` (só por função, `stories.arquivada_em`, só pronta ou falhou); ação `arquivarHistoria`; `BotaoArquivar` (`components/ui/`); `historiasDoLivro` filtra e `historiasArquivadas` lista; `privado.conteudo_do_livro` deixa a arquivada fora da montagem.
+- **Gravação parada (P73):** `motivoDaEspera` (`lib/pipeline/regras.ts`, pura e testada) decide a frase; "demorando" depois de `ESPERA_COMECAR_MIN` liga `tentar`, e `BotaoTentarDeNovo` (`components/ui/`) chama `tentarDeNovoAudio`. `dispararGravacao` devolve se o evento chegou e grava `erro_servidor` se não; `gravacoesOrfas` lança erro em vez de devolver lista vazia.
+- **Inngest só em produção (T57):** `/api/inngest` responde 404 em preview (`inngestAtendeAqui`, `lib/inngest/ambiente.ts`); só há um ambiente no Inngest e o preview não pode virar o app dele. `enviarEmail` devolve `repetido` quando o Resend recusa uma chave de idempotência já usada (`lib/email/repeticao.ts`).
 - **Papel na tela:** `livro.ehResponsavel` esconde o que é só do responsável (P60); o banco confere com `privado.eh_responsavel`. Links novos sem login: tipo em `TipoLink` (`lib/links.ts`), token por HMAC.
 
 ## Domínios em `lib/`

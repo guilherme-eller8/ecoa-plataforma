@@ -92,6 +92,8 @@ export const MOTIVOS_ESPERA = {
   livro_fechado: "Guardada",
   descartada: "Fora das histórias",
   nao_recebido: "Começando a ouvir",
+  // Só na tela: recebida há mais de ESPERA_COMECAR_MIN e ainda não começou (evento perdido).
+  demorando: "Demorando",
 } as const;
 
 export type MotivoEspera = keyof typeof MOTIVOS_ESPERA;
@@ -107,4 +109,35 @@ export const FRASES_ESPERA: Record<MotivoEspera, string> = {
   livro_fechado: "Guardada.",
   descartada: "Ficou fora das histórias. O áudio continua guardado.",
   nao_recebido: "Recebida. Já vai começar a ouvir.",
+  demorando: "Está demorando mais que o normal para começar.",
 };
+
+/**
+ * Por que uma gravação recebida ainda não virou história. Pura: a tela nunca promete "já vai
+ * começar" para sempre; passado ESPERA_COMECAR_MIN, admite a demora e oferece Tentar de novo.
+ */
+export function motivoDaEspera(
+  g: {
+    processado: boolean;
+    duracaoS: number | null;
+    loteIncompleto: boolean;
+    recebidoEm: string | null;
+  },
+  ctx: {
+    iaConfirmada: boolean;
+    agora: number;
+    maxArquivoS: number;
+    esperaComecarMin: number;
+  },
+): MotivoEspera {
+  if (g.processado) return "descartada";
+  if (g.duracaoS == null) return "sem_duracao";
+  if (g.duracaoS > ctx.maxArquivoS) return "longa";
+  if (!ctx.iaConfirmada) return "sem_consentimento";
+  if (g.loteIncompleto) return "lote_incompleto";
+  const recebida = g.recebidoEm ? new Date(g.recebidoEm).getTime() : NaN;
+  return Number.isFinite(recebida) &&
+    ctx.agora - recebida > ctx.esperaComecarMin * 60_000
+    ? "demorando"
+    : "nao_recebido";
+}

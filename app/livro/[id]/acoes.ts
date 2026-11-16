@@ -28,6 +28,7 @@ import {
   MAX_FOTOS_POR_ENVIO,
   MAX_ITENS_ENQUETE,
   MAX_FOTOS_POR_LIVRO,
+  TENTAR_DE_NOVO_JANELA_MIN,
   TEXTO_PERGUNTA_MAX,
 } from "@/lib/config";
 import { envLinks } from "@/lib/env-links";
@@ -1033,6 +1034,59 @@ export async function arquivarAudio(
   });
   if (error) return falhou(error);
   if (data) after(() => dispararGravacao(id, `desarquivou:${Date.now()}`));
+  atualizar(livroId);
+  return { ok: true };
+}
+
+/**
+ * Gravação recebida que não começou a virar história (evento perdido): reenvia o evento.
+ * Confere antes que ela ainda está parada; se já andou, só atualiza a tela. Cliques na mesma
+ * janela de TENTAR_DE_NOVO_JANELA_MIN viram um evento só.
+ */
+export async function tentarDeNovoAudio(
+  livroId: string,
+  id: string,
+): Promise<Resposta> {
+  const c = await paraEscrever(livroId);
+  if (ehErro(c)) return c;
+  if (!uuid.safeParse(id).success)
+    return { ok: false, mensagem: "Não deu certo agora. Tente de novo." };
+  const { data: g, error } = await c.supabase
+    .from("recordings")
+    .select("id, lote_id, para_historia, processado_em, upload, arquivado_em")
+    .eq("id", id)
+    .eq("book_id", c.livro.id)
+    .maybeSingle();
+  if (error) return falhou(error);
+  const { data: srs, error: erroHistoria } = await c.supabase
+    .from("story_recordings")
+    .select("story_id")
+    .eq("recording_id", id)
+    .limit(1);
+  if (erroHistoria) return falhou(erroHistoria);
+  const parada =
+    g &&
+    g.upload === "recebido" &&
+    !g.processado_em &&
+    !g.arquivado_em &&
+    !(srs ?? []).length;
+  if (!parada) {
+    atualizar(livroId);
+    return { ok: true };
+  }
+  const janela = Math.floor(Date.now() / (TENTAR_DE_NOVO_JANELA_MIN * 60_000));
+  const foi = await dispararGravacao(
+    id,
+    `tentou:${janela}`,
+    g.lote_id,
+    g.para_historia,
+  );
+  if (!foi)
+    return {
+      ok: false,
+      mensagem: "Não conseguimos agora. Tente de novo em alguns minutos.",
+    };
+  evento(c, "tentou_de_novo", { recording: id });
   atualizar(livroId);
   return { ok: true };
 }

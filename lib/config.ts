@@ -258,6 +258,11 @@ export const TRANSCREVER_TIMEOUT_BASE_S = 60;
 export const TRANSCREVER_TIMEOUT_POR_MIN_S = 10;
 export const TRANSCREVER_TIMEOUT_MAX_S = 270;
 export const VARREDURA_GRAVACAO_MIN = 5; // gravação recebida sem história há mais que isso: reenvia
+// Gravação recebida que não começou a virar história há mais que isso: a tela admite a demora
+// (em vez de "já vai começar") e oferece Tentar de novo. O normal é começar em segundos.
+export const ESPERA_COMECAR_MIN = 10;
+// Tentar de novo: cliques na mesma janela viram um evento só (o Inngest ignora id repetido).
+export const TENTAR_DE_NOVO_JANELA_MIN = 2;
 export const VARREDURA_PARADA_MIN = 20;
 // Previsão mostrada no cartão (sem ansiedade): base + segundos por segundo de áudio, por fase.
 // Calibrar com ai_usage.ms quando houver histórias reais.

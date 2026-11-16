@@ -53,6 +53,7 @@ export function acoesDoLivro(id: string) {
   const arquivarHistoria: AcoesArquivar = {
     arquivar: a.arquivarHistoria.bind(null, id),
   };
+  const tentarDeNovo = a.tentarDeNovoAudio.bind(null, id);
   return {
     configuracao,
     fotos,
@@ -61,5 +62,6 @@ export function acoesDoLivro(id: string) {
     audios,
     arquivar,
     arquivarHistoria,
+    tentarDeNovo,
   };
 }

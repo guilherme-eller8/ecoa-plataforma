@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AtualizarAoVivo } from "@/components/ui/atualizar-ao-vivo";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
+import { BotaoTentarDeNovo } from "@/components/ui/botao-tentar-de-novo";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { IconeMicrofone, IconeSubir } from "@/components/ui/icones";
 import { formatarDuracao } from "@/lib/audios/formatos";
@@ -14,6 +15,7 @@ import type {
   AcoesArquivar,
   AudioDaTela,
   LivroDaTela,
+  Resposta,
 } from "@/lib/livro/tipos";
 
 const DATA = new Intl.DateTimeFormat("pt-BR", {
@@ -106,11 +108,13 @@ export function TelaAudios({
   livro,
   audios,
   acoes,
+  tentarDeNovo,
   vitrine = false,
 }: {
   livro: LivroDaTela;
   audios: AudioDaTela[];
   acoes?: AcoesArquivar;
+  tentarDeNovo?: (id: string) => Promise<Resposta>; // gravação parada sem começar
   vitrine?: boolean; // só na vitrine: sem Supabase, sem canal
 }) {
   const router = useRouter();
@@ -252,6 +256,17 @@ export function TelaAudios({
                         </p>
                         <Situacao livroId={livro.id} audio={a} />
                       </div>
+                      {a.situacao?.tipo === "espera" &&
+                      a.situacao.tentar &&
+                      tentarDeNovo &&
+                      livro.podeEscrever ? (
+                        <div className="flex flex-col items-start gap-2">
+                          <p className="text-ui-15 text-tinta">
+                            {a.situacao.frase}
+                          </p>
+                          <BotaoTentarDeNovo id={a.id} tentar={tentarDeNovo} />
+                        </div>
+                      ) : null}
                       <Player url={a.url} nome={nome} />
                       {pode ? (
                         <Botao

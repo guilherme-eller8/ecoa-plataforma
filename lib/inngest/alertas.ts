@@ -36,7 +36,7 @@ export const alertasAdminFn = inngest.createFunction(
             emailAlerta({ titulo: a.titulo, linhas: a.linhas, urlAdmin: url }),
             { idempotencyKey: chaveDoAlerta(a, dia, admin.id) },
           );
-          if (r.ok) n++;
+          if (r.ok && !r.repetido) n++; // repetido: já avisado hoje
         }
       return n;
     });

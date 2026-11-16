@@ -31,6 +31,7 @@ async function Audios({ id }: { id: string }) {
     <TelaAudios
       livro={tela}
       acoes={acoesDoLivro(id).arquivar}
+      tentarDeNovo={acoesDoLivro(id).tentarDeNovo}
       audios={audios.map((a) => ({ ...a, situacao: situacoes.get(a.id) }))}
     />
   );
