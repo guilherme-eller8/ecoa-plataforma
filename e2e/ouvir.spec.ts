@@ -97,18 +97,47 @@ test.describe("Página de amostra (exemplo)", () => {
     ).toBeVisible();
     await page.goto("/styleguide/editor-amostra");
     const folha = page.getByRole("dialog", { name: "Página de amostra" });
-    await expect(folha.getByRole("link", { name: "Baixar PDF" })).toBeVisible();
+    await expect(
+      folha.getByRole("img", { name: /página da história/ }),
+    ).toBeVisible();
+    await expect(
+      folha.getByRole("link", { name: "Baixar PDF para imprimir" }),
+    ).toBeVisible();
+    await expect(folha.getByText("O QR já toca a voz")).toBeVisible();
     await expect(folha.getByText("7KQ2 M9XA")).toBeVisible();
     await folha.getByRole("button", { name: "Desligar este QR" }).click();
     await expect(folha.getByText(/não vai ouvir mais nada/)).toBeVisible();
   });
 
-  test("voz preparando: sem Baixar PDF", async ({ page }) => {
+  test("voz preparando: a página já aparece, o PDF espera e dá para fechar", async ({
+    page,
+  }) => {
     await page.goto("/styleguide/editor-amostra-preparando");
     const folha = page.getByRole("dialog", { name: "Página de amostra" });
-    await expect(folha.getByText("Preparando a voz…")).toBeVisible();
-    await expect(folha.getByRole("link", { name: "Baixar PDF" })).toHaveCount(
-      0,
-    );
+    await expect(
+      folha.getByRole("img", { name: /página da história/ }),
+    ).toBeVisible();
+    await expect(folha.getByText("Preparando a voz do QR")).toBeVisible();
+    await expect(folha.getByRole("progressbar")).toBeVisible();
+    await expect(folha.getByText(/Pode fechar/)).toBeVisible();
+    await expect(
+      folha.getByRole("link", { name: "Baixar PDF para imprimir" }),
+    ).toHaveCount(0);
+    await expect(
+      folha.getByRole("button", { name: "Baixar PDF para imprimir" }),
+    ).toBeDisabled();
+  });
+
+  test("fila recusou o pedido: diz na hora e oferece tentar de novo", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/editor-amostra-falhou");
+    const folha = page.getByRole("dialog", { name: "Página de amostra" });
+    await expect(
+      folha.getByText(/Não conseguimos preparar a voz agora/),
+    ).toBeVisible();
+    await expect(
+      folha.getByRole("button", { name: "Tentar de novo" }),
+    ).toBeVisible();
   });
 });

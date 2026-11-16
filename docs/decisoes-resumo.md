@@ -77,7 +77,8 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P69** Arquivar áudio: qualquer membro que escreve, inclusive o que já virou história; só sai das listas e da fila, nunca é apagado; história e QR continuam.
 - **P70** Foto da capa com foco: arrastar a foto no retângulo; o foco (0 a 100%) vai no conteúdo congelado e o PDF enquadra igual à prévia.
 - **P71** Arquivar história: qualquer membro que escreve; sai das listas e da montagem, nada é apagado (texto, áudio, QR e versões publicadas ficam); Desarquivar volta.
-- **P72** Gravação sem começar há 10 min: a tela admite a demora e oferece *Tentar de novo*; envio e varredura não falham mais em silêncio.
+- **P72** Ver o livro antes de imprimir: a amostra mostra a página na hora (QR tracejado até a voz) com progresso e "pode fechar"; *Folhear o livro* na montagem, do mesmo Typst, sem gravar nada.
+- **P73** Gravação sem começar há 10 min: a tela admite a demora e oferece *Tentar de novo*; envio e varredura não falham mais em silêncio.
 
 ## Técnicas
 
@@ -136,4 +137,5 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T53** Aderência e erros no admin sem Sentry nem migration: `job_falhou` e `erro_servidor` em `events` (só ids e rota-padrão); link do autor aberto grava `entrou`; `events` só por `lib/eventos.ts` (escrita e `lerEventos`).
 - **T54** Central de Evals no admin, em fases (`docs/designs/evals.md`): Scribe e Claude medidos separados; fase 0 guarda os sinais e para erro definitivo; gabarito, juiz e canários seguem os gatilhos da T31.
 - **T55** Evals 1A: livro ativo = ação de criação de membro ou autor em 7 dias (sem `entrou` nem família); ativação = 1ª revisada em 7 dias; abaixo de 5, "amostra pequena"; somas no banco, linhas em blocos; alertas 1 por condição e dia.
-- **T56** Preview da Vercel não atende `/api/inngest` (404): nunca vira o app de produção no Inngest; repetição do Resend não é falha.
+- **T56** Pedido à fila não falha calado (`pedirRecorte` tenta 2 vezes e grava `erro_servidor`); prévias em JPEG do PDF real, só as páginas pedidas, QR provisório tracejado; Folhear em memória por hash, sem migration.
+- **T57** Preview da Vercel não atende `/api/inngest` (404): nunca vira o app de produção no Inngest; repetição do Resend não é falha.

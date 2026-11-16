@@ -75,6 +75,7 @@ async function Historia({
           },
           amostra: {
             preparar: amostra.prepararAmostra.bind(null, id, historiaId),
+            previa: amostra.previaAmostra.bind(null, id, historiaId),
             desligar: amostra.desligarQr.bind(null, id, historiaId),
           },
           propostas: {

@@ -75,6 +75,7 @@ export const TELAS = [
   "player-digitar",
   "editor-amostra",
   "editor-amostra-preparando",
+  "editor-amostra-falhou",
   // Prompt 11
   "pessoas",
   "pessoas-vazia",
@@ -115,6 +116,8 @@ export const TELAS = [
   "versao-gerando",
   "versao-pronta",
   "versao-falhou",
+  "folhear",
+  "folhear-vazio",
   // Prompt 15
   "admin-aderencia",
   "admin-aderencia-vazia",

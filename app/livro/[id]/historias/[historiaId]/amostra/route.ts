@@ -2,10 +2,12 @@
 // Nenhum PDF sai sem o QR lido por software no próprio arquivo.
 import { after } from "next/server";
 import { registrarEvento } from "@/lib/eventos";
-import { gerarAmostra } from "@/lib/livro/amostra";
 import { conferirQr } from "@/lib/livro/conferir-qr";
 import { livroDaAcao } from "@/lib/livro/acesso";
-import { bytesDaFoto, dadosDaAmostra } from "@/lib/livro/dados-amostra";
+import {
+  dadosDaAmostra,
+  gerarAmostraDaHistoria,
+} from "@/lib/livro/dados-amostra";
 
 export const maxDuration = 60;
 
@@ -57,21 +59,16 @@ export async function GET(
       : undefined;
 
   try {
-    const bytes = d.foto ? await bytesDaFoto(d.foto.caminho) : null;
-    const r = await gerarAmostra({
-      titulo:
-        maiuscula === undefined
-          ? d.titulo
-          : `${d.titulo} · teste ${maiuscula ? "A (maiúsculo)" : "B (minúsculo)"}`,
-      ano: d.ano,
-      paragrafos: d.paragrafos,
-      codigo: d.codigo,
-      foto:
-        d.foto && bytes
-          ? { bytes, largura: d.foto.largura, altura: d.foto.altura }
-          : null,
-      maiuscula,
-    });
+    const r = await gerarAmostraDaHistoria(
+      { ...d, codigo: d.codigo },
+      {
+        titulo:
+          maiuscula === undefined
+            ? undefined
+            : `${d.titulo} · teste ${maiuscula ? "A (maiúsculo)" : "B (minúsculo)"}`,
+        maiuscula,
+      },
+    );
     const c = await conferirQr(r.pdf, r.url, r.marca);
     if (!c.ok)
       return pagina(422, "Não conseguimos conferir o QR. Tente de novo.");
