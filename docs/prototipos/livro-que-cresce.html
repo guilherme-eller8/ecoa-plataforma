@@ -1,0 +1,427 @@
+<title>O livro que cresce</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+<style>
+  /* Layout: três celulares lado a lado (empilham no celular), cada um com uma peça viva.
+     Paleta e fontes do app (app/globals.css): o protótipo é só claro, como o app. */
+  :root {
+    --polen: #f5efe4;
+    --polen-2: #ece4d5;
+    --papel: #fffdf8;
+    --tinta: #26211d;
+    --tinta-2: #6e6259;
+    --floresta: #1f3d33;
+    --floresta-escuro: #162d25;
+    --floresta-claro: #e3ebe5;
+    --linha: #e6dccb;
+    --linha-forte: #cfc2ad;
+    --aviso: #7a5200;
+    --aviso-fundo: #fbf1d6;
+    --mesa: #e9e1d2;
+    --livro: "Newsreader", Georgia, "Times New Roman", serif;
+    --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--mesa);
+    color: var(--tinta);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.45;
+  }
+  .pagina {
+    max-width: 1220px;
+    margin: 0 auto;
+    padding-block: 40px 56px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  header { display: flex; flex-direction: column; gap: 8px; max-width: 62ch; }
+  header .rotulo { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-2); }
+  header h1 { font-family: var(--livro); font-weight: 500; font-size: clamp(32px, 5vw, 44px); line-height: 1.05; margin: 0; text-wrap: balance; }
+  header p { margin: 0; color: var(--tinta-2); font-size: 17px; }
+
+  .vitrine { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; align-items: start; }
+  .peca { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .peca > h2 { margin: 0; font-size: 15px; font-weight: 600; display: flex; gap: 10px; align-items: baseline; }
+  .peca > h2 span { font-weight: 400; color: var(--tinta-2); }
+  .peca > p.nota { margin: 0; font-size: 14px; color: var(--tinta-2); max-width: 44ch; }
+
+  .celular {
+    background: var(--polen);
+    border: 1px solid var(--linha-forte);
+    border-radius: 34px;
+    padding: 22px 18px 24px;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: 0 1px 0 #fff8 inset, 0 18px 40px -24px #3a2d1f55;
+    max-width: 380px;
+    width: 100%;
+  }
+  .barra-topo { display: flex; justify-content: space-between; font-size: 12px; color: var(--tinta-2); }
+  .marca { font-family: var(--livro); font-size: 18px; color: var(--floresta); font-weight: 600; }
+
+  .cartao { background: var(--papel); border: 1px solid var(--linha); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+  .titulo-livro { font-family: var(--livro); font-size: 22px; line-height: 1.15; margin: 0; }
+  .apoio { font-size: 14px; color: var(--tinta-2); margin: 0; }
+  .frase { font-size: 16px; margin: 0; }
+
+  .botao {
+    font: inherit; font-weight: 600; font-size: 17px;
+    min-height: 52px; border-radius: 999px; border: 0;
+    background: var(--floresta); color: var(--papel);
+    padding: 0 22px; cursor: pointer; width: 100%;
+  }
+  .botao:hover { background: var(--floresta-escuro); }
+  .botao.secundario { background: transparent; color: var(--floresta); border: 1.5px solid var(--linha-forte); }
+  .botao.secundario:hover { background: var(--polen-2); }
+  .botao:focus-visible, .link:focus-visible, .mini:focus-visible { outline: 3px solid #1f3d3366; outline-offset: 3px; }
+  .link { font: inherit; font-size: 15px; background: none; border: 0; padding: 6px 0; color: var(--floresta); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; align-self: flex-start; }
+  .controles { margin-top: auto; display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--linha-forte); }
+  .controles .legenda { width: 100%; font-size: 12px; color: var(--tinta-2); letter-spacing: .06em; text-transform: uppercase; }
+  .mini { font: inherit; font-size: 13px; border: 1px solid var(--linha-forte); background: var(--papel); color: var(--tinta); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+  .mini:hover { background: var(--polen-2); }
+
+  /* ── Peça 1: trilha ───────────────────────────── */
+  .trilha { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); position: relative; }
+  .trilha::before { content: ""; position: absolute; left: 10%; right: 10%; top: 11px; height: 2px; background: var(--polen-2); }
+  .trilha .enchida { position: absolute; left: 10%; top: 11px; height: 2px; background: var(--floresta); width: 0; transition: width .6s ease; }
+  .trilha li { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; font-size: 12px; color: var(--tinta-2); text-align: center; }
+  .ponto { width: 24px; height: 24px; border-radius: 50%; background: var(--papel); border: 2px solid var(--linha-forte); display: grid; place-items: center; transition: background .3s, border-color .3s, transform .3s; }
+  .ponto svg { width: 13px; height: 13px; opacity: 0; transition: opacity .2s; }
+  li.feito .ponto { background: var(--floresta); border-color: var(--floresta); }
+  li.feito .ponto svg { opacity: 1; }
+  li.feito { color: var(--tinta); }
+  li.agora { color: var(--floresta); font-weight: 600; }
+  li.agora .ponto { border-color: var(--floresta); background: var(--floresta-claro); animation: pulsar 1.6s ease-in-out infinite; }
+  li.agora.parado .ponto { border-color: var(--aviso); background: var(--aviso-fundo); animation: none; }
+  li.agora.parado { color: var(--aviso); }
+  li.estalo .ponto { transform: scale(1.25); }
+  @keyframes pulsar { 0%,100% { box-shadow: 0 0 0 0 #1f3d3340; } 50% { box-shadow: 0 0 0 7px #1f3d3300; } }
+  .barra { height: 6px; background: var(--polen-2); border-radius: 999px; overflow: hidden; }
+  .barra > div { height: 100%; width: 0; background: var(--floresta); border-radius: 999px; transition: width .5s linear; }
+  .aviso { background: var(--aviso-fundo); color: var(--aviso); border-radius: 14px; padding: 12px 14px; font-size: 15px; margin: 0; }
+
+  /* ── Peça 2: lombada ──────────────────────────── */
+  .estante { position: relative; height: 196px; display: flex; align-items: flex-end; justify-content: center; gap: 0; border-bottom: 6px solid #c9b79a; border-radius: 2px; padding-bottom: 0; }
+  .livro3d { position: relative; height: 172px; display: flex; align-items: stretch; transition: transform .4s; }
+  .lombada {
+    width: 14px; background: var(--floresta); border-radius: 3px 0 0 3px;
+    transition: width .7s cubic-bezier(.2,.8,.2,1);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    box-shadow: inset -3px 0 0 #0003, inset 2px 0 0 #fff2;
+  }
+  .lombada span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--livro); color: #f5efe4; font-size: 14px; white-space: nowrap; opacity: 0; transition: opacity .3s; }
+  .lombada.larga span { opacity: 1; }
+  .capa { width: 116px; background: linear-gradient(90deg, #26493d, var(--floresta)); border-radius: 0 6px 6px 0; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 12px; color: #f5efe4; }
+  .capa b { font-family: var(--livro); font-weight: 500; font-size: 16px; line-height: 1.1; }
+  .capa i { font-style: normal; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; }
+  .paginas-borda { width: 6px; background: repeating-linear-gradient(0deg, #fffdf8 0 2px, #e6dccb 2px 3px); margin: 4px 0; border-radius: 0 2px 2px 0; transition: width .7s; }
+  .contador { display: flex; align-items: baseline; gap: 8px; }
+  .contador strong { font-family: var(--livro); font-size: 40px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; }
+  .contador span { color: var(--tinta-2); }
+  .marcos { position: relative; height: 34px; }
+  .marcos .trilho { position: absolute; left: 0; right: 0; top: 8px; height: 6px; border-radius: 999px; background: var(--polen-2); overflow: hidden; }
+  .marcos .trilho div { height: 100%; width: 0; background: var(--floresta); transition: width .7s cubic-bezier(.2,.8,.2,1); }
+  .marco { position: absolute; top: 3px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--tinta-2); white-space: nowrap; }
+  .marco i { width: 16px; height: 16px; border-radius: 50%; background: var(--papel); border: 2px solid var(--linha-forte); transition: background .3s, border-color .3s; }
+  .marco.ok i { background: var(--floresta); border-color: var(--floresta); }
+  .marco:first-child { transform: none; align-items: flex-start; }
+  .marco:last-child { transform: translateX(-100%); align-items: flex-end; }
+  .festa { position: relative; overflow: hidden; }
+  .confete { position: absolute; width: 7px; height: 11px; border-radius: 2px; top: -12px; pointer-events: none; animation: cair 1.4s ease-in forwards; }
+  @keyframes cair { to { transform: translateY(240px) rotate(320deg); opacity: 0; } }
+  .brinde { background: var(--floresta); color: var(--papel); border-radius: 14px; padding: 12px 14px; font-size: 15px; margin: 0; display: flex; gap: 10px; align-items: center; animation: entrar .35s ease; }
+  .brinde b { font-family: var(--livro); font-weight: 500; font-size: 18px; }
+  @keyframes entrar { from { transform: translateY(6px); opacity: 0; } }
+
+  /* ── Peça 3: enquanto espera ──────────────────── */
+  .escrevendo { display: flex; flex-direction: column; gap: 10px; }
+  .escrevendo .linha-cab { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 14px; color: var(--tinta-2); }
+  .texto-vivo { font-family: var(--livro); font-size: 17px; line-height: 1.5; margin: 0; min-height: 76px; color: var(--tinta); }
+  .texto-vivo .cursor { display: inline-block; width: 2px; height: 1em; background: var(--floresta); vertical-align: -2px; animation: piscar 1s steps(2) infinite; }
+  @keyframes piscar { 50% { opacity: 0; } }
+  .missao { background: var(--floresta-claro); border-radius: 20px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .missao .fase { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--floresta); font-weight: 600; }
+  .missao .pergunta { font-family: var(--livro); font-size: 23px; line-height: 1.2; margin: 0; text-wrap: balance; }
+  .pronta { background: var(--papel); border: 1.5px solid var(--floresta); border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; animation: entrar .35s ease; }
+
+  .rodape { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; border-top: 1px solid var(--linha-forte); padding-top: 24px; }
+  .rodape h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-2); font-weight: 600; }
+  .rodape ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="pagina">
+  <header>
+    <span class="rotulo">Ecoa · protótipo · dados de exemplo</span>
+    <h1>O livro que cresce</h1>
+    <p>Três peças para a espera entre gravar e ver a história no livro. Toque nos botões de baixo de cada celular para simular.</p>
+  </header>
+
+  <div class="vitrine">
+    <!-- Peça 1 -->
+    <section class="peca" aria-labelledby="t1">
+      <h2 id="t1">1 · Trilha da história <span>no cartão</span></h2>
+      <p class="nota">Cinco marcos e nenhum estado sem próximo passo. Se travar, a tela avisa e oferece tentar de novo.</p>
+      <div class="celular">
+        <div class="barra-topo"><span class="marca">ecoa</span><span>Histórias</span></div>
+        <article class="cartao">
+          <div>
+            <p class="titulo-livro" id="h1-titulo">Conversa de 15 de nov.</p>
+            <p class="apoio">Gravada por você · 1 min 42 s</p>
+          </div>
+          <ol class="trilha" id="trilha" aria-label="Etapas da história">
+            <div class="enchida" id="enchida"></div>
+          </ol>
+          <div class="barra" id="h1-barra-caixa"><div id="h1-barra"></div></div>
+          <p class="frase" id="h1-frase"></p>
+          <div id="h1-acao"></div>
+        </article>
+        <div class="controles">
+          <span class="legenda">Simular</span>
+          <button class="mini" id="h1-avancar" type="button">Próxima etapa</button>
+          <button class="mini" id="h1-travar" type="button">E se travar?</button>
+          <button class="mini" id="h1-zerar" type="button">Recomeçar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Peça 2 -->
+    <section class="peca" aria-labelledby="t2">
+      <h2 id="t2">2 · A lombada <span>na home</span></h2>
+      <p class="nota">O livro engrossa a cada história revisada. A meta é real: as 80 páginas do plano.</p>
+      <div class="celular festa" id="h2-celular">
+        <div class="barra-topo"><span class="marca">ecoa</span><span>Início</span></div>
+        <div class="estante" aria-hidden="true">
+          <div class="livro3d">
+            <div class="lombada" id="lombada"><span>O livro do vô Antônio</span></div>
+            <div class="capa"><i>Memórias</i><b>O livro do vô Antônio</b></div>
+            <div class="paginas-borda" id="borda"></div>
+          </div>
+        </div>
+        <div class="contador"><strong id="h2-num">23</strong><span>de 80 páginas</span></div>
+        <div class="marcos" aria-hidden="true">
+          <div class="trilho"><div id="h2-trilho"></div></div>
+          <div class="marco" data-p="3" style="left:0%"><i></i>1ª história</div>
+          <div class="marco" data-p="20" style="left:25%"><i></i>20 pág.</div>
+          <div class="marco" data-p="40" style="left:50%"><i></i>Metade</div>
+          <div class="marco" data-p="80" style="left:100%"><i></i>Pronto</div>
+        </div>
+        <div id="h2-brinde" aria-live="polite"></div>
+        <button class="botao" type="button" id="h2-nova">Nova história</button>
+        <p class="apoio" style="text-align:center">2 histórias esperando sua revisão</p>
+        <div class="controles">
+          <span class="legenda">Simular</span>
+          <button class="mini" id="h2-revisar" type="button">Revisar uma história (+3 pág.)</button>
+          <button class="mini" id="h2-zerar" type="button">Recomeçar</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Peça 3 -->
+    <section class="peca" aria-labelledby="t3">
+      <h2 id="t3">3 · Enquanto espera <span>a próxima missão</span></h2>
+      <p class="nota">A espera vira o próximo ciclo. A ação principal é gravar a próxima; quando a história fica pronta, passa a ser ler.</p>
+      <div class="celular">
+        <div class="barra-topo"><span class="marca">ecoa</span><span>Conversa de 15 de nov.</span></div>
+        <div class="escrevendo">
+          <div class="linha-cab"><span id="h3-etapa">Escrevendo a história</span><span id="h3-falta">falta cerca de 1 min</span></div>
+          <div class="barra"><div id="h3-barra"></div></div>
+          <p class="texto-vivo" id="h3-texto"><span class="cursor"></span></p>
+        </div>
+        <div id="h3-zona"></div>
+        <div class="controles">
+          <span class="legenda">Simular</span>
+          <button class="mini" id="h3-acelerar" type="button">Pular para pronta</button>
+          <button class="mini" id="h3-zerar" type="button">Recomeçar</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="rodape">
+    <div>
+      <h3>Fica de fora de propósito</h3>
+      <ul>
+        <li>Pontos, medalhas e sequência de dias: para o avô, sequência quebrada vira culpa.</li>
+        <li>Mais de uma ação principal por tela (P23).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>O que observar com as famílias</h3>
+      <ul>
+        <li>Voltam para revisar sem lembrete?</li>
+        <li>Gravam a próxima enquanto a IA escreve?</li>
+        <li>Alguém comenta as páginas sem você perguntar?</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const check = '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" stroke="#fffdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  /* ── Peça 1 ───────────────────────────── */
+  const ETAPAS = ["Gravada", "Ouvindo", "Escrevendo", "Revisar", "No livro"];
+  const FRASES = [
+    { f: "Recebida. Começa a ouvir em instantes.", barra: 6 },
+    { f: "Ouvindo o áudio · falta cerca de 2 min", barra: 35 },
+    { f: "Escrevendo o texto · falta menos de 1 min", barra: 72 },
+    { f: "Pronta. Leia e confira se ficou do jeito que ele contou.", barra: null, acao: "Ler e revisar" },
+    { f: "Entrou no livro. Mais 3 páginas para o vô Antônio.", barra: null },
+  ];
+  const trilha = document.getElementById("trilha");
+  ETAPAS.forEach((nome) => {
+    const li = document.createElement("li");
+    li.innerHTML = '<span class="ponto">' + check + "</span>" + nome;
+    trilha.appendChild(li);
+  });
+  const itens = [...trilha.querySelectorAll("li")];
+  let e1 = 0, travado = false;
+  function pintar1(anterior) {
+    itens.forEach((li, i) => {
+      li.className = i < e1 || e1 === 4 ? "feito" : i === e1 ? "agora" + (travado ? " parado" : "") : "";
+      if (anterior !== undefined && i === anterior && i < e1) {
+        li.classList.add("estalo");
+        setTimeout(() => li.classList.remove("estalo"), 300);
+      }
+      li.setAttribute("aria-current", i === e1 ? "step" : "false");
+    });
+    document.getElementById("enchida").style.width = (e1 / 4) * 80 + "%";
+    const s = FRASES[e1];
+    const caixa = document.getElementById("h1-barra-caixa");
+    caixa.hidden = s.barra === null;
+    document.getElementById("h1-barra").style.width = (s.barra || 0) + "%";
+    const frase = document.getElementById("h1-frase");
+    const acao = document.getElementById("h1-acao");
+    acao.innerHTML = "";
+    if (travado) {
+      frase.innerHTML = "";
+      const p = document.createElement("p");
+      p.className = "aviso";
+      p.textContent = "Está demorando mais que o normal. Já avisamos a equipe.";
+      acao.appendChild(p);
+      const b = document.createElement("button");
+      b.className = "botao secundario"; b.type = "button"; b.textContent = "Tentar de novo";
+      b.style.marginTop = "10px";
+      b.onclick = () => { travado = false; pintar1(); };
+      acao.appendChild(b);
+      return;
+    }
+    frase.textContent = s.f;
+    if (s.acao) {
+      const b = document.createElement("button");
+      b.className = "botao"; b.type = "button"; b.textContent = s.acao;
+      b.onclick = () => { const a = e1; e1 = 4; pintar1(a); };
+      acao.appendChild(b);
+    }
+  }
+  document.getElementById("h1-avancar").onclick = () => { if (e1 < 4) { const a = e1; e1++; travado = false; pintar1(a); } };
+  document.getElementById("h1-travar").onclick = () => { if (e1 === 0 || e1 > 2) e1 = 1; travado = true; pintar1(); };
+  document.getElementById("h1-zerar").onclick = () => { e1 = 0; travado = false; pintar1(); };
+  pintar1();
+
+  /* ── Peça 2 ───────────────────────────── */
+  const META = 80;
+  let pag = 23;
+  const MARCOS = { 3: "A primeira história está no livro.", 20: "20 páginas. Já dá um capítulo.", 40: "Metade do livro!", 80: "O livro está pronto para montar." };
+  const cel2 = document.getElementById("h2-celular");
+  function confete() {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cores = ["#1f3d33", "#c9a227", "#b5654a", "#e3ebe5", "#6e6259"];
+    for (let i = 0; i < 26; i++) {
+      const c = document.createElement("i");
+      c.className = "confete";
+      c.style.left = Math.random() * 100 + "%";
+      c.style.background = cores[i % cores.length];
+      c.style.animationDelay = Math.random() * 0.4 + "s";
+      cel2.appendChild(c);
+      setTimeout(() => c.remove(), 2000);
+    }
+  }
+  function pintar2(antes) {
+    const f = Math.min(1, pag / META);
+    document.getElementById("h2-num").textContent = pag;
+    document.getElementById("h2-trilho").style.width = f * 100 + "%";
+    const lomb = document.getElementById("lombada");
+    lomb.style.width = 14 + f * 46 + "px";
+    lomb.classList.toggle("larga", f >= 0.3);
+    document.getElementById("borda").style.width = 4 + f * 10 + "px";
+    document.querySelectorAll(".marco").forEach((m) => m.classList.toggle("ok", pag >= Number(m.dataset.p)));
+    const brinde = document.getElementById("h2-brinde");
+    if (antes === undefined) { brinde.innerHTML = ""; return; }
+    const cruzou = Object.keys(MARCOS).map(Number).find((m) => antes < m && pag >= m);
+    if (cruzou) {
+      brinde.innerHTML = '<p class="brinde"><b>' + MARCOS[cruzou] + "</b></p>";
+      confete();
+    } else {
+      brinde.innerHTML = '<p class="apoio" style="text-align:center">+3 páginas. Faltam ' + Math.max(0, META - pag) + " para o livro.</p>";
+    }
+  }
+  document.getElementById("h2-revisar").onclick = () => { const a = pag; pag = Math.min(META, pag + 3); if (pag === 80 && a < 80) pag = 80; pintar2(a); };
+  document.getElementById("h2-zerar").onclick = () => { pag = 23; pintar2(); };
+  document.getElementById("h2-nova").onclick = () => {
+    document.getElementById("h2-brinde").innerHTML = '<p class="apoio" style="text-align:center">Aqui abriria o gravador.</p>';
+  };
+  pintar2();
+
+  /* ── Peça 3 ───────────────────────────── */
+  const TEXTO = "Eu tinha dezessete anos quando cheguei em Belo Horizonte, com uma mala de papelão e o endereço de um primo anotado no verso de um santinho.";
+  const PERGUNTAS = [
+    { fase: "Juventude", p: "Qual foi o seu primeiro emprego?" },
+    { fase: "Casamento", p: "Como você conheceu a vó?" },
+    { fase: "Infância", p: "Do que você brincava na rua de casa?" },
+  ];
+  let q = 0, t = 0, timer = null;
+  const DURACAO = 40; // segundos simulados até ficar pronta
+  function zona() {
+    const z = document.getElementById("h3-zona");
+    if (t >= DURACAO) {
+      z.innerHTML = '<div class="pronta"><p class="titulo-livro" style="font-size:20px">A história ficou pronta.</p><p class="apoio">Leia e confira se ficou do jeito que ele contou.</p><button class="botao" type="button">Ler a história</button><button class="link" type="button" id="h3-depois">Gravar a próxima primeiro</button></div>';
+      document.getElementById("h3-depois").onclick = () => { t = DURACAO - 0.01; tick(true); };
+      return;
+    }
+    const x = PERGUNTAS[q];
+    z.innerHTML = '<div class="missao"><span class="fase">Enquanto escrevo · ' + x.fase + '</span><p class="pergunta">' + x.p + '</p><button class="botao" type="button" id="h3-gravar">Gravar agora</button><button class="link" type="button" id="h3-outra">Outra pergunta</button></div>';
+    document.getElementById("h3-outra").onclick = () => { q = (q + 1) % PERGUNTAS.length; zona(); };
+    document.getElementById("h3-gravar").onclick = () => {
+      document.getElementById("h3-gravar").textContent = "Aqui abriria o gravador";
+    };
+  }
+  function tick(redesenhar) {
+    const f = Math.min(1, t / DURACAO);
+    const pronta = t >= DURACAO;
+    document.getElementById("h3-barra").style.width = (pronta ? 100 : Math.min(95, f * 100)) + "%";
+    const n = Math.floor(TEXTO.length * Math.min(1, f * 1.05));
+    document.getElementById("h3-texto").innerHTML = TEXTO.slice(0, n).replace(/</g, "&lt;") + (pronta ? "" : '<span class="cursor"></span>');
+    document.getElementById("h3-etapa").textContent = pronta ? "Pronta" : "Escrevendo a história";
+    const falta = DURACAO - t;
+    document.getElementById("h3-falta").textContent = pronta ? "" : falta <= 8 ? "quase pronta" : "falta cerca de 1 min";
+    if (redesenhar || pronta) zona();
+  }
+  function iniciar() {
+    clearInterval(timer);
+    t = 0; q = 0; tick(); zona();
+    timer = setInterval(() => {
+      if (t >= DURACAO) return clearInterval(timer);
+      t = Math.min(DURACAO, t + 0.5);
+      tick(t >= DURACAO);
+    }, 500);
+  }
+  document.getElementById("h3-acelerar").onclick = () => { t = DURACAO; clearInterval(timer); tick(true); };
+  document.getElementById("h3-zerar").onclick = iniciar;
+  iniciar();
+})();
+</script>
