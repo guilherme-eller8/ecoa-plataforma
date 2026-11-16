@@ -52,6 +52,7 @@ export function TelaLivro({
   vitrine,
   guardadas = [],
   arquivarHistoria,
+  ehAdmin = false,
 }: {
   livro: LivroDaTela;
   resumo: ResumoDoLivro;
@@ -61,6 +62,7 @@ export function TelaLivro({
   vitrine?: Record<string, AoVivo>; // só na vitrine: sem canal, com texto de exemplo
   guardadas?: GuardadaDaTela[]; // gravações que chegaram e ainda não viraram história
   arquivarHistoria?: AcoesArquivar; // P71
+  ehAdmin?: boolean; // Evals 1A: atalho de volta ao admin, só para quem é admin
 }) {
   const falta = livro.podeEscrever
     ? pendentes(
@@ -87,11 +89,21 @@ export function TelaLivro({
       )}
       <div className="flex items-center justify-between gap-4 lg:col-span-2">
         <Marca />
-        {!livro.podeEscrever ? (
-          <span className="text-ui-15 bg-papel text-tinta-2 rounded-full px-4 py-2">
-            Somente leitura
-          </span>
-        ) : null}
+        <div className="flex items-center gap-3">
+          {!livro.podeEscrever ? (
+            <span className="text-ui-15 bg-papel text-tinta-2 rounded-full px-4 py-2">
+              Somente leitura
+            </span>
+          ) : null}
+          {ehAdmin ? (
+            <Link
+              href="/admin"
+              className="text-ui-15 text-floresta min-h-alvo inline-flex items-center font-medium underline-offset-4 hover:underline"
+            >
+              Admin
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <section className="flex flex-col gap-6 lg:col-start-1 lg:row-start-2">

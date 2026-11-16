@@ -1467,6 +1467,38 @@ export type Database = {
           minutos_audio: number;
         }[];
       };
+      admin_cotas_24h: {
+        Args: { p_fracao: number };
+        Returns: { book_id: string; minutos: number; pedidos: number }[];
+      };
+      admin_primeira_palavra: {
+        Args: { p_desde: string; p_faixas_min: number[]; p_parada_ms: number };
+        Returns: {
+          esperas: number;
+          faixa: number;
+          p50_ms: number | null;
+          p95_ms: number | null;
+          paradas: number;
+        }[];
+      };
+      admin_uso_por_dia: {
+        Args: { p_ate: string; p_desde: string };
+        Returns: {
+          chamadas: number;
+          custo_falhas_usd: number;
+          custo_usd: number;
+          dia: string;
+          etapa: string;
+          falhas: number;
+          minutos_audio: number;
+          modelo: string;
+          repetidas: number;
+          tokens_cache_gravado: number;
+          tokens_cache_lido: number;
+          tokens_entrada: number;
+          tokens_saida: number;
+        }[];
+      };
       admin_listar_livros: {
         Args: never;
         Returns: {

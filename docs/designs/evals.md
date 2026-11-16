@@ -115,9 +115,9 @@ Depois do OK, o código passa a escrever: `erro_codigo` em toda falha; `ms_desde
 - **Métrica:** mudanças de regra que nasceram da central e baixaram os parágrafos corrigidos na versão seguinte.
 - **Critério de morte:** 3 semanas com histórias novas e nenhuma decisão tomada a partir da tela. Vira um e-mail semanal de 6 números; as fases 2 e 3 não saem.
 
-## Fase 1A: custo, performance e adoção (para a próxima sessão)
+## Fase 1A: custo, performance e adoção
 
-**Estado:** só o plano. Nada construído. Simulação visual (números inventados, exceto o custo por minuto): https://claude.ai/artifact/RU3m1d5e9dbaDbPErH9qWY (privada do Guilherme; a especificação abaixo basta sem ela).
+**Estado:** construída em 16/11/2026. Migration `20261128120000_evals_fase1a` (3 funções de leitura: `admin_uso_por_dia`, `admin_primeira_palavra` e `admin_cotas_24h`, esta para o alerta de cota) aplicada com o OK do Guilherme, sem revisor do EGM (dispensado por ele; teste em `supabase/tests/evals-1a.test.ts`). Definições na T55. Também entraram, a pedido: a escolha entre admin e os próprios livros em `/` e o bloco Cliente em `/admin/aderencia/[livro]`. Simulação visual (números inventados, exceto o custo por minuto): https://claude.ai/artifact/RU3m1d5e9dbaDbPErH9qWY (privada do Guilherme; a especificação abaixo basta sem ela).
 
 ### Por quê agora
 

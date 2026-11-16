@@ -33,6 +33,7 @@ async function AderenciaLivro({ id }: { id: string }) {
     <TelaAderenciaLivro
       autorNome={dados.livro.autorNome}
       email={dados.livro.email}
+      cliente={dados.cliente}
       linha={dados.linha}
       pessoas={dados.pessoas}
       linhaDoTempo={dados.linhaDoTempo}

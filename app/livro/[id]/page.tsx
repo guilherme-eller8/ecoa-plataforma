@@ -77,6 +77,7 @@ async function Livro({ id }: { id: string }) {
       guardadas={guardadas}
       arquivarHistoria={acoesDoLivro(id).arquivarHistoria}
       marcarVista={marcarHistoriaVista.bind(null, id)}
+      ehAdmin={usuario.ehAdmin}
     />
   );
 }

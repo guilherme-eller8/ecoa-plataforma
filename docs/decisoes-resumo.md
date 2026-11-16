@@ -134,3 +134,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T52** Texto e QR em 100% K; capa em CMYK; fotos RGB até a gráfica pedir.
 - **T53** Aderência e erros no admin sem Sentry nem migration: `job_falhou` e `erro_servidor` em `events` (só ids e rota-padrão); link do autor aberto grava `entrou`; `events` só por `lib/eventos.ts` (escrita e `lerEventos`).
 - **T54** Central de Evals no admin, em fases (`docs/designs/evals.md`): Scribe e Claude medidos separados; fase 0 guarda os sinais e para erro definitivo; gabarito, juiz e canários seguem os gatilhos da T31.
+- **T55** Evals 1A: livro ativo = ação de criação de membro ou autor em 7 dias (sem `entrou` nem família); ativação = 1ª revisada em 7 dias; abaixo de 5, "amostra pequena"; somas no banco, linhas em blocos; alertas 1 por condição e dia.

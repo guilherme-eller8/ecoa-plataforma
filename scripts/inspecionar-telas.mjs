@@ -52,6 +52,11 @@ const TELAS = {
   "admin-aderencia": "/styleguide/admin-aderencia",
   "admin-aderencia-vazia": "/styleguide/admin-aderencia-vazia",
   "admin-aderencia-livro": "/styleguide/admin-aderencia-livro",
+  "admin-evals": "/styleguide/admin-evals",
+  "admin-evals-vazio": "/styleguide/admin-evals-vazio",
+  "admin-evals-adocao": "/styleguide/admin-evals-adocao",
+  "admin-evals-adocao-vazia": "/styleguide/admin-evals-adocao-vazia",
+  "inicio-admin": "/styleguide/inicio-admin",
   "admin-erros": "/styleguide/admin-erros",
   "admin-erros-vazio": "/styleguide/admin-erros-vazio",
   // Prompt 7

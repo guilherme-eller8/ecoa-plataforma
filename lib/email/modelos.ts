@@ -222,3 +222,24 @@ export function emailResumo({
     },
   };
 }
+
+/** Alerta de Evals 1A ao admin (lib/evals/alertas.ts): só ids curtos e números. */
+export function emailAlerta({
+  titulo,
+  linhas,
+  urlAdmin,
+}: {
+  titulo: string;
+  linhas: string[];
+  urlAdmin: string;
+}): Email {
+  const frase = linhas.map(escapar).join("<br>");
+  return {
+    assunto: `Ecoa: ${titulo}`,
+    html: moldura(escapar(titulo), frase, {
+      rotulo: "Abrir Evals",
+      url: urlAdmin,
+    }),
+    texto: `${titulo}\n\n${linhas.join("\n")}\n\nAbrir Evals: ${urlAdmin}\n\nEcoa Memórias`,
+  };
+}

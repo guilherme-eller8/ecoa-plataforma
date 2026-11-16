@@ -159,20 +159,21 @@ export type Funil = {
   configurou: number;
   primeiraHistoria: number;
   cincoHistorias: number;
-  /** null até o prompt 13 (publicação) existir. */
+  /** Livros com 1 ou mais publicações (evento livro_publicado); null se não foi contado. */
   publicado: number | null;
 };
 
 export function funil(
   livros: readonly LivroEntrada[],
   linhas: readonly LinhaDeAderencia[],
+  publicados: number | null = null,
 ): Funil {
   return {
     livros: livros.length,
     configurou: linhas.filter((l) => l.configurou).length,
     primeiraHistoria: livros.filter((l) => l.prontas >= 1).length,
     cincoHistorias: livros.filter((l) => l.prontas >= 5).length,
-    publicado: null,
+    publicado: publicados,
   };
 }
 
