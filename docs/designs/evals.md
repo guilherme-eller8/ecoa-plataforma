@@ -139,6 +139,23 @@ Depois do OK, o código passa a escrever: `erro_codigo` em toda falha; `ms_desde
 1. **Por que o Inngest não sincronizou sozinho.** Depois dos merges dos PRs #12 a #15, o último sync era o manual de 15/11 às 17:04, com a URL fixa `https://app.ecoa-memorias.com.br/api/inngest`. Antes dele, o sync apontava para um deploy específico (09:25) e a varredura reenviou uma gravação sem que nenhuma execução começasse. Confirmar como a integração Vercel × Inngest sincroniza (os valores `INNGEST_*` têm `configurationId`, então a integração está instalada) e se a URL fixa resolve. Se não resolver, o alerta de fila parada abaixo passa a ser a defesa.
 2. **Teto de linhas da API.** O PostgREST devolve no máximo `max_rows` linhas (padrão 1.000), qualquer que seja o `.limit()`. O painel de aderência pede até 20.000 eventos (`ADERENCIA_MAX_EVENTOS`) e só avisa "truncado" se vierem 20.000, então pode estar lendo menos sem avisar. Conferir o `max_rows` do projeto; ler `events` paginando ou agregando no banco. Tudo o que somar linhas na 1A faz isso no banco.
 
+### Resultado das conferências (16/11/2026)
+
+**1. Sync do Inngest.** Lido no Inngest (`list_app_syncs`) e na Vercel (deploys de produção e integrações).
+
+- A integração Inngest × Vercel continua instalada e ligada ao projeto `ecoa-plataforma` (`icfg_pE9P…`, escopos de deploy e de variáveis).
+- Até 15/11 09:25 UTC, cada deploy de produção ganhava um sync automático cerca de 1 min depois, sempre na URL **do deploy** (`ecoa-plataforma-<hash>…vercel.app/api/inngest?x-vercel-protection-bypass=…`). Às 09:05 um sync falhou com `unauthorized`: a chave de bypass da proteção da Vercel tinha mudado; o de 09:25 já usou a nova.
+- Depois disso o sync automático parou: os deploys dos PRs #12 (16:55), #13 (17:00), #14 (20:25) e #15 (20:35) não geraram sync. Os dois syncs seguintes foram na URL fixa `https://app.ecoa-memorias.com.br/api/inngest`: 17:04 (`success`, manual) e 16/11 00:04 (`duplicate`: nada mudou nas funções).
+- **A URL fixa resolve a execução:** o Inngest chama o endereço do último sync, e o domínio de produção sempre aponta para o deploy mais novo. O incidente de 15/11 (varredura reenviou e nada começou) é o caso do sync preso num deploy específico, que a URL fixa elimina.
+- **Não resolve mudança de função:** função nova, cron novo ou trigger alterado só passam a valer depois de um sync. A causa da parada do automático não aparece em nenhuma das duas APIs (a configuração fica no painel do Inngest, em Integrations → Vercel).
+- **Defesa adotada na 1A:** (a) depois de todo merge que mexe em `lib/inngest/`, sync manual na URL fixa e conferência do número de funções (era 13 em 16/11; a 1A soma 1, a dos alertas); (b) o alerta de fila parada; (c) o alerta roda dentro do Inngest, então não avisa se o Inngest inteiro parar: o `/admin` mostra a mesma condição ao abrir, como segunda linha de defesa. Pendência do Guilherme (5 min, sem código): abrir Integrations → Vercel no Inngest e conferir se o projeto está habilitado e com o domínio de produção como URL.
+
+**2. Teto de linhas da API.** O `max_rows` não é configuração do Postgres (não aparece em `pg_roles` nem em `current_setting`); fica no painel do Supabase (Settings → API → Max rows), sem leitura pelo MCP. O container desta sessão não alcança a API REST para medir. Padrão do Supabase: 1.000.
+
+- Hoje não há perda: produção tem 67 linhas em `events` e 24 em `ai_usage`.
+- O risco é real para a ceia: `lerEventos` pede até `ADERENCIA_MAX_EVENTOS` (20.000) num só `.limit()`, e o aviso "truncado" só aparece se vierem 20.000. Com teto de 1.000, a 1.001ª linha some sem aviso.
+- **Decisão:** o código deixa de depender do valor. Toda soma da 1A vai para funções do banco; a leitura de `events` da Aderência passa a paginar em blocos de 1.000 (`.range`) até um bloco vir incompleto, e "truncado" passa a valer quando o total passa de `ADERENCIA_MAX_EVENTOS`. Teste: leitura de 2.500 eventos falsos devolve 2.500.
+
 ### Entregas
 
 **1. Páginas do admin** (nova aba "Evals" em `components/telas/admin-cabecalho.tsx`; padrão de `app/admin/aderencia/page.tsx`: `notFound()` se não for admin, chave secreta só no servidor).
