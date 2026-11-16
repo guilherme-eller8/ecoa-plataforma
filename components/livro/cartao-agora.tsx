@@ -176,7 +176,7 @@ export function CartaoAgora({
           <h2 id="agora" className="text-ui-15 text-tinta-2 font-medium">
             {rotulo}
           </h2>
-          <p className="font-livro text-livro-28 text-tinta md:text-livro-36 max-w-[26ch] text-balance">
+          <p className="font-livro text-livro-24 text-tinta md:text-livro-28 lg:text-livro-36 max-w-[30ch] text-balance">
             {titulo}
           </p>
         </div>

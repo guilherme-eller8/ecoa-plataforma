@@ -373,6 +373,7 @@ export function Vitrine({ tela }: { tela: Tela }) {
             causosNovos: 1,
             enqueteAberta: false,
             audios: 3,
+            historias: { paginas: 4, prontas: 0, paraRevisar: 1, andando: 1 },
           }}
           historias={HISTORIAS_JAIR.slice(0, 2)}
           perguntas={PERGUNTAS_JAIR}
