@@ -10,9 +10,14 @@ import {
 } from "@/lib/config";
 import { miniaturaDaFoto, previaDaCapa } from "./contar";
 import { comoErroLivro } from "./erros";
-import { completarPaginas } from "./espec";
+import { completarPaginas, mmParaPt, paginaDoMiolo } from "./espec";
 import { conferirCaminhos, emLotes, type BaixarFoto } from "./exportar";
-import { dadosDoFolheio, QR_PROVISORIO } from "./folhear-dados";
+import {
+  dadosDoFolheio,
+  fotosDoFolheio,
+  QR_PROVISORIO,
+  type FotoDoFolheio,
+} from "./folhear-dados";
 import { soIncluidas, type ConteudoDoLivro } from "./montagem";
 import { rasterizarPaginas } from "./pdf";
 import { aplicarRecorte } from "./recortar-foto";
@@ -26,6 +31,16 @@ export type Folheio = {
   cobrir: MarcaQr[];
   /** A capa aberta (frente, lombada e verso), em SVG, como na montagem. */
   capa: string;
+  /** P76: cada foto de história no papel, em % da página, para o toque que abre "Ajustar". */
+  toques: ToqueNaFoto[];
+};
+
+export type ToqueNaFoto = FotoDoFolheio & {
+  pagina: number;
+  x: number;
+  y: number;
+  l: number;
+  a: number;
 };
 
 const MAX_NA_MEMORIA = 3;
@@ -83,7 +98,29 @@ async function montar(
     ? await miniaturaDaFoto(await baixar("acervo", c.livro.capa_foto.caminho))
     : null;
 
+  const pagina = paginaDoMiolo();
+  const lPt = mmParaPt(pagina.larguraMm);
+  const aPt = mmParaPt(pagina.alturaMm);
+  const deQuem = fotosDoFolheio(c);
+  const pct = (n: number, de: number) => Math.round((n / de) * 10000) / 100;
+  const toques = final.fotos().flatMap((m) => {
+    const f = deQuem.get(m.arquivo);
+    return f
+      ? [
+          {
+            ...f,
+            pagina: m.pagina,
+            x: pct(m.x, lPt),
+            y: pct(m.y, aPt),
+            l: pct(m.l, lPt),
+            a: pct(m.a, aPt),
+          },
+        ]
+      : [];
+  });
+
   return {
+    toques,
     pdf: final.pdf(),
     paginas: total,
     historias: f.historias,

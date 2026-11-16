@@ -65,4 +65,25 @@ test.describe("Folhear o livro (exemplo)", () => {
       page.getByRole("link", { name: "Folhear o livro" }),
     ).toBeVisible();
   });
+
+  test("tocar na foto abre Ajustar a foto ali mesmo (P76)", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto("/styleguide/folhear");
+    await expect(page.getByText("Capa", { exact: true })).toBeVisible();
+    await expect(page.getByText("Toque numa foto para ajustar.")).toBeVisible();
+    const proxima = page.getByRole("button", { name: "Próxima →" });
+    // A foto de exemplo está na página 6.
+    for (let i = 0; i < (isMobile ? 6 : 4); i++) await proxima.click();
+    await expect(
+      page.getByText(isMobile ? "Página 6 de 8" : "Páginas 6 e 7 de 8"),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Ajustar esta foto" }).click();
+    const folha = page.getByRole("dialog", { name: "Ajustar a foto" });
+    await expect(folha).toBeVisible();
+    await expect(
+      folha.getByRole("radio", { name: "Página inteira, ao lado" }),
+    ).toBeVisible();
+  });
 });

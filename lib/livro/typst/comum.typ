@@ -103,13 +103,21 @@
 }
 
 // Foto numa caixa de tamanho fixo (a mesma na contagem e no PDF). Na contagem, um cinza.
-#let foto-fixa(f, modo) = {
+// A marca <foto> diz onde a foto caiu (página e canto, em pt, como o QR): o Folhear põe ali o
+// toque que abre "Ajustar a foto" (P76). Não aparece no papel.
+#let foto-fixa(f, modo) = box({
+  // Dentro da caixa: a posição é a da foto já centralizada, não a do começo da linha.
+  place(top + left, context {
+    let p = here().position()
+    [#metadata((arquivo: f.arquivo, pagina: p.page, x: p.x.pt(), y: p.y.pt(),
+                l: mm(f.larguraMm).pt(), a: mm(f.alturaMm).pt())) <foto>]
+  })
   if modo == "contagem" {
     rect(width: mm(f.larguraMm), height: mm(f.alturaMm), fill: luma(230), stroke: none)
   } else {
     image(f.arquivo, width: mm(f.larguraMm), height: mm(f.alturaMm), fit: "cover")
   }
-}
+})
 
 #let paragrafos(lista) = {
   for (i, p) in lista.enumerate() {
