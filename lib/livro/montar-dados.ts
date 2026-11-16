@@ -9,7 +9,7 @@ import {
 } from "@/lib/config";
 import { codigoImpresso } from "@/lib/qr/codigo";
 import { capaAberta, larguraTextoMm, paginaDoMiolo } from "./espec";
-import { caixaDaFoto } from "./fotos";
+import { caixaImpressa } from "./fotos";
 import {
   corDaCapa,
   paragrafosDaMensagem,
@@ -18,6 +18,7 @@ import {
   type ConteudoDoLivro,
 } from "./montagem";
 import { matrizDoQr, type QrParaTypst } from "./qr-matriz";
+import type { Recorte } from "./recorte";
 
 export type FotoParaTypst = {
   arquivo: string;
@@ -41,6 +42,8 @@ export type FotoPedida = {
   alturaMm: number;
   largura: number | null; // pixels do original (do banco)
   altura: number | null;
+  /** P75: o servidor corta a foto antes de reduzir (null = inteira). */
+  recorte?: Recorte | null;
 };
 
 export type QrDoTypst = QrParaTypst & { impresso: string; aponte: string };
@@ -72,6 +75,8 @@ export type DadosMiolo = {
     ano: number | null;
     paragrafos: string[];
     fotos: FotoParaTypst[];
+    /** P75: a 1ª foto numa página inteira, ao lado da abertura (null = junto com a história). */
+    lado: FotoParaTypst | null;
     qr: QrDoTypst | null;
   }[];
   mensagens: {
@@ -139,28 +144,46 @@ export function montarDadosMiolo(
     arquivo: string,
     bucket: FotoPedida["bucket"],
     caminho: string,
-    dim: { largura: number | null; altura: number | null },
+    dim: {
+      largura: number | null;
+      altura: number | null;
+      recorte?: Recorte | null;
+    },
     caixa: { larguraMm: number; alturaMm: number },
   ): FotoParaTypst => {
-    fotos.push({ arquivo, bucket, caminho, ...caixa, ...dim });
+    fotos.push({
+      arquivo,
+      bucket,
+      caminho,
+      ...caixa,
+      largura: dim.largura,
+      altura: dim.altura,
+      recorte: dim.recorte ?? null,
+    });
     return { arquivo, ...caixa };
   };
 
-  const historias = c.historias.map((h, i) => ({
-    titulo: h.titulo?.trim() ?? "",
-    ano: h.ano,
-    paragrafos: h.paragrafos,
-    fotos: h.fotos.map((f, j) =>
+  const historias = c.historias.map((h, i) => {
+    const pedidas = h.fotos.map((f, j) =>
       pedir(
         `foto-h${i + 1}-${j + 1}.jpg`,
         "acervo",
         f.caminho,
         f,
-        caixaDaFoto(f),
+        caixaImpressa(f, j === 0),
       ),
-    ),
-    qr: qrDoTypst(h, opcoes.maiuscula),
-  }));
+    );
+    // P75: a 1ª foto marcada vai para a página inteira ao lado; as outras seguem depois do texto.
+    const lado = h.fotos[0]?.ao_lado ? pedidas[0] : null;
+    return {
+      titulo: h.titulo?.trim() ?? "",
+      ano: h.ano,
+      paragrafos: h.paragrafos,
+      fotos: lado ? pedidas.slice(1) : pedidas,
+      lado,
+      qr: qrDoTypst(h, opcoes.maiuscula),
+    };
+  });
   const msgBox = LAYOUT_MIOLO.fotoMensagemMm;
   const mensagens = c.mensagens.map((m, i) => ({
     nome: m.nome,

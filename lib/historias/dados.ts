@@ -496,12 +496,31 @@ export async function fotosDaHistoria(
   const supabase = await clienteSessao();
   const { data: ligadas } = await supabase
     .from("story_photos")
-    .select("photo_id, ordem, criado_em")
+    .select(
+      "photo_id, ordem, criado_em, recorte_x, recorte_y, recorte_l, recorte_a, ao_lado",
+    )
     .eq("book_id", livro)
     .eq("story_id", historia)
     .order("ordem")
     .order("criado_em");
   const ids = (ligadas ?? []).map((l) => l.photo_id);
+  const ajuste = new Map(
+    (ligadas ?? []).map((l) => [
+      l.photo_id,
+      {
+        recorte:
+          l.recorte_x == null
+            ? null
+            : {
+                x: Number(l.recorte_x),
+                y: Number(l.recorte_y),
+                l: Number(l.recorte_l),
+                a: Number(l.recorte_a),
+              },
+        aoLado: l.ao_lado,
+      },
+    ]),
+  );
   if (!ids.length) return [];
   const { data: fotos } = await supabase
     .from("photos")
@@ -523,6 +542,8 @@ export async function fotosDaHistoria(
             largura: f.largura,
             altura: f.altura,
             legenda: f.legenda,
+            recorte: ajuste.get(id)?.recorte ?? null,
+            aoLado: ajuste.get(id)?.aoLado ?? false,
           },
         ]
       : [];

@@ -20,6 +20,7 @@ import { registrarEvento } from "@/lib/eventos";
 import { fotosDaHistoria } from "@/lib/historias/dados";
 import type { FotoDaHistoria } from "@/lib/historias/tipos";
 import { livroDaAcao, type LivroComAcesso } from "@/lib/livro/acesso";
+import { Recorte } from "@/lib/livro/recorte";
 import { fotosDoLivro } from "@/lib/livro/dados";
 import type { FotoDaTela, Resposta } from "@/lib/livro/tipos";
 import { clienteSessao } from "@/lib/supabase/servidor";
@@ -310,6 +311,52 @@ export async function tirarFoto(
     .eq("story_id", historiaId)
     .eq("photo_id", foto);
   if (error) return { ok: false, mensagem: fraseDoErro(error) };
+  atualizar(livroId);
+  return { ok: true };
+}
+
+/**
+ * P75: recorte (% da foto, null = inteira) e página inteira ao lado. Grava pela sessão (RLS de
+ * membro com plano ativo, update só das colunas do ajuste). Página ao lado só na 1ª foto: é a que
+ * abre a história no papel.
+ */
+export async function ajustarFoto(
+  livroId: string,
+  historiaId: string,
+  foto: string,
+  ajuste: unknown,
+): Promise<Resposta> {
+  const a = z
+    .object({ recorte: Recorte.nullable(), aoLado: z.boolean() })
+    .safeParse(ajuste);
+  if (!uuid.safeParse(foto).success || !a.success) return ERRO;
+  const r = a.data.recorte;
+  if (r && (r.x + r.l > 100.001 || r.y + r.a > 100.001)) return ERRO;
+  const c = await contexto(livroId, historiaId);
+  if (ehErro(c)) return c;
+  if (a.data.aoLado) {
+    const atuais = await fotosDaHistoria(c.livro.id, historiaId);
+    if (atuais[0]?.id !== foto)
+      return {
+        ok: false,
+        mensagem: "Só a primeira foto da história pode ir na página ao lado.",
+      };
+  }
+  const { data, error } = await c.supabase
+    .from("story_photos")
+    .update({
+      recorte_x: r?.x ?? null,
+      recorte_y: r?.y ?? null,
+      recorte_l: r?.l ?? null,
+      recorte_a: r?.a ?? null,
+      ao_lado: a.data.aoLado,
+    })
+    .eq("book_id", c.livro.id)
+    .eq("story_id", historiaId)
+    .eq("photo_id", foto)
+    .select("photo_id");
+  if (error) return { ok: false, mensagem: fraseDoErro(error) };
+  if (!data?.length) return SEM_ACESSO;
   atualizar(livroId);
   return { ok: true };
 }

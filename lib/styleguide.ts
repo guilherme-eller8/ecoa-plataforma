@@ -76,6 +76,7 @@ export const TELAS = [
   "editor-amostra",
   "editor-amostra-preparando",
   "editor-amostra-falhou",
+  "editor-ajustar-foto",
   // Prompt 11
   "pessoas",
   "pessoas-vazia",

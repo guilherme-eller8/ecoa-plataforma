@@ -40,6 +40,17 @@
   }
 }
 
+// Abre a próxima página na par (P75: a foto de página inteira fica à esquerda, de frente para a
+// abertura da história). Se a página atual seria ímpar, cria o branco sem número antes.
+#let abrir-na-par() = {
+  pagebreak(weak: true)
+  context if calc.odd(here().page()) {
+    [#metadata(none) <sem-numero>]
+    v(1pt)
+    pagebreak()
+  }
+}
+
 #let configurar(g, titulo, corpo) = {
   set document(title: titulo)
   set page(..pagina(g), footer: numero-de-pagina, footer-descent: 30%)
@@ -108,8 +119,17 @@
 
 // O capítulo de uma história: ano, título, QR ao lado do título, fotos e texto. Usado pelo
 // livro e pela página de amostra (uma fonte só). `cortado` só na amostra.
-#let historia(h, modo, cortado: false, continua: "") = {
-  // O título aparece no sumário; o título visível é o do cabeçalho abaixo.
+#let historia(h, modo, cortado: false, continua: "", paridade: true) = {
+  // P75: a 1ª foto numa página inteira, sem número, à esquerda; a história abre na página ao lado.
+  // Na amostra (paridade: false) a foto é a 1ª página e a história, a 2ª, como o livro aberto.
+  let lado = h.at("lado", default: none)
+  if lado != none {
+    if paridade { abrir-na-par() }
+    [#metadata(none) <sem-numero>]
+    block(width: 100%, height: 100%, align(center + horizon, foto-fixa(lado, modo)))
+    pagebreak()
+  }
+  // O título aparece no sumário (na página onde o texto abre); o visível é o do cabeçalho abaixo.
   [#show heading: none
    #heading(level: 1, outlined: true)[#h.titulo]]
   if h.fotos.len() > 0 {

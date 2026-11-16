@@ -82,6 +82,7 @@ const TELAS = {
   "editor-amostra": "/styleguide/editor-amostra",
   "editor-amostra-preparando": "/styleguide/editor-amostra-preparando",
   "editor-amostra-falhou": "/styleguide/editor-amostra-falhou",
+  "editor-ajustar-foto": "/styleguide/editor-ajustar-foto",
   // Prompt 11
   mensagem: "/styleguide/mensagem",
   "mensagem-gravar": "/styleguide/mensagem-gravar",
@@ -128,6 +129,7 @@ const COM_FOLHA_ABERTA = new Set([
   "editor-amostra",
   "editor-amostra-preparando",
   "editor-amostra-falhou",
+  "editor-ajustar-foto",
 ]);
 
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);

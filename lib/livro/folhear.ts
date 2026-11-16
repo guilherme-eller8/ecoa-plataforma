@@ -15,6 +15,7 @@ import { conferirCaminhos, emLotes, type BaixarFoto } from "./exportar";
 import { dadosDoFolheio, QR_PROVISORIO } from "./folhear-dados";
 import { soIncluidas, type ConteudoDoLivro } from "./montagem";
 import { rasterizarPaginas } from "./pdf";
+import { aplicarRecorte } from "./recortar-foto";
 import { compilarMiolo, type MarcaQr } from "./render";
 
 export type Folheio = {
@@ -64,7 +65,7 @@ async function montar(
   const prontas = await emLotes(f.fotos, FOTOS_BAIXADAS_JUNTAS, async (p) => [
     p.arquivo,
     await reduzir(
-      await baixar(p.bucket, p.caminho),
+      await aplicarRecorte(await baixar(p.bucket, p.caminho), p.recorte),
       p,
       p.bucket === "mensagens",
     ),

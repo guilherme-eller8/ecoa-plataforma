@@ -3,6 +3,7 @@ import type { PropostaDaTela } from "@/lib/editor/tipos";
 import type { ChaveTamanho } from "@/lib/ui/tamanho";
 import type { Marcacao } from "@/lib/ai/schemas";
 import type { TextoDaHistoria } from "@/lib/editor/conteudo";
+import type { Recorte } from "@/lib/livro/recorte";
 import type { SegmentoDaTela } from "@/lib/editor/ouvir";
 import type { EstadoHistoria, TipoDeFalha } from "@/lib/pipeline/regras";
 
@@ -98,6 +99,9 @@ export type FotoDaHistoria = {
   largura: number | null;
   altura: number | null;
   legenda: string | null;
+  /** P75: o recorte (% da original; null = inteira) e se a 1ª foto vai na página inteira ao lado. */
+  recorte: Recorte | null;
+  aoLado: boolean;
 };
 
 export type HistoriaParaEditar = {

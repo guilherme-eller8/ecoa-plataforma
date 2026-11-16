@@ -5,6 +5,8 @@ import { normalizarTexto } from "@/lib/editor/conteudo";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import { gerarAmostra } from "./amostra";
+import { aplicarRecorte } from "./recortar-foto";
+import type { Recorte } from "./recorte";
 
 export type ParaAmostra = {
   titulo: string;
@@ -17,6 +19,8 @@ export type ParaAmostra = {
     caminho: string;
     largura: number | null;
     altura: number | null;
+    recorte?: Recorte | null; // P75
+    ao_lado?: boolean;
   } | null;
 };
 
@@ -50,7 +54,7 @@ export async function dadosDaAmostra(
       .maybeSingle(),
     supabase
       .from("story_photos")
-      .select("photo_id")
+      .select("photo_id, recorte_x, recorte_y, recorte_l, recorte_a, ao_lado")
       .eq("book_id", livro)
       .eq("story_id", historia)
       .order("ordem")
@@ -69,7 +73,20 @@ export async function dadosDaAmostra(
       .eq("book_id", livro)
       .eq("id", ligada.photo_id)
       .maybeSingle();
-    if (f) foto = f;
+    if (f)
+      foto = {
+        ...f,
+        recorte:
+          ligada.recorte_x == null
+            ? null
+            : {
+                x: Number(ligada.recorte_x),
+                y: Number(ligada.recorte_y),
+                l: Number(ligada.recorte_l),
+                a: Number(ligada.recorte_a),
+              },
+        ao_lado: ligada.ao_lado,
+      };
   }
   return {
     titulo: titulo.trim() || "Uma história",
@@ -82,13 +99,14 @@ export async function dadosDaAmostra(
   };
 }
 
-/** Bytes da foto (o caminho veio do banco pela sessão, nunca do navegador). */
 /** A amostra desta história (PDF e marca do QR): o mesmo caminho para o download e para a tela. */
 export async function gerarAmostraDaHistoria(
   d: ParaAmostra & { codigo: string },
   opcoes: { titulo?: string; maiuscula?: boolean } = {},
 ) {
-  const bytes = d.foto ? await bytesDaFoto(d.foto.caminho) : null;
+  const original = d.foto ? await bytesDaFoto(d.foto.caminho) : null;
+  const bytes =
+    d.foto && original ? await aplicarRecorte(original, d.foto.recorte) : null;
   return gerarAmostra({
     titulo: opcoes.titulo ?? d.titulo,
     ano: d.ano,
@@ -96,12 +114,19 @@ export async function gerarAmostraDaHistoria(
     codigo: d.codigo,
     foto:
       d.foto && bytes
-        ? { bytes, largura: d.foto.largura, altura: d.foto.altura }
+        ? {
+            bytes,
+            largura: d.foto.largura,
+            altura: d.foto.altura,
+            recorte: d.foto.recorte,
+            ao_lado: d.foto.ao_lado,
+          }
         : null,
     maiuscula: opcoes.maiuscula,
   });
 }
 
+/** Bytes da foto (o caminho veio do banco pela sessão, nunca do navegador). */
 export async function bytesDaFoto(caminho: string): Promise<Buffer | null> {
   const { data } = await clienteAdmin()
     .storage.from("acervo")
