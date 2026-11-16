@@ -89,6 +89,58 @@ export async function rasterizarEConferir(
 }
 
 /**
+ * Prévia na tela (amostra e Folhear): só as páginas `de`..`ate` (de 1), em JPEG. Cada marca em
+ * `cobrir` vira um quadrado tracejado no lugar do QR: o desenho não pode ser lido por uma câmera
+ * (o QR daquela história ainda não existe, nasce ao publicar).
+ */
+export async function rasterizarPaginas(
+  pdf: Buffer,
+  de: number,
+  ate: number,
+  dpi: number,
+  cobrir: MarcaQr[] = [],
+): Promise<Buffer[]> {
+  const mupdf: Mupdf = await import("mupdf");
+  const doc = mupdf.Document.openDocument(pdf, "application/pdf");
+  const saida: Buffer[] = [];
+  try {
+    const k = dpi / 72;
+    const fim = Math.min(ate, doc.countPages());
+    for (let i = Math.max(1, de); i <= fim; i++) {
+      const pix = doc
+        .loadPage(i - 1)
+        .toPixmap(mupdf.Matrix.scale(k, k), mupdf.ColorSpace.DeviceRGB, false);
+      const largura = pix.getWidth();
+      const altura = pix.getHeight();
+      const pixels = pix.getPixels();
+      const caixas = cobrir
+        .filter((m) => m.pagina === i)
+        .map((m) => recorteDaMarca(m, dpi));
+      let img = sharp(
+        Buffer.from(pixels.buffer, pixels.byteOffset, pixels.byteLength),
+        { raw: { width: largura, height: altura, channels: 3 } },
+      );
+      if (caixas.length) {
+        const tracejado = Math.max(2, Math.round(dpi / 50));
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${largura}" height="${altura}">${caixas
+          .map(
+            (c) =>
+              `<rect x="${c.x + tracejado}" y="${c.y + tracejado}" width="${c.largura - 2 * tracejado}" height="${c.altura - 2 * tracejado}" fill="#f4efe4" stroke="#9a8f7c" stroke-width="${tracejado}" stroke-dasharray="${tracejado * 3} ${tracejado * 2}"/>`,
+          )
+          .join("")}</svg>`;
+        img = img.composite([{ input: Buffer.from(svg), top: 0, left: 0 }]);
+      }
+      saida.push(await img.jpeg({ quality: 80 }).toBuffer());
+    }
+  } catch (e) {
+    throw comoErroLivro(e, "falhou_pdf");
+  } finally {
+    doc.destroy?.();
+  }
+  return saida;
+}
+
+/**
  * Cada QR esperado lido exatamente na sua URL, nenhum a mais nem a menos (inclusive com duas
  * mensagens na mesma página). Falhou um: a versão falha.
  */

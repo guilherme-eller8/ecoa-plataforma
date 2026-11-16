@@ -3,8 +3,8 @@
 // Uma versão publicada do livro (prompt 13, design 5.6): preparando, pronta (prévia página a página
 // e os dois PDFs) ou que não deu certo. Qualquer membro abre e baixa (Q7).
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { PreviaDaCapa } from "@/components/montar/previa-capa";
+import { useEffect, useState } from "react";
+import { Folhear } from "@/components/montar/folhear";
 import { Aviso } from "@/components/ui/aviso";
 import { Botao, classesDoBotao } from "@/components/ui/botao";
 import {
@@ -46,95 +46,14 @@ function Moldura({
 }
 
 function Prévia({ v, acoes }: { v: VersaoPublicada; acoes: AcoesVersao }) {
-  const total = v.paginas ?? 0;
-  // 0 = a capa; 1..total = as páginas do miolo.
-  const [indice, setIndice] = useState(0);
-  const [urls, setUrls] = useState<Record<number, string>>(() =>
-    Object.fromEntries(v.previasUrls.map((u, i) => [i + 1, u])),
-  );
-  const pedidas = useRef(new Set<number>([1]));
-
-  const garantir = useCallback(
-    (pagina: number) => {
-      if (pagina < 1 || pagina > total) return;
-      const de =
-        Math.floor((pagina - 1) / EXPORT_PREVIAS_POR_PEDIDO) *
-          EXPORT_PREVIAS_POR_PEDIDO +
-        1;
-      if (pedidas.current.has(de)) return;
-      pedidas.current.add(de);
-      void acoes.previas(de).then((r) => {
-        if (!r.ok) return pedidas.current.delete(de);
-        setUrls((u) => ({
-          ...u,
-          ...Object.fromEntries(r.dados.urls.map((x, i) => [de + i, x])),
-        }));
-      });
-    },
-    [acoes, total],
-  );
-
-  useEffect(() => {
-    garantir(indice);
-    garantir(indice + 1);
-  }, [indice, garantir]);
-
-  const par = indice + 1 <= total ? indice + 1 : null;
-
   return (
-    <section className="flex flex-col gap-4" aria-label="Prévia do livro">
-      {indice === 0 ? (
-        v.capaUrl ? (
-          <PreviaDaCapa src={v.capaUrl} alt="Capa aberta" />
-        ) : (
-          <p className="text-ui-15 text-tinta-2">Carregando…</p>
-        )
-      ) : (
-        <div className="flex justify-center gap-3">
-          {[indice, par].map((n, k) =>
-            n === null ? null : (
-              <div
-                key={n}
-                className={`bg-polen-2 rounded-interno flex aspect-[154/216] items-center justify-center overflow-hidden ${k === 1 ? "hidden w-1/2 md:flex" : "w-full max-w-sm md:w-1/2"}`}
-              >
-                {urls[n] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={urls[n]}
-                    alt={`Página ${n} de ${total}`}
-                    className="size-full object-contain"
-                  />
-                ) : (
-                  <span className="text-ui-15 text-tinta-2">Carregando…</span>
-                )}
-              </div>
-            ),
-          )}
-        </div>
-      )}
-      <div className="flex items-center justify-between gap-3">
-        <Botao
-          variante="secundario"
-          disabled={indice === 0}
-          onClick={() => setIndice((i) => Math.max(0, i - 1))}
-        >
-          ← Anterior
-        </Botao>
-        <span
-          className="text-ui-15 text-tinta-2 text-center"
-          aria-live="polite"
-        >
-          {indice === 0 ? "Capa" : `Página ${indice} de ${total}`}
-        </span>
-        <Botao
-          variante="secundario"
-          disabled={indice >= total}
-          onClick={() => setIndice((i) => Math.min(total, i + 1))}
-        >
-          Próxima →
-        </Botao>
-      </div>
-    </section>
+    <Folhear
+      total={v.paginas ?? 0}
+      capa={v.capaUrl}
+      urlsIniciais={Object.fromEntries(v.previasUrls.map((u, i) => [i + 1, u]))}
+      porPedido={EXPORT_PREVIAS_POR_PEDIDO}
+      pedir={acoes.previas}
+    />
   );
 }
 

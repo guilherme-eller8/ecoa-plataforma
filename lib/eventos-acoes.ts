@@ -79,6 +79,7 @@ export const ACOES = [
   "livro_pronto", // sistema { export_id, versao, paginas, qr }
   "livro_falhou", // sistema { export_id, versao, erro } (código fixo)
   "livro_baixado", // membro { export_id, versao, arquivo }
+  "livro_folheado", // membro abriu o Folhear antes de publicar (P72) { paginas, historias }
   // Prompt 15: aderência e erros. Nunca texto de erro nem URL (T36).
   "job_falhou", // sistema; { funcao, run_id } e o livro quando o evento original traz
   "erro_servidor", // sistema; { rota, tipo, digest }; a rota é o padrão, nunca a URL com token

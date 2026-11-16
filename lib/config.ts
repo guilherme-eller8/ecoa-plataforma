@@ -332,6 +332,11 @@ export const QR_AUDIO_URL_S = 10 * 60; // validade da URL assinada que o player 
 export const QR_URL_MAIUSCULA = true;
 export const AMOSTRA_ESPERA_VOZ_S = 120; // a folha consulta o recorte até isso; depois pede para voltar
 export const AMOSTRA_CONSULTAR_S = 3; // intervalo da consulta do recorte na folha
+export const AMOSTRA_VOZ_TIPICA_S = 40; // a barra da folha anda até 90% nesse tempo (só para a tela)
+export const AMOSTRA_PREVIA_DPI = 110; // a página de amostra na tela (JPEG)
+export const FOLHEAR_DPI = 130; // Folhear o livro antes de publicar (P72): dá para ampliar no celular
+export const FOLHEAR_PAGINAS_POR_PEDIDO = 4; // páginas por ida ao servidor no Folhear
+export const FOLHEAR_FOTO_PX = 900; // fotos do Folhear reduzidas a isso (o PDF final usa 300 DPI)
 
 // ── Aderência (prompt 15, docs/designs/aderencia-erros.md) ───────────────
 export const LIVRO_PARADO_DIAS = 7; // sem ação de pessoa há tanto tempo = "parado" (PRD M10, M11)

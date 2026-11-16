@@ -4,6 +4,7 @@ import "server-only";
 import { normalizarTexto } from "@/lib/editor/conteudo";
 import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
+import { gerarAmostra } from "./amostra";
 
 export type ParaAmostra = {
   titulo: string;
@@ -82,6 +83,25 @@ export async function dadosDaAmostra(
 }
 
 /** Bytes da foto (o caminho veio do banco pela sessão, nunca do navegador). */
+/** A amostra desta história (PDF e marca do QR): o mesmo caminho para o download e para a tela. */
+export async function gerarAmostraDaHistoria(
+  d: ParaAmostra & { codigo: string },
+  opcoes: { titulo?: string; maiuscula?: boolean } = {},
+) {
+  const bytes = d.foto ? await bytesDaFoto(d.foto.caminho) : null;
+  return gerarAmostra({
+    titulo: opcoes.titulo ?? d.titulo,
+    ano: d.ano,
+    paragrafos: d.paragrafos,
+    codigo: d.codigo,
+    foto:
+      d.foto && bytes
+        ? { bytes, largura: d.foto.largura, altura: d.foto.altura }
+        : null,
+    maiuscula: opcoes.maiuscula,
+  });
+}
+
 export async function bytesDaFoto(caminho: string): Promise<Buffer | null> {
   const { data } = await clienteAdmin()
     .storage.from("acervo")

@@ -83,7 +83,7 @@ export async function prepararFoto(
   }
 }
 
-async function emLotes<T, R>(
+export async function emLotes<T, R>(
   itens: T[],
   juntos: number,
   f: (x: T) => Promise<R>,

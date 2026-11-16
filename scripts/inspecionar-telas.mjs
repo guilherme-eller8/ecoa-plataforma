@@ -81,6 +81,7 @@ const TELAS = {
   "player-digitar": "/styleguide/player-digitar",
   "editor-amostra": "/styleguide/editor-amostra",
   "editor-amostra-preparando": "/styleguide/editor-amostra-preparando",
+  "editor-amostra-falhou": "/styleguide/editor-amostra-falhou",
   // Prompt 11
   mensagem: "/styleguide/mensagem",
   "mensagem-gravar": "/styleguide/mensagem-gravar",
@@ -112,6 +113,9 @@ const TELAS = {
   "versao-gerando": "/styleguide/versao-gerando",
   "versao-pronta": "/styleguide/versao-pronta",
   "versao-falhou": "/styleguide/versao-falhou",
+  // P72
+  folhear: "/styleguide/folhear",
+  "folhear-vazio": "/styleguide/folhear-vazio",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no
@@ -123,6 +127,7 @@ const COM_FOLHA_ABERTA = new Set([
   "editor-grupo",
   "editor-amostra",
   "editor-amostra-preparando",
+  "editor-amostra-falhou",
 ]);
 
 const escolhidas = process.argv.slice(2).filter((a) => a in TELAS);
