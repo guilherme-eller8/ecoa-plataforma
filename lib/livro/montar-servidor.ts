@@ -10,7 +10,7 @@ import { fotosDoLivro } from "./dados";
 import {
   corDaCapa,
   lerConteudo,
-  saiComQr,
+  vaiComQr,
   type ConteudoDoLivro,
 } from "./montagem";
 import type { MontagemDaTela, VersaoDaTela } from "./montar-tipos";
@@ -98,7 +98,7 @@ export async function montagemDaTela(
       revisada: h.revisada,
       incluida: h.incluida,
       palavras: h.palavras,
-      comQr: saiComQr(h),
+      comQr: vaiComQr(h),
     })),
     mensagens: conteudo.mensagens.map((m) => ({
       id: m.id,
@@ -106,7 +106,7 @@ export async function montagemDaTela(
       relacao: m.relacao,
       incluida: m.incluida,
       previa: (m.texto ?? "").slice(0, 120),
-      comQr: saiComQr(m),
+      comQr: vaiComQr(m),
     })),
     alertas: alertasDoLivro(conteudo),
     proximaVersao: (versoes[0]?.versao ?? 0) + 1,

@@ -7,7 +7,7 @@ import {
 } from "@/lib/config";
 import { paginasExtras } from "./espec";
 import { fotoPequenaParaImprimir } from "./fotos";
-import { saiComQr, soIncluidas, type ConteudoDoLivro } from "./montagem";
+import { soIncluidas, vaiComQr, type ConteudoDoLivro } from "./montagem";
 
 export type Alerta = {
   nivel: "vermelho" | "amarelo";
@@ -98,7 +98,7 @@ export function alertasDoLivro(
         item: h.id,
       });
     }
-    if (!saiComQr(h)) {
+    if (!vaiComQr(h)) {
       amarelos.push({
         nivel: "amarelo",
         codigo: "historia_sem_qr",
@@ -109,7 +109,7 @@ export function alertasDoLivro(
     }
   }
   for (const m of c.mensagens) {
-    if (!saiComQr(m)) {
+    if (!vaiComQr(m)) {
       amarelos.push({
         nivel: "amarelo",
         codigo: "mensagem_sem_qr",

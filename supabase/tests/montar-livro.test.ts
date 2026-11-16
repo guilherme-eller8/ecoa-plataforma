@@ -13,6 +13,7 @@ type ItemDoLivro = {
   incluida?: boolean;
   qr?: { codigo: string; ligado: boolean } | null;
   com_audio?: boolean;
+  voz?: boolean;
 };
 type ConteudoBruto = { historias: ItemDoLivro[]; mensagens: ItemDoLivro[] };
 
@@ -427,7 +428,15 @@ describe("publicar", () => {
       titulo: "Só escrita",
       audio: false,
     });
-    const visto = (await conteudo(ana, livroA)).hash;
+    const antes = await conteudo(ana, livroA);
+    const visto = antes.hash;
+    // Antes de publicar não há QR, mas a montagem já diz quem tem voz (o alerta usa isto).
+    const hsAntes = antes.historias as ItemDoLivro[];
+    expect(hsAntes.find((h) => h.id === semAudio)).toMatchObject({
+      qr: null,
+      voz: false,
+    });
+    expect(hsAntes.some((h) => h.qr === null && h.voz === true)).toBe(true);
     // Uma mensagem tirada do livro depois de conferir: o hash não bate mais.
     await sql(
       `update public.family_messages set no_livro = false where id = $1`,
