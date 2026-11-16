@@ -51,6 +51,22 @@ describe("alertas do Conferir", () => {
     expect(bloqueia(a)).toBe(false);
   });
 
+  it("antes de publicar o QR não existe: com voz não avisa, sem voz avisa", () => {
+    const c = conteudoDeExemplo();
+    c.historias[0].qr = null;
+    c.historias[0].voz = true; // tem voz: o QR nasce ao publicar
+    c.historias[1].qr = null;
+    c.historias[1].voz = false; // só escrita
+    c.mensagens[0].qr = null; // mensagem com áudio, QR ainda não criado
+    const a = alertasDoLivro(c);
+    expect(
+      a.filter((x) => x.codigo === "historia_sem_qr").map((x) => x.item),
+    ).toEqual([c.historias[1].id]);
+    expect(
+      a.filter((x) => x.codigo === "mensagem_sem_qr").map((x) => x.item),
+    ).toEqual([c.mensagens[1].id]);
+  });
+
   it("livro vazio bloqueia", () => {
     const c = conteudoDeExemplo();
     c.historias = [];

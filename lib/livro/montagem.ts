@@ -26,6 +26,8 @@ export const HistoriaDoLivro = z.object({
   paragrafos: z.array(z.string()),
   fotos: z.array(Foto),
   qr: Qr,
+  // Tem voz que o QR toca (privado.historia_aceita_qr). Versões congeladas antes não têm.
+  voz: z.boolean().optional(),
 });
 
 export const MensagemDoLivro = z.object({
@@ -87,4 +89,14 @@ export function paragrafosDaMensagem(texto: string | null): string[] {
 /** Esta história ou mensagem vai com QR impresso (só o que toca, Q10)? */
 export function saiComQr(x: { qr: { ligado: boolean } | null }): boolean {
   return x.qr != null && x.qr.ligado;
+}
+
+/**
+ * Vai sair com QR quando publicar? Antes da 1ª publicação o QR ainda não existe (nasce ao
+ * publicar), então vale a voz: a história que o recorte aceita, a mensagem com áudio transcrito.
+ * Na Conferir e no selo do Conteúdo; o PDF usa `saiComQr`, que exige o código.
+ */
+export function vaiComQr(x: HistoriaDoLivro | MensagemDoLivro): boolean {
+  if (x.qr) return x.qr.ligado;
+  return "com_audio" in x ? x.com_audio : x.voz === true;
 }

@@ -1,7 +1,7 @@
 // Dados falsos do prompt 13 (montar e publicar): 6 histórias e 2 mensagens, o caso do aceite.
 // Nada aqui é real. Usado pelo styleguide, pelos testes dos templates e pela contagem de exemplo.
 import { alertasDoLivro } from "@/lib/livro/alertas";
-import { saiComQr, type ConteudoDoLivro } from "@/lib/livro/montagem";
+import { vaiComQr, type ConteudoDoLivro } from "@/lib/livro/montagem";
 import type {
   AcoesMontar,
   AcoesVersao,
@@ -129,7 +129,7 @@ export function montagemDeExemplo(
       revisada: h.revisada,
       incluida: h.incluida,
       palavras: h.palavras,
-      comQr: saiComQr(h),
+      comQr: vaiComQr(h),
     })),
     mensagens: c.mensagens.map((m) => ({
       id: m.id,
@@ -137,7 +137,7 @@ export function montagemDeExemplo(
       relacao: m.relacao,
       incluida: m.incluida,
       previa: (m.texto ?? "").slice(0, 120),
-      comQr: saiComQr(m),
+      comQr: vaiComQr(m),
     })),
     alertas: alertasDoLivro(c),
     proximaVersao: 1,
