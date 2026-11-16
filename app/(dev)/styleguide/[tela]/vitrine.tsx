@@ -1101,7 +1101,7 @@ function acoesFolhearFalsas(total: number): AcoesFolhear {
           ? [
               {
                 historiaId: "00000000-0000-4000-8000-000000000000",
-                fotoId: FOTO_ALTA.id,
+                indice: 0,
                 primeira: true,
                 pagina: 6,
                 x: 35.62,
