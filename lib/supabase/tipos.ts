@@ -1240,24 +1240,39 @@ export type Database = {
       };
       story_photos: {
         Row: {
+          ao_lado: boolean;
           book_id: string;
           criado_em: string;
           ordem: number;
           photo_id: string;
+          recorte_a: number | null;
+          recorte_l: number | null;
+          recorte_x: number | null;
+          recorte_y: number | null;
           story_id: string;
         };
         Insert: {
+          ao_lado?: boolean;
           book_id: string;
           criado_em?: string;
           ordem?: number;
           photo_id: string;
+          recorte_a?: number | null;
+          recorte_l?: number | null;
+          recorte_x?: number | null;
+          recorte_y?: number | null;
           story_id: string;
         };
         Update: {
+          ao_lado?: boolean;
           book_id?: string;
           criado_em?: string;
           ordem?: number;
           photo_id?: string;
+          recorte_a?: number | null;
+          recorte_l?: number | null;
+          recorte_x?: number | null;
+          recorte_y?: number | null;
           story_id?: string;
         };
         Relationships: [];
