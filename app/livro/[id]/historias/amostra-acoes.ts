@@ -21,6 +21,7 @@ import { rasterizarPaginas } from "@/lib/livro/pdf";
 import type { Resposta } from "@/lib/livro/tipos";
 import { codigoValido } from "@/lib/qr/codigo";
 import { pedirRecorte } from "@/lib/qr/player";
+import { clienteAdmin } from "@/lib/supabase/admin";
 import { clienteSessao } from "@/lib/supabase/servidor";
 
 const uuid = z.uuid();
@@ -45,11 +46,25 @@ function evento(a: LivroComAcesso, acao: Acao, historia: string) {
   );
 }
 
+/**
+ * Quando a voz deste QR foi pedida. A coluna é só do servidor (o membro não lê); só é chamada
+ * depois que criar_qr conferiu membro, plano e história no banco, e lê um campo de um código.
+ */
+async function pedidoDaVoz(codigo: string): Promise<number | null> {
+  const { data } = await clienteAdmin()
+    .from("qr_codes")
+    .select("audio_pedido_em")
+    .eq("codigo", codigo)
+    .maybeSingle();
+  return data?.audio_pedido_em ? Date.parse(data.audio_pedido_em) : null;
+}
+
 async function qrAtual(livro: string, historia: string) {
   const supabase = await clienteSessao();
   const { data } = await supabase
     .from("qr_codes")
-    .select("codigo, desativado_em, audio_pedido_em, audio_pronto_em")
+    // Só colunas que o membro pode ler (audio_pedido_em não é uma delas: ver pedidoDaVoz).
+    .select("codigo, desativado_em, audio_pronto_em")
     .eq("book_id", livro)
     .eq("story_id", historia)
     .maybeSingle();
@@ -91,9 +106,7 @@ export async function prepararAmostra(
   const envioFalhou = r.pedir_audio ? !(await pedirRecorte(r.codigo)) : false;
   // Pedida há mais que a espera da folha e ainda sem voz: algo travou do nosso lado (a fila
   // aceitou e não rodou). O admin fica sabendo uma vez por dia (T56).
-  const pedida = antes?.audio_pedido_em
-    ? Date.parse(antes.audio_pedido_em)
-    : null;
+  const pedida = r.audio_pronto ? null : await pedidoDaVoz(r.codigo);
   if (
     !r.audio_pronto &&
     !envioFalhou &&
