@@ -1,6 +1,6 @@
 # Compra do plano pelo Mercado Pago (prompt 14, parte 1)
 
-Status: **rascunho para aprovação** · 18/11/2026 · PRD: M1 (onda 2). A impressão (itens 3 e 4 do prompt 14) fica para um prompt separado, por decisão do Guilherme em 18/11.
+Status: **aprovado pelo Guilherme em 20/11/2026** (fatura: ECOAMEMORIAS) · 18/11/2026 · PRD: M1 (onda 2). A impressão (itens 3 e 4 do prompt 14) fica para um prompt separado, por decisão do Guilherme em 18/11.
 
 ## Visão geral
 
@@ -30,7 +30,7 @@ Hoje o plano é pago por Pix e ativado à mão no `/admin`. Este design faz a co
 - Desligar o livro sozinho em estorno ou chargeback: o admin decide.
 - Captcha: só se aparecer abuso (ver Revisão).
 
-## Decisões novas (entram em `decisoes.md` com o OK)
+## Decisões novas (registradas em `decisoes.md` em 20/11)
 
 - **P77 Compra pelo app.** O botão da landing leva a `app.ecoa-memorias.com.br/comprar`. Um campo (e-mail), a confirmação "O acesso vai para **fulano@gmail.com**" e *Pagar R$ 467*. O app cria a cobrança no Checkout Pro do Mercado Pago (Pix e cartão até 12x, sem boleto) e manda a pessoa para lá. O e-mail digitado na Ecoa vira o responsável, não o e-mail da conta do Mercado Pago. Na volta, "Pronto" e *Entrar com Google*; o acesso também vai por e-mail. Substitui P5 em parte: sai "link de pagamento", entra "cobrança criada pelo app" (o motivo da P5 continua: nenhum checkout próprio, nenhum dado de cartão).
 - **P78 Parcelas.** Até 3x sem juros (a Ecoa paga o parcelamento); de 4x a 12x, juros do Mercado Pago para o cliente. Configurado no painel do Mercado Pago, não no código.
@@ -572,7 +572,7 @@ Mais um campo para o avô. A sugestão de domínio e o e-mail inteiro antes de *
 
 ## Perguntas em aberto
 
-1. Texto na fatura do cartão: "ECOAMEMORIAS" serve?
+Nenhuma. Texto na fatura: "ECOAMEMORIAS" (Guilherme, 20/11).
 
 ## Plano de implementação
 
