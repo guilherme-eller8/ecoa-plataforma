@@ -1,6 +1,6 @@
 # Convite pelo nome e boas-vindas com duas portas
 
-Prompt avulso de 22/11/2026, pedido do Guilherme. Mexe em schema, RLS e link sem login: EGM em duas sessões (T28). Esta é a sessão 1: vai até o design aprovado. Versão 2, depois da revisão (seção 12).
+Prompt avulso de 22/11/2026, pedido do Guilherme. Mexe em schema, RLS e link sem login: EGM em duas sessões (T28). **Aprovado pelo Guilherme em 22/11/2026**, com as recomendações da seção 3 e o risco da seção 6 aceito. Sessão 2 constrói a partir daqui. Versão 2, depois da revisão (seção 12).
 
 Decisões novas propostas: **P81** (convite pelo nome, substitui em parte P59), **P82** (boas-vindas com duas portas, substitui em parte P79 item 2) e **T59** (schema). Ver seção 10.
 
