@@ -82,6 +82,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P74** Amostra = começo da história em até 2 páginas (livro aberto); o botão mostra o andamento da voz com a folha fechada; voz atrasada avisa o admin; título do capítulo sem justificar.
 - **P75** Ajustar a foto da história: cortar (formato, aproximar, arrastar) e, na 1ª foto, junto da história ou página inteira ao lado; recorte e posição em `story_photos`, por uso.
 - **P76** No Folhear, tocar numa foto abre a mesma folha *Ajustar a foto*; o livro é refeito e volta na mesma página; escolhas prontas, não editor livre.
+- **P77** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo.
 
 ## Técnicas
 

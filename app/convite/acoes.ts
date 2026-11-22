@@ -17,5 +17,6 @@ export async function aceitarConvite(convite: string): Promise<Resposta> {
   });
   if (error || !data) return { ok: false, mensagem: fraseDoErro(error) };
   revalidatePath("/", "layout");
-  redirect(`/livro/${data}`);
+  // Quem entra por convite quer gravar: cai direto na gravação, com a oferta da tela inicial.
+  redirect(`/livro/${data}/historias/gravar?bemvindo=1`);
 }

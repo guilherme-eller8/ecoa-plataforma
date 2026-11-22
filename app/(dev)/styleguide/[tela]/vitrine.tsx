@@ -714,16 +714,20 @@ export function Vitrine({ tela }: { tela: Tela }) {
     case "gravar-conversa":
     case "gravar-conversa-pergunta":
     case "gravar-conversa-partes":
+    case "gravar-conversa-bemvindo":
       return (
         <TelaGravarConversa
           livro={LIVRO_JAIR}
           perguntas={PERGUNTAS_PENDENTES}
           acoes={ACOES_AUDIOS_FALSAS}
           perguntaInicial={
-            tela === "gravar-conversa" ? null : PERGUNTAS_PENDENTES[0]?.id
+            tela === "gravar-conversa" || tela === "gravar-conversa-bemvindo"
+              ? null
+              : PERGUNTAS_PENDENTES[0]?.id
           }
           subir={SUBIR_FALSO}
           limiteParteS={tela === "gravar-conversa-partes" ? 3 : undefined}
+          bemvindo={tela === "gravar-conversa-bemvindo"}
         />
       );
     case "autor-primeira":

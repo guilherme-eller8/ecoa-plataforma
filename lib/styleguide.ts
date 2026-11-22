@@ -28,6 +28,7 @@ export const TELAS = [
   "gravar-conversa",
   "gravar-conversa-pergunta",
   "gravar-conversa-partes",
+  "gravar-conversa-bemvindo",
   "autor-primeira",
   "autor-inicio",
   "autor-inicio-vazio",

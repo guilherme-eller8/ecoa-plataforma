@@ -17,6 +17,7 @@ export default function PaginaGravarConversa({
         <GravarConversa
           id={id}
           pergunta={typeof busca.pergunta === "string" ? busca.pergunta : null}
+          bemvindo={busca.bemvindo === "1"}
         />
       ))}
     </Suspense>
@@ -26,9 +27,11 @@ export default function PaginaGravarConversa({
 async function GravarConversa({
   id,
   pergunta,
+  bemvindo,
 }: {
   id: string;
   pergunta: string | null;
+  bemvindo: boolean;
 }) {
   const { livro, podeEscrever } = await livroDaPagina(id);
   const [tela, perguntas] = await Promise.all([
@@ -43,6 +46,7 @@ async function GravarConversa({
       )}
       acoes={acoesDoLivro(id).audios}
       perguntaInicial={pergunta}
+      bemvindo={bemvindo}
     />
   );
 }
