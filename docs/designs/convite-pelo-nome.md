@@ -138,8 +138,8 @@ Sempre que `servico_definir_email_convite` ou `definir_e_aceitar_convite` **defi
 
 ## 7. SQL
 
-- Subida: `supabase/migrations/20261130120000_convite_pelo_nome.sql` (conferir na sessão 2 que é a mais nova).
-- Reversão: `supabase/reversao/20261130120000_convite_pelo_nome.down.sql`. Reverter o app antes do banco.
+- Subida: `supabase/migrations/20261202120000_convite_pelo_nome.sql` (conferir na sessão 2 que é a mais nova).
+- Reversão: `supabase/reversao/20261202120000_convite_pelo_nome.down.sql`. Reverter o app antes do banco.
 - `lib/config.ts`: `CONVITE_TROCAS_EMAIL = 3` (espelhado em `privado.convite_trocas_email()`; `config-banco.test.ts`).
 
 ### Subida
