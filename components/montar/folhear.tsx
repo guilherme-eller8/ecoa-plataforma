@@ -97,7 +97,7 @@ function Pagina({
                 height: `${a.a}%`,
               }}
             >
-              <span className="bg-papel/90 text-tinta text-ui-13 absolute right-1.5 bottom-1.5 rounded-full px-2.5 py-1 font-medium shadow-sm">
+              <span className="bg-papel text-tinta text-ui-13 absolute right-1.5 bottom-1.5 rounded-full px-2.5 py-1 font-medium">
                 Ajustar
               </span>
             </button>

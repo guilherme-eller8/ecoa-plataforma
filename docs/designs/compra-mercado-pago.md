@@ -604,4 +604,4 @@ A migration foi aplicada como aprovada, sem mudar uma linha. Ajustes feitos no c
 - **Volta "não passou":** *Tentar de novo* abre a mesma cobrança (`mp_link`); sem ela, volta para `/comprar`.
 - **Conferência de 30 min:** processa os pagamentos da compra do mais antigo ao mais novo; falha passageira fica para a rodada seguinte.
 - **Gate de design:** a faixa de teste ocupa a largura toda; a confirmação "O acesso vai para…" some enquanto há sugestão de domínio; o logo do Google entra como ícone do botão (corrigiu também `/entrar`, onde ele ficava em cima do texto).
-- **Alerta do Supabase:** as 4 funções-constante novas em `privado` (`preco_plano_centavos` etc.) não fixam `search_path`. Sem risco (só `select` de um número), mas o linter avisa; correção numa migration de 4 linhas, se aprovada.
+- **Alerta do Supabase:** as 4 funções-constante novas em `privado` (`preco_plano_centavos` etc.) nasceram sem `search_path` fixo. Corrigido em `20261201120000_search_path_constantes_compra.sql` (aprovado e aplicado em 22/11).
