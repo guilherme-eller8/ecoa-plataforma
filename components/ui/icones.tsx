@@ -65,6 +65,14 @@ export function IconeFechar(p: Props) {
   );
 }
 
+export function IconeChevron(p: Props) {
+  return (
+    <Base {...p}>
+      <path d="M6 9l6 6 6-6" />
+    </Base>
+  );
+}
+
 export function IconeSeta(p: Props) {
   return (
     <Base {...p}>

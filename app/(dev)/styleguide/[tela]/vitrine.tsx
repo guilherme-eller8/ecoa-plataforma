@@ -98,6 +98,7 @@ import {
   AUDIOS_JAIR,
   ENVIAR_FALSO,
   itensDeExemplo,
+  PERGUNTAS_MUITAS,
   PERGUNTAS_PENDENTES,
   SUBIR_FALSO,
 } from "@/lib/exemplos/prompt5a";
@@ -715,13 +716,20 @@ export function Vitrine({ tela }: { tela: Tela }) {
     case "gravar-conversa-pergunta":
     case "gravar-conversa-partes":
     case "gravar-conversa-bemvindo":
+    case "gravar-conversa-topicos":
       return (
         <TelaGravarConversa
           livro={LIVRO_JAIR}
-          perguntas={PERGUNTAS_PENDENTES}
+          perguntas={
+            tela === "gravar-conversa-topicos"
+              ? PERGUNTAS_MUITAS
+              : PERGUNTAS_PENDENTES
+          }
           acoes={ACOES_AUDIOS_FALSAS}
           perguntaInicial={
-            tela === "gravar-conversa" || tela === "gravar-conversa-bemvindo"
+            tela === "gravar-conversa" ||
+            tela === "gravar-conversa-bemvindo" ||
+            tela === "gravar-conversa-topicos"
               ? null
               : PERGUNTAS_PENDENTES[0]?.id
           }

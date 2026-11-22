@@ -31,6 +31,7 @@ const TELAS = {
   "gravar-conversa": "/styleguide/gravar-conversa",
   "gravar-conversa-pergunta": "/styleguide/gravar-conversa-pergunta",
   "gravar-conversa-bemvindo": "/styleguide/gravar-conversa-bemvindo",
+  "gravar-conversa-topicos": "/styleguide/gravar-conversa-topicos",
   "autor-primeira": "/styleguide/autor-primeira",
   "autor-inicio": "/styleguide/autor-inicio",
   "autor-inicio-vazio": "/styleguide/autor-inicio-vazio",
