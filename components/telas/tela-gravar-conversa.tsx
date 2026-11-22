@@ -8,10 +8,11 @@ import { Gravar } from "@/components/gravacao/gravar";
 import { PorNaTelaInicial } from "@/components/pwa/por-na-tela-inicial";
 import { classesDoBotao } from "@/components/ui/botao";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
-import { IconeMicrofone } from "@/components/ui/icones";
+import { IconeChevron, IconeMicrofone } from "@/components/ui/icones";
 import { enviarPorTus } from "@/lib/audios/tus";
 import type { AdaptadorEnvio, SubirBlob } from "@/lib/gravacao/envio";
 import { armazemIndexedDb, type Armazem } from "@/lib/gravacao/local";
+import { topicosDaConversa, type Topico } from "@/lib/perguntas/topicos";
 import type {
   AcoesAudios,
   LivroDaTela,
@@ -51,6 +52,65 @@ export function adaptadorDoLivro(acoes: AcoesAudios): AdaptadorEnvio {
   };
 }
 
+function ListaDePerguntas({
+  perguntas,
+  aoEscolher,
+}: {
+  perguntas: readonly PerguntaDaTela[];
+  aoEscolher: (id: string) => void;
+}) {
+  return perguntas.map((p) => (
+    <li key={p.id}>
+      <button
+        type="button"
+        onClick={() => aoEscolher(p.id)}
+        className="rounded-cartao border-linha bg-papel font-livro text-livro-20 text-tinta hover:bg-polen-2 min-h-alvo w-full border px-5 py-4 text-left leading-snug"
+      >
+        {p.texto}
+      </button>
+    </li>
+  ));
+}
+
+// Um tópico (fase da vida): o nome abre e fecha; com a lista curta, todos vêm abertos.
+function TopicoDePerguntas({
+  topico,
+  aoEscolher,
+}: {
+  topico: Topico;
+  aoEscolher: (id: string) => void;
+}) {
+  const [aberto, setAberto] = useState(topico.abertoDeInicio);
+  const id = `topico-${topico.categoria.id}`;
+  return (
+    <section aria-labelledby={id}>
+      <h2 id={id}>
+        <button
+          type="button"
+          aria-expanded={aberto}
+          aria-controls={`${id}-lista`}
+          onClick={() => setAberto((a) => !a)}
+          className="rounded-cartao bg-polen-2 text-ui-17 text-tinta hover:bg-linha min-h-alvo flex w-full items-center gap-3 px-5 py-3 text-left font-medium"
+        >
+          <span className="flex-1">{topico.categoria.nome}</span>
+          <span className="num text-ui-15 text-tinta-2 font-normal">
+            {topico.itens.length}
+            <span className="sr-only"> perguntas</span>
+          </span>
+          <IconeChevron
+            className={`text-tinta-2 shrink-0 transition-transform ${aberto ? "rotate-180" : ""}`}
+          />
+        </button>
+      </h2>
+      {aberto ? (
+        <ul id={`${id}-lista`} className="flex flex-col gap-3 pt-3 pb-2">
+          <ListaDePerguntas perguntas={topico.itens} aoEscolher={aoEscolher} />
+        </ul>
+      ) : null}
+    </section>
+  );
+}
+
 export function TelaGravarConversa({
   livro,
   perguntas,
@@ -79,6 +139,7 @@ export function TelaGravarConversa({
   const deposito = useMemo(() => armazem ?? armazemIndexedDb(), [armazem]);
   const adaptador = useMemo(() => adaptadorDoLivro(acoes), [acoes]);
   const pergunta = perguntas.find((p) => p.id === escolha) ?? null;
+  const topicos = useMemo(() => topicosDaConversa(perguntas), [perguntas]);
   const voltar = `/livro/${livro.id}/historias/nova`;
 
   return (
@@ -121,18 +182,21 @@ export function TelaGravarConversa({
                 Conversa livre, sem pergunta
               </button>
             </li>
-            {perguntas.map((p) => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => setEscolha(p.id)}
-                  className="rounded-cartao border-linha bg-papel font-livro text-livro-20 text-tinta hover:bg-polen-2 min-h-alvo w-full border px-5 py-4 text-left leading-snug"
-                >
-                  {p.texto}
-                </button>
-              </li>
-            ))}
+            {topicos ? null : (
+              <ListaDePerguntas perguntas={perguntas} aoEscolher={setEscolha} />
+            )}
           </ul>
+          {topicos ? (
+            <div className="flex flex-col gap-2">
+              {topicos.map((t) => (
+                <TopicoDePerguntas
+                  key={t.categoria.id}
+                  topico={t}
+                  aoEscolher={setEscolha}
+                />
+              ))}
+            </div>
+          ) : null}
         </>
       ) : (
         <>

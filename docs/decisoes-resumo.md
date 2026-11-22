@@ -64,7 +64,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P56** Página de amostra só de história pronta; texto até onde couber em parágrafos inteiros; PDF só com a voz pronta.
 - **P57** Player do QR mínimo (título, ano, *Ouvir*); métrica = *Ouvir* tocado, 1 por código, rede e hora.
 - **P58** Só o responsável desliga e religa um QR; voltar para rascunho não desliga.
-- **P59** Convite de co-facilitador preso ao e-mail, uso único, 7 dias; pendentes contam no teto (P64); tetos de envio em 24 h.
+- **P59** Convite de co-facilitador preso ao e-mail, uso único, 7 dias; pendentes contam no teto (P64); tetos de envio em 24 h. Substituída em parte por P81.
 - **P60** Só do responsável: convidar, remover, trocar link ativo do autor/família, IA, QR, publicar, imprimir, pagar.
 - **P61** Compartilhar no grupo (/o/): qualquer membro; 1 link por história pronta; voz do recorte do QR; só parágrafos.
 - **P62** Lembrar com carinho: pergunta enviada há 3 dias; volta 3 dias depois do último lembrete.
@@ -84,7 +84,10 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P76** No Folhear, tocar numa foto abre a mesma folha *Ajustar a foto*; o livro é refeito e volta na mesma página; escolhas prontas, não editor livre.
 - **P77** Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS.
 - **P78** Até 3x sem juros (Ecoa paga); 4x a 12x com juros do cliente; configurado no painel.
-- **P79** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo.
+- **P79** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo. Item 2 substituído por P82.
+- **P80** Gravar conversa: perguntas em tópicos por fase da vida; até 8 abertas, acima disso fechadas; uma pergunta por gravação.
+- **P81** Convite pelo nome: link pelo WhatsApp; o convidado define o próprio e-mail; vale o primeiro; só o mesmo aparelho corrige (3x); responsável avisado antes do acesso.
+- **P82** Convite aceito cai em Boas-vindas: *Gravar uma conversa* (principal) e *Deixar sua mensagem sem que {autor} saiba* (`/m`).
 
 ## Técnicas
 
@@ -146,3 +149,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T56** Pedido à fila não falha calado (`pedirRecorte` tenta 2 vezes e grava `erro_servidor`); prévias em JPEG do PDF real, só as páginas pedidas, QR provisório tracejado; Folhear em memória por hash, sem migration.
 - **T57** Preview da Vercel não atende `/api/inngest` (404): nunca vira o app de produção no Inngest; repetição do Resend não é falha.
 - **T58** `payments` só pela chave secreta; estado sempre da API do Mercado Pago; aviso, volta e conferência de 30 min na mesma função; 1 livro por compra; alerta 1 vez; produção em modo de teste até o CNPJ.
+- **T59** `book_invites` com `nome`, `email_trocas`, `email_definido_em`, `dono_hash`; e-mail opcional até definido; `definir_e_aceitar_convite` atômica; `aceitar_convite` com `is distinct from`.

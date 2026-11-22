@@ -1,7 +1,12 @@
 // Dados falsos das telas do prompt 5A (styleguide e e2e). Nada aqui chama o servidor.
 import type { ItemAudio } from "@/components/audios/subir-audios";
 import type { EnviarArquivo } from "@/lib/audios/tus";
-import type { AcoesAudios, AudioDaTela } from "@/lib/livro/tipos";
+import type {
+  AcoesAudios,
+  AudioDaTela,
+  PerguntaDaTela,
+} from "@/lib/livro/tipos";
+import { perguntasDoTema, TEMAS } from "@/lib/perguntas/banco";
 import { LIVRO_JAIR, PERGUNTAS_JAIR } from "./prompt4";
 
 export { LIVRO_JAIR };
@@ -9,6 +14,21 @@ export { LIVRO_JAIR };
 export const PERGUNTAS_PENDENTES = PERGUNTAS_JAIR.filter(
   (p) => p.estado === "para_enviar" || p.estado === "enviada",
 );
+
+/** Depois do "Marcar todas" (P79): várias perguntas por fase, para ver os tópicos. */
+export const PERGUNTAS_MUITAS: PerguntaDaTela[] = [
+  ...TEMAS.flatMap((t, ti) =>
+    perguntasDoTema(t.id, { fe: false })
+      .slice(0, ti % 2 ? 2 : 7)
+      .map((p, i) => ({
+        ...PERGUNTAS_PENDENTES[0],
+        id: `00000000-0000-4000-8000-0000000006${String(ti * 10 + i).padStart(2, "0")}`,
+        texto: p.texto,
+        bancoId: p.id,
+      })),
+  ),
+  ...PERGUNTAS_PENDENTES.filter((p) => !p.bancoId),
+];
 
 const id = (n: number) =>
   `00000000-0000-4000-8000-0000000005${String(n).padStart(2, "0")}`;

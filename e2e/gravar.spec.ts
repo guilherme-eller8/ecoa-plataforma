@@ -34,6 +34,29 @@ test("Nova história oferece Gravar conversa e Subir áudios", async ({
   ).toBeVisible();
 });
 
+test("perguntas em tópicos: lista longa vem fechada, abre a fase e a escolha vai ao gravador", async ({
+  page,
+}) => {
+  await page.goto("/styleguide/gravar-conversa-topicos");
+  const grande = page.getByRole("button", { name: /^Família e raízes/ });
+  await expect(grande).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("button", { name: /^Infância/ })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+
+  await grande.click();
+  await expect(grande).toHaveAttribute("aria-expanded", "true");
+  const lista = page.locator("#topico-raizes-lista");
+  const primeira = lista.getByRole("button").first();
+  const texto = (await primeira.textContent())!.trim();
+  await primeira.click();
+  await expect(
+    page.getByRole("heading", { name: "Gravar conversa" }),
+  ).toBeVisible();
+  await expect(page.getByRole("blockquote")).toHaveText(texto);
+});
+
 test("escolhe a pergunta, grava, pausa, retoma, ouve e envia", async ({
   page,
 }) => {
