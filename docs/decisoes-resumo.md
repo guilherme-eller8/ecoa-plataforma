@@ -10,7 +10,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P2** Gravar conversando (modo conversa) é o centro; gravar sozinho é igualmente simples.
 - **P3** R$ 467 por plano anual: gravações ilimitadas e 1 livro de 80 páginas; página e cópia extras configuráveis.
 - **P4** Sem cobrança recorrente; plano vencido = somente leitura; QR e leitura continuam.
-- **P5** Pagamento: Pix manual na onda 1; Mercado Pago (Pix e cartão em 12x) na onda 2.
+- **P5** Pagamento: Pix manual na onda 1; Mercado Pago (Pix e cartão em 12x) na onda 2. Substituída em parte por P77.
 - **P6** Google como entrada principal, link por e-mail como alternativa; autor entra por link pessoal, sem login.
 - **P7** Papéis: 1 responsável (publica, imprime, paga, convida), co-facilitadores (onda 2; teto → P64), autor em modo autor.
 - **P8** Modo autor: perguntas para ele, histórias livres, ouvir e corrigir os textos, ler o livro sem as mensagens.
@@ -82,7 +82,9 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P74** Amostra = começo da história em até 2 páginas (livro aberto); o botão mostra o andamento da voz com a folha fechada; voz atrasada avisa o admin; título do capítulo sem justificar.
 - **P75** Ajustar a foto da história: cortar (formato, aproximar, arrastar) e, na 1ª foto, junto da história ou página inteira ao lado; recorte e posição em `story_photos`, por uso.
 - **P76** No Folhear, tocar numa foto abre a mesma folha *Ajustar a foto*; o livro é refeito e volta na mesma página; escolhas prontas, não editor livre.
-- **P77** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo.
+- **P77** Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS.
+- **P78** Até 3x sem juros (Ecoa paga); 4x a 12x com juros do cliente; configurado no painel.
+- **P79** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo.
 
 ## Técnicas
 
@@ -143,3 +145,4 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T55** Evals 1A: livro ativo = ação de criação de membro ou autor em 7 dias (sem `entrou` nem família); ativação = 1ª revisada em 7 dias; abaixo de 5, "amostra pequena"; somas no banco, linhas em blocos; alertas 1 por condição e dia.
 - **T56** Pedido à fila não falha calado (`pedirRecorte` tenta 2 vezes e grava `erro_servidor`); prévias em JPEG do PDF real, só as páginas pedidas, QR provisório tracejado; Folhear em memória por hash, sem migration.
 - **T57** Preview da Vercel não atende `/api/inngest` (404): nunca vira o app de produção no Inngest; repetição do Resend não é falha.
+- **T58** `payments` só pela chave secreta; estado sempre da API do Mercado Pago; aviso, volta e conferência de 30 min na mesma função; 1 livro por compra; alerta 1 vez; produção em modo de teste até o CNPJ.
