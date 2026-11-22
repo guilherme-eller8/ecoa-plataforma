@@ -74,6 +74,10 @@ describe("lib/config.ts x banco", () => {
     ["max_publicacoes_dia", config.MAX_PUBLICACOES_DIA],
     ["publicacao_expira_s", config.PUBLICACAO_EXPIRA_MIN * 60],
     ["max_usos_montagem_minuto", config.MAX_USOS_MONTAGEM_MINUTO],
+    ["preco_plano_centavos", config.PRECO_PLANO * 100],
+    ["duracao_plano_meses", config.DURACAO_PLANO_MESES],
+    ["max_compras_por_email_dia", config.MAX_COMPRAS_POR_EMAIL_DIA],
+    ["minutos_compra_aberta", config.MINUTOS_COMPRA_ABERTA],
   ])("privado.%s() = %i", async (funcao, valor) => {
     const r = await db.query<{ v: number }>(`select privado.${funcao}() as v`);
     expect(Number(r.rows[0].v)).toBe(valor);

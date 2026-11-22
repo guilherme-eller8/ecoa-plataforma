@@ -45,8 +45,8 @@ export function TelaEntrar({
             await entrarComGoogle();
           }}
           className="w-full"
+          icone={<LogoGoogle />}
         >
-          <LogoGoogle />
           Entrar com Google
         </Botao>
 
@@ -84,7 +84,7 @@ export function TelaEntrar({
   );
 }
 
-function LogoGoogle() {
+export function LogoGoogle() {
   return (
     <svg
       aria-hidden="true"

@@ -131,6 +131,16 @@ export const TELAS = [
   "admin-evals-adocao",
   "admin-evals-adocao-vazia",
   "inicio-admin",
+  // Prompt 14, parte 1: compra pelo Mercado Pago
+  "comprar",
+  "comprar-teste",
+  "comprar-sugestao",
+  "comprar-fechada",
+  "compra-pronta",
+  "compra-esperando",
+  "compra-nao-passou",
+  "compra-conferindo",
+  "admin-compras",
 ] as const;
 export type Tela = (typeof TELAS)[number];
 

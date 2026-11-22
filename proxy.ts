@@ -145,7 +145,7 @@ export const config = {
     "/o/:path*",
     "/convite/:path*",
     "/resumo/sair/:path*",
-    // /api/inngest fica de fora: o Inngest chama a rota a cada passo, sem sessão.
-    "/((?!_next/static|_next/image|api/inngest|favicon.ico|.*\\.[a-z0-9]+$).*)",
+    // /api/inngest e /api/mercadopago ficam de fora: chamadas de fora, sem sessão.
+    "/((?!_next/static|_next/image|api/inngest|api/mercadopago|favicon.ico|.*\\.[a-z0-9]+$).*)",
   ],
 };

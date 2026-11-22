@@ -1,5 +1,6 @@
 import "server-only";
 import { alertasAdminFn } from "./alertas";
+import { comprasConferirFn } from "./compras";
 import { registrarFalhaFn } from "./falhas";
 import { resumoDoLivroFn, resumoSemanalFn } from "./resumo";
 // Funções do Inngest (T34). O Inngest só orquestra: o código roda aqui, na Vercel, e cada
@@ -503,4 +504,5 @@ export const funcoes = [
   exportarLivroFn,
   registrarFalhaFn,
   alertasAdminFn,
+  comprasConferirFn,
 ];

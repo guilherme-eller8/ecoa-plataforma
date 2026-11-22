@@ -24,6 +24,7 @@ type Props = {
   renovar: AcaoFormulario;
   reenviar: AcaoFormulario;
   processamento?: React.ReactNode;
+  compras?: React.ReactNode;
 };
 
 const ROTULO_ESTADO = ROTULO_PLANO;
@@ -43,6 +44,7 @@ export function TelaAdmin({
   renovar,
   reenviar,
   processamento,
+  compras,
 }: Props) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-5xl flex-col gap-10 px-5 pt-8 pb-16 md:px-10">
@@ -77,6 +79,8 @@ export function TelaAdmin({
           </ul>
         )}
       </section>
+
+      {compras}
 
       {processamento}
     </main>

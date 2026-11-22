@@ -1,0 +1,13 @@
+drop function public.compras_para_conferir();
+drop function public.admin_listar_compras();
+drop function public.compra_marcar_acesso(uuid);
+drop function public.compra_registrar(uuid, text, text, integer, text, integer, uuid, text);
+drop function public.compra_guardar_preferencia(uuid, text, text);
+drop function public.compra_criar(text);
+drop function privado.email_canonico(text);
+drop function privado.minutos_compra_aberta();
+drop function privado.max_compras_por_email_dia();
+drop function privado.duracao_plano_meses();
+drop function privado.preco_plano_centavos();
+drop table public.payments;
+drop type public.pagamento_estado;

@@ -1463,6 +1463,29 @@ export type Database = {
         };
         Relationships: [];
       };
+      payments: {
+        Row: {
+          acesso_enviado_em: string | null;
+          alertas: string[];
+          aprovado_em: string | null;
+          atualizado_em: string;
+          book_id: string | null;
+          criado_em: string;
+          email: string;
+          estado: Database["public"]["Enums"]["pagamento_estado"];
+          id: string;
+          meio: string | null;
+          mp_link: string | null;
+          mp_pagamento_id: string | null;
+          mp_preferencia_id: string | null;
+          parcelas: number | null;
+          tipo: string;
+          valor_centavos: number;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -2062,8 +2085,64 @@ export type Database = {
           foto_caminho: string | null;
         }[];
       };
+      // Prompt 14, parte 1: compra pelo Mercado Pago (só a chave secreta).
+      compra_criar: {
+        Args: { p_email: string };
+        Returns: { id: string; mp_link: string | null }[];
+      };
+      compra_guardar_preferencia: {
+        Args: { p_compra: string; p_link: string; p_preferencia: string };
+        Returns: undefined;
+      };
+      compra_registrar: {
+        Args: {
+          p_acao: "aprovar" | "pendente" | "recusado" | "estorno" | "reter";
+          p_alerta?: string | null;
+          p_compra: string;
+          p_meio: string | null;
+          p_mp_pagamento: string;
+          p_parcelas: number | null;
+          p_responsavel: string | null;
+          p_valor_centavos: number | null;
+        };
+        Returns: {
+          alerta: string | null;
+          book_id: string | null;
+          novo: boolean;
+        }[];
+      };
+      compra_marcar_acesso: { Args: { p_compra: string }; Returns: undefined };
+      admin_listar_compras: {
+        Args: never;
+        Returns: {
+          acesso_enviado_em: string | null;
+          alertas: string[];
+          book_id: string | null;
+          criado_em: string;
+          email: string;
+          estado: Database["public"]["Enums"]["pagamento_estado"];
+          id: string;
+          meio: string | null;
+          parcelas: number | null;
+          valor_centavos: number;
+        }[];
+      };
+      compras_para_conferir: {
+        Args: never;
+        Returns: {
+          estado: Database["public"]["Enums"]["pagamento_estado"];
+          id: string;
+        }[];
+      };
     };
     Enums: {
+      pagamento_estado:
+        | "criado"
+        | "pendente"
+        | "aprovado"
+        | "recusado"
+        | "retido"
+        | "estornado";
       glossario_estado: "sugerido" | "aceito" | "recusado";
       glossario_tipo: "pessoa" | "lugar";
       story_estado:

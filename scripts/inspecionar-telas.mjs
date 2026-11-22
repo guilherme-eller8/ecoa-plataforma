@@ -117,6 +117,16 @@ const TELAS = {
   // P72
   folhear: "/styleguide/folhear",
   "folhear-vazio": "/styleguide/folhear-vazio",
+  // Prompt 14, parte 1
+  comprar: "/styleguide/comprar",
+  "comprar-teste": "/styleguide/comprar-teste",
+  "comprar-sugestao": "/styleguide/comprar-sugestao",
+  "comprar-fechada": "/styleguide/comprar-fechada",
+  "compra-pronta": "/styleguide/compra-pronta",
+  "compra-esperando": "/styleguide/compra-esperando",
+  "compra-nao-passou": "/styleguide/compra-nao-passou",
+  "compra-conferindo": "/styleguide/compra-conferindo",
+  "admin-compras": "/styleguide/admin-compras",
 };
 
 // Exceção do PRD (Design e experiência, regras do autor): a pergunta para o autor tem no

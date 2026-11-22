@@ -1,6 +1,7 @@
 // Textos dos e-mails enviados pelo app. O e-mail de link de entrada é do Supabase (ver guia de setup).
 
 import { CONVITE_VALIDADE_DIAS } from "@/lib/config";
+import { fraseDoAlerta } from "@/lib/pagamento/estado";
 
 export type Email = {
   assunto: string;
@@ -241,5 +242,28 @@ export function emailAlerta({
       url: urlAdmin,
     }),
     texto: `${titulo}\n\n${linhas.join("\n")}\n\nAbrir Evals: ${urlAdmin}\n\nEcoa Memórias`,
+  };
+}
+
+/** Alerta de compra ao admin (prompt 14, CUJ 7): só o id e o que aconteceu. */
+export function emailAlertaCompra({
+  referencia,
+  alerta,
+  urlAdmin,
+}: {
+  referencia: string;
+  alerta: string;
+  urlAdmin: string;
+}): Email {
+  const titulo = "Compra para conferir";
+  const frase = fraseDoAlerta(alerta);
+  return {
+    assunto: `Ecoa: ${titulo}`,
+    html: moldura(
+      titulo,
+      `${escapar(frase)}<br><br>Compra: ${escapar(referencia)}`,
+      { rotulo: "Abrir o admin", url: urlAdmin },
+    ),
+    texto: `${titulo}\n\n${frase}\nCompra: ${referencia}\n\nAbrir o admin: ${urlAdmin}\n\nEcoa Memórias`,
   };
 }

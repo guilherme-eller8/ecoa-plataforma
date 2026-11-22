@@ -25,8 +25,14 @@ export function decidirRota(
   return null;
 }
 
-// Páginas com token na URL (prompt 11, T47): sem cache, sem índice e sem Referer.
-const PRIVADAS = [/^\/convite\//, /^\/o\//, /^\/resumo\/sair\//];
+// Páginas com token na URL (prompt 11, T47): sem cache, sem índice e sem Referer. A volta da
+// compra (prompt 14) leva o id da compra e o payment_id do Mercado Pago.
+const PRIVADAS = [
+  /^\/convite\//,
+  /^\/o\//,
+  /^\/resumo\/sair\//,
+  /^\/comprar\/pronto\//,
+];
 
 export function ehPaginaComToken(caminho: string): boolean {
   return PRIVADAS.some((r) => r.test(caminho));

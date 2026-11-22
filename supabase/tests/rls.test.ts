@@ -286,6 +286,7 @@ describe("quem não é membro", () => {
         "poll_votes",
         "edit_locks",
         "story_photos",
+        "payments",
       ]) {
         expect(await tenta(tx, `select 1 from public.${tabela}`)).toEqual(
           negado,
@@ -307,6 +308,12 @@ describe("funções do admin só com a chave secreta", () => {
     `select * from public.admin_primeira_palavra(now(), array[5], 1000)`,
     `select * from public.admin_cotas_24h(0.8)`,
     `select privado.vencer_planos()`,
+    `select * from public.compra_criar('ana@exemplo.com')`,
+    `select public.compra_guardar_preferencia('00000000-0000-0000-0000-000000000000', 'p', 'l')`,
+    `select * from public.compra_registrar('00000000-0000-0000-0000-000000000000', '1', 'aprovar', 46700, 'pix', 1, null, null)`,
+    `select public.compra_marcar_acesso('00000000-0000-0000-0000-000000000000')`,
+    `select * from public.admin_listar_compras()`,
+    `select * from public.compras_para_conferir()`,
   ];
 
   it.each(["anon", "authenticated"] as const)(

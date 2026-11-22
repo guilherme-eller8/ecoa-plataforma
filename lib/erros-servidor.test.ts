@@ -13,6 +13,10 @@ describe("rotaSegura", () => {
       "/livro/[id]/historias/[historiaId]",
     );
     expect(rotaSegura("/app/api/inngest/route")).toBe("/api/inngest");
+    expect(rotaSegura("/app/api/mercadopago/route")).toBe("/api/mercadopago");
+    expect(rotaSegura("/app/comprar/pronto/[compra]/page")).toBe(
+      "/comprar/pronto/[compra]",
+    );
   });
   it("aceita grupo de rotas", () => {
     expect(rotaSegura("/app/(dev)/styleguide/[tela]/page")).toBe(

@@ -4,6 +4,7 @@ import type { Acao } from "@/lib/eventos-acoes";
 const FRASES: Partial<Record<Acao, string>> = {
   entrou: "Entrou",
   plano_ativado: "Plano ativado",
+  plano_comprado: "Plano comprado",
   plano_renovado: "Plano renovado",
   acesso_reenviado: "Acesso reenviado",
   plano_vencido: "Plano venceu",

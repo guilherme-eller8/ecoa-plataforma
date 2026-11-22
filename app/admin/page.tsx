@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import {
+  AdminCompras,
+  type LinhaCompra,
+} from "@/components/telas/admin-compras";
+import {
   AdminProcessamento,
   type CustoDoLivro,
   type Esperando,
@@ -55,6 +59,23 @@ async function Admin() {
     venceEm: l.plano_vence_em,
   }));
 
+  const { data: dadosCompras, error: erroCompras } = await clienteAdmin().rpc(
+    "admin_listar_compras",
+  );
+  if (erroCompras) throw new Error("Não deu para carregar as compras.");
+  const compras: LinhaCompra[] = (dadosCompras ?? []).map((c) => ({
+    id: c.id,
+    criadoEm: c.criado_em,
+    email: c.email,
+    valorCentavos: c.valor_centavos,
+    meio: c.meio,
+    parcelas: c.parcelas,
+    estado: c.estado,
+    alertas: c.alertas,
+    acessoEnviado: Boolean(c.acesso_enviado_em),
+    livro: c.book_id,
+  }));
+
   const p = await processamento(
     new Map(livros.map((l) => [l.id, l.autorNome ?? "(sem nome)"])),
   );
@@ -64,6 +85,7 @@ async function Admin() {
       ativar={ativarPlano}
       renovar={renovarPlano}
       reenviar={reenviarAcesso}
+      compras={<AdminCompras compras={compras} />}
       processamento={
         <AdminProcessamento
           {...p}

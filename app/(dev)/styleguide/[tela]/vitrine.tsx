@@ -24,6 +24,10 @@ import {
   ROTAS_COM_ERRO,
 } from "@/lib/exemplos/prompt15";
 import { TelaAdmin } from "@/components/telas/tela-admin";
+import { AdminCompras } from "@/components/telas/admin-compras";
+import { TelaComprar } from "@/components/telas/tela-comprar";
+import { TelaCompraPronta } from "@/components/telas/tela-compra-pronta";
+import { COMPRA_DETALHE, COMPRAS_FALSAS } from "@/lib/exemplos/prompt14";
 import { TelaConfiguracoes } from "@/components/telas/tela-configuracoes";
 import { TelaHistoria } from "@/components/telas/tela-historia";
 import { TelaHistorias } from "@/components/telas/tela-historias";
@@ -822,6 +826,59 @@ export function Vitrine({ tela }: { tela: Tela }) {
           ativar={acaoFalsa}
           renovar={acaoFalsa}
           reenviar={acaoFalsa}
+        />
+      );
+    // ── Prompt 14, parte 1 ──
+    case "comprar":
+    case "comprar-teste":
+    case "comprar-sugestao":
+    case "comprar-fechada":
+      return (
+        <TelaComprar
+          aberta={tela !== "comprar-fechada"}
+          modoTeste={tela === "comprar-teste"}
+          preco="R$ 467"
+          detalhe={COMPRA_DETALHE}
+          emailInicial={
+            tela === "comprar-sugestao"
+              ? "fulano@gmial.com"
+              : tela === "comprar-teste"
+                ? "beatriz.souza@gmail.com"
+                : ""
+          }
+          iniciar={acaoFalsa}
+        />
+      );
+    case "compra-pronta":
+    case "compra-esperando":
+    case "compra-nao-passou":
+    case "compra-conferindo":
+      return (
+        <TelaCompraPronta
+          estado={
+            (
+              {
+                "compra-pronta": "pronto",
+                "compra-esperando": "esperando",
+                "compra-nao-passou": "nao_passou",
+                "compra-conferindo": "conferindo",
+              } as const
+            )[tela]
+          }
+          emailMascarado="b•••@gmail.com"
+          tentarUrl="#"
+          esperaMaxMin={0}
+          entrarComGoogle={() => {}}
+        />
+      );
+    case "admin-compras":
+      return (
+        <TelaAdmin
+          livros={LIVROS_FALSOS}
+          ativar={acaoFalsa}
+          renovar={acaoFalsa}
+          reenviar={acaoFalsa}
+          compras={<AdminCompras compras={COMPRAS_FALSAS} />}
         />
       );
     case "configurar-quem":

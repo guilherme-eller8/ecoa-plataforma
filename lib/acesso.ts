@@ -52,11 +52,15 @@ export async function contaParaEmail(
   return { tipo: "criada", id: data.user.id };
 }
 
-/** Manda (ou reenvia) o e-mail de acesso ao responsável do livro. */
+/**
+ * Manda (ou reenvia) o e-mail de acesso ao responsável do livro. Com `idempotencyKey`, o
+ * Resend descarta a repetição (aviso e volta da mesma compra: 1 e-mail só).
+ */
 export async function enviarAcesso(
   livroId: string,
   cliente: ClienteAdmin = clienteAdmin(),
-) {
+  opcoes: { idempotencyKey?: string } = {},
+): Promise<{ ok: boolean; repetido?: boolean }> {
   const [{ data: membro }, { data: livro }] = await Promise.all([
     cliente
       .from("book_members")
@@ -77,5 +81,6 @@ export async function enviarAcesso(
       autorNome: livro.autor_nome,
       urlEntrar: `${urlDoApp()}/entrar`,
     }),
+    opcoes,
   );
 }

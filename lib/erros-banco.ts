@@ -83,6 +83,12 @@ export const FRASES_DOS_CODIGOS = {
   export_imutavel: "Esta versão publicada não pode ser mudada.",
   mensagem_publicada:
     "Esta mensagem já está num livro publicado. Fale com a Ecoa para tirá-la.",
+  // Prompt 14: compra pelo Mercado Pago (P77, T58).
+  compra_teto_email:
+    "Muitas tentativas com este e-mail hoje. Tente amanhã ou fale com a gente.",
+  compra_inexistente: "Não achamos esta compra.",
+  compra_sem_responsavel: "Não deu certo agora. Tente de novo.",
+  compra_acao_invalida: "Não deu certo agora. Tente de novo.",
 } as const;
 
 export type CodigoBanco = keyof typeof FRASES_DOS_CODIGOS;

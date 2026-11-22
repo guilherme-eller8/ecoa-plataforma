@@ -7,6 +7,12 @@ export const MARCA = "Ecoa Memórias";
 // R$ 467 por ano: gravações ilimitadas e 1 livro de 80 páginas.
 export const PRECO_PLANO = 467; // exibir como "R$ 467"
 export const DURACAO_PLANO_MESES = 12; // conta a partir da ativação
+// Compra pelo Mercado Pago (P77, T58). Preço e duração acima também são conferidos no banco.
+export const MAX_COMPRAS_POR_EMAIL_DIA = 5; // pelo e-mail canônico, em 24 h (espelhado)
+export const MINUTOS_COMPRA_ABERTA = 30; // tocar Pagar de novo reaproveita a cobrança (espelhado)
+export const COMPRA_VALIDADE_H = 48; // a cobrança no Mercado Pago expira (preferência)
+export const COMPRA_ESPERA_MAX_MIN = 10; // a volta se atualiza sozinha até este tempo
+export const COMPRA_CONSULTA_MIN_S = 3; // a volta só consulta a API de novo depois disto
 
 // ── Livro ────────────────────────────────────────────────────────────────
 export const PAGINAS_INCLUSAS = 80;

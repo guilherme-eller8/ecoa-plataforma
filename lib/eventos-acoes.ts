@@ -84,6 +84,8 @@ export const ACOES = [
   // Prompt 15: aderência e erros. Nunca texto de erro nem URL (T36).
   "job_falhou", // sistema; { funcao, run_id } e o livro quando o evento original traz
   "erro_servidor", // sistema; { rota, tipo, digest }; a rota é o padrão, nunca a URL com token
+  // Prompt 14, parte 1: compra pelo Mercado Pago.
+  "plano_comprado", // sistema; { meio, parcelas } (o livro nasceu da compra)
 ] as const;
 
 export const PAPEIS = [

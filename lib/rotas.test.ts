@@ -36,22 +36,27 @@ describe("decidirRota", () => {
     ["/admin", admin],
     ["/livros-antigos", semSessao],
     ["/administracao", membro],
+    ["/comprar", semSessao],
+    ["/comprar/pronto/c0ffee00-0000-4000-8000-000000000001", semSessao],
   ] as const)("%s segue", (caminho, sessao) => {
     expect(decidirRota(caminho, sessao)).toBeNull();
   });
 });
 
 describe("páginas com token (prompt 11)", () => {
-  it.each(["/convite/v1_abc", "/o/v1_abc", "/resumo/sair/m/v1_abc"])(
-    "%s abre sem login e sai sem cache, índice nem Referer",
-    (caminho) => {
-      expect(decidirRota(caminho, semSessao)).toBeNull();
-      expect(ehPaginaComToken(caminho)).toBe(true);
-    },
-  );
+  it.each([
+    "/convite/v1_abc",
+    "/o/v1_abc",
+    "/resumo/sair/m/v1_abc",
+    "/comprar/pronto/c0ffee00-0000-4000-8000-000000000001",
+  ])("%s abre sem login e sai sem cache, índice nem Referer", (caminho) => {
+    expect(decidirRota(caminho, semSessao)).toBeNull();
+    expect(ehPaginaComToken(caminho)).toBe(true);
+  });
   it("o resto não ganha os cabeçalhos", () => {
     expect(ehPaginaComToken("/livro/1")).toBe(false);
     expect(ehPaginaComToken("/ouvir")).toBe(false);
+    expect(ehPaginaComToken("/comprar")).toBe(false);
     expect(CABECALHOS_PRIVADOS["Cache-Control"]).toBe("private, no-store");
   });
 });

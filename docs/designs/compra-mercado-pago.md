@@ -1,6 +1,6 @@
 # Compra do plano pelo Mercado Pago (prompt 14, parte 1)
 
-Status: **aprovado pelo Guilherme em 20/11/2026** (fatura: ECOAMEMORIAS) · 18/11/2026 · PRD: M1 (onda 2). A impressão (itens 3 e 4 do prompt 14) fica para um prompt separado, por decisão do Guilherme em 18/11.
+Status: **aprovado pelo Guilherme em 20/11/2026** (fatura: ECOAMEMORIAS) · **construído em 22/11/2026** (ver "Construção") · 18/11/2026 · PRD: M1 (onda 2). A impressão (itens 3 e 4 do prompt 14) fica para um prompt separado, por decisão do Guilherme em 18/11.
 
 ## Visão geral
 
@@ -592,3 +592,16 @@ Nenhuma. Texto na fatura: "ECOAMEMORIAS" (Guilherme, 20/11).
 7. **Admin.** Alterar `app/admin/page.tsx` e a tela do admin para a lista *Compras*.
 8. **Documentos.** Alterar `docs/mapa.md` (rotas, `lib/pagamento/`, `compras-conferir`), `decisoes.md` e `decisoes-resumo.md` (P77, P78 e T58; P5 "substituída em parte por P77").
 9. **Fechamento.** Gate de fim de tarefa; aceite na produção com `MP_MODO=teste`.
+
+## Construção (22/11/2026)
+
+A migration foi aplicada como aprovada, sem mudar uma linha. Ajustes feitos no código, sem mudar decisão:
+
+- **E-mail mascarado:** reusa `mascararEmail` de `lib/convite/textos.ts` (`b•••@gmail.com`, 1 letra), em vez de criar outro com 2.
+- **Conta criada por aviso e volta ao mesmo tempo:** a 2ª criação no Auth falha; `processarPagamento` busca a conta de novo uma vez antes de tratar como falha passageira.
+- **Link do pagamento:** credencial de teste antiga (`TEST-…`) usa `sandbox_init_point`; usuário de teste e produção usam `init_point`.
+- **Contestação:** o aviso de `chargebacks` traz o id da contestação, não a compra; o alerta vai com `contestacao-{id}` e a chave do Resend segura as repetições.
+- **Volta "não passou":** *Tentar de novo* abre a mesma cobrança (`mp_link`); sem ela, volta para `/comprar`.
+- **Conferência de 30 min:** processa os pagamentos da compra do mais antigo ao mais novo; falha passageira fica para a rodada seguinte.
+- **Gate de design:** a faixa de teste ocupa a largura toda; a confirmação "O acesso vai para…" some enquanto há sugestão de domínio; o logo do Google entra como ícone do botão (corrigiu também `/entrar`, onde ele ficava em cima do texto).
+- **Alerta do Supabase:** as 4 funções-constante novas em `privado` (`preco_plano_centavos` etc.) não fixam `search_path`. Sem risco (só `select` de um número), mas o linter avisa; correção numa migration de 4 linhas, se aprovada.
