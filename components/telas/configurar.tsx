@@ -346,11 +346,13 @@ function Fase({
   marcadas,
   sugeridas,
   aoAlternar,
+  aoMarcarTodas,
 }: {
   tema: Tema;
   marcadas: string[];
   sugeridas: string[]; // as iniciais: continuam visíveis mesmo desmarcadas
   aoAlternar: (id: string) => void;
+  aoMarcarTodas: (ids: string[], marcar: boolean) => void;
 }) {
   const [aberta, setAberta] = useState(false);
   const [comFe, setComFe] = useState(false);
@@ -362,18 +364,35 @@ function Fase({
     (p) => marcadas.includes(p.id) || sugeridas.includes(p.id),
   );
   const lista = aberta ? todas : visiveisFechada;
+  const todasMarcadas = todas.every((p) => marcadas.includes(p.id));
   const id = `fase-${tema.id}`;
   return (
     <section aria-labelledby={id} className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <h2 id={id} className="text-ui-17 text-tinta font-medium">
           {tema.nome}
         </h2>
-        <span className="text-ui-15 text-tinta-2">
-          {marcadasAqui.length === 1
-            ? "1 marcada"
-            : `${marcadasAqui.length} marcadas`}
-        </span>
+        {aberta ? (
+          // No alto da fase aberta: quem quer todas não precisa rolar a lista inteira.
+          <Botao
+            variante="texto"
+            className="shrink-0"
+            onClick={() =>
+              aoMarcarTodas(
+                todas.map((p) => p.id),
+                !todasMarcadas,
+              )
+            }
+          >
+            {todasMarcadas ? "Desmarcar todas" : "Marcar todas"}
+          </Botao>
+        ) : (
+          <span className="text-ui-15 text-tinta-2">
+            {marcadasAqui.length === 1
+              ? "1 marcada"
+              : `${marcadasAqui.length} marcadas`}
+          </span>
+        )}
       </div>
       {lista.length ? (
         <ul className="flex flex-col gap-2">
@@ -435,6 +454,15 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
     );
   }
 
+  // "Marcar todas" de uma fase aberta (só as que estão na tela, respeitando "Perguntas de fé").
+  function marcarTodas(ids: string[], marcar: boolean) {
+    setMarcadas((m) =>
+      marcar
+        ? [...m, ...ids.filter((x) => !m.includes(x))]
+        : m.filter((x) => !ids.includes(x)),
+    );
+  }
+
   function salvar() {
     iniciar(async () => {
       const r = await acoes.salvarPerguntas({ bancoIds: marcadas, proprias });
@@ -462,7 +490,8 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
       }
     >
       <p className="text-ui-17 text-tinta-2">
-        Uma pergunta por fase da vida, da infância até hoje.
+        Uma pergunta por fase da vida, da infância até hoje. Você escolhe depois
+        o que enviar ao {livro.autor}.
       </p>
       {TEMAS.map((tema) => (
         <Fase
@@ -471,6 +500,7 @@ export function ConfigurarPerguntas({ livro, acoes }: Props) {
           marcadas={marcadas}
           sugeridas={sugeridas}
           aoAlternar={alternar}
+          aoMarcarTodas={marcarTodas}
         />
       ))}
       {proprias.length ? (

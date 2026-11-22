@@ -298,7 +298,7 @@ export function TelaAudios({
           ) : null}
 
           {arquivados.length ? (
-            <details className="border-linha border-t pt-6">
+            <details className="pt-8">
               <summary className="text-ui-17 text-floresta min-h-alvo cursor-pointer font-medium">
                 {arquivados.length === 1
                   ? "1 áudio arquivado"

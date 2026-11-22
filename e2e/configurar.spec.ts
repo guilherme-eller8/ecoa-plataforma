@@ -41,6 +41,27 @@ test.describe("configuração inicial (exemplo)", () => {
     await expect(page.getByRole("checkbox")).toHaveCount(8 + 13);
   });
 
+  test("passo 2: marcar todas de uma fase aberta, e desmarcar", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/configurar-perguntas");
+    await expect(
+      page.getByText("Você escolhe depois o que enviar ao"),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Marcar todas" }),
+    ).toHaveCount(0);
+    await page.getByRole("button", { name: "Ver mais de Infância" }).click();
+    await page.getByRole("button", { name: "Marcar todas" }).click();
+    await expect(
+      page.getByRole("button", { name: "Salvar 20 perguntas" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Desmarcar todas" }).click();
+    await expect(
+      page.getByRole("button", { name: "Salvar 7 perguntas" }),
+    ).toBeVisible();
+  });
+
   test("passo 2: escrever a minha entra na lista", async ({ page }) => {
     await page.goto("/styleguide/configurar-perguntas");
     await page.getByRole("button", { name: "Escrever a minha" }).click();

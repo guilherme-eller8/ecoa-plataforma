@@ -5,6 +5,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Gravar } from "@/components/gravacao/gravar";
+import { PorNaTelaInicial } from "@/components/pwa/por-na-tela-inicial";
 import { classesDoBotao } from "@/components/ui/botao";
 import { DicaPrimeiraVez } from "@/components/ui/dica";
 import { IconeMicrofone } from "@/components/ui/icones";
@@ -55,6 +56,7 @@ export function TelaGravarConversa({
   perguntas,
   acoes,
   perguntaInicial = null,
+  bemvindo = false,
   armazem,
   subir,
   limiteParteS,
@@ -63,6 +65,8 @@ export function TelaGravarConversa({
   perguntas: PerguntaDaTela[]; // para perguntar e enviadas
   acoes: AcoesAudios;
   perguntaInicial?: string | null;
+  /** Acabou de aceitar o convite: oferece pôr o Ecoa na tela inicial. */
+  bemvindo?: boolean;
   armazem?: Armazem;
   subir?: SubirBlob;
   limiteParteS?: number;
@@ -105,6 +109,7 @@ export function TelaGravarConversa({
           <h1 className="font-livro text-livro-28 text-tinta leading-tight">
             Sobre o que vão conversar?
           </h1>
+          {bemvindo ? <PorNaTelaInicial /> : null}
           <ul className="flex flex-col gap-3">
             <li>
               <button

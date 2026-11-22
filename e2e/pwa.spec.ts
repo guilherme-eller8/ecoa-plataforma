@@ -93,3 +93,67 @@ test("Compartilhar: os áudios chegam já escolhidos em Subir áudios", async ({
     page.getByRole("link", { name: "Livro do Dona Lurdes" }),
   ).toBeVisible();
 });
+
+// Quem aceita o convite cai na gravação com a oferta de pôr o Ecoa na tela inicial.
+test.describe("pôr na tela inicial depois do convite", () => {
+  test("iPhone: explica o caminho pelo Compartilhar e some com Entendi", async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    });
+    const page = await ctx.newPage();
+    await page.goto("/styleguide/gravar-conversa-bemvindo");
+    const dica = page.getByText("Adicionar à Tela de Início");
+    await expect(dica).toBeVisible();
+    await page.getByRole("button", { name: "Entendi" }).click();
+    await expect(dica).toHaveCount(0);
+    await page.reload();
+    await expect(page.getByText("Sobre o que vão conversar?")).toBeVisible();
+    await expect(dica).toHaveCount(0);
+    await ctx.close();
+  });
+
+  test("Android: o botão abre o pedido do Chrome", async ({ page }) => {
+    await page.goto("/styleguide/gravar-conversa-bemvindo");
+    await expect(page.getByText("Sobre o que vão conversar?")).toBeVisible();
+    // Sem pedido do navegador (computador), nada aparece.
+    await expect(page.getByText("ponha o Ecoa na tela inicial")).toHaveCount(0);
+    const botao = page.getByRole("button", { name: "Pôr na tela inicial" });
+    // O Chrome manda o pedido depois que a página carrega; repete até a tela estar pronta.
+    await expect(async () => {
+      await page.evaluate(() => {
+        const e = new Event("beforeinstallprompt") as Event & {
+          prompt: () => Promise<void>;
+          userChoice: Promise<{ outcome: string }>;
+        };
+        e.prompt = async () => {
+          (window as unknown as { pediu: boolean }).pediu = true;
+        };
+        e.userChoice = Promise.resolve({ outcome: "accepted" });
+        window.dispatchEvent(e);
+      });
+      await expect(botao).toBeVisible({ timeout: 500 });
+    }).toPass();
+    await botao.click();
+    await expect(page.getByText("ponha o Ecoa na tela inicial")).toHaveCount(0);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { pediu: boolean }).pediu,
+      ),
+    ).toBe(true);
+  });
+
+  test("sem o convite, a gravação não oferece nada", async ({ browser }) => {
+    const ctx = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
+    });
+    const page = await ctx.newPage();
+    await page.goto("/styleguide/gravar-conversa");
+    await expect(page.getByText("Sobre o que vão conversar?")).toBeVisible();
+    await expect(page.getByText("Adicionar à Tela de Início")).toHaveCount(0);
+    await ctx.close();
+  });
+});

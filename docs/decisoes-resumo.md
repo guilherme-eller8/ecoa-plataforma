@@ -84,6 +84,7 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P76** No Folhear, tocar numa foto abre a mesma folha *Ajustar a foto*; o livro é refeito e volta na mesma página; escolhas prontas, não editor livre.
 - **P77** Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS.
 - **P78** Até 3x sem juros (Ecoa paga); 4x a 12x com juros do cliente; configurado no painel.
+- **P79** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo.
 
 ## Técnicas
 
