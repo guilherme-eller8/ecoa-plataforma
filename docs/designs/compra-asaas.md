@@ -1,6 +1,6 @@
 # Compra do plano pelo Asaas (troca do Mercado Pago)
 
-Status: **rascunho para aprovação**, revisado (1 revisor de segurança, 12 achados) · 22/11/2026 · Substitui o provedor de `docs/designs/compra-mercado-pago.md` (prompt 14, parte 1). Tudo o que não está aqui continua como lá.
+Status: **aprovado pelo Guilherme em 22/11/2026** (design e SQL), revisado (1 revisor de segurança, 12 achados) · 22/11/2026 · Substitui o provedor de `docs/designs/compra-mercado-pago.md` (prompt 14, parte 1). Tudo o que não está aqui continua como lá.
 
 ## Visão geral
 
@@ -25,7 +25,7 @@ Dividir a compra entre irmãos **não** entra aqui (P79: teste manual antes). O 
 ## Decisões novas (para aprovar)
 
 - **P80 Compra pelo Asaas Checkout.** Substitui em P77 só o provedor: Mercado Pago → Asaas Checkout (Pix e cartão até 12x, sem boleto). O resto de P77 fica (e-mail na Ecoa vira o responsável, volta com "Pronto", acesso por e-mail). Fatura: o nome configurado na conta Asaas.
-- **P81 Parcelas no Asaas.** Substitui P78. O checkout deixa a pessoa escolher de 1x a 12x. Repassar os juros só a partir da 4x (P78) **não está documentado** no Asaas Checkout. Proposta: **até 12x sem juros**, a Ecoa paga a taxa do cartão e recebe mês a mês (sem antecipar). Se o painel permitir repassar a taxa, voltamos a P78 por configuração, sem código. *(decisão do Guilherme: ver Perguntas)*
+- **P81 Parcelas no Asaas.** Substitui P78. O checkout deixa a pessoa escolher de 1x a 12x. Repassar os juros só a partir da 4x (P78) **não está documentado** no Asaas Checkout. Proposta: **até 12x sem juros**, a Ecoa paga a taxa do cartão e recebe mês a mês (sem antecipar). Se o painel permitir repassar a taxa, voltamos a P78 por configuração, sem código. *(aprovado com o design; confirmar no painel do Asaas)*
 - **T59 Pagamento no Asaas.** Substitui T58 no que é do provedor:
   - `ASAAS_API_KEY`, `ASAAS_WEBHOOK_TOKEN` (32 a 255 caracteres, nunca a chave da API), `ASAAS_WEBHOOK_TOKEN_ANTERIOR` (opcional, para trocar o token sem janela de falha) e `ASAAS_AMBIENTE` (`sandbox` ou `producao`; faixa "Modo de teste" no sandbox).
   - O token do aviso não protege o corpo nem impede repetição. Por isso o aviso só usa do corpo a referência da compra; o estado vem sempre da API; e cada compra é consultada no máximo 1 vez a cada 3 s (`compra_reservar_conferencia`, a mesma trava da volta, que usa 10 s). Um token vazado permite no máximo 1 consulta por compra a cada 3 s; nunca cria livro.

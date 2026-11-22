@@ -82,9 +82,11 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P74** Amostra = começo da história em até 2 páginas (livro aberto); o botão mostra o andamento da voz com a folha fechada; voz atrasada avisa o admin; título do capítulo sem justificar.
 - **P75** Ajustar a foto da história: cortar (formato, aproximar, arrastar) e, na 1ª foto, junto da história ou página inteira ao lado; recorte e posição em `story_photos`, por uso.
 - **P76** No Folhear, tocar numa foto abre a mesma folha *Ajustar a foto*; o livro é refeito e volta na mesma página; escolhas prontas, não editor livre.
-- **P77** Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS.
-- **P78** Até 3x sem juros (Ecoa paga); 4x a 12x com juros do cliente; configurado no painel.
+- **P77** Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS. Substituída em parte por P80.
+- ~~**P78**~~ → P81.
 - **P79** Dividir a compra entre irmãos: teste manual no Asaas nas próximas 10 vendas (sucesso ≥ 3; morte ≤ 1 ou metade pendurada > 7 dias); sem código até o resultado.
+- **P80** Compra pelo Asaas Checkout (Pix e cartão até 12x, sem boleto, 60 min); o resto de P77 fica.
+- **P81** Até 12x sem juros (Ecoa paga a taxa, recebe mês a mês); P78 volta por configuração se o painel permitir.
 
 ## Técnicas
 
@@ -145,4 +147,5 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T55** Evals 1A: livro ativo = ação de criação de membro ou autor em 7 dias (sem `entrou` nem família); ativação = 1ª revisada em 7 dias; abaixo de 5, "amostra pequena"; somas no banco, linhas em blocos; alertas 1 por condição e dia.
 - **T56** Pedido à fila não falha calado (`pedirRecorte` tenta 2 vezes e grava `erro_servidor`); prévias em JPEG do PDF real, só as páginas pedidas, QR provisório tracejado; Folhear em memória por hash, sem migration.
 - **T57** Preview da Vercel não atende `/api/inngest` (404): nunca vira o app de produção no Inngest; repetição do Resend não é falha.
-- **T58** `payments` só pela chave secreta; estado sempre da API do Mercado Pago; aviso, volta e conferência de 30 min na mesma função; 1 livro por compra; alerta 1 vez; produção em modo de teste até o CNPJ.
+- **T58** `payments` só pela chave secreta; estado sempre da API do Mercado Pago; aviso, volta e conferência de 30 min na mesma função; 1 livro por compra; alerta 1 vez; produção em modo de teste até o CNPJ. Substituída em parte por T59.
+- **T59** Asaas: token do aviso (+ anterior) e trava de consulta por compra (3 s aviso, 10 s volta); estado sempre da API, paginado; parcelado só com todas pagas; `valor_pago_centavos`; 200 depois de registrar; varredura diária das aprovadas.
