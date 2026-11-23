@@ -147,9 +147,11 @@ Uma função só, `processarPagamento(asaasId, { compraEsperada? })`, chamada pe
    1. valor somado = valor da compra e `billingType` em (`PIX`, `CREDIT_CARD`); se não → `reter` com `valor_diferente` ou `meio_inesperado`, sem criar conta;
    2. compra ainda sem livro → `contaParaEmail(compra.email)` (`lib/acesso.ts`); `recusada` → `reter` com `conta_recusada`; `erro` → falha passageira;
    3. `compra_registrar(…, 'aprovar', …)`.
-6. Compra aprovada e `acesso_enviado_em` vazio → `enviarAcesso(livro, db, { idempotencyKey: "compra:{id}" })`; deu certo (ou `repetido`) → `compra_marcar_acesso`.
-7. Só com `novo = true`: `registrarEvento({ quem: null, papel: "sistema", acao: "plano_comprado", livro, detalhes: { meio, parcelas } })`. Nunca nome, CPF ou e-mail.
-8. `alerta` devolvido → `avisarAdminsDaCompra({ compra, alerta })`, chave `compra:{id}:{alerta}:{admin}`.
+6. Compra aprovada e `acesso_enviado_em` vazio → `enviarAcesso(livro, db, { idempotencyKey: "compra:{id}" })` (3º parâmetro **novo e opcional** em `lib/acesso.ts:56`, repassado a `enviarEmail`, que já aceita a chave e devolve `repetido`; o reenvio manual do admin segue sem chave); deu certo (ou `repetido`) → `compra_marcar_acesso`.
+7. Só com `novo = true`: `registrarEvento({ quem: null, papel: "sistema", acao: "plano_ativado", livro, detalhes: { origem: "compra", meio, parcelas } })`. Reusa a ação que o admin já grava (`app/admin/acoes.ts:43-73`), para aderência e evals (`lib/aderencia/calculo`) contarem compras sem mudança; o `origem` separa compra de ativação à mão. Nunca nome, CPF ou e-mail.
+8. `alerta` devolvido → `avisarAdminsDaCompra({ compra, alerta })`, novo em `lib/email/alerta.ts`, reusando `adminsParaAvisar()`, com modelo `emailAlertaCompra` em `lib/email/modelos.ts`; chave `compra:{id}:{alerta}:{admin}`.
+
+A ordem é a mesma da ativação do admin (`contaParaEmail` → plano → evento → e-mail), mas o livro nasce dentro de `compra_registrar`, que trava a compra; por isso `processar.ts` não chama a ação do admin, só as mesmas peças.
 
 **Consulta pela tela e pela volta:** antes de chamar a API, `rpc("compra_pode_consultar", { p_compra })` grava `consultado_em` e só devolve verdadeiro se a última consulta tiver mais de 20 s (atômico). A página de Pix lê o estado do banco a cada 4 s e pede a consulta à API no máximo a cada 20 s. A URL não vira amplificador de chamadas ao Asaas.
 
@@ -160,12 +162,12 @@ Uma função só, `processarPagamento(asaasId, { compraEsperada? })`, chamada pe
   - `PAYMENT_*` → `processarPagamento(payment.id)`;
   - `CHECKOUT_PAID` → `pagamentosDoCheckout(checkout.id)` → `processarPagamento` de cada um;
   - outro evento → nada.
-- **Sempre 200** com o token certo. Falha no processamento → `registrarEvento` `erro_servidor` (rota-padrão, só ids) e 200. Tempo máximo do processamento: 8 s (o Asaas espera 10 s); passou disso, 200 e a conferência termina o trabalho.
+- **Sempre 200** com o token certo. Falha no processamento → `erro_servidor` no formato existente `{ rota: "/api/asaas", tipo, digest }` (como `lib/pipeline/disparo.ts:25`), que já aparece agrupado em `/admin/erros`, e 200. Tempo máximo do processamento: 8 s (o Asaas espera 10 s); passou disso, 200 e a conferência termina o trabalho.
 - Aviso repetido ou antigo não faz mal: o estado vem da API e o banco é idempotente.
 
 ### Conferência a cada 10 min (`lib/inngest/compras.ts`)
 
-Função Inngest `compras-conferir` (cron `*/10 * * * *`, só produção, T57), lendo `compras_para_conferir()`:
+Função Inngest `compras-conferir` (`triggers: [cron("*/10 * * * *")]`, `retries` e `checkpointing: false` como as outras crons), no array `funcoes` de `lib/inngest/funcoes.ts`. "Só produção" vem de `inngestAtendeAqui` (T57), sem condição na função. Lê `compras_para_conferir()`:
 
 - `criado` ou `pendente` com Pix ou Checkout, de 5 min a 48 h → Pix: `processarPagamento(asaas_pix_id)`; Checkout: `pagamentosDoCheckout` → `processarPagamento` de cada;
 - `aprovado` com `acesso_enviado_em` vazio → tenta o e-mail de novo.
@@ -200,7 +202,7 @@ Os passos devolvem só ids (T36). Cobre aviso perdido, fila pausada, app fora do
 - **Minimização:** a Ecoa guarda só e-mail, valor, meio, parcelas, estado e ids do Asaas. Nome e CPF passam pela ação do servidor direto para o Asaas e não ficam em banco, log, evento, Inngest nem `localStorage`.
 - **Finalidade e transparência:** a frase ao lado do CPF diz para que serve e que não fica com a Ecoa. O Asaas é o meio de pagamento (instituição de pagamento autorizada pelo Banco Central) e trata nome e CPF para emitir a cobrança; entra na lista de terceiros da `/privacidade` (prompt 15).
 - **Sem comunicação do Asaas:** `notificationDisabled: true` em todo cliente criado; quem fala com o comprador é a Ecoa.
-- **Retenção:** compras não pagas há mais de 90 dias perdem o e-mail (job do prompt 15, que já cuida da retenção). Registrado aqui para não esquecer.
+- **Retenção:** compras não pagas (`criado`, `pendente`, `recusado`) há mais de 90 dias são apagadas. Não existe limpeza assim hoje: entra como passo `compras-vencidas` na `varreduraFn` (`lib/inngest/funcoes.ts`, ao lado de `mensagens-rascunhos`), chamando `servico_apagar_compras_vencidas()` (no SQL), com teste. Compras aprovadas, retidas e estornadas ficam (contabilidade e contestação).
 - **Erros:** `lib/pagamento/asaas.ts` nunca registra o corpo da resposta nem os parâmetros; só status e códigos.
 
 ### Variáveis
@@ -256,6 +258,7 @@ create function privado.preco_plano_centavos() returns integer language sql immu
 create function privado.duracao_plano_meses() returns integer language sql immutable as $$ select 12 $$;
 create function privado.max_compras_por_email_dia() returns integer language sql immutable as $$ select 5 $$;
 create function privado.minutos_compra_aberta() returns integer language sql immutable as $$ select 30 $$;
+create function privado.dias_retencao_compra() returns integer language sql immutable as $$ select 90 $$;
 
 -- E-mail para o teto: no Gmail, sem pontos e sem +algo.
 create function privado.email_canonico(p_email text) returns text
@@ -270,7 +273,7 @@ $$;
 revoke all on function
   privado.preco_plano_centavos(), privado.duracao_plano_meses(),
   privado.max_compras_por_email_dia(), privado.minutos_compra_aberta(),
-  privado.email_canonico(text)
+  privado.dias_retencao_compra(), privado.email_canonico(text)
   from public, anon, authenticated;
 
 create function public.compra_criar(p_email text)
@@ -471,6 +474,19 @@ language sql stable security definer set search_path = '' as $$
   limit 100
 $$;
 
+-- LGPD: compra que não virou pagamento não guarda o e-mail para sempre (varredura diária).
+create function public.servico_apagar_compras_vencidas()
+returns integer language plpgsql security definer set search_path = '' as $$
+declare
+  v_n integer;
+begin
+  delete from public.payments
+  where estado in ('criado', 'pendente', 'recusado') and book_id is null
+    and criado_em < now() - make_interval(days => privado.dias_retencao_compra());
+  get diagnostics v_n = row_count;
+  return v_n;
+end $$;
+
 revoke all on function
   public.compra_criar(text),
   public.compra_guardar_pix(uuid, text, text),
@@ -479,7 +495,8 @@ revoke all on function
   public.compra_registrar(uuid, text, text, integer, text, integer, uuid, text),
   public.compra_marcar_acesso(uuid),
   public.admin_listar_compras(),
-  public.compras_para_conferir()
+  public.compras_para_conferir(),
+  public.servico_apagar_compras_vencidas()
   from public, anon, authenticated;
 grant execute on function
   public.compra_criar(text),
@@ -489,7 +506,8 @@ grant execute on function
   public.compra_registrar(uuid, text, text, integer, text, integer, uuid, text),
   public.compra_marcar_acesso(uuid),
   public.admin_listar_compras(),
-  public.compras_para_conferir()
+  public.compras_para_conferir(),
+  public.servico_apagar_compras_vencidas()
   to service_role;
 ```
 
@@ -498,6 +516,7 @@ grant execute on function
 `supabase/reversao/20261130120000_compra_asaas.down.sql`
 
 ```sql
+drop function public.servico_apagar_compras_vencidas();
 drop function public.compras_para_conferir();
 drop function public.admin_listar_compras();
 drop function public.compra_marcar_acesso(uuid);
@@ -507,6 +526,7 @@ drop function public.compra_guardar_checkout(uuid, text, timestamptz);
 drop function public.compra_guardar_pix(uuid, text, text);
 drop function public.compra_criar(text);
 drop function privado.email_canonico(text);
+drop function privado.dias_retencao_compra();
 drop function privado.minutos_compra_aberta();
 drop function privado.max_compras_por_email_dia();
 drop function privado.duracao_plano_meses();
@@ -528,9 +548,12 @@ A reversão apaga o histórico de compras. Antes de reverter em produção, expo
   - valor diferente → `retido`, nenhum livro, alerta 1 vez;
   - `recusado` depois de `aprovado` não muda nada; estorno antes do aprovar → `estornado` e o aprovar seguinte não cria livro;
   - `reter` sem alerta → erro; segunda compra aprovada em 24 h → `segunda_compra_24h`;
+  - `servico_apagar_compras_vencidas` apaga `criado` de 91 dias e mantém aprovada, retida e a de 89 dias;
   - `compras_para_conferir` acha pendente com Pix, criado com Checkout e aprovado sem acesso; ignora `criado` sem Pix nem Checkout.
-- **RLS** (`rls.test.ts`): as 8 funções novas no array `chamadas`; `payments` na lista "anon não tem acesso a nenhuma tabela"; a reversão em `reverter()`.
-- **Config** (`config-banco.test.ts`): preço, duração, teto e minutos. Frases em `lib/erros-banco.ts` para `compra_teto_email`, `compra_inexistente`, `compra_sem_responsavel`, `compra_acao_invalida`.
+- **RLS** (`rls.test.ts`): as funções novas no array `chamadas` (`:299-310`); `payments` na lista de `:275-289`. `reverter()` (`supabase/tests/banco.ts:26`) não muda: lê a pasta `supabase/reversao/` sozinha; o `.down.sql` derruba `payments` antes do tipo, e nada depende de `payments`.
+- **Config** (`config-banco.test.ts`, tabela `it.each`): `["preco_plano_centavos", config.PRECO_PLANO * 100]`, `["duracao_plano_meses", config.DURACAO_PLANO_MESES]`, `["max_compras_por_email_dia", config.MAX_COMPRAS_POR_EMAIL_DIA]`, `["minutos_compra_aberta", config.MINUTOS_COMPRA_ABERTA]`, `["dias_retencao_compra", config.DIAS_RETENCAO_COMPRA]`. O teste de frases (`:84-95`) pega os `raise exception 'compra_*'` sozinho; as frases vão em `lib/erros-banco.ts`.
+- **Rotas** (`lib/rotas.test.ts`): `/comprar/{uuid}` privada, `/comprar` pública.
+- **Alerta** (`lib/email/alerta.test.ts`, `modelos.test.ts`): 1 e-mail por admin e alerta; o modelo não leva e-mail nem nome do comprador, só o id da compra e o tipo do alerta.
 - **Puras** (Vitest): `tokenConfere` (certo, errado, vazio, outro tamanho → falso sem lançar); `acaoDoAsaas` (todos os status, parcelas misturadas, `refunds` parcial); `cpfValido` (válidos, dígito errado, 11 iguais); soma de parcelas em centavos (155,67 + 155,67 + 155,66 = 46700); `mascararEmail`; `sugerirDominio`; corpo do Checkout (`maxInstallmentCount: 3`, só `CREDIT_CARD`, `externalReference`, callbacks).
 - **Processar** (Asaas, banco e e-mail falsos): aviso e volta ao mesmo tempo → 1 livro e 1 e-mail; 3 avisos de parcelas do mesmo parcelamento → 1 livro, sem alerta; e-mail falhou → a próxima chamada envia; Pix de outra compra na URL → nada; `externalReference` diferente → retido; pagamento sem compra → nada.
 - **Aviso** (`app/api/asaas/route.test.ts`): token errado → 401; corpo com campo desconhecido → 200; processamento que lança → 200 e `erro_servidor`; `lib/erros-servidor.test.ts` com caso para `/api/asaas`.
@@ -601,12 +624,20 @@ Pendente.
 
 ## Plano de implementação
 
-1. **Banco.** Migration, reversão e `supabase/tests/compra.test.ts`; alterar `rls.test.ts`, `config-banco.test.ts` e `lib/erros-banco.ts` juntos.
-2. **Config e tipos.** `lib/config.ts`: `MAX_COMPRAS_POR_EMAIL_DIA`, `MINUTOS_COMPRA_ABERTA`, `MAX_PARCELAS_CARTAO = 3`, `MINUTOS_CHECKOUT = 60`. Tipos gerados em arquivo; em `lib/supabase/tipos.ts` só `payments`, `pagamento_estado` e as 8 funções.
-3. **Pagamento.** `lib/env-pagamento.ts`; `lib/pagamento/`: `asaas.ts` (cliente), `estado.ts` (puras: `acaoDoAsaas`, `tokenConfere`, `cpfValido`, `mascararEmail`, `sugerirDominio`, centavos), `processar.ts` e os testes.
-4. **Acesso, alertas e eventos.** `enviarAcesso` com `idempotencyKey`; `avisarAdminsDaCompra` e o modelo de e-mail; `plano_comprado` em `lib/eventos-acoes.ts` e "Plano comprado" em `lib/aderencia/rotulos.ts`.
-5. **Rotas e fila.** `app/api/asaas/route.ts`, `lib/inngest/compras.ts` e o registro; `proxy.ts` (matcher), `lib/rotas.ts` (`PRIVADAS`), `lib/erros-servidor.test.ts`.
-6. **Telas.** `app/comprar/` (página e `acoes.ts`), `app/comprar/[compra]/` (página e `acoes.ts`), `tela-comprar.tsx`, `tela-compra.tsx`, `lib/exemplos/prompt14.ts`, styleguide e `scripts/inspecionar-telas.mjs`; gate de design.
-7. **Admin.** Lista *Compras*.
-8. **Documentos.** `docs/mapa.md`; `decisoes.md` e `decisoes-resumo.md` (P83, P84, T60; P77 "substituída em parte por P83", P78 por P84, T58 por T60); `compra-mercado-pago.md` ganha "Substituído por `compra-asaas.md`" no status.
+1. **Banco.**
+   - Create: `supabase/migrations/20261130120000_compra_asaas.sql`, `supabase/reversao/20261130120000_compra_asaas.down.sql`, `supabase/tests/compra.test.ts`.
+   - Modify (juntos, senão o teste fica vermelho): `supabase/tests/rls.test.ts`, `supabase/tests/config-banco.test.ts`, `lib/erros-banco.ts`.
+2. **Config e tipos.**
+   - Modify `lib/config.ts`: `MAX_COMPRAS_POR_EMAIL_DIA = 5`, `MINUTOS_COMPRA_ABERTA = 30`, `DIAS_RETENCAO_COMPRA = 90` (os três com o comentário "espelhado no banco"), `MAX_PARCELAS_CARTAO = 3`, `MINUTOS_CHECKOUT = 60`. Preço e duração já existem (`PRECO_PLANO`, `DURACAO_PLANO_MESES`).
+   - Modify `lib/supabase/tipos.ts` **à mão** (padrão do `docs/mapa.md`): `Tables.payments`, `Enums.pagamento_estado` e as funções novas, com o `returns table` de `compra_registrar`.
+3. **Pagamento.** Create `lib/env-pagamento.ts`, `lib/pagamento/asaas.ts`, `lib/pagamento/estado.ts` (puras), `lib/pagamento/processar.ts` e os `*.test.ts`.
+4. **Acesso, alertas e eventos.** Modify `lib/acesso.ts` (3º parâmetro opcional de `enviarAcesso`), `lib/email/alerta.ts` (`avisarAdminsDaCompra`), `lib/email/modelos.ts` (+ teste). Sem ação nova de evento (`plano_ativado` com `origem`).
+5. **Rotas e fila.**
+   - Create `app/api/asaas/route.ts` (+ teste) e `lib/inngest/compras.ts`.
+   - Modify `lib/inngest/funcoes.ts` (array `funcoes` e passo `compras-vencidas` na varredura), `proxy.ts` (`|api/asaas` no regex do `matcher`, `:149`, e o comentário de `:148`), `lib/rotas.ts` + `lib/rotas.test.ts`, `lib/erros-servidor.test.ts`.
+6. **Telas.**
+   - Create `app/comprar/page.tsx` + `acoes.ts`, `app/comprar/[compra]/page.tsx` + `acoes.ts`, `components/telas/tela-comprar.tsx`, `components/telas/tela-compra.tsx`, `lib/exemplos/prompt14.ts`.
+   - Modify o registro do styleguide (as telas entram na vitrine; o `scripts/inspecionar-telas.mjs` só muda se não descobrir pelo styleguide, conferido na construção). Depois, o gate de design.
+7. **Admin.** Modify `app/admin/page.tsx` e a tela do admin para a lista *Compras* (componente nomeado na construção, ao lado da lista de livros).
+8. **Documentos.** Modify `docs/mapa.md`, `decisoes.md` e `decisoes-resumo.md` (P83, P84, T60; P77 "substituída em parte por P83", P78 por P84, T58 por T60); `compra-mercado-pago.md` ganha "Substituído por `compra-asaas.md`" no status.
 9. **Fechamento.** Gate de fim de tarefa; aceite na produção com `ASAAS_MODO=sandbox`.
