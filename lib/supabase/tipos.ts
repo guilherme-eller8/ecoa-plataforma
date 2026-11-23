@@ -174,9 +174,13 @@ export type Database = {
           chave_versao: number;
           criado_em: string;
           criado_por: string | null;
-          email: string;
+          dono_hash: string | null;
+          email: string | null;
+          email_definido_em: string | null;
+          email_trocas: number;
           expira_em: string;
           id: string;
+          nome: string | null;
           revogado_em: string | null;
           token_hash: string;
         };
@@ -187,9 +191,13 @@ export type Database = {
           chave_versao: number;
           criado_em?: string;
           criado_por?: string | null;
-          email: string;
+          dono_hash?: string | null;
+          email?: string | null;
+          email_definido_em?: string | null;
+          email_trocas?: number;
           expira_em: string;
           id: string;
+          nome?: string | null;
           revogado_em?: string | null;
           token_hash: string;
         };
@@ -1776,15 +1784,47 @@ export type Database = {
         };
         Returns: undefined;
       };
+      // Convite pelo nome (P81, T59).
+      servico_criar_convite_nome: {
+        Args: {
+          p_chave_versao: number;
+          p_id: string;
+          p_livro: string;
+          p_nome: string;
+          p_token_hash: string;
+          p_usuario: string;
+        };
+        Returns: undefined;
+      };
+      servico_pode_definir_email: {
+        Args: {
+          p_dono_hash: string | null;
+          p_email: string;
+          p_token_hash: string;
+        };
+        Returns: string;
+      };
+      servico_definir_email_convite: {
+        Args: { p_dono_hash: string; p_email: string; p_token_hash: string };
+        Returns: string;
+      };
+      definir_e_aceitar_convite: {
+        Args: { p_dono_hash?: string | null; p_token_hash: string };
+        Returns: { definiu: boolean; livro_id: string }[];
+      };
       servico_ler_convite: {
-        Args: { p_token_hash: string };
+        Args: { p_dono_hash?: string | null; p_token_hash: string };
         Returns: {
           autor: string | null;
           book_id: string;
           convite_id: string;
           criado_por: string | null;
-          email: string;
+          e_dono: boolean;
+          email: string | null;
+          email_definido: boolean;
           estado: string;
+          nome: string | null;
+          trocas_restantes: number;
         }[];
       };
       meus_convites: {

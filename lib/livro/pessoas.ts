@@ -1,4 +1,5 @@
 import "server-only";
+import { mensagemConviteNome, nomeSeguro } from "@/lib/convite/textos";
 import { tokenDoLink, urlConvite } from "@/lib/links";
 import { clienteSessao } from "@/lib/supabase/servidor";
 import { mensagemConvite } from "@/lib/whatsapp";
@@ -6,17 +7,29 @@ import type { ConviteDaTela, MembroDaTela } from "./tipos";
 
 /** Mensagem do convite pendente para o WhatsApp: o token é derivado de novo pelo HMAC (T25). */
 export function conviteDaTela(
-  c: { id: string; email: string; expira_em: string; chave_versao: number },
+  c: {
+    id: string;
+    nome: string | null;
+    email: string | null;
+    expira_em: string;
+    chave_versao: number;
+  },
   autor: string,
 ): ConviteDaTela {
+  const link = urlConvite(tokenDoLink("convite", c.id, c.chave_versao));
   return {
     id: c.id,
+    nome: c.nome,
     email: c.email,
     expiraEm: c.expira_em,
-    mensagem: mensagemConvite({
-      autor,
-      link: urlConvite(tokenDoLink("convite", c.id, c.chave_versao)),
-    }),
+    // Convite pelo nome (P81) chama pelo nome; os antigos, por e-mail, seguem com o texto de P59.
+    mensagem: c.nome
+      ? mensagemConviteNome({
+          nome: c.nome,
+          autor: nomeSeguro(autor) || autor,
+          link,
+        })
+      : mensagemConvite({ autor, link }),
   };
 }
 
@@ -37,7 +50,7 @@ export async function pessoasDoLivro(
     ehResponsavel
       ? db
           .from("book_invites")
-          .select("id, email, expira_em, chave_versao")
+          .select("id, nome, email, expira_em, chave_versao")
           .eq("book_id", livroId)
           .is("aceito_em", null)
           .is("revogado_em", null)

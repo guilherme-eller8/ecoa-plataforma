@@ -8,8 +8,7 @@ import { Campo, CampoTexto } from "@/components/ui/campo";
 import { FolhaInferior } from "@/components/ui/folha-inferior";
 import { Seletor } from "@/components/ui/seletor";
 import { UploadFotos } from "@/components/fotos/upload-fotos";
-import { Copiar } from "@/components/ui/copiar";
-import { FormConvite } from "@/components/telas/tela-pessoas";
+import { FormConvite, MandarConvite } from "@/components/telas/tela-pessoas";
 import { TEXTO_PERGUNTA_MAX } from "@/lib/config";
 import {
   passosDoPapel,
@@ -91,28 +90,23 @@ export function ConfigurarAjuda({
         Um irmão ou parente pode gravar e editar com você.
       </p>
       {convidados.length ? (
-        <ul className="flex flex-col gap-2">
+        <ul className="flex flex-col gap-4">
           {convidados.map((c) => (
-            <li
-              key={c.id}
-              className="text-ui-17 text-tinta flex flex-wrap items-center gap-3"
-            >
-              <span className="[overflow-wrap:anywhere]">
-                Convite para {c.email}
+            <li key={c.id} className="flex flex-col gap-2">
+              <span className="text-ui-17 text-tinta [overflow-wrap:anywhere]">
+                Convite para {c.nome ?? c.email}
               </span>
-              <Copiar texto={c.mensagem} rotulo="Copiar mensagem" />
+              <MandarConvite convite={c} />
             </li>
           ))}
         </ul>
-      ) : enviado ? (
-        <p className="text-ui-17 text-tinta">Convite enviado.</p>
       ) : null}
       <FormConvite
         convidar={convidar}
-        rotulo={enviado ? "Convidar mais alguém" : "Enviar convite"}
+        rotulo={enviado ? "Convidar mais alguém" : "Criar convite"}
         aoConvidar={(c) => {
           setEnviado(true);
-          if (c) setConvidados((cs) => [...cs, c]);
+          setConvidados((cs) => [...cs, c]);
         }}
       />
     </Moldura>

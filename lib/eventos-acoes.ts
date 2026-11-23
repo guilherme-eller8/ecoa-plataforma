@@ -59,6 +59,7 @@ export const ACOES = [
   "convidou", // { convite_id }
   "convite_cancelado", // { convite_id }
   "convite_aceito", // só o banco grava (aceitar_convite) { convite_id }
+  "convite_email_definido", // só o banco grava (convite pelo nome, P81) { convite_id }
   "removeu_membro", // só o banco grava { user_id }
   "saiu_do_livro", // só o banco grava { user_id }
   "compartilhou_historia", // { story_id }

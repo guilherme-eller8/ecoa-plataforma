@@ -68,13 +68,20 @@ async function usuario(email: string, confirmado = true) {
   return id;
 }
 
+// O convite por e-mail saiu de uso (P81): o service_role perdeu o grant em
+// 20261202120000_convite_pelo_nome. Os convites antigos continuam valendo, então a
+// regra segue testada chamando a função como dona do banco.
 async function convidar(livro: string, por: string, email: string) {
   const id = crypto.randomUUID();
-  const r = await servico(
-    `select public.servico_criar_convite($1, $2, $3, $4, $5, 1::smallint)`,
-    [livro, por, id, email, hash(id)],
-  );
-  return { id, erro: r.erro };
+  try {
+    await sql(
+      `select public.servico_criar_convite($1, $2, $3, $4, $5, 1::smallint)`,
+      [livro, por, id, email, hash(id)],
+    );
+    return { id, erro: undefined };
+  } catch (e) {
+    return { id, erro: (e as Error).message };
+  }
 }
 
 async function historiaPronta(livro: string) {
@@ -430,11 +437,12 @@ describe("revisão de segurança (v2)", () => {
       "limite_convites",
     );
     // A pré-checagem dá o mesmo erro, sem criar nada (o servidor chama antes de criar a conta).
-    const pre = await servico(
-      `select public.servico_pode_convidar($1, $2, 'ivo@exemplo.com')`,
-      [livro, hugo],
-    );
-    expect(pre.erro).toBe("limite_convites");
+    await expect(
+      sql(`select public.servico_pode_convidar($1, $2, 'ivo@exemplo.com')`, [
+        livro,
+        hugo,
+      ]),
+    ).rejects.toThrow("limite_convites");
   });
 
   it("convite cancelado, vencido ou de quem deixou de ser responsável não vale", async () => {

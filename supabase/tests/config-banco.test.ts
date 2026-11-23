@@ -69,6 +69,7 @@ describe("lib/config.ts x banco", () => {
     ["max_convites_dia", config.MAX_CONVITES_DIA],
     ["max_convites_por_email_dia", config.MAX_CONVITES_POR_EMAIL_DIA],
     ["convite_validade_dias", config.CONVITE_VALIDADE_DIAS],
+    ["convite_trocas_email", config.CONVITE_TROCAS_EMAIL],
     ["palavras_por_pagina", config.PALAVRAS_POR_PAGINA_ESTIMADA],
     ["max_itens_livro", config.MAX_ITENS_LIVRO],
     ["max_publicacoes_dia", config.MAX_PUBLICACOES_DIA],

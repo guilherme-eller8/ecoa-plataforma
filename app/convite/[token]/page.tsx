@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import {
-  TelaConvite,
-  type EstadoTelaConvite,
-} from "@/components/telas/tela-convite";
+import { estadoDaTelaConvite } from "@/lib/convite/estado";
 import { lerConvite } from "@/lib/convite/servidor";
 import { usuarioAtual } from "@/lib/sessao";
 import { sair } from "../../acoes-sessao";
-import { aceitarConvite } from "../acoes";
+import {
+  aceitarPeloLink,
+  definirEmailDoConvite,
+  receberLinkDoConvite,
+} from "../acoes";
+import { ConviteCliente } from "./convite-cliente";
 
 // Sem cache nem índice: o proxy põe no-store, noindex e no-referrer (T47).
 export const metadata: Metadata = {
@@ -32,21 +34,17 @@ async function Convite({ token }: { token: string }) {
     lerConvite(token),
     usuarioAtual(),
   ]);
-  let estado: EstadoTelaConvite;
-  if (convite.estado === "invalido") estado = { tipo: "invalido" };
-  else if (!usuario)
-    estado = { tipo: "entrar", quem: convite.quem, autor: convite.autor };
-  else if (usuario.email?.toLowerCase() !== convite.emailConvidado)
-    estado = { tipo: "outro_email", emailMascarado: convite.emailMascarado };
-  else estado = { tipo: "aceitar", quem: convite.quem, autor: convite.autor };
+  // Só o estado sai daqui: o e-mail do convite vai mascarado (lib/convite/estado.ts).
+  const estado = estadoDaTelaConvite(convite, usuario?.email ?? null);
+  const valido = convite.estado === "pendente";
   return (
-    <TelaConvite
+    <ConviteCliente
       estado={estado}
-      aceitar={
-        convite.estado === "pendente"
-          ? aceitarConvite.bind(null, convite.conviteId)
-          : undefined
+      definirEmail={
+        valido ? definirEmailDoConvite.bind(null, token) : undefined
       }
+      receberLink={valido ? receberLinkDoConvite.bind(null, token) : undefined}
+      aceitar={valido ? aceitarPeloLink.bind(null, token) : undefined}
       sair={sair}
     />
   );

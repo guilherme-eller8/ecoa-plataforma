@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { emailAcesso, emailConvite, emailResumo } from "./modelos";
+import {
+  emailAcesso,
+  emailConvite,
+  emailConviteDefinido,
+  emailResumo,
+} from "./modelos";
 
 const url = "https://app.ecoa-memorias.com.br/entrar";
 
@@ -120,5 +125,31 @@ describe("emailFalha (aviso ao admin)", () => {
     expect(e.texto).toContain("Livro 0f3a9c1e.");
     expect(e.texto).toContain("https://app.exemplo/admin");
     expect(e.html).toContain("Abrir o admin");
+  });
+});
+
+describe("emailConviteDefinido", () => {
+  it("assunto fixo, nome, e-mail completo e o caminho para cancelar", () => {
+    const e = emailConviteDefinido({
+      nome: "Maria",
+      apelido: "Jair",
+      email: "maria.souza@gmail.com",
+      urlPessoas: "https://app/livro/1/pessoas",
+    });
+    expect(e.assunto).toBe("Alguém vai entrar no seu livro de memórias");
+    expect(e.texto).toContain(
+      "Maria vai entrar no livro de Jair como maria.souza@gmail.com.",
+    );
+    expect(e.texto).toContain("Não é Maria? Cancele o convite em Quem ajuda.");
+    expect(e.html).toContain("https://app/livro/1/pessoas");
+  });
+  it("escapa o e-mail no HTML", () => {
+    const e = emailConviteDefinido({
+      nome: "Maria",
+      apelido: "",
+      email: "a<b>@x.com",
+      urlPessoas: "u",
+    });
+    expect(e.html).not.toContain("<b>");
   });
 });

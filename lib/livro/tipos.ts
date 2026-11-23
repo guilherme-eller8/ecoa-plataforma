@@ -207,15 +207,14 @@ export type MembroDaTela = {
 
 export type ConviteDaTela = {
   id: string;
-  email: string;
+  nome: string | null; // convite pelo nome (P81); null nos antigos, por e-mail
+  email: string | null; // null até o convidado definir o próprio e-mail
   expiraEm: string;
   mensagem: string; // pronta para o WhatsApp, com o link /convite/{token}
 };
 
 export type AcoesPessoas = {
-  convidar: (
-    email: string,
-  ) => Promise<Resposta<{ convite: ConviteDaTela | null }>>;
+  convidar: (nome: string) => Promise<Resposta<{ convite: ConviteDaTela }>>;
   cancelarConvite: (convite: string) => Promise<Resposta>;
   remover: (usuario: string) => Promise<Resposta>;
   sair: () => Promise<Resposta>;

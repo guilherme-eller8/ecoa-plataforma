@@ -13,11 +13,28 @@ test.describe("Quem ajuda", () => {
     ).toBeVisible();
     await expect(page.getByRole("button", { name: "Convidar" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Remover" })).toBeVisible();
-    await expect(page.getByText("rafael@exemplo.com")).toBeVisible();
+    await expect(page.getByText("Ainda não abriu o convite")).toBeVisible();
+    await expect(
+      page.getByText("carla.souza@gmail.com, ainda não entrou"),
+    ).toBeVisible();
+  });
+
+  test("convidar pede só o nome e a folha manda pelo WhatsApp", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/pessoas");
     await page.getByRole("button", { name: "Convidar" }).click();
-    await page.getByLabel("E-mail de quem vai ajudar").fill("tia@exemplo.com");
-    await page.getByRole("button", { name: "Enviar convite" }).click();
-    await expect(page.getByText("tia@exemplo.com")).toBeVisible();
+    const folha = page.getByRole("dialog", { name: "Convidar" });
+    await expect(folha.getByRole("textbox")).toHaveCount(1);
+    await folha.getByLabel("Nome de quem vai ajudar").fill("Tia Lu");
+    await folha.getByRole("button", { name: "Criar convite" }).click();
+    const pronto = page.getByRole("dialog", { name: "Convite para Tia Lu" });
+    const whats = pronto.getByRole("link", { name: "Mandar no WhatsApp" });
+    await expect(whats).toBeVisible();
+    await expect(whats).toHaveAttribute("href", /wa\.me/);
+    await expect(
+      pronto.getByRole("button", { name: "Copiar mensagem" }),
+    ).toBeVisible();
   });
 
   test("remover oferece trocar os links do autor e da família", async ({
@@ -56,8 +73,60 @@ test.describe("Quem ajuda", () => {
 });
 
 test.describe("Convite", () => {
-  test("sem sessão: Entrar para aceitar", async ({ page }) => {
+  test("pelo nome, sem sessão: pede o e-mail e depois manda entrar", async ({
+    page,
+  }) => {
     await page.goto("/styleguide/convite");
+    await expect(
+      page.getByRole("heading", { name: "Oi, Rafael!" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("É o e-mail que você usa no celular, sem +"),
+    ).toBeVisible();
+    await page.getByLabel("Seu e-mail do Google").fill("rafa@gmail.com");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Pronto. Entre com r•••@gmail.com" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Entrar com Google" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Receber link por e-mail" }).click();
+    await expect(page.getByText(/o link chega em instantes/)).toBeVisible();
+  });
+
+  test("e-mail definido neste aparelho: entrar ou corrigir", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/convite-entrar");
+    await page.getByRole("button", { name: "Corrigir o e-mail" }).click();
+    await page.getByLabel("Seu e-mail do Google").fill("outro@gmail.com");
+    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(
+      page.getByText("Este convite já está com outra pessoa.", {
+        exact: false,
+      }),
+    ).toBeVisible();
+  });
+
+  test("em uso em outro aparelho: pede um novo a quem convidou", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/convite-em-uso");
+    await expect(
+      page.getByText("Se era para você, peça um novo a Guilherme."),
+    ).toBeVisible();
+  });
+
+  test("com sessão: aceitar como o e-mail de quem entrou", async ({ page }) => {
+    await page.goto("/styleguide/convite-aceitar");
+    await expect(
+      page.getByRole("button", { name: "Aceitar como rafael.souza@gmail.com" }),
+    ).toBeVisible();
+  });
+
+  test("convite antigo, sem sessão: Entrar para aceitar", async ({ page }) => {
+    await page.goto("/styleguide/convite-antigo");
     await expect(
       page.getByRole("link", { name: "Entrar para aceitar" }),
     ).toBeVisible();
@@ -74,6 +143,38 @@ test.describe("Convite", () => {
     await page.goto("/styleguide/configurar-ajuda");
     await expect(page.getByText("Passo 4 de 4")).toBeVisible();
     await expect(page.getByRole("button", { name: "Pular" })).toBeVisible();
+  });
+});
+
+test.describe("Boas-vindas", () => {
+  test("duas portas: gravar (principal) e a mensagem sem o autor saber", async ({
+    page,
+  }) => {
+    await page.goto("/styleguide/bemvindo");
+    await expect(
+      page.getByRole("heading", {
+        name: "Que bom ter você no livro de Vô Jair",
+      }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: "Gravar uma conversa com Vô Jair" }),
+    ).toHaveAttribute("href", /\/historias\/gravar\?bemvindo=1$/);
+    await expect(
+      page.getByRole("button", { name: "Deixar sua mensagem" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(
+        "Sem que Vô Jair saiba: só vê no livro impresso. Quem ajuda no livro pode ler.",
+      ),
+    ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Ver o livro" })).toBeVisible();
+  });
+
+  test("somente leitura: só Ver o livro", async ({ page }) => {
+    await page.goto("/styleguide/bemvindo-leitura");
+    await expect(page.getByRole("link", { name: "Ver o livro" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Gravar/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /mensagem/ })).toHaveCount(0);
   });
 });
 

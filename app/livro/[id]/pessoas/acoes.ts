@@ -1,19 +1,16 @@
 "use server";
 
-// Quem ajuda (prompt 11, design 4.1 e 4.2). O banco é quem garante cada regra; aqui só se
-// evita trabalho à toa e se monta o e-mail.
+// Quem ajuda (prompt 11, design 4.1 e 4.2; convite pelo nome, P81). O banco é quem garante
+// cada regra; aqui só se valida a entrada e se monta a mensagem.
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
-import { contaParaEmail } from "@/lib/acesso";
 import { CONVITE_VALIDADE_DIAS } from "@/lib/config";
-import { nomeSeguro, primeiroNome } from "@/lib/convite/textos";
-import { emailConvite } from "@/lib/email/modelos";
-import { enviarEmail } from "@/lib/email/enviar";
+import { nomeDoConvite } from "@/lib/convite/textos";
 import { envLinks } from "@/lib/env-links";
 import { fraseDoErro } from "@/lib/erros-banco";
 import { registrarEvento } from "@/lib/eventos";
-import { hashDoToken, tokenDoLink, urlConvite } from "@/lib/links";
+import { hashDoToken, tokenDoLink } from "@/lib/links";
 import { livroDaAcao, nomeDoAutor } from "@/lib/livro/acesso";
 import { conviteDaTela } from "@/lib/livro/pessoas";
 import type { ConviteDaTela, Resposta } from "@/lib/livro/tipos";
@@ -29,80 +26,40 @@ const SO_RESPONSAVEL = {
   ok: false as const,
   mensagem: "Só quem cuida do livro pode fazer isso.",
 };
-const email = z
-  .email()
-  .max(254)
-  .transform((e) => e.trim().toLowerCase());
 const uuid = z.uuid();
 
 function atualizar(livroId: string) {
   revalidatePath(`/livro/${livroId}`, "layout");
 }
 
+/**
+ * Convite pelo nome (P81): nenhum e-mail sai da Ecoa. O convidado define o próprio e-mail no
+ * link, e o responsável manda o link pelo WhatsApp (P9).
+ */
 export async function convidar(
   livroId: string,
   entrada: string,
-): Promise<Resposta<{ convite: ConviteDaTela | null }>> {
+): Promise<Resposta<{ convite: ConviteDaTela }>> {
   const acesso = await livroDaAcao(livroId);
   if (!acesso) return SEM_ACESSO;
   if (acesso.livro.papel !== "responsavel") return SO_RESPONSAVEL;
-  const valido = email.safeParse(String(entrada ?? "").trim());
-  if (!valido.success) return { ok: false, mensagem: "Confira o e-mail." };
-  const destino = valido.data;
+  const nome = nomeDoConvite(String(entrada ?? ""));
+  if (!nome) return { ok: false, mensagem: "Use só letras no nome." };
   const { usuario, livro } = acesso;
-  const db = clienteAdmin();
 
-  // 1. As regras do banco, sem efeito: nada é criado se o convite não vai sair.
-  const pre = await db.rpc("servico_pode_convidar", {
-    p_livro: livro.id,
-    p_usuario: usuario.id,
-    p_email: destino,
-  });
-  if (pre.error) return { ok: false, mensagem: fraseDoErro(pre.error) };
-
-  // 2. A conta do convidado (o cadastro é fechado). Conta recusada: resposta igual à de
-  // sucesso, sem gravar nem enviar nada (não vira oráculo de contas).
-  const conta = await contaParaEmail(destino, db);
-  if (conta.tipo === "erro")
-    return { ok: false, mensagem: "Não deu para enviar. Tente de novo." };
-  if (conta.tipo === "recusada") {
-    console.warn("[convite] conta recusada pela identidade", {
-      livro: livro.id,
-    });
-    return { ok: true, dados: { convite: null } };
-  }
-
-  // 3. O convite, com o livro travado no banco.
   const env = envLinks();
   const id = crypto.randomUUID();
   const token = tokenDoLink("convite", id, env.versaoAtual, env);
-  const criado = await db.rpc("servico_criar_convite", {
+  const criado = await clienteAdmin().rpc("servico_criar_convite_nome", {
     p_livro: livro.id,
     p_usuario: usuario.id,
     p_id: id,
-    p_email: destino,
+    p_nome: nome,
     p_token_hash: hashDoToken(token),
     p_chave_versao: env.versaoAtual,
   });
-  if (criado.error) {
-    if (conta.tipo === "criada") await db.auth.admin.deleteUser(conta.id);
-    return { ok: false, mensagem: fraseDoErro(criado.error) };
-  }
+  if (criado.error) return { ok: false, mensagem: fraseDoErro(criado.error) };
 
-  // 4. O e-mail. Assunto fixo e nomes saneados.
-  const { data: eu } = await db.auth.admin.getUserById(usuario.id);
-  const meta = eu.user?.user_metadata as Record<string, unknown> | undefined;
-  const autor = nomeDoAutor(livro);
-  await enviarEmail(
-    destino,
-    emailConvite({
-      quem:
-        primeiroNome(String(meta?.full_name ?? meta?.name ?? "") || null) ?? "",
-      apelido: nomeSeguro(autor),
-      urlConvite: urlConvite(token),
-    }),
-    { idempotencyKey: `convite-${id}` },
-  );
   after(() =>
     registrarEvento({
       quem: usuario.id,
@@ -119,13 +76,14 @@ export async function convidar(
       convite: conviteDaTela(
         {
           id,
-          email: destino,
+          nome,
+          email: null,
           expira_em: new Date(
             Date.now() + CONVITE_VALIDADE_DIAS * 86_400_000,
           ).toISOString(),
           chave_versao: env.versaoAtual,
         },
-        autor,
+        nomeDoAutor(livro),
       ),
     },
   };

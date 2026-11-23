@@ -42,8 +42,10 @@ test("o link por e-mail revela o campo e responde igual para qualquer e-mail", a
 
 test("erro de conta sem livro aparece na tela", async ({ page }) => {
   await page.goto("/entrar?erro=sem_livro");
-  await expect(page.getByRole("alert").filter({ hasText: "livro" })).toHaveText(
-    "Este e-mail ainda não tem um livro.",
+  const alerta = page.getByRole("alert").filter({ hasText: "livro" });
+  await expect(alerta).toContainText("Este e-mail ainda não tem um livro.");
+  await expect(alerta).toContainText(
+    "Veio de um convite? Abra o link de novo e confira o e-mail.",
   );
 });
 

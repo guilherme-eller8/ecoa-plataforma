@@ -113,6 +113,7 @@ import {
 import { FolhaGrupo } from "@/components/editor/folha-grupo";
 import { TelaCompartilhada } from "@/components/telas/tela-compartilhada";
 import { TelaConvite } from "@/components/telas/tela-convite";
+import { TelaBemvindo } from "@/components/telas/tela-bemvindo";
 import { TelaConvitesPendentes } from "@/components/telas/tela-convites-pendentes";
 import { TelaPessoas } from "@/components/telas/tela-pessoas";
 import {
@@ -329,14 +330,77 @@ export function Vitrine({ tela }: { tela: Tela }) {
     case "convite":
       return (
         <TelaConvite
-          estado={{ tipo: "entrar", quem: "Guilherme", autor: "Vô Jair" }}
+          estado={{
+            tipo: "pedir_email",
+            nome: "Rafael",
+            quem: "Guilherme",
+            autor: "Vô Jair",
+          }}
+          definirEmail={async (email) => ({
+            ok: true,
+            dados: { emailMascarado: `${email.trim()[0] ?? "r"}•••@gmail.com` },
+          })}
+          receberLink={async () => ({ ok: true })}
+          entrarComGoogle={nada}
+        />
+      );
+    case "convite-entrar":
+      return (
+        <TelaConvite
+          estado={{
+            tipo: "entrar",
+            nome: "Rafael",
+            emailMascarado: "r•••@gmail.com",
+            podeCorrigir: true,
+          }}
+          definirEmail={async () => ({
+            ok: false,
+            mensagem:
+              "Este convite já está com outra pessoa. Peça um novo a quem convidou.",
+          })}
+          receberLink={async () => ({ ok: true })}
+          entrarComGoogle={nada}
+        />
+      );
+    case "convite-em-uso":
+      return <TelaConvite estado={{ tipo: "em_uso", quem: "Guilherme" }} />;
+    case "convite-antigo":
+      return (
+        <TelaConvite
+          estado={{
+            tipo: "entrar_antigo",
+            quem: "Guilherme",
+            autor: "Vô Jair",
+          }}
         />
       );
     case "convite-aceitar":
       return (
         <TelaConvite
-          estado={{ tipo: "aceitar", quem: "Guilherme", autor: "Vô Jair" }}
+          estado={{
+            tipo: "aceitar",
+            quem: "Guilherme",
+            autor: "Vô Jair",
+            email: "rafael.souza@gmail.com",
+          }}
           aceitar={async () => ({ ok: true })}
+        />
+      );
+    case "bemvindo":
+      return (
+        <TelaBemvindo
+          livroId={LIVRO_JAIR.id}
+          autor="Vô Jair"
+          podeEscrever
+          abrirMensagem={async () => {}}
+        />
+      );
+    case "bemvindo-leitura":
+      return (
+        <TelaBemvindo
+          livroId={LIVRO_JAIR.id}
+          autor="Vô Jair"
+          podeEscrever={false}
         />
       );
     case "convite-outro-email":

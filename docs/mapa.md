@@ -15,8 +15,9 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 | `/livro/[id]/historias` (+ `/nova`, `/gravar`) | Lista e nova história | membro |
 | `/livro/[id]/historias/[historiaId]` | Acompanhar ou editar (história pronta) | membro |
 | `…/[historiaId]/dividir`, `/versoes`, `/gravar`, `/parar`, `/amostra` | Divisão, histórico, gravar mais, PDF da amostra | membro |
-| `/livro/[id]/pessoas` | Quem ajuda: convidar, cancelar, remover, sair (prompt 11) | membro |
-| `/convite/[token]` | Convite de co-facilitador; aceitar pelo e-mail convidado | sem login (aceitar com sessão) |
+| `/livro/[id]/pessoas` | Quem ajuda: convidar pelo nome (P81), cancelar, remover, sair (prompt 11) | membro |
+| `/livro/[id]/bemvindo` | Boas-vindas de quem aceitou o convite: gravar ou deixar mensagem (P82) | membro |
+| `/convite/[token]` | Convite de co-facilitador: pelo nome, o convidado define o próprio e-mail (cookie de dono); aceitar com sessão | sem login (aceitar com sessão) |
 | `/o/[token]` | História compartilhada no grupo (voz e texto) | sem login |
 | `/resumo/sair/[membro]/[token]` (+ `/um-clique`) | Descadastro do resumo semanal | sem login |
 | `/livro/[id]/mensagens` | Mensagens da família (curadoria, convite) | membro |
@@ -55,7 +56,8 @@ Onde cada coisa mora e os padrões que se repetem. Leia antes de procurar no rep
 - **Arquivar história (P71):** `public.historia_arquivar` (só por função, `stories.arquivada_em`, só pronta ou falhou); ação `arquivarHistoria`; `BotaoArquivar` (`components/ui/`); `historiasDoLivro` filtra e `historiasArquivadas` lista; `privado.conteudo_do_livro` deixa a arquivada fora da montagem.
 - **Gravação parada (P73):** `motivoDaEspera` (`lib/pipeline/regras.ts`, pura e testada) decide a frase; "demorando" depois de `ESPERA_COMECAR_MIN` liga `tentar`, e `BotaoTentarDeNovo` (`components/ui/`) chama `tentarDeNovoAudio`. `dispararGravacao` devolve se o evento chegou e grava `erro_servidor` se não; `gravacoesOrfas` lança erro em vez de devolver lista vazia.
 - **Inngest só em produção (T57):** `/api/inngest` responde 404 em preview (`inngestAtendeAqui`, `lib/inngest/ambiente.ts`); só há um ambiente no Inngest e o preview não pode virar o app dele. `enviarEmail` devolve `repetido` quando o Resend recusa uma chave de idempotência já usada (`lib/email/repeticao.ts`).
-- **Pôr na tela inicial (P79):** `lib/pwa/instalar.ts` guarda o pedido do Chrome desde o 1º carregamento (importado por `registrar-sw.tsx`); `components/pwa/por-na-tela-inicial.tsx` oferece uma vez por aparelho (botão no Android, caminho do Compartilhar no iPhone). Hoje só na gravação aberta pelo convite (`?bemvindo=1`).
+- **Pôr na tela inicial (P79):** `lib/pwa/instalar.ts` guarda o pedido do Chrome desde o 1º carregamento (importado por `registrar-sw.tsx`); `components/pwa/por-na-tela-inicial.tsx` oferece uma vez por aparelho (botão no Android, caminho do Compartilhar no iPhone). Hoje só na gravação aberta pelo convite (`?bemvindo=1`, vindo de `/livro/[id]/bemvindo`).
+- **Convite pelo nome (P81):** estado da tela em `lib/convite/estado.ts` (puro, testado; o e-mail do convite só sai mascarado); leitura, cookie de dono (`ecoa_convite_{id}`, só o hash no banco) em `lib/convite/servidor.ts`; aviso ao responsável e limpeza de conta sem uso em `lib/convite/aviso.ts`; ações em `app/convite/acoes.ts`. Link de entrada por e-mail em `lib/entrar/link.ts` (usado por `/entrar` e pelo convite).
 - **Papel na tela:** `livro.ehResponsavel` esconde o que é só do responsável (P60); o banco confere com `privado.eh_responsavel`. Links novos sem login: tipo em `TipoLink` (`lib/links.ts`), token por HMAC.
 
 ## Domínios em `lib/`

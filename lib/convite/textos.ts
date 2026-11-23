@@ -24,3 +24,32 @@ export function nomeSeguro(nome: string | null | undefined): string {
 export function primeiroNome(nome: string | null | undefined): string | null {
   return nomeSeguro(nome).split(" ")[0] || null;
 }
+
+/**
+ * Nome digitado em *Convidar* (P81). Rejeita, sem consertar calado, o que `nomeSeguro`
+ * mudaria: número, link, símbolo ou mais de 30 letras. Devolve o nome pronto ou null.
+ */
+export function nomeDoConvite(
+  entrada: string | null | undefined,
+): string | null {
+  const digitado = (entrada ?? "").normalize("NFC").replace(/\s+/g, " ").trim();
+  if (!digitado || nomeSeguro(digitado) !== digitado) return null;
+  return digitado;
+}
+
+/** Texto do convite pelo nome, para o WhatsApp ou *Copiar mensagem* (P81, P9). */
+export function mensagemConviteNome({
+  nome,
+  autor,
+  link,
+}: {
+  nome: string;
+  autor: string;
+  link: string;
+}): string {
+  return [
+    `Oi, ${nome}! Chamei você para me ajudar no livro de memórias de ${autor}.`,
+    `Abra o link e entre com o seu Gmail: ${link}`,
+    "O link é só seu, não repasse no grupo.",
+  ].join("\n\n");
+}
