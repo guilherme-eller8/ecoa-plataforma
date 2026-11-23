@@ -46,18 +46,32 @@ export const MEMBROS_VISTOS_PELA_BIA: MembroDaTela[] = MEMBROS_JAIR.map(
 export const CONVITES_JAIR: ConviteDaTela[] = [
   {
     id: "00000000-0000-4000-8000-000000001201",
-    email: "rafael@exemplo.com",
+    nome: "Rafael",
+    email: null,
     expiraEm: "2026-11-21T12:00:00Z",
     mensagem:
-      "Estou fazendo o livro de memórias de Vô Jair e quero sua ajuda.\n\nMandei um convite para o seu e-mail. Entre com ele por este link:\n\nhttps://app.ecoa-memorias.com.br/convite/v1_exemplo",
+      "Oi, Rafael! Chamei você para me ajudar no livro de memórias de Vô Jair.\n\nAbra o link e entre com o seu Gmail: https://app.ecoa-memorias.com.br/convite/v1_exemplo\n\nO link é só seu, não repasse no grupo.",
+  },
+  {
+    id: "00000000-0000-4000-8000-000000001202",
+    nome: "Carla",
+    email: "carla.souza@gmail.com",
+    expiraEm: "2026-11-21T12:00:00Z",
+    mensagem:
+      "Oi, Carla! Chamei você para me ajudar no livro de memórias de Vô Jair.\n\nAbra o link e entre com o seu Gmail: https://app.ecoa-memorias.com.br/convite/v1_exemplo2\n\nO link é só seu, não repasse no grupo.",
   },
 ];
 
 export const ACOES_PESSOAS_FALSAS: AcoesPessoas = {
-  convidar: async (email) => ({
+  convidar: async (nome) => ({
     ok: true,
     dados: {
-      convite: { ...CONVITES_JAIR[0], id: crypto.randomUUID(), email },
+      convite: {
+        ...CONVITES_JAIR[0],
+        id: crypto.randomUUID(),
+        nome,
+        mensagem: CONVITES_JAIR[0].mensagem.replace("Rafael", nome),
+      },
     },
   }),
   cancelarConvite: ok,

@@ -41,6 +41,7 @@ const FRASES: Partial<Record<Acao, string>> = {
   qr_tocou: "Alguém ouviu pelo QR",
   convidou: "Convidou um co-facilitador",
   convite_aceito: "Convite aceito",
+  convite_email_definido: "Convidado informou o e-mail",
   removeu_membro: "Removeu um membro",
   saiu_do_livro: "Saiu do livro",
   compartilhou_historia: "Compartilhou uma história",

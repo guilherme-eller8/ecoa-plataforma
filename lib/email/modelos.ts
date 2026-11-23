@@ -177,6 +177,35 @@ export function emailConvite({
   };
 }
 
+/**
+ * Aviso ao responsável quando o convidado define (ou corrige) o e-mail do convite pelo nome
+ * (P81). Chega antes do acesso: se não for a pessoa certa, dá tempo de cancelar.
+ */
+export function emailConviteDefinido({
+  nome,
+  apelido,
+  email,
+  urlPessoas,
+}: {
+  nome: string; // nome do convite, saneado
+  apelido: string; // saneado
+  email: string; // e-mail completo que o convidado digitou
+  urlPessoas: string;
+}): Email {
+  const assunto = "Alguém vai entrar no seu livro de memórias";
+  const quem = nome || "A pessoa convidada";
+  const livro = apelido ? `no livro de ${apelido}` : "no seu livro";
+  const frase = `${quem} vai entrar ${livro} como ${email}. Não é ${nome || "quem você chamou"}? Cancele o convite em Quem ajuda.`;
+  return {
+    assunto,
+    html: moldura(escapar(assunto) + ".", escapar(frase), {
+      rotulo: "Ver quem ajuda",
+      url: urlPessoas,
+    }),
+    texto: `${frase}\n\nVer quem ajuda: ${urlPessoas}\n\nEcoa Memórias`,
+  };
+}
+
 /** Resumo semanal (P63): só números, sem título nem trecho (P42), descadastro de 1 clique. */
 export function emailResumo({
   apelido,

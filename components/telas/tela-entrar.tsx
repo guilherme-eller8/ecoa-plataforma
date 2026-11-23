@@ -36,7 +36,17 @@ export function TelaEntrar({
         <h1 className="font-ui text-tinta text-[26px] leading-tight font-semibold md:text-[32px]">
           Entre no seu livro
         </h1>
-        {erro && ERROS[erro] && <Aviso ok={false}>{ERROS[erro]}</Aviso>}
+        {erro && ERROS[erro] && (
+          <Aviso ok={false}>
+            {ERROS[erro]}
+            {erro === "sem_livro" ? (
+              <>
+                <br />
+                Veio de um convite? Abra o link de novo e confira o e-mail.
+              </>
+            ) : null}
+          </Aviso>
+        )}
 
         <Botao
           carregando={indoAoGoogle}

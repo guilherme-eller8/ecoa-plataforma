@@ -25,17 +25,17 @@ function nomeDe(m: MembroDaTela) {
   return m.nome || m.email || "Sem nome";
 }
 
-/** Formulário de convite: usado na tela e no passo Quem mais ajuda. */
+/** Convite pelo nome (P81): só o nome. Usado na tela e no passo Quem mais ajuda. */
 export function FormConvite({
   convidar,
   aoConvidar,
-  rotulo = "Enviar convite",
+  rotulo = "Criar convite",
 }: {
   convidar: AcoesPessoas["convidar"];
-  aoConvidar: (convite: ConviteDaTela | null) => void;
+  aoConvidar: (convite: ConviteDaTela) => void;
   rotulo?: string;
 }) {
-  const [email, setEmail] = useState("");
+  const [nome, setNome] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [pendente, iniciar] = useTransition();
   return (
@@ -44,23 +44,22 @@ export function FormConvite({
       onSubmit={(e) => {
         e.preventDefault();
         iniciar(async () => {
-          const r = await convidar(email);
+          const r = await convidar(nome);
           if (!r.ok) return setErro(r.mensagem);
           setErro(null);
-          setEmail("");
+          setNome("");
           aoConvidar(r.dados.convite);
         });
       }}
     >
       <Campo
-        rotulo="E-mail de quem vai ajudar"
-        dica="A pessoa entra com este e-mail, pelo Google ou por um link."
-        type="email"
-        inputMode="email"
-        autoComplete="email"
+        rotulo="Nome de quem vai ajudar"
+        autoComplete="off"
+        autoCapitalize="words"
+        maxLength={30}
         required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
         erro={erro ?? undefined}
       />
       <Botao type="submit" carregando={pendente} larguraTotal>
@@ -70,6 +69,50 @@ export function FormConvite({
   );
 }
 
+/** O convite vai pelo WhatsApp de quem convidou (P9): nenhum e-mail sai da Ecoa. */
+export function MandarConvite({
+  convite,
+  principal = false,
+  children,
+}: {
+  convite: ConviteDaTela;
+  principal?: boolean;
+  children?: React.ReactNode; // mais ações na mesma linha (ex.: Cancelar)
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <a
+        href={linkWhatsApp(convite.mensagem)}
+        target="_blank"
+        rel="noreferrer"
+        className={classesDoBotao({
+          variante: principal ? "principal" : "secundario",
+          larguraTotal: principal,
+        })}
+      >
+        <IconeEnviar tamanho={20} />
+        <span>Mandar no WhatsApp</span>
+      </a>
+      <Copiar texto={convite.mensagem} rotulo="Copiar mensagem" />
+      {children}
+    </div>
+  );
+}
+
+/** Situação do convite pendente, em poucas palavras. */
+export function situacaoDoConvite(c: ConviteDaTela): {
+  titulo: string;
+  linha: string;
+} {
+  if (!c.nome)
+    return {
+      titulo: c.email ?? "Convite",
+      linha: "Convite enviado. Esperando.",
+    };
+  if (!c.email) return { titulo: c.nome, linha: "Ainda não abriu o convite" };
+  return { titulo: c.nome, linha: `${c.email}, ainda não entrou` };
+}
+
 function ConvitePendente({
   convite,
   cancelar,
@@ -77,29 +120,24 @@ function ConvitePendente({
   convite: ConviteDaTela;
   cancelar?: () => void;
 }) {
+  const { titulo, linha } = situacaoDoConvite(convite);
   return (
     <li className="rounded-cartao bg-papel border-linha flex flex-col gap-3 border p-5">
-      <p className="text-ui-17 text-tinta [overflow-wrap:anywhere]">
-        {convite.email}
-      </p>
-      <p className="text-ui-15 text-tinta-2">Convite enviado. Esperando.</p>
-      <div className="flex flex-wrap items-center gap-3">
-        <a
-          href={linkWhatsApp(convite.mensagem)}
-          target="_blank"
-          rel="noreferrer"
-          className={classesDoBotao({ variante: "secundario" })}
-        >
-          <IconeEnviar tamanho={20} />
-          <span>Mandar no WhatsApp</span>
-        </a>
-        <Copiar texto={convite.mensagem} rotulo="Copiar mensagem" />
+      <div className="flex flex-col gap-1">
+        <p className="text-ui-17 text-tinta [overflow-wrap:anywhere]">
+          {titulo}
+        </p>
+        <p className="text-ui-15 text-tinta-2 [overflow-wrap:anywhere]">
+          {linha}
+        </p>
+      </div>
+      <MandarConvite convite={convite}>
         {cancelar ? (
           <Botao variante="texto" onClick={cancelar}>
             Cancelar
           </Botao>
         ) : null}
-      </div>
+      </MandarConvite>
     </li>
   );
 }
@@ -120,6 +158,7 @@ export function TelaPessoas({
   const router = useRouter();
   const [convites, setConvites] = useState(convitesIniciais);
   const [convidando, setConvidando] = useState(false);
+  const [criado, setCriado] = useState<ConviteDaTela | null>(null);
   const [removendo, setRemovendo] = useState<MembroDaTela | null>(null);
   const [trocarDepois, setTrocarDepois] = useState<string | null>(null);
   const [saindo, setSaindo] = useState(false);
@@ -271,20 +310,28 @@ export function TelaPessoas({
 
       <FolhaInferior
         aberta={convidando}
-        aoFechar={() => setConvidando(false)}
-        titulo="Convidar"
+        aoFechar={() => {
+          setConvidando(false);
+          setCriado(null);
+        }}
+        titulo={criado ? `Convite para ${criado.nome ?? ""}` : "Convidar"}
       >
-        <FormConvite
-          convidar={acoes.convidar}
-          aoConvidar={(convite) => {
-            setConvidando(false);
-            if (convite) setConvites((cs) => [...cs, convite]);
-            setAviso({
-              ok: true,
-              texto: "Convite enviado. Mande também pelo WhatsApp.",
-            });
-          }}
-        />
+        {criado ? (
+          <div className="flex flex-col gap-4">
+            <p className="text-ui-17 text-tinta-2">
+              O link é só para {criado.nome}. Mande pelo WhatsApp.
+            </p>
+            <MandarConvite convite={criado} principal />
+          </div>
+        ) : (
+          <FormConvite
+            convidar={acoes.convidar}
+            aoConvidar={(convite) => {
+              setCriado(convite);
+              setConvites((cs) => [...cs, convite]);
+            }}
+          />
+        )}
       </FolhaInferior>
 
       <FolhaInferior

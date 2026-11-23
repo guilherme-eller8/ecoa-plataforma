@@ -1797,7 +1797,11 @@ export type Database = {
         Returns: undefined;
       };
       servico_pode_definir_email: {
-        Args: { p_dono_hash: string | null; p_email: string; p_token_hash: string };
+        Args: {
+          p_dono_hash: string | null;
+          p_email: string;
+          p_token_hash: string;
+        };
         Returns: string;
       };
       servico_definir_email_convite: {

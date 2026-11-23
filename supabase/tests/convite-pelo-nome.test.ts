@@ -157,9 +157,9 @@ describe("o convidado define o e-mail", () => {
     expect((await pode(c.token, " Maria@Exemplo.com ")).linhas?.[0].r).toBe(
       "definir",
     );
-    expect((await definir(c.token, " Maria@Exemplo.com ", d)).linhas?.[0].r).toBe(
-      "definir",
-    );
+    expect(
+      (await definir(c.token, " Maria@Exemplo.com ", d)).linhas?.[0].r,
+    ).toBe("definir");
     const i = await convite(c.id);
     expect(i).toMatchObject({
       email: "maria@exemplo.com",
@@ -173,9 +173,9 @@ describe("o convidado define o e-mail", () => {
     expect(ev).toEqual([{ ator_tipo: "sistema" }]);
 
     // Outro aparelho com o mesmo e-mail: 'mesmo', nada muda.
-    expect((await definir(c.token, "maria@exemplo.com", dono())).linhas?.[0].r).toBe(
-      "mesmo",
-    );
+    expect(
+      (await definir(c.token, "maria@exemplo.com", dono())).linhas?.[0].r,
+    ).toBe("mesmo");
     expect((await convite(c.id)).dono_hash).toBe(d);
     expect(await ler(c.token, d)).toMatchObject({
       email_definido: true,
@@ -196,9 +196,9 @@ describe("o convidado define o e-mail", () => {
       "convite_em_uso",
     );
     for (const n of [1, 2, 3]) {
-      expect((await definir(c.token, `m${n}@exemplo.com`, d)).linhas?.[0].r).toBe(
-        "definir",
-      );
+      expect(
+        (await definir(c.token, `m${n}@exemplo.com`, d)).linhas?.[0].r,
+      ).toBe("definir");
     }
     expect((await convite(c.id)).email_trocas).toBe(3);
     expect((await ler(c.token, d))?.trocas_restantes).toBe(0);
@@ -212,7 +212,9 @@ describe("o convidado define o e-mail", () => {
   it("4ª definição do mesmo e-mail em 24 h dá limite_convites", async () => {
     for (let n = 0; n < config.MAX_CONVITES_POR_EMAIL_DIA; n++) {
       const c = await convidar(livroB, beto, `P${n}`);
-      expect((await definir(c.token, "repetido@exemplo.com", dono())).erro).toBeUndefined();
+      expect(
+        (await definir(c.token, "repetido@exemplo.com", dono())).erro,
+      ).toBeUndefined();
     }
     const c = await convidar(livroA, ana, "Outra");
     expect((await pode(c.token, "repetido@exemplo.com")).erro).toBe(
@@ -227,17 +229,17 @@ describe("o convidado define o e-mail", () => {
 
   it("e-mail de quem já está no livro dá 'ignorar' e não grava; pendente antigo do mesmo e-mail é revogado", async () => {
     const c = await convidar(livroA, ana, "Caio");
-    expect((await definir(c.token, "caio@exemplo.com", dono())).linhas?.[0].r).toBe(
-      "ignorar",
-    );
+    expect(
+      (await definir(c.token, "caio@exemplo.com", dono())).linhas?.[0].r,
+    ).toBe("ignorar");
     expect((await convite(c.id)).email).toBeNull();
 
     const velho = await convidar(livroA, ana, "Lu");
     await definir(velho.token, "lu@exemplo.com", dono());
     const novo = await convidar(livroA, ana, "Lu de novo");
-    expect((await definir(novo.token, "lu@exemplo.com", dono())).linhas?.[0].r).toBe(
-      "definir",
-    );
+    expect(
+      (await definir(novo.token, "lu@exemplo.com", dono())).linhas?.[0].r,
+    ).toBe("definir");
     expect((await convite(velho.id)).revogado_em).not.toBeNull();
     expect((await convite(novo.id)).revogado_em).toBeNull();
     await limparConvites(livroA);
@@ -255,9 +257,10 @@ describe("o convidado define o e-mail", () => {
     expect((await ler(vencido.token))?.estado).toBe("vencido");
 
     const cancelado = await convidar(livroA, ana, "C");
-    await sql(`update public.book_invites set revogado_em = now() where id = $1`, [
-      cancelado.id,
-    ]);
+    await sql(
+      `update public.book_invites set revogado_em = now() where id = $1`,
+      [cancelado.id],
+    );
     expect((await pode(cancelado.token, "c@exemplo.com")).erro).toBe(
       "convite_invalido",
     );
@@ -284,9 +287,9 @@ describe("o convidado define o e-mail", () => {
     expect((await pode("nao-e-hash", "y@exemplo.com")).erro).toBe(
       "convite_invalido",
     );
-    expect((await definir(hash("nao-existe"), "y@exemplo.com", dono())).erro).toBe(
-      "convite_invalido",
-    );
+    expect(
+      (await definir(hash("nao-existe"), "y@exemplo.com", dono())).erro,
+    ).toBe("convite_invalido");
     await limparConvites(livroA);
   });
 });
@@ -345,9 +348,11 @@ describe("aceitar", () => {
     const fabio = await usuario("fabio@exemplo.com");
     expect(
       (
-        await membro(fabio, `select * from public.definir_e_aceitar_convite($1)`, [
-          c.token,
-        ])
+        await membro(
+          fabio,
+          `select * from public.definir_e_aceitar_convite($1)`,
+          [c.token],
+        )
       ).erro,
     ).toBe("convite_em_uso");
     const r = await membro(
@@ -393,14 +398,18 @@ describe("aceitar", () => {
     const ult = await usuario("ultima@exemplo.com");
     expect(
       (
-        await membro(ult, `select * from public.definir_e_aceitar_convite($1)`, [
-          conv.token,
-        ])
+        await membro(
+          ult,
+          `select * from public.definir_e_aceitar_convite($1)`,
+          [conv.token],
+        )
       ).erro,
     ).toBe("limite_cofacilitadores");
     // A transação desfez a definição.
     expect((await convite(conv.id)).email).toBeNull();
-    await sql(`delete from public.book_members where user_id = any($1)`, [extras]);
+    await sql(`delete from public.book_members where user_id = any($1)`, [
+      extras,
+    ]);
     await limparConvites(livroA);
   });
 
@@ -411,9 +420,11 @@ describe("aceitar", () => {
     );
     expect(
       (
-        await membro(gil, `select * from public.definir_e_aceitar_convite($1)`, [
-          c.token,
-        ])
+        await membro(
+          gil,
+          `select * from public.definir_e_aceitar_convite($1)`,
+          [c.token],
+        )
       ).erro,
     ).toBe("sem_permissao");
     await limparConvites(livroA);
@@ -426,8 +437,14 @@ describe("privilégios", () => {
       `select public.servico_criar_convite_nome($1, $2, gen_random_uuid(), 'X', $3, 1::smallint)`,
       [livroA, ana, hash("x")],
     ],
-    [`select public.servico_pode_definir_email($1, 'a@b.com', null)`, [hash("x")]],
-    [`select public.servico_definir_email_convite($1, 'a@b.com', $1)`, [hash("x")]],
+    [
+      `select public.servico_pode_definir_email($1, 'a@b.com', null)`,
+      [hash("x")],
+    ],
+    [
+      `select public.servico_definir_email_convite($1, 'a@b.com', $1)`,
+      [hash("x")],
+    ],
     [`select * from public.servico_ler_convite($1)`, [hash("x")]],
   ];
 
@@ -459,8 +476,12 @@ describe("privilégios", () => {
       expect(r.erro).toMatch(/permission denied/);
     }
     expect(
-      (await membro(ana, `select nome, email_definido_em from public.book_invites`))
-        .erro,
+      (
+        await membro(
+          ana,
+          `select nome, email_definido_em from public.book_invites`,
+        )
+      ).erro,
     ).toBeUndefined();
   });
 
@@ -492,9 +513,9 @@ describe("reversão", () => {
         "utf8",
       ),
     );
-    const ids = (await sql<{ id: string }>(`select id from public.book_invites`)).map(
-      (r) => r.id,
-    );
+    const ids = (
+      await sql<{ id: string }>(`select id from public.book_invites`)
+    ).map((r) => r.id);
     expect(ids).toContain(comEmail.id);
     expect(ids).not.toContain(semEmail.id);
     await db.exec(
