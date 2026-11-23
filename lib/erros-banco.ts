@@ -56,6 +56,10 @@ export const FRASES_DOS_CODIGOS = {
   limite_cofacilitadores:
     "O livro já tem 5 pessoas ajudando. Cancele um convite para abrir vaga.",
   convite_invalido: "Este convite não vale mais. Peça um novo a quem convidou.",
+  convite_em_uso:
+    "Este convite já está com outra pessoa. Peça um novo a quem convidou.",
+  limite_trocas_email:
+    "Você já corrigiu o e-mail 3 vezes. Peça um novo convite a quem convidou.",
   compartilhar_nao_pronta: "Marque a história como pronta para compartilhar.",
   limite_mensagens: "Muitas mensagens hoje. Tente amanhã.",
   mensagem_nao_encontrada:

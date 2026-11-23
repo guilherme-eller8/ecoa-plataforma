@@ -121,6 +121,7 @@ export const MAX_COFACILITADORES = 5; // além do responsável; convites pendent
 export const MAX_CONVITES_DIA = 10; // por livro e por responsável, em 24 h (espelhado)
 export const MAX_CONVITES_POR_EMAIL_DIA = 3; // o mesmo e-mail, somando todos os livros (espelhado)
 export const CONVITE_VALIDADE_DIAS = 7; // espelhado em privado.convite_validade_dias
+export const CONVITE_TROCAS_EMAIL = 3; // correções do e-mail no convite pelo nome, só no aparelho dono (P81, espelhado)
 
 // ── Domínios ─────────────────────────────────────────────────────────────
 export const DOMINIO_APP = "app.ecoa-memorias.com.br";
