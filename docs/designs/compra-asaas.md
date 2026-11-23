@@ -318,6 +318,7 @@ Uma função só, `processarPagamento(asaasId, opcoes)`, chamada pelo aviso, pel
   - **`aprovado` com `acesso_enviado_em` vazio e menos de 6 tentativas:** tenta o e-mail de novo.
   - **Qualquer estado com alerta registrado e não enviado:** tenta o alerta de novo.
 - Os passos devolvem só ids (T36).
+- **Chave viva:** o passo `compras-vencidas` da varredura diária também chama `GET /v3/myAccount/fees` uma vez, para a chave não ser desativada por falta de uso; 401 vira `erro_servidor`.
 - Cobre aviso perdido, fila pausada, app fora do ar, Pix pago tarde e e-mail que caiu.
 
 ### Banco
@@ -927,6 +928,7 @@ A reversão apaga o histórico de compras. Antes de reverter em produção, expo
 | Chave do ambiente errado | Prefixo `$aact_prod_` ou `$aact_hmlg_` conferido contra `ASAAS_MODO` ao carregar |
 | CPF ou nome em log | `ErroAsaas` sem corpo nem zod; teste dedicado; nada no Inngest nem em eventos |
 | Asaas falando com o comprador (e cobrando por isso) | Todo cliente criado pela Ecoa com `notificationDisabled: true`, inclusive o do cartão |
+| Chave da API desativada por falta de uso (o Asaas desativa após 3 meses sem chamadas) | A varredura diária faz 1 chamada leve (`GET /v3/myAccount/fees`) e grava `erro_servidor` se der 401 |
 | Vercel Hobby não permite uso comercial | T39: Pro antes do 1º cliente pagante |
 
 ## Alternativas consideradas
