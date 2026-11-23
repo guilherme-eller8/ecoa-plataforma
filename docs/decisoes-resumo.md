@@ -82,12 +82,14 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **P74** Amostra = começo da história em até 2 páginas (livro aberto); o botão mostra o andamento da voz com a folha fechada; voz atrasada avisa o admin; título do capítulo sem justificar.
 - **P75** Ajustar a foto da história: cortar (formato, aproximar, arrastar) e, na 1ª foto, junto da história ou página inteira ao lado; recorte e posição em `story_photos`, por uso.
 - **P76** No Folhear, tocar numa foto abre a mesma folha *Ajustar a foto*; o livro é refeito e volta na mesma página; escolhas prontas, não editor livre.
-- **P77** Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS.
-- **P78** Até 3x sem juros (Ecoa paga); 4x a 12x com juros do cliente; configurado no painel.
+- ~~**P77**~~ → P83 em parte (Asaas no lugar do Mercado Pago). Compra pelo app: landing → `/comprar` (e-mail conferido) → Checkout Pro (Pix, cartão até 12x, sem boleto); e-mail digitado vira responsável; fatura ECOAMEMORIAS.
+- ~~**P78**~~ → P84.
 - **P79** Setup: *Marcar todas* por fase aberta e "você escolhe depois o que enviar"; convite aceito cai em *Gravar conversa* com a oferta de pôr na tela inicial; família que grava entra como co-facilitador, sem papel novo. Item 2 substituído por P82.
 - **P80** Gravar conversa: perguntas em tópicos por fase da vida; até 8 abertas, acima disso fechadas; uma pergunta por gravação.
 - **P81** Convite pelo nome: link pelo WhatsApp; o convidado define o próprio e-mail; vale o primeiro; só o mesmo aparelho corrige (3x); responsável avisado antes do acesso.
 - **P82** Convite aceito cai em Boas-vindas: *Gravar uma conversa* (principal) e *Deixar sua mensagem sem que {autor} saiba* (`/m`).
+- **P83** Compra pelo Asaas: `/comprar` (e-mail) → `/comprar/{compra}` com nome e CPF; Pix na página (principal), cartão no Checkout do Asaas; nome e CPF não ficam na Ecoa; compra presa ao aparelho.
+- **P84** Cartão em até 3x sem juros; sem 4x a 12x.
 
 ## Técnicas
 
@@ -148,5 +150,6 @@ Decisão nova aprovada: entra no fim da tabela em `docs/decisoes.md` **e** ganha
 - **T55** Evals 1A: livro ativo = ação de criação de membro ou autor em 7 dias (sem `entrou` nem família); ativação = 1ª revisada em 7 dias; abaixo de 5, "amostra pequena"; somas no banco, linhas em blocos; alertas 1 por condição e dia.
 - **T56** Pedido à fila não falha calado (`pedirRecorte` tenta 2 vezes e grava `erro_servidor`); prévias em JPEG do PDF real, só as páginas pedidas, QR provisório tracejado; Folhear em memória por hash, sem migration.
 - **T57** Preview da Vercel não atende `/api/inngest` (404): nunca vira o app de produção no Inngest; repetição do Resend não é falha.
-- **T58** `payments` só pela chave secreta; estado sempre da API do Mercado Pago; aviso, volta e conferência de 30 min na mesma função; 1 livro por compra; alerta 1 vez; produção em modo de teste até o CNPJ.
+- ~~**T58**~~ → T60. `payments` só pela chave secreta; estado sempre da API do Mercado Pago; aviso, volta e conferência de 30 min na mesma função; 1 livro por compra; alerta 1 vez; produção em modo de teste até o CNPJ.
 - **T59** `book_invites` com `nome`, `email_trocas`, `email_definido_em`, `dono_hash`; e-mail opcional até definido; `definir_e_aceitar_convite` atômica; `aceitar_convite` com `is distinct from`.
+- **T60** Asaas: estado sempre da API; aviso por `asaas-access-token` e 200 sempre (fila pausa em 15 falhas); conferência de 10 min; `payment_attempts` + `externalReference` ligam pagamento à compra; alerta marcado só depois de enviado; `ambiente` e e-mails de teste no sandbox; clientes sem notificação do Asaas.

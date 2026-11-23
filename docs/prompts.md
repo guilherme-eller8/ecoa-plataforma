@@ -252,6 +252,8 @@ Gate de design. Aceite: com 6 histórias e 2 mensagens reais, publico, e os PDFs
 
 ## Prompt 14. Impressão intermediada e Mercado Pago [EGM]
 
+> 23/11/2026: o gateway virou o Asaas. A parte 1 (compra do plano) segue `docs/designs/compra-asaas.md` (P83, P84, T60), que substitui o Mercado Pago do item 2. A impressão (itens 3 e 4) continua num prompt separado.
+
 ```
 Leia docs/prd.md: M1 (onda 2), M9 (impressão) e Impressão intermediada pela Ecoa. Pré-requisito: CNPJ e conta no Mercado Pago criados. Use o EGM.
 

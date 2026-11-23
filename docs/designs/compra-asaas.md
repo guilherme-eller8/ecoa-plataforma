@@ -1,12 +1,13 @@
 # Compra do plano pelo Asaas (prompt 14, parte 1, refeito)
 
-Status: **revisado, esperando a aprovação do Guilherme** · 23/11/2026 · PRD: M1 (onda 2). Substitui `compra-mercado-pago.md` (aprovado em 20/11, nunca construído) na camada do provedor. Do anterior ficam a compra como intenção de pagar, 1 livro por compra, o alerta que sai 1 vez, a conferência periódica e a tela de e-mail. Documentação do Asaas lida em 23/11 em `docs.asaas.com` (páginas de Checkout de ago–out/2026).
+Status: **aprovado pelo Guilherme em 23/11/2026** · 23/11/2026 · PRD: M1 (onda 2). Substitui `compra-mercado-pago.md` (aprovado em 20/11, nunca construído) na camada do provedor. Do anterior ficam a compra como intenção de pagar, 1 livro por compra, o alerta que sai 1 vez, a conferência periódica e a tela de e-mail. Documentação do Asaas lida em 23/11 em `docs.asaas.com` (páginas de Checkout de ago–out/2026).
 
 ## Visão geral
 
 O Guilherme trocou o gateway para o Asaas. A pessoa toca em *Comprar* na landing, confere o e-mail em `/comprar` e escolhe como pagar:
 
-- **Pix na própria página.** Nome e CPF são pedidos só nesse passo; o QR e *Copiar código Pix* aparecem na tela, e ela vira "Pronto" sozinha quando o Pix cai.
+- Nome e CPF são pedidos só nesse passo, num formulário único para os dois meios.
+- **Pix na própria página.** O QR e *Copiar código Pix* aparecem na tela, e ela vira "Pronto" sozinha quando o Pix cai.
 - **Cartão no Checkout hospedado do Asaas**, em até 3x sem juros. O número do cartão nunca passa pela Ecoa.
 
 Pagamento confirmado cria o livro, ativa o plano por 12 meses e manda o e-mail de acesso em menos de 1 minuto.
@@ -23,7 +24,7 @@ Pagamento confirmado cria o livro, ativa o plano por 12 meses e manda o e-mail d
 
 1. Comprar em poucos toques:
    - **Pix:** e-mail → *Continuar* → nome e CPF → QR;
-   - **Cartão:** e-mail → *Continuar* → *Cartão* → Checkout do Asaas.
+   - **Cartão:** e-mail → *Continuar* → nome e CPF → *Cartão* → Checkout do Asaas.
 2. Pagamento confirmado cria o livro, ativa o plano e manda o acesso em menos de 1 minuto (aceite do M1).
 3. O mesmo pagamento nunca cria dois livros. Nenhum pagamento confirmado fica sem livro **e** sem alerta entregue ao admin.
 4. Nenhum dado de cartão passa pela Ecoa. CPF e nome vão direto ao Asaas e não ficam no banco, nos logs, nos eventos nem no Inngest.
@@ -44,7 +45,7 @@ Pagamento confirmado cria o livro, ativa o plano por 12 meses e manda o e-mail d
 - **P83 Compra pelo Asaas.** Substitui P77 em parte.
   - **Sai:** o Checkout Pro do Mercado Pago.
   - **Fica:** `/comprar` com um campo; o e-mail digitado vira o responsável; *Entrar com Google* na volta; o acesso também por e-mail.
-  - **Depois do e-mail:** `/comprar/{compra}` oferece Pix na própria página como ação principal (nome e CPF pedidos só aqui, QR e copia-e-cola na tela) e cartão no Checkout hospedado do Asaas como alternativa. Sem boleto.
+  - **Depois do e-mail:** `/comprar/{compra}` pede nome e CPF (só aqui, para os dois meios) e oferece Pix na própria página como ação principal (QR e copia-e-cola na tela) e cartão no Checkout hospedado do Asaas como alternativa. Sem boleto.
   - **Dados pessoais:** nome e CPF vão ao Asaas e não ficam na Ecoa. A compra só é mexida pelo aparelho que a começou.
   - **Motivo:** o Guilherme trocou o gateway; o Pix fica na página sem tocar em dado sensível; o cartão hospedado mantém o motivo da P5 (nenhum dado de cartão).
   - **Alternativas:** cartão na nossa página (PCI); tudo no Checkout do Asaas (Pix fora da página).
@@ -73,7 +74,7 @@ Pagamento confirmado cria o livro, ativa o plano por 12 meses e manda o e-mail d
 
 ### CUJ 2: Comprar com cartão
 - **Quando** toca em *Pagar com cartão* em `/comprar/{compra}`,
-- **Então** vai ao Checkout do Asaas (até 3x sem juros), preenche cartão e CPF **lá** e volta para `/comprar/{compra}`: "Pronto" se já confirmou; senão, "Conferindo o pagamento…", que vira "Pronto" sozinho.
+- **Então** vai ao Checkout do Asaas (até 3x sem juros), já com nome e CPF preenchidos, digita o cartão **lá** e volta para `/comprar/{compra}`: "Pronto" se já confirmou; senão, "Conferindo o pagamento…", que vira "Pronto" sozinho.
 
 ### CUJ 3: Fechou a aba no meio
 - **Dado** um pagamento confirmado e a aba fechada,
@@ -195,7 +196,7 @@ landing ─▶ /comprar ── iniciarCompra ─▶ compra_criar (SQL) ─▶ co
   - `installment.maxInstallmentCount = MAX_PARCELAS_CARTAO` (3), `minutesToExpire: MINUTOS_CHECKOUT` (60);
   - `externalReference: compra`, `items: [{ name: "Plano anual Ecoa Memórias", quantity: 1, value }]`;
   - `callback`: as três URLs = `{urlDoApp()}/comprar/{compra}`;
-  - sem `customerData` (a pessoa preenche no Asaas);
+  - `customer`: o cliente criado pela Ecoa com `notificationDisabled: true` (as notificações do Asaas são por cliente; um cliente criado pelo próprio Checkout receberia e-mail e SMS do Asaas, cobrados da Ecoa);
 - `linkDoCheckout(id)` → `https://asaas.com/checkoutSession/show?id={id}` (host do sandbox: Perguntas em aberto);
 - `lerPagamento(id)` → `GET /payments/{id}`; zod **permissivo** em `id`, `status`, `billingType`, `value`, `originalValue`, `interestValue`, `externalReference`, `checkoutSession`, `installment`, `deleted`, `refunds`;
 - `pagamentosDoCheckout(checkout)` → `GET /payments?checkoutSession={id}`;
@@ -227,10 +228,10 @@ landing ─▶ /comprar ── iniciarCompra ─▶ compra_criar (SQL) ─▶ co
 
 ### Cartão (`pagarComCartao`, mesmo arquivo)
 
-1. Dono conferido. A compra precisa estar `criado` ou `recusado`.
+1. Dono conferido. Nome e CPF validados como no Pix. A compra precisa estar `criado` ou `recusado`.
 2. Checkout ativo com mais de 5 min de validade → redireciona para ele.
 3. Pix ativo → `cancelarPix` (tentativa única); ele continua em `payment_attempts`.
-4. `compra_pode_cobrar` → `criarCheckout` → `compra_guardar_tentativa` (tipo `checkout`, expira em 60 min) → redireciona para `linkDoCheckout`.
+4. `compra_pode_cobrar` → `criarCliente` (ou reusa o `asaas_cliente_id` do Pix, se houver) → `criarCheckout` com esse `customer` → `compra_guardar_tentativa` (tipo `checkout`, expira em 60 min) → redireciona para `linkDoCheckout`.
 
 ### Processar um pagamento (`lib/pagamento/processar.ts`)
 
@@ -353,8 +354,8 @@ Uma função só, `processarPagamento(asaasId, opcoes)`, chamada pelo aviso, pel
   - "R$ 467 · plano de 1 ano";
   - campos *Nome completo* e *CPF* (teclado numérico, máscara, `autocomplete="off"`);
   - *Gerar Pix* (principal);
-  - "Pedimos o CPF só para gerar o Pix. A Ecoa não guarda o CPF.";
-  - link *Pagar com cartão em até 3x*;
+  - link *Pagar com cartão em até 3x* (usa os mesmos campos);
+  - "Pedimos nome e CPF só para a cobrança no Asaas. A Ecoa não guarda o CPF.";
 - **pix** (Pix ativo):
   - QR;
   - *Copiar código Pix* (principal; no celular é o que se usa);
@@ -385,9 +386,7 @@ Exemplos em `lib/exemplos/prompt14.ts` e no styleguide; gate de design nas duas 
 
 - **Minimização:** a Ecoa guarda só o e-mail, valor, meio, parcelas, estado e ids do Asaas. Nome e CPF passam pela ação do servidor direto para o Asaas. Não ficam em banco, log (`ErroAsaas` sanitizado), evento, Inngest nem `localStorage`.
 - **Finalidade e transparência:** a frase ao lado do CPF diz para que serve e que não fica com a Ecoa. O Asaas é o meio de pagamento (instituição de pagamento autorizada pelo Banco Central) e trata nome e CPF para emitir a cobrança; entra na lista de terceiros da `/privacidade` (prompt 15).
-- **Notificações do Asaas:**
-  - No Pix, `notificationDisabled: true`.
-  - No cartão, o cliente é criado pelo Checkout, com as notificações padrão da conta. Pré-requisito: desligá-las no painel. Se o painel não permitir, a `/privacidade` diz que o Asaas pode mandar o comprovante do cartão.
+- **Notificações do Asaas:** são por cliente (não há chave na conta inteira). Todo cliente é criado pela Ecoa com `notificationDisabled: true`, inclusive o do cartão, que vai ao Checkout como `customer`. O Asaas não manda e-mail nem SMS ao comprador, e a Ecoa não paga por eles.
 - **Retenção:** a varredura diária (`varreduraFn`, novo passo `compras-vencidas`, ao lado de `mensagens-rascunhos`) chama `servico_apagar_compras_vencidas()`. Ela apaga:
   - compras sem livro em `criado`, `pendente` ou `recusado` há mais de 90 dias;
   - compras sem nenhuma cobrança há mais de 1 dia.
@@ -548,7 +547,8 @@ begin
     where id = p_compra and estado in ('criado', 'recusado');
   elsif p_tipo = 'checkout' then
     update public.payments
-    set asaas_checkout_id = p_asaas_id, asaas_checkout_expira_em = p_expira_em,
+    set asaas_cliente_id = coalesce(p_cliente, asaas_cliente_id),
+        asaas_checkout_id = p_asaas_id, asaas_checkout_expira_em = p_expira_em,
         asaas_pix_id = null, asaas_pix_expira_em = null, atualizado_em = now(),
         estado = case when estado = 'recusado' then 'criado'::public.pagamento_estado else estado end
     where id = p_compra and estado in ('criado', 'recusado');
@@ -897,7 +897,7 @@ A reversão apaga o histórico de compras. Antes de reverter em produção, expo
 **Telas** (Playwright, styleguide): `/comprar` (com e sem faixa de teste, com sugestão de domínio) e os 7 estados de `/comprar/[compra]`, a 390 px.
 
 **Aceite** (produção com `ASAAS_MODO=sandbox` e `ASAAS_EMAILS_TESTE` só com os e-mails do Guilherme):
-- Pix de teste pago pelo painel do sandbox: a tela vira "Pronto" sozinha, e o e-mail chega em menos de 1 minuto;
+- Pix de teste confirmado por `POST /v3/sandbox/payment/{id}/confirm` (simulação, só no sandbox): a tela vira "Pronto" sozinha, e o e-mail chega em menos de 1 minuto;
 - cartão de teste à vista e em 3x: 1 livro, `parcelas = 3`, valor somado 46700;
   - registrar o status de cada parcela logo depois da confirmação (premissa do `acaoDoAsaas`);
 - cartão recusado no Checkout; voltar sem pagar; trocar de Pix para cartão e pagar o Pix antigo pelo painel → `pagamento_duplicado`;
@@ -926,7 +926,7 @@ A reversão apaga o histórico de compras. Antes de reverter em produção, expo
 | Compra de teste virando livro grátis | No sandbox, só os e-mails de `ASAAS_EMAILS_TESTE`; `ambiente` na compra |
 | Chave do ambiente errado | Prefixo `$aact_prod_` ou `$aact_hmlg_` conferido contra `ASAAS_MODO` ao carregar |
 | CPF ou nome em log | `ErroAsaas` sem corpo nem zod; teste dedicado; nada no Inngest nem em eventos |
-| Asaas falando com o comprador do cartão | Notificações padrão desligadas no painel, ou aviso na `/privacidade` |
+| Asaas falando com o comprador (e cobrando por isso) | Todo cliente criado pela Ecoa com `notificationDisabled: true`, inclusive o do cartão |
 | Vercel Hobby não permite uso comercial | T39: Pro antes do 1º cliente pagante |
 
 ## Alternativas consideradas
@@ -974,7 +974,7 @@ Facilitaria uma 2ª compra, mas é dado pessoal sem necessidade para a Ecoa. Des
   5. cookie do dono no lugar do reaproveitamento por e-mail; teto só de compras com cobrança;
   6. em parte: teto global de cobranças por hora com alerta e conferência ordenada por última consulta (o captcha foi recusado, ver F);
   7. estorno ou contestação de outro `ref` não rebaixa a compra aprovada (o botão *Liberar* ficou para depois, em Não objetivos);
-  8. notificações do Checkout desligadas no painel e `ErroAsaas` sanitizado, inclusive para `ZodError`;
+  8. o cliente do cartão também é criado pela Ecoa com notificações desligadas (a documentação confirmou que não há chave na conta) e `ErroAsaas` sanitizado, inclusive para `ZodError`;
   9. `on delete set null` e retenção apagando só o que não é mais pagável;
   10. token anterior aceito, 200 sem configuração e freio de 5 s no aviso;
   11. `RECEIVED_IN_CASH` retido, juros e multa conferidos, status das parcelas registrado no aceite;
@@ -986,22 +986,21 @@ Facilitaria uma 2ª compra, mas é dado pessoal sem necessidade para a Ecoa. Des
 
 1. Conta no Asaas aprovada (produção) e conta no sandbox (`sandbox.asaas.com`), cada uma com a sua chave de API.
 2. Chave Pix cadastrada no sandbox e na produção (sem ela, o QR dá erro no sandbox).
-3. No painel, desligar as notificações padrão de cobrança para clientes (e-mail, SMS, WhatsApp), para o Checkout de cartão não falar com o comprador.
-4. Webhook no painel (*Integrações → Webhooks*):
+3. Webhook no painel (*Integrações → Webhooks*):
    - URL `https://app.ecoa-memorias.com.br/api/asaas`;
    - versão 3, envio **não sequencial**;
    - token de autenticação: 32+ caracteres, sorteado;
    - eventos: `PAYMENT_CONFIRMED`, `PAYMENT_RECEIVED`, `PAYMENT_OVERDUE`, `PAYMENT_REFUNDED`, `PAYMENT_PARTIALLY_REFUNDED`, `PAYMENT_REFUND_IN_PROGRESS`, `PAYMENT_RECEIVED_IN_CASH_UNDONE`, `PAYMENT_CHARGEBACK_REQUESTED`, `PAYMENT_CHARGEBACK_DISPUTE`, `PAYMENT_AWAITING_CHARGEBACK_REVERSAL`, `PAYMENT_REPROVED_BY_RISK_ANALYSIS`, `PAYMENT_CREDIT_CARD_CAPTURE_REFUSED`, `CHECKOUT_PAID`.
-5. Variáveis na Vercel (Production) e no `.env.local`.
-6. Limite por IP no Firewall da Vercel para `POST` em `/comprar` e `/comprar/*`.
-7. Vercel Pro antes da 1ª venda real (T39).
-8. Com `ASAAS_MODO=producao`: botão *Comprar* da landing apontando para `https://app.ecoa-memorias.com.br/comprar`.
+4. Variáveis na Vercel (Production) e no `.env.local`.
+5. Limite por IP no Firewall da Vercel para `POST` em `/comprar` e `/comprar/*`.
+6. Vercel Pro antes da 1ª venda real (T39).
+7. Com `ASAAS_MODO=producao`: botão *Comprar* da landing apontando para `https://app.ecoa-memorias.com.br/comprar`.
 
 ## Perguntas em aberto
 
 1. **Host do Checkout no sandbox.** A documentação só mostra `https://asaas.com/checkoutSession/show?id=…`. O 1º teste confirma se no sandbox é `sandbox.asaas.com`; o código lê o host por `ASAAS_MODO`.
 2. **Texto na fatura do cartão.** A API do Asaas não tem campo para isso; o nome que aparece vem do cadastro da conta. Conferir no painel se dá para deixar "ECOAMEMORIAS".
-3. **Notificações padrão no painel.** Conferir se o painel permite desligá-las para clientes criados pelo Checkout (pré-requisito 3); senão, vale o aviso na `/privacidade`.
+3. ~~Notificações padrão no painel.~~ Resolvida em 23/11: são por cliente; a Ecoa cria todos os clientes com `notificationDisabled: true`.
 
 ## Plano de implementação
 

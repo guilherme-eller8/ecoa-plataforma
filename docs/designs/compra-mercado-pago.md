@@ -1,6 +1,6 @@
 # Compra do plano pelo Mercado Pago (prompt 14, parte 1)
 
-Status: **aprovado pelo Guilherme em 20/11/2026** (fatura: ECOAMEMORIAS) · 18/11/2026 · PRD: M1 (onda 2). A impressão (itens 3 e 4 do prompt 14) fica para um prompt separado, por decisão do Guilherme em 18/11.
+Status: **substituído por `compra-asaas.md` em 23/11/2026** (o gateway virou o Asaas; nunca construído) · aprovado pelo Guilherme em 20/11/2026 (fatura: ECOAMEMORIAS) · 18/11/2026 · PRD: M1 (onda 2). A impressão (itens 3 e 4 do prompt 14) fica para um prompt separado, por decisão do Guilherme em 18/11.
 
 ## Visão geral
 
